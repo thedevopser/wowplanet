@@ -22,7 +22,7 @@ class SecurityController extends AbstractController
 
         return $this->render('security/login.html.twig', [
             'last_username' => $lastUsername,
-            'error' => $error,
+            'error'         => $error,
         ]);
     }
 
@@ -35,19 +35,19 @@ class SecurityController extends AbstractController
     #[Route('/connect/google', name: 'connect_google')]
     public function connectGoogle(ClientRegistry $clientRegistry): Response
     {
-        return $clientRegistry->getClient('google')->redirect();
+        return $clientRegistry->getClient('google')->redirect([], []);
     }
 
     #[Route('/connect/discord', name: 'connect_discord')]
     public function connectDiscord(ClientRegistry $clientRegistry): Response
     {
-        return $clientRegistry->getClient('discord')->redirect();
+        return $clientRegistry->getClient('discord')->redirect([], []);
     }
 
     #[Route('/connect/battlenet', name: 'connect_battlenet')]
     public function connectBattlenet(ClientRegistry $clientRegistry): Response
     {
-        return $clientRegistry->getClient('battlenet')->redirect();
+        return $clientRegistry->getClient('battlenet')->redirect([], []);
     }
 
     #[Route('/connect/google/check', name: 'connect_google_check')]

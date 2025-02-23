@@ -71,7 +71,7 @@ class User implements UserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->username;
+        return !empty($this->username) ? $this->username : 'default_identifier';
     }
 
     /**
