@@ -20,8 +20,7 @@ final class UserMenuComponent
 
     public function __construct(
         private Security $security
-    )
-    {
+    ) {
         $this->user = $security->getUser();
     }
 

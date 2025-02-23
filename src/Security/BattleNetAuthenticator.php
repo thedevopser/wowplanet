@@ -23,7 +23,8 @@ class BattleNetAuthenticator extends OAuth2Authenticator implements Authenticati
         private ClientRegistry $clientRegistry,
         private EntityManagerInterface $entityManager,
         private RouterInterface $router
-    ) {}
+    ) {
+    }
 
     public function supports(Request $request): ?bool
     {
@@ -36,7 +37,7 @@ class BattleNetAuthenticator extends OAuth2Authenticator implements Authenticati
         $accessToken = $this->fetchAccessToken($client);
 
         return new SelfValidatingPassport(
-            new UserBadge($accessToken->getToken(), function() use ($accessToken, $client) {
+            new UserBadge($accessToken->getToken(), function () use ($accessToken, $client) {
                 /** @var BattleNetResourceOwner $battleNetUser */
                 $battleNetUser = $client->fetchUserFromToken($accessToken);
 

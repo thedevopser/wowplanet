@@ -26,4 +26,5 @@ yarn-error.log
 ###> Castor ###
 castor.php
 castorPersonal.php
+.castor.stub.php
 ###< Castor ###
