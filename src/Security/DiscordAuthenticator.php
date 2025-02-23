@@ -48,7 +48,7 @@ class DiscordAuthenticator extends OAuth2Authenticator
                     ->findOneBy(['discordId' => $userId])
                     ?? new User();
 
-                $user->setUsername($discordUser->getUsername());
+                $user->setUsername($discordUser->getUsername() ?? 'DiscordUser');
                 $user->setDiscordId($userId);
                 $user->setAvatar($avatarUrl);
 
@@ -67,7 +67,7 @@ class DiscordAuthenticator extends OAuth2Authenticator
     {
         $userId = $discordUser->getId();
         $avatarHash = $discordUser->getAvatarHash() ?? null;
-        $discriminator = $discordUser->getDiscriminator() ?? "0";
+        $discriminator = $discordUser->getDiscriminator() ?? '0';
 
         return $avatarHash
             ? sprintf(
@@ -78,7 +78,6 @@ class DiscordAuthenticator extends OAuth2Authenticator
             )
             : sprintf('https://cdn.discordapp.com/embed/avatars/%d.png', (int) $discriminator % 5);
     }
-
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {

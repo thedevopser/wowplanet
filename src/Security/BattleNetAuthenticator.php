@@ -28,7 +28,7 @@ class BattleNetAuthenticator extends OAuth2Authenticator implements Authenticati
 
     public function supports(Request $request): ?bool
     {
-        return $request->attributes->get('_route') === 'connect_battlenet_check';
+        return 'connect_battlenet_check' === $request->attributes->get('_route');
     }
 
     public function authenticate(Request $request): Passport
@@ -52,7 +52,7 @@ class BattleNetAuthenticator extends OAuth2Authenticator implements Authenticati
                 // Créer un nouvel utilisateur s'il n'existe pas
                 $user = new User();
                 $user->setBattleNetId($battleNetUser->getId());
-                $user->setUsername($battleNetUser->getBattletagName());
+                $user->setUsername($battleNetUser->getBattletagName() ?? 'Battletag');
                 $this->entityManager->persist($user);
                 $this->entityManager->flush();
 
@@ -76,7 +76,7 @@ class BattleNetAuthenticator extends OAuth2Authenticator implements Authenticati
         return new Response($message, Response::HTTP_FORBIDDEN);
     }
 
-    public function start(Request $request, AuthenticationException $authException = null): Response
+    public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         return new RedirectResponse(
             $this->router->generate('app_login'), // Remplacer par votre route de login

@@ -40,29 +40,12 @@ class GoogleAuthenticator extends OAuth2Authenticator
             new UserBadge($accessToken->getToken(), function () use ($accessToken, $client) {
                 /** @var GoogleUser $googleUser */
                 $googleUser = $client->fetchUserFromToken($accessToken);
+                $googleId = $googleUser->getId();
+                $user = $this->entityManager->getRepository(User::class)
+                    ->findOneBy(['discordId' => $googleUser->getId()]) ?? new User();
 
-                $existingUser = $this->entityManager->getRepository(User::class)
-                    ->findOneBy(['discordId' => $googleUser->getId()]);
-
-                if ($existingUser) {
-                    if (!$existingUser->getGoogleId()) {
-                        $existingUser->setGoogleId($googleUser->getId());
-                        $this->entityManager->persist($existingUser);
-                        $this->entityManager->flush();
-                    }
-
-                    if ($existingUser->getAvatar() == null) {
-                        $existingUser->setAvatar($googleUser->getAvatar());
-                        $this->entityManager->persist($existingUser);
-                        $this->entityManager->flush();
-                    }
-
-                    return $existingUser;
-                }
-
-                $user = new User();
                 $user->setUsername($googleUser->getName());
-                $user->setGoogleId($googleUser->getId());
+                $user->setGoogleId(is_string($googleId) ? $googleId : null);
                 $user->setAvatar($googleUser->getAvatar());
 
                 $this->entityManager->persist($user);

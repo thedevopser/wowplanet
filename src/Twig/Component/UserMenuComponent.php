@@ -21,7 +21,7 @@ final class UserMenuComponent
     public function __construct(
         private Security $security
     ) {
-        $this->user = $security->getUser();
+        $this->user = $this->security->getUser();
     }
 
     public function getUser(): ?object
