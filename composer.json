@@ -45,6 +45,7 @@
         "symfony/web-link": "7.2.*",
         "symfony/webpack-encore-bundle": "^2.2",
         "symfony/yaml": "7.2.*",
+        "thedevopser/castor-symfony": "^2.0",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
         "wohali/oauth2-discord-new": "*"

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2f1f255062fbb3f83eb019aefca4e507",
+    "content-hash": "70a05cb3bfe64a8fddcb1908cd5c89ec",
     "packages": [
         {
             "name": "doctrine/cache",
@@ -8046,6 +8046,60 @@
                 }
             ],
             "time": "2025-01-07T12:55:42+00:00"
+        },
+        {
+            "name": "thedevopser/castor-symfony",
+            "version": "V2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thedevopser/castor-symfony.git",
+                "reference": "65c170b8c872a38c9d9afede73a15382f4204be8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thedevopser/castor-symfony/zipball/65c170b8c872a38c9d9afede73a15382f4204be8",
+                "reference": "65c170b8c872a38c9d9afede73a15382f4204be8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4",
+                "symfony/console": "^5.0|^6.0|^7.0",
+                "symfony/dependency-injection": "^5.0|^6.0|^7.0",
+                "symfony/filesystem": "^5.0|^6.0|^7.0",
+                "symfony/framework-bundle": "^5.4|^6.4|^7.0",
+                "symfony/yaml": "^5.0|^6.0|^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5",
+                "symfony/phpunit-bridge": "^5.4|^6.4|^7.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "TheDevOpser\\CastorBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "TheDevOpser",
+                    "email": "sylvain.anglade@gmail.com"
+                }
+            ],
+            "description": "Bundle Symfony pour installer le fichier castor.php",
+            "support": {
+                "issues": "https://github.com/thedevopser/castor-symfony/issues",
+                "source": "https://github.com/thedevopser/castor-symfony/tree/V2.0"
+            },
+            "time": "2025-02-08T15:24:50+00:00"
         },
         {
             "name": "twig/extra-bundle",

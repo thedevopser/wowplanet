@@ -22,3 +22,8 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+###> Castor ###
+castor.php
+castorPersonal.php
+###< Castor ###
