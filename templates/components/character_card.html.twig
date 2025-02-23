@@ -1,0 +1,100 @@
+<a href="{{ path('app_characters_detail', {'realm': realm, 'character': name}) }}" class="w-full transition-all duration-300 hover:scale-[1.02]">
+
+<div class="bg-zinc-900 rounded-lg shadow-lg border border-transparent hover:border-yellow-500 transition-all duration-300 p-4 w-full">
+        <!-- Avatar & Nom -->
+        <div class="flex items-center gap-4 mb-4">
+            <img src="{{ avatar }}" alt="{{ name }}"
+                 class="w-16 h-16 rounded-lg object-cover border-2 border-yellow-500">
+            <div class="flex flex-col">
+                <h3 class="text-xl font-extrabold text-yellow-500 leading-tight">{{ name }}</h3>
+                {% if title %}
+                    <p class="text-sm text-zinc-400">{{ title }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Infos -->
+        <div class="flex gap-4">
+            <!-- Bloc Gauche -->
+            <div class="flex-1 bg-zinc-800 p-3 rounded-lg text-sm space-y-2">
+                <div class="p-2 rounded flex justify-between items-center">
+                    <span class="font-bold text-yellow-500">Niveau</span>
+                    <span class="font-bold {% if level == 80 %}text-green-400{% else %}text-white{% endif %}">{{ level }}</span>
+                </div>
+                <div class="p-2 rounded flex justify-between items-center">
+                    <span class="font-bold text-yellow-500">Classe</span>
+                    <span class="relative group">
+                    <span class="text-white">{{ class|truncate(7) }}</span>
+                    {% if class|length > 7 %}
+                        <span class="absolute z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-zinc-700">
+                            {{ class }}
+                        </span>
+                    {% endif %}
+                </span>
+                </div>
+                {% if specialization %}
+                    <div class="p-2 rounded flex justify-between items-center">
+                        <span class="font-bold text-yellow-500">Spé</span>
+                        <span class="relative group">
+                        <span class="text-white">{{ specialization|truncate(7) }}</span>
+                        {% if specialization|length > 7 %}
+                            <span class="absolute z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-zinc-700">
+                                {{ specialization }}
+                            </span>
+                        {% endif %}
+                    </span>
+                    </div>
+                {% endif %}
+                <div class="p-2 rounded flex justify-between items-center">
+                    <span class="font-bold text-yellow-500">Race</span>
+                    <span class="relative group">
+                    <span class="text-white">{{ race|truncate(7) }}</span>
+                    {% if race|length > 7 %}
+                        <span class="absolute z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-zinc-700">
+                            {{ race }}
+                        </span>
+                    {% endif %}
+                </span>
+                </div>
+            </div>
+
+            <!-- Bloc Droite -->
+            <div class="flex-1 bg-zinc-800 p-3 rounded-lg text-sm space-y-2">
+                <div class="p-2 rounded flex justify-between items-center">
+                    <span class="font-bold text-yellow-500">Royaume</span>
+                    <span class="relative group">
+                    <span class="text-white">{{ realm|truncate(7) }}</span>
+                    {% if realm|length > 7 %}
+                        <span class="absolute z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg border border-zinc-700">
+                            {{ realm }}
+                        </span>
+                    {% endif %}
+                </span>
+                </div>
+                <div class="p-2 rounded flex justify-between items-center">
+                    <span class="font-bold text-yellow-500">Faction</span>
+                    <span class="{% if faction == 'alliance' %}text-blue-400{% else %}text-red-400{% endif %}">{{ faction }}</span>
+                </div>
+                {% if achievement_points %}
+                    <div class="p-2 rounded flex justify-between items-center">
+                        <span class="font-bold text-yellow-500">Points</span>
+                        <span class="text-white">{{ achievement_points }}</span>
+                    </div>
+                {% endif %}
+                {% if ilvl %}
+                    <div class="p-2 rounded flex justify-between items-center">
+                        <span class="font-bold text-yellow-500">iLvl</span>
+                        <span class="font-bold text-white">{{ ilvl }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if guild %}
+            <div class="mt-4 bg-zinc-800 p-3 rounded-lg text-sm text-center">
+                <span class="font-bold text-yellow-500">Guilde</span>
+                <p class="text-zinc-300">{{ guild }}</p>
+            </div>
+        {% endif %}
+    </div>
+</a>

@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Personnages | Wowplanet{% endblock %}
+
+{% block body %}
+    <h1 class="text-3xl font-bold mb-8 text-yellow-500 text-center">Mes Personnages</h1>
+
+    <div class="flex flex-wrap justify-center gap-4">
+        {% for character in pagination %}
+            <div class="w-full sm:w-[48%] lg:w-[32%] flex justify-center">
+                {{ component('character_card', {
+                    name: character.name,
+                    title: character.title,
+                    avatar: character.avatar,
+                    realm: character.realm,
+                    level: character.level,
+                    class: character.class,
+                    specialization: character.specialization,
+                    race: character.race,
+                    faction: character.faction,
+                    ilvl: character.ilvl,
+                    achievement_points: character.achievement_points,
+                    guild: character.guild
+                }) }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-8 flex justify-center">
+        {{ knp_pagination_render(pagination, 'pagination.html.twig') }}
+    </div>
+{% endblock %}
