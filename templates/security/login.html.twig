@@ -14,13 +14,13 @@
         {% endif %}
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <a href="{{ path('connect_google') }}" class="bg-red-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-red-400 transition">
+            <a href="{{ path('connect_google') }}" data-cy="login-google" class="bg-red-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-red-400 transition">
                 Connexion avec Google
             </a>
-            <a href="{{ path('connect_discord') }}" class="bg-indigo-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-indigo-400 transition">
+            <a href="{{ path('connect_discord') }}" data-cy="login-discord" class="bg-indigo-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-indigo-400 transition">
                 Connexion avec Discord
             </a>
-            <a href="{{ path('connect_battlenet') }}" class="bg-blue-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-blue-400 transition">
+            <a href="{{ path('connect_battlenet') }}" data-cy="login-battlenet" class="bg-blue-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-blue-400 transition">
                 Connexion avec Battle.net
             </a>
         </div>

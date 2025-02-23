@@ -28,3 +28,6 @@ castor.php
 castorPersonal.php
 .castor.stub.php
 ###< Castor ###
+
+###> Cypress ###
+tests/Cypress/rapports
