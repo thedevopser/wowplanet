@@ -4,7 +4,6 @@
 
 {% block body %}
     <div class="text-center">
-        <!-- Texte de bienvenue -->
         <h1 class="text-3xl font-bold text-yellow-500 mb-6">
             Bienvenue sur Wowplanet !
         </h1>
@@ -13,34 +12,21 @@
         </p>
 
         {% if app.user %}
-            <!-- Si l'utilisateur est connecté, afficher les cartes -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Mes Personnages -->
-                <a href="{{ path('app_characters_all') }}">
-                    <div class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
-                        <h2 class="text-xl font-semibold mb-2">Mes Personnages</h2>
-                        <p>Voir la liste complète de mes personnages.</p>
-                    </div>
+                <a href="{{ path('app_characters_all') }}" class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
+                    <h2 class="text-xl font-semibold mb-2">Mes Personnages</h2>
+                    <p>Voir la liste complète de mes personnages.</p>
                 </a>
-
-                <!-- Les Quêtes -->
-                <a href="{{ path('app_quests') }}">
-                    <div class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
-                        <h2 class="text-xl font-semibold mb-2">Les Quêtes</h2>
-                        <p>Suivez la progression de vos quêtes.</p>
-                    </div>
+                <a href="{{ path('app_quests') }}" class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
+                    <h2 class="text-xl font-semibold mb-2">Les Quêtes</h2>
+                    <p>Suivez la progression de vos quêtes.</p>
                 </a>
-
-                <!-- Chercher un personnage -->
-                <a href="{{ path('app_characters_search') }}">
-                    <div class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
-                        <h2 class="text-xl font-semibold mb-2">Chercher un Personnage</h2>
-                        <p>Recherchez un joueur sur n'importe quel serveur.</p>
-                    </div>
+                <a href="{{ path('app_characters_search') }}" class="p-6 bg-zinc-500 text-yellow-500 rounded-xl shadow-lg hover:bg-zinc-400 transition">
+                    <h2 class="text-xl font-semibold mb-2">Chercher un Personnage</h2>
+                    <p>Recherchez un joueur sur n'importe quel serveur.</p>
                 </a>
             </div>
         {% else %}
-            <!-- Si l'utilisateur n'est PAS connecté, afficher le bouton -->
             <div class="flex justify-center">
                 <a href="{{ path('app_login') }}" class="bg-yellow-500 text-zinc-900 font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-yellow-400 transition">
                     Commencer l'aventure

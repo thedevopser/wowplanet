@@ -1,0 +1,27 @@
+<nav class="bg-zinc-900 text-yellow-500 py-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center px-4">
+        <div class="flex items-center gap-3">
+            <a href="{{ path('app_homepage') }}" class="flex items-center gap-3 hover:opacity-80 transition">
+                <img src="{{ asset('build/images/logo.webp') }}" alt="Logo Wowplanet" class="w-12 h-12 rounded-full" />
+                <span class="text-2xl font-bold text-yellow-500">Wowplanet</span>
+            </a>
+        </div>
+
+        {% if app.user %}
+            <div class="flex gap-6">
+                <a href="{{ path('app_characters_all') }}" class="text-yellow-500 hover:text-yellow-400">Mes Personnages</a>
+                <a href="{{ path('app_quests') }}" class="text-yellow-500 hover:text-yellow-400">Les Quêtes</a>
+                <a href="{{ path('app_characters_search') }}" class="text-yellow-500 hover:text-yellow-400">Chercher un Personnage</a>
+            </div>
+        {% endif %}
+        <div>
+            {% if app.user %}
+                {{ component('user_menu') }}
+            {% else %}
+                <a href="{{ path('app_login') }}" class="text-yellow-500 hover:text-yellow-400">
+                    Connexion
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
