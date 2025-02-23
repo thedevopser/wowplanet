@@ -6,7 +6,6 @@ use League\OAuth2\Client\Provider\ResourceOwnerInterface;
 
 class BattleNetResourceOwner implements ResourceOwnerInterface
 {
-
     public function __construct(private readonly array $response)
     {
     }

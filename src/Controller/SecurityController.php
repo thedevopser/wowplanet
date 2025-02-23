@@ -55,6 +55,5 @@ class SecurityController extends AbstractController
     #[Route('/connect/battlenet/check', name: 'connect_battlenet_check')]
     public function check(Request $request): void
     {
-
     }
 }
