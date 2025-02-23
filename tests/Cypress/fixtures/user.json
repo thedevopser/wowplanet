@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "username": "Test User",
+  "googleId": "test-google-id",
+  "discordId": "test-discord-id",
+  "avatar": "https://cdn.discordapp.com/embed/avatars/1.png",
+  "roles": ["ROLE_USER"]
+}
