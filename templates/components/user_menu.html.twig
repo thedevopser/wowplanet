@@ -1,16 +1,16 @@
 <div {{ attributes }}>
-    {% if user %}
+    {% if this.user %}
         <div class="relative">
-            <div class="flex items-center gap-3 cursor-pointer user-avatar" data-action="click->live#action" data-live-action="toggleMenu">
+            <div class="flex items-center gap-3 cursor-pointer user-avatar" data-action="click->live#action" data-live-action-param="toggleMenu">
                 <img
-                        src="{{ user.avatar ?? asset('build/images/logo.webp') }}"
-                        alt="{{ user.username }}"
+                        src="{{ this.user.avatar ?? asset('build/images/logo.webp') }}"
+                        alt="{{ this.user.username }}"
                         class="w-12 h-12 rounded-full border-2 border-yellow-500"
                 />
-                <span class="text-yellow-500 font-semibold">{{ user.username }}</span>
+                <span class="text-yellow-500 font-semibold">{{ this.user.username }}</span>
             </div>
 
-            {% if isMenuOpen %}
+            {% if isOpen %}
                 <div class="absolute left-0 top-full mt-3 w-40 bg-zinc-900 border border-zinc-800 shadow-md rounded-lg z-50 user-menu">
                     <ul class="text-yellow-500">
                         <li class="px-4 py-2 hover:bg-zinc-800 cursor-pointer">
