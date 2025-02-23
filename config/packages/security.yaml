@@ -16,10 +16,10 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                enable_csrf: true
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+                - App\Security\DiscordAuthenticator
+                - App\Security\BattleNetAuthenticator
             logout:
                 path: app_logout
                 # where to redirect after logout

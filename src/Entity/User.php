@@ -19,6 +19,18 @@ class User implements UserInterface
     #[ORM\Column(length: 180)]
     private ?string $username = null;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $battlenetId = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $googleId = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $discordId = null;
+
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $avatar = null;
+
     /**
      * @var list<string> The user roles
      */
@@ -40,6 +52,16 @@ class User implements UserInterface
         $this->username = $username;
 
         return $this;
+    }
+
+    public function getBattleNetId(): ?string
+    {
+        return $this->battlenetId;
+    }
+
+    public function setBattleNetId(?string $battlenetId): void
+    {
+        $this->battlenetId = $battlenetId;
     }
 
     /**
@@ -74,6 +96,36 @@ class User implements UserInterface
         $this->roles = $roles;
 
         return $this;
+    }
+
+    public function getGoogleId(): ?string
+    {
+        return $this->googleId;
+    }
+
+    public function setGoogleId(?string $googleId): void
+    {
+        $this->googleId = $googleId;
+    }
+
+    public function getDiscordId(): ?string
+    {
+        return $this->discordId;
+    }
+
+    public function setDiscordId(?string $discordId): void
+    {
+        $this->discordId = $discordId;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): void
+    {
+        $this->avatar = $avatar;
     }
 
     /**
