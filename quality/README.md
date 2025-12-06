@@ -98,12 +98,17 @@ make phpcbf-fix
 
 ## GitHub Actions
 
-Le workflow `.github/workflows/code-quality.yml` exécute automatiquement tous les outils de qualité :
-- Sur **toutes les branches** lors d'un `push`
-- Sur **toutes les pull requests**
+Le workflow `.github/workflows/code-quality.yml` est optimisé pour éviter les duplications :
 
-Le workflow vérifie :
+### Sur Pull Request (toutes branches)
+Vérification complète de la qualité :
 1. Style de code (PHPCBF/PSR12)
 2. Analyse statique (PHPStan)
 3. Refactoring (Rector)
 4. Tests (PHPUnit)
+
+### Sur Push vers `main`
+Validation finale :
+- Tests (PHPUnit) uniquement
+
+Cette stratégie évite les duplications puisque les PR sont déjà validées avant le merge.
