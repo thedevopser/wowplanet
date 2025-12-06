@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: dev
+    environment:
+      SERVER_NAME: :80
+    volumes:
+      - ../:/app
+    networks:
+      - traefik_network
+      - wowplanet
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wowplanet.rule=Host(`wowplanet.dev.local`)"
+      - "traefik.http.routers.wowplanet.entrypoints=websecure"
+      - "traefik.http.routers.wowplanet.tls=true"
+      - "traefik.http.services.wowplanet.loadbalancer.server.port=80"
+
+networks:
+  traefik_network:
+    name: base_ops_traefik_network
+    external: true
+  wowplanet:
+    external: true

@@ -1,0 +1,27 @@
+{
+    # Global options
+    auto_https off
+    admin off
+}
+
+:80 {
+    # FrankenPHP configuration
+    root /app/public
+
+    # Enable compression
+    encode zstd gzip
+
+    # Handle PHP files with FrankenPHP
+    php_server
+
+    # Try files directive for Symfony routing
+    try_files {path} {path}/index.php /index.php
+
+    # Serve static files directly
+    file_server
+
+    # Log in JSON format
+    log {
+            format json
+    }
+}
