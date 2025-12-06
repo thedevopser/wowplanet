@@ -1,4 +1,12 @@
-.PHONY: quality test hooks rector
+.PHONY: quality test hooks rector phpcbf-check phpcbf-fix
+
+# Vérifie le style de code avec PHPCBF (PSR12)
+phpcbf-check:
+	@docker run --rm -t -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 phpcs --standard=./quality/phpcbf.xml --report=summary
+
+# Corrige automatiquement le style de code avec PHPCBF (PSR12)
+phpcbf-fix:
+	@docker run --rm -t -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 phpcbf --standard=./quality/phpcbf.xml
 
 quality:
 	@docker run --rm -t -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 phpstan analyse -c ./quality/phpstan.neon.dist --memory-limit=1G
