@@ -108,17 +108,25 @@ jobs:
 
       - name: Install AssetMapper assets
         run: php bin/console importmap:install
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
 
       - name: Build Tailwind CSS
         run: php bin/console tailwind:build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
 
       - name: Compile AssetMapper assets
         run: php bin/console asset-map:compile
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
 
       - name: Create database schema
         run: |
           php bin/console doctrine:database:create --env=test --if-not-exists
-          php bin/console doctrine:schema:create --env=test
+          php bin/console d:m:m -n --env=test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
 
       - name: Run tests
         run: php bin/phpunit --testdox
