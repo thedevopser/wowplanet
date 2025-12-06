@@ -109,6 +109,9 @@ jobs:
       - name: Install AssetMapper assets
         run: php bin/console importmap:install
 
+      - name: Build Tailwind CSS
+        run: php bin/console tailwind:build
+
       - name: Compile AssetMapper assets
         run: php bin/console asset-map:compile
 
