@@ -18,8 +18,11 @@ return static function (RectorConfig $rectorConfig): void {
         __DIR__ . '/../vendor',
         __DIR__ . '/../var',
         __DIR__ . '../tests/Fixtures',
-        // Désactivation de la promotion des propriétés dans le constructeur
-        ClassPropertyAssignToConstructorPromotionRector::class,
+        // Désactivation de la promotion des propriétés dans le constructeur pour les entités Doctrine
+        // (illisible sur les entités avec beaucoup de propriétés)
+        ClassPropertyAssignToConstructorPromotionRector::class => [
+            __DIR__ . '/../src/Entity',
+        ],
     ]);
 
     $rectorConfig->sets([

@@ -1,22 +1,91 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello HomeController!
-{% endblock %}
+{% block title %}WowPlanet - Outils World of Warcraft{% endblock %}
 
 {% block body %}
+<div class="container mx-auto px-4 py-16">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+            Bienvenue sur WowPlanet
+        </h1>
+        <p class="text-xl md:text-2xl mb-8" style="color: var(--text-secondary);">
+            Vos outils pour World of Warcraft
+        </p>
+        <p class="text-lg max-w-2xl mx-auto" style="color: var(--text-tertiary);">
+            Suivez vos réputations, analysez vos personnages et optimisez votre progression dans Azeroth.
+        </p>
+    </div>
 
-	<div class="container-fluid bg-blue-200 p-5 rounded-lg m-3 text-center">
-		<h1>Hello
-			{{ controller_name }}! ✅</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+        <twig:Card
+            icon="⚔️"
+            title="Réputations"
+            description="Trouvez quel personnage possède le meilleur niveau de réputation pour chaque faction."
+            buttonText="Explorer →"
+            buttonUrl="#"
+        />
 
-		This friendly message is coming from:
-		<ul>
-			<li>Your controller at
-				<code>/home/thedevopser/projects/wowplanet/src/Controller/HomeController.php</code>
-			</li>
-			<li>Your template at
-				<code>/home/thedevopser/projects/wowplanet/templates/home/index.html.twig</code>
-			</li>
-		</ul>
-	</div>
+        <twig:Card
+            icon="📊"
+            title="Statistiques"
+            description="Analysez vos performances et comparez vos personnages."
+            buttonText="Bientôt disponible"
+            :disabled="true"
+            :hover="false"
+        />
+
+        <twig:Card
+            icon="🎯"
+            title="Objectifs"
+            description="Suivez votre progression vers vos objectifs en jeu."
+            buttonText="Bientôt disponible"
+            :disabled="true"
+            :hover="false"
+        />
+    </div>
+
+    <div class="max-w-4xl mx-auto p-8 rounded-xl border card-glass">
+        <h2 class="text-3xl font-bold mb-6 text-center" style="color: var(--text-primary);">Comment ça marche ?</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
+                    1
+                </div>
+                <h3 class="font-bold mb-2" style="color: var(--text-primary);">Connexion Battle.net</h3>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Connectez-vous avec votre compte Battle.net pour accéder à vos données.
+                </p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
+                    2
+                </div>
+                <h3 class="font-bold mb-2" style="color: var(--text-primary);">Sélection</h3>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Choisissez les réputations que vous souhaitez analyser.
+                </p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
+                    3
+                </div>
+                <h3 class="font-bold mb-2" style="color: var(--text-primary);">Résultats</h3>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Découvrez instantanément vos meilleurs personnages pour chaque réputation.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-16 text-center">
+        <div class="inline-flex items-center gap-2 px-6 py-3 rounded-lg card-glass">
+            <span class="text-2xl">💡</span>
+            <span style="color: var(--text-secondary);">
+                <strong style="color: var(--text-primary);">Astuce :</strong> Utilisez le bouton 🌙/☀️ en haut à droite pour basculer entre le mode clair et sombre
+            </span>
+        </div>
+    </div>
+</div>
 {% endblock %}

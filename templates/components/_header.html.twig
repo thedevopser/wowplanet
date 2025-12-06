@@ -1,0 +1,37 @@
+<header class="sticky top-0 z-50 border-b card-glass backdrop-blur-md">
+    <nav class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-8">
+                <a href="{{ path('app_home') }}" class="flex items-center gap-2 text-2xl font-bold hover:opacity-80 transition-opacity bg-linear-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                    <span>⚔️</span>
+                    <span>WowPlanet</span>
+                </a>
+
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="{{ path('app_home') }}" class="hover:opacity-70 transition-opacity" style="color: var(--text-secondary);">
+                        Accueil
+                    </a>
+                    <a href="#" class="hover:opacity-70 transition-opacity" style="color: var(--text-secondary);">
+                        Réputations
+                    </a>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button
+                    data-action="click->theme#toggle"
+                    data-theme-target="icon"
+                    class="p-2 rounded-lg hover:opacity-70 transition-all text-2xl card-glass"
+                    aria-label="Toggle theme"
+                >
+                    🌙
+                </button>
+
+                <a href="#" class="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium btn-gradient text-white">
+                    <span>🔐</span>
+                    <span>Admin</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+</header>
