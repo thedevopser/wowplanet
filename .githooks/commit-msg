@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+set -eu
+
+msgfile="$1"
+msg="$(cat "$msgfile")"
+
+pattern='^(feat|doc|ops|fix|refacto|chore)\([^)]*\):\s.+'
+
+echo "$msg" | grep -Eq "$pattern" && exit 0
+
+echo "Invalid commit message format. Commit aborted." >&2
+echo "Expected: <type>(<scope>): <message>" >&2
+echo "Where <type> is one of: feat|doc|ops|fix|refacto" >&2
+exit 1

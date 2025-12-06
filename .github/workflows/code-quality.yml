@@ -1,0 +1,134 @@
+name: Code Quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  phpcbf:
+    name: PHP Code Style Check (PSR12)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check code style (PSR12)
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            phpcs --standard=./quality/phpcbf.xml --report=full
+
+          if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ Des violations de style de code PSR12 ont été détectées."
+            echo "👉 Pour corriger automatiquement, exécutez : make phpcbf-fix"
+            exit 1
+          fi
+
+  phpstan:
+    name: PHPStan Static Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Composer dependencies
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Warmup Symfony cache
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            php bin/console cache:warmup --env=dev
+
+      - name: Run PHPStan
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            phpstan analyse -c ./quality/phpstan.neon.dist --memory-limit=1G
+
+  rector:
+    name: Rector (Dry Run)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Composer dependencies
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run Rector
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            /tools/rector process --dry-run -c ./quality/rector.php --ansi
+
+  tests:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wowplanet_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, pgsql, dom, filter, gd, json, opcache, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install AssetMapper assets
+        run: php bin/console importmap:install
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
+
+      - name: Build Tailwind CSS
+        run: php bin/console tailwind:build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
+
+      - name: Compile AssetMapper assets
+        run: php bin/console asset-map:compile
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
+
+      - name: Create database schema
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console d:m:m -n --env=test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
+
+      - name: Run tests
+        run: php bin/phpunit --testdox
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/wowplanet_test?serverVersion=16&charset=utf8
