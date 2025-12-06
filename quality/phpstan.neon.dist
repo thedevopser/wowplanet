@@ -1,0 +1,33 @@
+includes:
+    # Extensions Doctrine pour PHPStan (disponibles dans jakzal/phpqa)
+    - /tools/.composer/vendor-bin/phpstan/vendor/phpstan/phpstan-doctrine/extension.neon
+
+    # Extensions Symfony pour PHPStan (disponibles dans jakzal/phpqa)
+    - /tools/.composer/vendor-bin/phpstan/vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+    level: max
+
+    paths:
+        - ../src
+        - ../tests
+
+    doctrine:
+        objectManagerLoader: ../tests/object-manager.php
+        repositoryClass: Doctrine\ORM\EntityRepository
+
+    symfony:
+        containerXmlPath: ../var/cache/dev/App_KernelDevDebugContainer.xml
+        consoleApplicationLoader: ../tests/console-application.php
+
+    excludePaths:
+        - ../src/Kernel.php
+        - ../var/*
+        - ../vendor/*
+
+    reportUnmatchedIgnoredErrors: false
+
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    tmpDir: ../var/cache/phpstan

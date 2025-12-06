@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -eu
+
+echo "Running quality..."
+if ! make quality >/dev/null; then
+  echo "Quality failed. Commit aborted." >&2
+  exit 1
+fi
+
+echo "Running tests..."
+if ! make test >/dev/null; then
+  echo "Tests failed. Commit aborted." >&2
+  exit 1
+fi
+
+echo "All checks passed."
