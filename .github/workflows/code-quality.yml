@@ -37,6 +37,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Warmup Symfony cache
+        run: |
+          docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
+            php bin/console cache:warmup --env=dev
+
       - name: Run PHPStan
         run: |
           docker run --rm -v ${PWD}:/project -w /project jakzal/phpqa:php8.4 \
