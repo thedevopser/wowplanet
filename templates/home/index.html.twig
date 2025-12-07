@@ -16,38 +16,44 @@
         </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-        <twig:Card
-            icon="⚔️"
-            title="Réputations"
-            description="Trouvez quel personnage possède le meilleur niveau de réputation pour chaque faction."
-            buttonText="Explorer →"
-            buttonUrl="#"
-        />
+    <div class="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto mb-16">
+        <div class="flex-1">
+            <twig:Card
+                icon="⚔️"
+                title="Réputations"
+                description="Trouvez quel personnage possède le meilleur niveau de réputation pour chaque faction."
+                buttonText="Explorer →"
+                buttonUrl="#"
+            />
+        </div>
 
-        <twig:Card
-            icon="📊"
-            title="Statistiques"
-            description="Analysez vos performances et comparez vos personnages."
-            buttonText="Bientôt disponible"
-            :disabled="true"
-            :hover="false"
-        />
+        <div class="flex-1">
+            <twig:Card
+                icon="📊"
+                title="Statistiques"
+                description="Analysez vos performances et comparez vos personnages."
+                buttonText="Bientôt disponible"
+                :disabled="true"
+                :hover="false"
+            />
+        </div>
 
-        <twig:Card
-            icon="🎯"
-            title="Objectifs"
-            description="Suivez votre progression vers vos objectifs en jeu."
-            buttonText="Bientôt disponible"
-            :disabled="true"
-            :hover="false"
-        />
+        <div class="flex-1">
+            <twig:Card
+                icon="🎯"
+                title="Objectifs"
+                description="Suivez votre progression vers vos objectifs en jeu."
+                buttonText="Bientôt disponible"
+                :disabled="true"
+                :hover="false"
+            />
+        </div>
     </div>
 
     <div class="max-w-4xl mx-auto p-8 rounded-xl border card-glass">
         <h2 class="text-3xl font-bold mb-6 text-center" style="color: var(--text-primary);">Comment ça marche ?</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="text-center">
+        <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-1 text-center">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
                     1
                 </div>
@@ -57,7 +63,7 @@
                 </p>
             </div>
 
-            <div class="text-center">
+            <div class="flex-1 text-center">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
                     2
                 </div>
@@ -67,7 +73,7 @@
                 </p>
             </div>
 
-            <div class="text-center">
+            <div class="flex-1 text-center">
                 <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold btn-gradient text-white">
                     3
                 </div>
