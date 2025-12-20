@@ -20,3 +20,16 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Blizzard API Services
+    App\Service\BlizzardApiService:
+        arguments:
+            $region: '%env(BLIZZARD_REGION)%'
+            $locale: '%env(BLIZZARD_LOCALE)%'
+
+    App\Service\BlizzardOAuthService:
+        arguments:
+            $clientId: '%env(BLIZZARD_CLIENT_ID)%'
+            $clientSecret: '%env(BLIZZARD_CLIENT_SECRET)%'
+            $region: '%env(BLIZZARD_REGION)%'
+            $redirectUri: '%env(BLIZZARD_REDIRECT_URI)%'

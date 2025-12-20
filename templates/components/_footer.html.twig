@@ -1,36 +1,7 @@
 <footer class="border-t mt-auto card-glass">
-	<div class="container mx-auto px-4 py-8">
-		<div class="flex flex-col md:flex-row gap-8 md:gap-12">
-			<div class="flex-1">
-				<h3 class="font-bold mb-4" style="color: var(--text-primary);">WowPlanet</h3>
-				<p class="text-sm" style="color: var(--text-secondary);">
-					Outils et statistiques pour World of Warcraft
-				</p>
-			</div>
-
-			<div class="flex-1">
-				<h3 class="font-bold mb-4" style="color: var(--text-primary);">Liens</h3>
-				<ul class="space-y-2 text-sm">
-					<li>
-						<a href="{{ path('app_home') }}" class="hover:opacity-70 transition-opacity" style="color: var(--text-secondary);">
-							Accueil
-						</a>
-					</li>
-					<li>
-						<a href="#" class="hover:opacity-70 transition-opacity" style="color: var(--text-secondary);">
-							Réputations
-						</a>
-					</li>
-				</ul>
-			</div>
-
-			<div class="flex-1"></div>
-		</div>
-
-		<div class="mt-8 pt-8 text-center text-sm border-t" style="color: var(--text-tertiary); border-color: var(--border-color);">
-			<p>&copy;
-				{{ 'now'|date('Y') }}
-				WowPlanet. World of Warcraft est une marque déposée de Blizzard Entertainment.</p>
-		</div>
+	<div class="mt-4 p-8 text-center text-sm">
+		<p>&copy;
+			{{ 'now'|date('Y') }}
+			WowPlanet. World of Warcraft est une marque déposée de Blizzard Entertainment.</p>
 	</div>
 </footer>

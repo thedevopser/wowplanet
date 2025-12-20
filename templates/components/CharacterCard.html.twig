@@ -1,0 +1,65 @@
+{% props result, index = null %}
+
+{% set char = result.character %}
+{% set rep = result.reputation %}
+
+<div class="card-glass rounded-xl p-3.5 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm"
+     {% if index %}data-results-pagination-target="item"{% endif %}>
+
+    <div class="flex items-center gap-3 mb-3">
+        <div class="min-w-0 w-full">
+            <h4 class="font-black text-base leading-tight truncate text-white">
+                {{ char.name }}
+            </h4>
+            <p class="text-[10px] truncate opacity-60 uppercase tracking-tighter" style="color: var(--text-secondary);">{{ char.realm.name }}</p>
+        </div>
+    </div>
+
+    <div class="flex gap-1.5 mb-4 flex-wrap">
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50">
+            Niv. {{ char.level }}
+        </span>
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50 truncate max-w-[90px]">
+            {{ char.playable_class.name }}
+        </span>
+    </div>
+
+    <div class="mt-auto space-y-3">
+        {% if rep.standing.renown_level is defined %}
+            <div class="pt-2">
+                <p class="text-[10px] font-bold text-center text-yellow-500/70 flex items-center justify-center gap-1 mb-1">
+                    <span>⭐</span> Renom {{ rep.standing.renown_level }}
+                </p>
+                <div class="relative w-full h-8 rounded-md overflow-hidden bg-white/5 flex items-center justify-center">
+                    <div class="absolute inset-y-0 left-0 standing-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }} transition-all duration-700 opacity-30" style="width: 100%"></div>
+                    <span class="relative z-10 text-[10px] font-bold standing-text-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }}">
+                        {{ rep.standing.name }}
+                    </span>
+                </div>
+            </div>
+        {% elseif rep.standing.value is defined and rep.standing.max is defined and rep.standing.max > 0 %}
+            {% set percent = (rep.standing.value / rep.standing.max * 100)|round %}
+            <div class="pt-2">
+                <div class="text-[10px] mb-1.5 font-bold uppercase tracking-tighter text-center opacity-70">
+                    Niveau <span class="standing-text-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }}">{{ rep.standing.name }}</span>
+                </div>
+
+                <div class="relative w-full h-10 rounded-lg overflow-hidden bg-white/10 flex items-center group/progress shadow-inner">
+                    <div class="absolute inset-y-0 left-0 standing-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }} transition-all duration-700 shadow-[offset-0_0_10px_rgba(0,0,0,0.2)]" style="width: {{ percent }}%"></div>
+                    <div class="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
+                        <span class="text-[9px] font-black text-white/30">0</span>
+                        <span class="text-sm font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{{ percent }}%</span>
+                        <span class="text-[9px] font-black text-white/30">100</span>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="relative w-full h-8 rounded-md overflow-hidden bg-white/5 flex items-center justify-center">
+                <div class="absolute inset-y-0 left-0 standing-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }} transition-all duration-700 opacity-30" style="width: 100%"></div>
+                <span class="relative z-10 text-[10px] font-bold standing-text-{{ rep.standing.name|lower|replace({' ': '-', 'é': 'e'}) }}">
+                    {{ rep.standing.name }}
+                </span>
+            </div>
+        {% endif %}
+    </div>
+</div>
