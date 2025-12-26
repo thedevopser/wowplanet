@@ -75,9 +75,32 @@ final class CurrencyController extends AbstractController
             return $this->redirectToRoute('app_currency_search');
         }
 
-        $currencyData = json_decode($jsonContent, true);
+        $cleanedJson = $this->cleanJsonControlCharacters($jsonContent);
+        $currencyData = json_decode($cleanedJson, true, 512, JSON_INVALID_UTF8_IGNORE);
+        $jsonError = json_last_error();
+
+        if ($jsonError !== JSON_ERROR_NONE) {
+            $errorMsg = match ($jsonError) {
+                JSON_ERROR_DEPTH => 'Profondeur maximale atteinte',
+                JSON_ERROR_STATE_MISMATCH => 'JSON mal formé',
+                JSON_ERROR_CTRL_CHAR => 'Caractère de contrôle inattendu',
+                JSON_ERROR_SYNTAX => 'Erreur de syntaxe JSON',
+                JSON_ERROR_UTF8 => 'Caractères UTF-8 invalides',
+                default => 'Erreur JSON inconnue (code: ' . $jsonError . ')',
+            };
+
+            $this->logger->error('JSON decode error', [
+                'error_code' => $jsonError,
+                'error_message' => $errorMsg,
+                'file_size' => strlen($jsonContent),
+            ]);
+
+            $this->addFlash('error', 'Erreur lors de la lecture du JSON : ' . $errorMsg);
+            return $this->redirectToRoute('app_currency_search');
+        }
+
         if (!is_array($currencyData)) {
-            $this->addFlash('error', 'Le fichier JSON est invalide.');
+            $this->addFlash('error', 'Le fichier JSON est invalide (pas un tableau).');
             return $this->redirectToRoute('app_currency_search');
         }
 
@@ -292,6 +315,15 @@ final class CurrencyController extends AbstractController
             'total_characters' => $totalCharacters,
             'total_currency' => $totalCurrency,
         ];
+    }
+
+    private function cleanJsonControlCharacters(string $json): string
+    {
+        $json = preg_replace('/"description":\s*"[^"]*(?:\\.[^"]*)*",?\s*/s', '', $json) ?? $json;
+
+        $json = preg_replace('/,(\s*[}\]])/', '$1', $json) ?? $json;
+
+        return $json;
     }
 
     /**
