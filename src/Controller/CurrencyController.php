@@ -265,6 +265,7 @@ final class CurrencyController extends AbstractController
         $results = [];
         $totalCurrency = 0;
         $totalCharacters = count($currencyData);
+        $currencyInfo = null;
 
         foreach ($currencyData as $characterData) {
             $characterName = $characterData['name'] ?? null;
@@ -292,6 +293,14 @@ final class CurrencyController extends AbstractController
 
             if ($specificCurrency === null) {
                 continue;
+            }
+
+            if ($currencyInfo === null) {
+                $currencyInfo = [
+                    'isAccountTransferable' => $specificCurrency['isAccountTransferable'] ?? null,
+                    'transferPercentage' => $specificCurrency['transferPercentage'] ?? null,
+                    'isAccountWide' => $specificCurrency['isAccountWide'] ?? null,
+                ];
             }
 
             $quantity = $specificCurrency['quantity'] ?? 0;
@@ -328,6 +337,7 @@ final class CurrencyController extends AbstractController
             'characters' => $results,
             'total_characters' => $totalCharacters,
             'total_currency' => $totalCurrency,
+            'currency_info' => $currencyInfo,
         ];
     }
 

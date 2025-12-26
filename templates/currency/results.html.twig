@@ -16,7 +16,34 @@
 
         <div class="mb-6">
             <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Résultats pour : {{ currency }}</h2>
+                <div>
+                    <h2 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Résultats pour : {{ currency }}</h2>
+                    {% if results.currency_info is defined and results.currency_info is not null %}
+                        <div class="flex gap-2 flex-wrap">
+                            {% if results.currency_info.isAccountTransferable is defined and results.currency_info.isAccountTransferable %}
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400">
+                                    ✓ Transférable
+                                </span>
+                            {% elseif results.currency_info.isAccountTransferable is defined and not results.currency_info.isAccountTransferable %}
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-red-500/20 text-red-400">
+                                    ✗ Non transférable
+                                </span>
+                            {% endif %}
+
+                            {% if results.currency_info.transferPercentage is defined and results.currency_info.transferPercentage < 100 %}
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-orange-500/20 text-orange-400">
+                                    -{{ 100 - results.currency_info.transferPercentage }}% perte lors du transfert
+                                </span>
+                            {% endif %}
+
+                            {% if results.currency_info.isAccountWide is defined and results.currency_info.isAccountWide %}
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-400">
+                                    ⚡ Partagée sur le compte
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
                 <a href="{{ path('app_currency_search') }}" class="px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors text-sm font-medium">
                     ← Nouvelle recherche
                 </a>

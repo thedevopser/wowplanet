@@ -43,30 +43,6 @@
         {% endif %}
     </div>
 
-    <div class="flex gap-1.5 mb-3 flex-wrap">
-        {% if curr.isAccountTransferable is defined and curr.isAccountTransferable %}
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-green-500/20 text-green-400">
-                ✓ Transférable
-            </span>
-        {% elseif curr.isAccountTransferable is defined and not curr.isAccountTransferable %}
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-500/20 text-red-400">
-                ✗ Non transférable
-            </span>
-        {% endif %}
-
-        {% if curr.transferPercentage is defined and curr.transferPercentage < 100 %}
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orange-500/20 text-orange-400">
-                -{{ 100 - curr.transferPercentage }}% perte
-            </span>
-        {% endif %}
-
-        {% if curr.isAccountWide is defined and curr.isAccountWide %}
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-500/20 text-blue-400">
-                ⚡ Compte
-            </span>
-        {% endif %}
-    </div>
-
     <div class="mt-auto space-y-3">
         <div class="pt-2">
             <div class="w-full h-16 rounded-xl bg-linear-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
