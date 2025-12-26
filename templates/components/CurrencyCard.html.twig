@@ -11,17 +11,36 @@
             <h4 class="font-black text-base leading-tight truncate text-white">
                 {{ char.name }}
             </h4>
-            <p class="text-[10px] truncate opacity-60 uppercase tracking-tighter" style="color: var(--text-secondary);">{{ char.realm.name }}</p>
+            {% if char.realm is defined and char.realm %}
+                <p class="text-[10px] truncate opacity-60 uppercase tracking-tighter" style="color: var(--text-secondary);">
+                    {% if char.realm is iterable %}
+                        {{ char.realm.name }}
+                    {% else %}
+                        {{ char.realm }}
+                    {% endif %}
+                </p>
+            {% endif %}
         </div>
     </div>
 
     <div class="flex gap-1.5 mb-4 flex-wrap">
         <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50">
-            Niv. {{ char.level }}
+            {{ char.faction|default('Unknown') }}
         </span>
-        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50 truncate max-w-[90px]">
-            {{ char.playable_class.name }}
-        </span>
+        {% if char.level is defined %}
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50">
+                Niv. {{ char.level }}
+            </span>
+        {% endif %}
+        {% if char.playable_class is defined %}
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50 truncate max-w-[90px]">
+                {{ char.playable_class.name }}
+            </span>
+        {% elseif char.class is defined %}
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50 truncate max-w-[90px]">
+                {{ char.class }}
+            </span>
+        {% endif %}
     </div>
 
     <div class="mt-auto space-y-3">
