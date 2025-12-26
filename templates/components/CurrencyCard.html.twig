@@ -1,0 +1,37 @@
+{% props result, index = null %}
+
+{% set char = result.character %}
+{% set curr = result.currency %}
+
+<div class="card-glass rounded-xl p-3.5 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm"
+     {% if index %}data-results-pagination-target="item"{% endif %}>
+
+    <div class="flex items-center gap-3 mb-3">
+        <div class="min-w-0 w-full">
+            <h4 class="font-black text-base leading-tight truncate text-white">
+                {{ char.name }}
+            </h4>
+            <p class="text-[10px] truncate opacity-60 uppercase tracking-tighter" style="color: var(--text-secondary);">{{ char.realm.name }}</p>
+        </div>
+    </div>
+
+    <div class="flex gap-1.5 mb-4 flex-wrap">
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50">
+            Niv. {{ char.level }}
+        </span>
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-white/5 text-white/50 truncate max-w-[90px]">
+            {{ char.playable_class.name }}
+        </span>
+    </div>
+
+    <div class="mt-auto space-y-3">
+        <div class="pt-2">
+            <div class="relative w-full h-16 rounded-xl overflow-hidden bg-gradient-to-r from-yellow-500/10 to-amber-500/10 flex items-center justify-center shadow-inner">
+                <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500/30 to-amber-500/30 transition-all duration-700" style="width: 100%"></div>
+                <span class="relative z-10 text-xl font-black bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+                    {{ result.quantity|number_format(0, ',', ' ') }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

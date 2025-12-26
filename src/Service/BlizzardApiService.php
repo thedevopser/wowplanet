@@ -14,6 +14,7 @@ final readonly class BlizzardApiService
     private const string API_BASE_URL = 'https://%s.api.blizzard.com';
     private const int CACHE_TTL_PROFILE = 300; // 5 minutes for user profile
     private const int CACHE_TTL_REPUTATION = 600; // 10 minutes for reputations
+    private const int CACHE_TTL_CURRENCY = 600; // 10 minutes for currencies
 
     public function __construct(
         private HttpClientInterface $httpClient,
@@ -222,5 +223,142 @@ final readonly class BlizzardApiService
         }
 
         return $baseValue + $value;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterCurrencies(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array {
+        $characterNameLower = strtolower($characterName);
+        $cacheKey = sprintf(
+            'blizzard_currency_%s_%s',
+            $realmSlug,
+            $characterNameLower
+        );
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use (
+            $accessToken,
+            $realmSlug,
+            $characterNameLower
+        ): array {
+            $item->expiresAfter(self::CACHE_TTL_CURRENCY);
+
+            $url = sprintf(
+                self::API_BASE_URL . '/profile/wow/character/%s/%s/currencies?namespace=profile-%s&locale=%s',
+                $this->region,
+                $realmSlug,
+                rawurlencode($characterNameLower),
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching character currencies from Blizzard API', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch character currencies', [
+                    'realm' => $realmSlug,
+                    'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            $data = $response->toArray(false);
+            $currenciesData = $data['currencies'] ?? [];
+
+            $this->logger->debug('Character currencies fetched', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+                'currencies_count' => is_array($currenciesData) ? count($currenciesData) : 0,
+            ]);
+
+            return $data;
+        });
+
+        return $cachedData;
+    }
+
+    /**
+     * @param array<string, mixed> $currencies
+     * @return array<string, mixed>|null
+     */
+    public function findSpecificCurrency(array $currencies, string $targetCurrencyName): ?array
+    {
+        $currenciesList = $currencies['currencies'] ?? [];
+        if (!is_array($currenciesList)) {
+            return null;
+        }
+
+        $normalizedTarget = $this->normalizeCurrencyName($targetCurrencyName);
+
+        foreach ($currenciesList as $currencyEntry) {
+            if (!is_array($currencyEntry)) {
+                continue;
+            }
+
+            $currency = $currencyEntry['currency'] ?? null;
+            if (!is_array($currency)) {
+                continue;
+            }
+
+            $currencyName = $currency['name'] ?? null;
+            if (!is_string($currencyName)) {
+                continue;
+            }
+
+            $normalizedCurrencyName = $this->normalizeCurrencyName($currencyName);
+
+            if ($normalizedCurrencyName === $normalizedTarget) {
+                /** @var array<string, mixed> $currencyEntry */
+                return $currencyEntry;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeCurrencyName(string $name): string
+    {
+        $normalized = mb_strtolower($name);
+        $normalized = str_replace(["\u{2019}", "\u{2018}", "\u{00B4}", '`'], "'", $normalized);
+        $normalized = str_replace(["\u{2013}", "\u{2014}"], '-', $normalized);
+        $normalized = trim($normalized);
+
+        return $normalized;
+    }
+
+    /**
+     * @param array<string, mixed> $currencyEntry
+     */
+    public function extractCurrencyQuantity(array $currencyEntry): int
+    {
+        $quantity = $currencyEntry['quantity'] ?? 0;
+
+        if (!is_int($quantity)) {
+            $this->logger->warning('Currency quantity is not an integer', [
+                'quantity' => $quantity,
+                'type' => gettype($quantity),
+            ]);
+            return 0;
+        }
+
+        return max(0, $quantity);
     }
 }
