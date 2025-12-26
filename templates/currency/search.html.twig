@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-12">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-yellow-500">
                 WoW Currency Tracker
             </h1>
             <p class="text-lg" style="color: var(--text-secondary);">
@@ -102,8 +102,8 @@
                 </form>
 
                 <div class="mt-6 text-center">
-                    <form action="{{ path('app_currency_upload') }}" method="GET">
-                        <button type="button" onclick="window.location.reload()" class="text-sm text-yellow-500 hover:text-yellow-400">
+                    <form action="{{ path('app_currency_clear') }}" method="POST">
+                        <button type="submit" class="text-sm text-yellow-500 hover:text-yellow-400">
                             Charger un nouveau fichier
                         </button>
                     </form>

@@ -38,6 +38,17 @@ final class CurrencyController extends AbstractController
         ]);
     }
 
+    #[Route('/currency/clear', name: 'app_currency_clear', methods: ['POST'])]
+    public function clearCurrencyData(Request $request): Response
+    {
+        $session = $request->getSession();
+        $session->remove('currency_data');
+        $session->remove('currency_results');
+
+        $this->addFlash('info', 'Données effacées. Vous pouvez charger un nouveau fichier.');
+        return $this->redirectToRoute('app_currency_search');
+    }
+
     #[Route('/currency/upload', name: 'app_currency_upload', methods: ['POST'])]
     public function uploadCurrencyData(Request $request): Response
     {

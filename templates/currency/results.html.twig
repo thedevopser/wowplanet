@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-12">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-yellow-500">
                 WoW Currency Tracker
             </h1>
             <p class="text-lg" style="color: var(--text-secondary);">
@@ -37,11 +37,11 @@
             </div>
         {% else %}
             <!-- Total Currency Banner -->
-            <div class="card-glass rounded-2xl p-6 mb-8 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-2 border-yellow-500/20">
+            <div class="card-glass rounded-2xl p-6 mb-8 bg-yellow-500/10 border-2 border-yellow-500/20">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium opacity-70 mb-1">Total cumulé sur tous les personnages</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+                        <p class="text-4xl font-black text-yellow-500">
                             {{ results.total_currency|number_format(0, ',', ' ') }} {{ currency }}
                         </p>
                     </div>
@@ -55,8 +55,8 @@
 
             {% if results.characters|length >= 3 %}
                 <div class="mb-16">
-                    <h3 class="text-3xl font-bold text-center mb-12">
-                        <span class="bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">Meilleurs Personnages</span>
+                    <h3 class="text-3xl font-bold text-center mb-12 text-yellow-500">
+                        Meilleurs Personnages
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
@@ -68,14 +68,15 @@
                                         {{ r.character.name }}
                                     </h4>
                                     <p class="text-xs opacity-60 font-medium" style="color: var(--text-secondary);">
-                                        {{ r.character.realm.name }} - {{ r.character.playable_class.name }}
+                                        {{ r.character.realm|default('Unknown') }}
+                                        {% if r.character.class is defined %} - {{ r.character.class }}{% endif %}
                                     </p>
                                 </div>
 
                                 <div class="space-y-4">
                                     <div class="pt-2">
-                                        <div class="relative w-full h-20 rounded-xl overflow-hidden bg-gradient-to-r from-yellow-500/20 to-amber-500/20 flex items-center justify-center shadow-inner">
-                                            <span class="text-3xl font-black bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent">
+                                        <div class="w-full h-20 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                                            <span class="text-3xl font-black text-yellow-500">
                                                 {{ r.quantity|number_format(0, ',', ' ') }}
                                             </span>
                                         </div>
