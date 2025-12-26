@@ -23,46 +23,98 @@ final class CurrencyController extends AbstractController
     public function searchForm(Request $request): Response
     {
         $session = $request->getSession();
-        $accessToken = $session->get('blizzard_access_token');
-        $expiresAt = $session->get('blizzard_token_expires_at', 0);
+        $currencyData = $session->get('currency_data');
 
-        if ($accessToken === null || $expiresAt <= time()) {
-            $this->logger->warning('Currency search attempted without valid token');
-            $this->addFlash('warning', 'Vous devez vous authentifier avec Battle.net pour accéder aux monnaies.');
-            return $this->redirectToRoute('app_oauth_login');
+        $availableCurrencies = [];
+        if (is_array($currencyData) && $this->isValidCurrencyDataArray($currencyData)) {
+            /** @var array<int, array<string, mixed>> $validCurrencyData */
+            $validCurrencyData = $currencyData;
+            $availableCurrencies = $this->extractAvailableCurrencies($validCurrencyData);
         }
 
-        return $this->render('currency/search.html.twig');
+        return $this->render('currency/search.html.twig', [
+            'has_data' => is_array($currencyData) && !empty($currencyData),
+            'available_currencies' => $availableCurrencies,
+        ]);
+    }
+
+    #[Route('/currency/upload', name: 'app_currency_upload', methods: ['POST'])]
+    public function uploadCurrencyData(Request $request): Response
+    {
+        $uploadedFile = $request->files->get('currency_file');
+
+        if ($uploadedFile === null || !is_object($uploadedFile)) {
+            $this->addFlash('error', 'Veuillez sélectionner un fichier JSON.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        if (!method_exists($uploadedFile, 'getClientOriginalExtension')) {
+            $this->addFlash('error', 'Fichier invalide.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        if ($uploadedFile->getClientOriginalExtension() !== 'json') {
+            $this->addFlash('error', 'Le fichier doit être au format JSON.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        if (!method_exists($uploadedFile, 'getPathname')) {
+            $this->addFlash('error', 'Fichier invalide.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        $pathname = $uploadedFile->getPathname();
+        if (!is_string($pathname)) {
+            $this->addFlash('error', 'Impossible de lire le chemin du fichier.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        $jsonContent = file_get_contents($pathname);
+        if ($jsonContent === false) {
+            $this->addFlash('error', 'Impossible de lire le fichier.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        $currencyData = json_decode($jsonContent, true);
+        if (!is_array($currencyData)) {
+            $this->addFlash('error', 'Le fichier JSON est invalide.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
+        $session = $request->getSession();
+        $session->set('currency_data', $currencyData);
+
+        $this->logger->info('Currency data uploaded', [
+            'characters_count' => count($currencyData),
+        ]);
+
+        $this->addFlash('success', 'Données de monnaie chargées avec succès !');
+        return $this->redirectToRoute('app_currency_search');
     }
 
     #[Route('/currency/process', name: 'app_currency_process', methods: ['POST'])]
     public function processSearch(Request $request): Response
     {
         $session = $request->getSession();
-        $accessToken = $session->get('blizzard_access_token');
-        $expiresAt = $session->get('blizzard_token_expires_at', 0);
+        $currencyData = $session->get('currency_data');
 
-        if ($accessToken === null || $expiresAt <= time()) {
-            $this->logger->warning('Currency search process attempted without valid token');
-            $this->addFlash('warning', 'Vous devez vous authentifier avec Battle.net pour accéder aux monnaies.');
-            return $this->redirectToRoute('app_oauth_login');
+        if (!is_array($currencyData) || empty($currencyData) || !$this->isValidCurrencyDataArray($currencyData)) {
+            $this->addFlash('error', 'Veuillez d\'abord charger un fichier de données de monnaie.');
+            return $this->redirectToRoute('app_currency_search');
         }
 
         $currencyName = $request->request->get('currency');
 
-        if ($currencyName === null || !is_string($currencyName)) {
-            $this->addFlash('error', 'Veuillez saisir un nom de monnaie.');
+        if ($currencyName === null || !is_string($currencyName) || $currencyName === '') {
+            $this->addFlash('error', 'Veuillez sélectionner une monnaie.');
             return $this->redirectToRoute('app_currency_search');
         }
 
-        if (!is_string($accessToken)) {
-            $this->logger->error('Access token is not a string');
-            return $this->redirectToRoute('app_oauth_login');
-        }
+        $this->logger->info('Searching currency from uploaded data', ['currency' => $currencyName]);
 
-        $this->logger->info('Searching currency', ['currency' => $currencyName]);
-
-        $results = $this->analyzeCurrencies($accessToken, $currencyName);
+        /** @var array<int, array<string, mixed>> $validCurrencyData */
+        $validCurrencyData = $currencyData;
+        $results = $this->analyzeCurrenciesFromData($validCurrencyData, $currencyName);
 
         $session->set('currency_results', [
             'currency' => $currencyName,
@@ -91,65 +143,121 @@ final class CurrencyController extends AbstractController
         ]);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function analyzeCurrencies(string $accessToken, string $targetCurrency): array
+    #[Route('/currency/debug', name: 'app_currency_debug', methods: ['GET'])]
+    public function debugCurrencies(Request $request): Response
     {
-        $profile = $this->apiService->fetchUserProfile($accessToken);
+        $session = $request->getSession();
+        $accessToken = $session->get('blizzard_access_token');
+        $expiresAt = $session->get('blizzard_token_expires_at', 0);
 
-        $wowAccounts = $profile['wow_accounts'] ?? null;
-        if (!is_array($wowAccounts)) {
-            $this->logger->error('No WoW accounts found in profile');
-            return [
-                'error' => 'Aucun compte WoW trouvé. Vérifiez vos autorisations.',
-                'characters' => [],
-                'total_characters' => 0,
-                'total_currency' => 0,
-            ];
+        if ($accessToken === null || $expiresAt <= time()) {
+            return new Response('No valid OAuth token', 401);
         }
 
-        $characters = $this->extractAllCharacters($wowAccounts);
+        if (!is_string($accessToken)) {
+            return new Response('Invalid token', 401);
+        }
 
-        $this->logger->info('Found characters in profile', ['count' => count($characters)]);
+        $targetCharacterName = $request->query->get('character');
+        $targetRealmSlug = $request->query->get('realm');
 
+        if (!is_string($targetCharacterName)) {
+            $targetCharacterName = 'Prøtactinium';
+        }
+
+        if (!is_string($targetRealmSlug)) {
+            $targetRealmSlug = 'dalaran';
+        }
+
+        $characterData = $this->apiService->fetchCharacterCurrencies(
+            $accessToken,
+            $targetRealmSlug,
+            $targetCharacterName
+        );
+
+        $styles = "body{font-family:monospace;margin:20px;} ";
+        $styles .= "pre{background:#f5f5f5;padding:15px;border-radius:5px;overflow-x:auto;}";
+
+        $json = json_encode($characterData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            return new Response('Failed to encode JSON', 500);
+        }
+
+        $jsonHtml = htmlspecialchars($json);
+
+        $output = "<html><head><meta charset='UTF-8'><title>Debug Character Data</title>";
+        $output .= "<style>{$styles}</style>";
+        $output .= "</head><body>";
+        $output .= "<h1>Full Character Data for {$targetCharacterName} on {$targetRealmSlug}</h1>";
+        $output .= "<p>Usage: /currency/debug?character=Prøtactinium&realm=dalaran</p>";
+        $output .= "<h2>Raw JSON Response:</h2>";
+        $output .= "<pre>{$jsonHtml}</pre>";
+        $output .= "<p><a href='/currency'>Back to search</a></p>";
+        $output .= "</body></html>";
+
+        return new Response($output);
+    }
+
+    /**
+     * @param array<mixed, mixed> $currencyData
+     */
+    private function isValidCurrencyDataArray(array $currencyData): bool
+    {
+        foreach ($currencyData as $key => $value) {
+            if (!is_int($key)) {
+                return false;
+            }
+
+            if (!is_array($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $currencyData
+     * @return array<string, mixed>
+     */
+    private function analyzeCurrenciesFromData(array $currencyData, string $targetCurrency): array
+    {
         $results = [];
         $totalCurrency = 0;
+        $totalCharacters = count($currencyData);
 
-        foreach ($characters as $character) {
-            $characterName = $character['name'] ?? null;
-            $realm = $character['realm'] ?? null;
-
-            if (!is_array($realm)) {
+        foreach ($currencyData as $characterData) {
+            $character = $characterData['character'] ?? null;
+            if (!is_array($character)) {
                 continue;
             }
 
-            $realmSlug = $realm['slug'] ?? null;
-
-            if (!is_string($characterName) || !is_string($realmSlug)) {
+            $currencies = $characterData['currencies'] ?? [];
+            if (!is_array($currencies)) {
                 continue;
             }
 
-            $currencies = $this->apiService->fetchCharacterCurrencies(
-                $accessToken,
-                $realmSlug,
-                $characterName
-            );
+            $specificCurrency = null;
+            foreach ($currencies as $currency) {
+                if (!is_array($currency)) {
+                    continue;
+                }
 
-            if (!isset($currencies['currencies'])) {
-                continue;
+                $currencyName = $currency['name'] ?? null;
+                if ($currencyName === $targetCurrency) {
+                    $specificCurrency = $currency;
+                    break;
+                }
             }
-
-            $specificCurrency = $this->apiService->findSpecificCurrency(
-                $currencies,
-                $targetCurrency
-            );
 
             if ($specificCurrency === null) {
                 continue;
             }
 
-            $quantity = $this->apiService->extractCurrencyQuantity($specificCurrency);
+            $quantity = $specificCurrency['quantity'] ?? 0;
+            if (!is_int($quantity)) {
+                continue;
+            }
 
             $results[] = [
                 'character' => $character,
@@ -158,54 +266,51 @@ final class CurrencyController extends AbstractController
             ];
 
             $totalCurrency += $quantity;
-
-            usleep(100000);
         }
 
         usort($results, fn (array $a, array $b): int => $b['quantity'] <=> $a['quantity']);
 
-        $this->logger->info('Currency search completed', [
+        $this->logger->info('Currency search completed from uploaded data', [
             'currency' => $targetCurrency,
-            'total_characters' => count($characters),
+            'total_characters' => $totalCharacters,
             'results_found' => count($results),
             'total_currency' => $totalCurrency,
         ]);
 
         return [
             'characters' => $results,
-            'total_characters' => count($characters),
+            'total_characters' => $totalCharacters,
             'total_currency' => $totalCurrency,
         ];
     }
 
     /**
-     * @param array<mixed> $wowAccounts
-     * @return array<int, array<string, mixed>>
+     * @param array<int, array<string, mixed>> $currencyData
+     * @return array<string, string>
      */
-    private function extractAllCharacters(array $wowAccounts): array
+    private function extractAvailableCurrencies(array $currencyData): array
     {
-        /** @var array<int, array<string, mixed>> $characters */
-        $characters = [];
+        $currencies = [];
 
-        foreach ($wowAccounts as $account) {
-            if (!is_array($account)) {
+        foreach ($currencyData as $characterData) {
+            $characterCurrencies = $characterData['currencies'] ?? [];
+            if (!is_array($characterCurrencies)) {
                 continue;
             }
 
-            $accountCharacters = $account['characters'] ?? null;
-            if (!is_array($accountCharacters)) {
-                continue;
-            }
-
-            foreach ($accountCharacters as $character) {
-                if (!is_array($character)) {
+            foreach ($characterCurrencies as $currency) {
+                if (!is_array($currency)) {
                     continue;
                 }
-                /** @var array<string, mixed> $character */
-                $characters[] = $character;
+
+                $name = $currency['name'] ?? null;
+                if (is_string($name) && !isset($currencies[$name])) {
+                    $currencies[$name] = $name;
+                }
             }
         }
 
-        return $characters;
+        asort($currencies);
+        return $currencies;
     }
 }

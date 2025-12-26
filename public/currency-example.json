@@ -1,0 +1,79 @@
+[
+  {
+    "character": {
+      "name": "Prøtactinium",
+      "realm": {
+        "name": "Dalaran",
+        "slug": "dalaran"
+      },
+      "level": 80,
+      "playable_class": {
+        "name": "Chevalier de la mort"
+      }
+    },
+    "currencies": [
+      {
+        "name": "Pierre de vol",
+        "quantity": 1500
+      },
+      {
+        "name": "Jeton du tisse-temps",
+        "quantity": 523
+      },
+      {
+        "name": "Anima du réservoir",
+        "quantity": 35000
+      }
+    ]
+  },
+  {
+    "character": {
+      "name": "Magetest",
+      "realm": {
+        "name": "Dalaran",
+        "slug": "dalaran"
+      },
+      "level": 70,
+      "playable_class": {
+        "name": "Mage"
+      }
+    },
+    "currencies": [
+      {
+        "name": "Pierre de vol",
+        "quantity": 2500
+      },
+      {
+        "name": "Anima du réservoir",
+        "quantity": 12000
+      }
+    ]
+  },
+  {
+    "character": {
+      "name": "Hunteralt",
+      "realm": {
+        "name": "Hyjal",
+        "slug": "hyjal"
+      },
+      "level": 80,
+      "playable_class": {
+        "name": "Chasseur"
+      }
+    },
+    "currencies": [
+      {
+        "name": "Pierre de vol",
+        "quantity": 800
+      },
+      {
+        "name": "Jeton du tisse-temps",
+        "quantity": 1200
+      },
+      {
+        "name": "Pièce en bronze de dragon",
+        "quantity": 5000
+      }
+    ]
+  }
+]
