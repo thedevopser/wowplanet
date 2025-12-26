@@ -295,9 +295,9 @@ final class CurrencyController extends AbstractController
                 continue;
             }
 
-            if ($currencyInfo === null) {
+            if ($currencyInfo === null && isset($specificCurrency['isAccountTransferable'])) {
                 $currencyInfo = [
-                    'isAccountTransferable' => $specificCurrency['isAccountTransferable'] ?? null,
+                    'isAccountTransferable' => $specificCurrency['isAccountTransferable'],
                     'transferPercentage' => $specificCurrency['transferPercentage'] ?? null,
                     'isAccountWide' => $specificCurrency['isAccountWide'] ?? null,
                 ];
