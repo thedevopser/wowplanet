@@ -1,79 +1,65 @@
-[
-  {
-    "character": {
+{
+  "characters": [
+    {
+      "lastUpdate": 1766745355,
       "name": "Prøtactinium",
-      "realm": {
-        "name": "Dalaran",
-        "slug": "dalaran"
-      },
-      "level": 80,
-      "playable_class": {
-        "name": "Chevalier de la mort"
-      }
+      "faction": "Alliance",
+      "currencies": [
+        {
+          "quantity": 1500,
+          "name": "Pierre de vol",
+          "id": 2003
+        },
+        {
+          "quantity": 523,
+          "name": "Jeton du tisse-temps",
+          "id": 1166
+        },
+        {
+          "quantity": 35000,
+          "name": "Anima du réservoir",
+          "id": 1813
+        }
+      ]
     },
-    "currencies": [
-      {
-        "name": "Pierre de vol",
-        "quantity": 1500
-      },
-      {
-        "name": "Jeton du tisse-temps",
-        "quantity": 523
-      },
-      {
-        "name": "Anima du réservoir",
-        "quantity": 35000
-      }
-    ]
-  },
-  {
-    "character": {
+    {
+      "lastUpdate": 1766744744,
       "name": "Magetest",
-      "realm": {
-        "name": "Dalaran",
-        "slug": "dalaran"
-      },
-      "level": 70,
-      "playable_class": {
-        "name": "Mage"
-      }
+      "faction": "Alliance",
+      "currencies": [
+        {
+          "quantity": 2500,
+          "name": "Pierre de vol",
+          "id": 2003
+        },
+        {
+          "quantity": 12000,
+          "name": "Anima du réservoir",
+          "id": 1813
+        }
+      ]
     },
-    "currencies": [
-      {
-        "name": "Pierre de vol",
-        "quantity": 2500
-      },
-      {
-        "name": "Anima du réservoir",
-        "quantity": 12000
-      }
-    ]
-  },
-  {
-    "character": {
+    {
+      "lastUpdate": 1766743000,
       "name": "Hunteralt",
-      "realm": {
-        "name": "Hyjal",
-        "slug": "hyjal"
-      },
-      "level": 80,
-      "playable_class": {
-        "name": "Chasseur"
-      }
-    },
-    "currencies": [
-      {
-        "name": "Pierre de vol",
-        "quantity": 800
-      },
-      {
-        "name": "Jeton du tisse-temps",
-        "quantity": 1200
-      },
-      {
-        "name": "Pièce en bronze de dragon",
-        "quantity": 5000
-      }
-    ]
-  }
-]
+      "faction": "Horde",
+      "currencies": [
+        {
+          "quantity": 800,
+          "name": "Pierre de vol",
+          "id": 2003
+        },
+        {
+          "quantity": 1200,
+          "name": "Jeton du tisse-temps",
+          "id": 1166
+        },
+        {
+          "quantity": 5000,
+          "name": "Pièce en bronze de dragon",
+          "id": 2003
+        }
+      ]
+    }
+  ]
+}

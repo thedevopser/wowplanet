@@ -57,20 +57,19 @@
                     <p class="text-sm mb-3" style="color: var(--text-secondary);">
                         Format attendu du fichier JSON :
                     </p>
-                    <pre class="text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-x-auto"><code>[
-  {
-    "character": {
+                    <pre class="text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-x-auto"><code>{
+  "characters": [
+    {
       "name": "Prøtactinium",
-      "realm": { "name": "Dalaran", "slug": "dalaran" },
-      "level": 80,
-      "playable_class": { "name": "Chevalier de la mort" }
-    },
-    "currencies": [
-      { "name": "Pierre de vol", "quantity": 1500 },
-      { "name": "Jeton du tisse-temps", "quantity": 523 }
-    ]
-  }
-]</code></pre>
+      "faction": "Alliance",
+      "lastUpdate": 1766745355,
+      "currencies": [
+        { "name": "Pierre de vol", "quantity": 1500 },
+        { "name": "Deniers", "quantity": 2625 }
+      ]
+    }
+  ]
+}</code></pre>
                 </div>
             </div>
         {% else %}

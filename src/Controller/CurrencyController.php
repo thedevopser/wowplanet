@@ -81,8 +81,14 @@ final class CurrencyController extends AbstractController
             return $this->redirectToRoute('app_currency_search');
         }
 
+        $characters = $currencyData['characters'] ?? $currencyData;
+        if (!is_array($characters)) {
+            $this->addFlash('error', 'Le fichier JSON ne contient pas de données de personnages.');
+            return $this->redirectToRoute('app_currency_search');
+        }
+
         $session = $request->getSession();
-        $session->set('currency_data', $currencyData);
+        $session->set('currency_data', $characters);
 
         $this->logger->info('Currency data uploaded', [
             'characters_count' => count($currencyData),
@@ -227,8 +233,8 @@ final class CurrencyController extends AbstractController
         $totalCharacters = count($currencyData);
 
         foreach ($currencyData as $characterData) {
-            $character = $characterData['character'] ?? null;
-            if (!is_array($character)) {
+            $characterName = $characterData['name'] ?? null;
+            if (!is_string($characterName)) {
                 continue;
             }
 
@@ -260,7 +266,11 @@ final class CurrencyController extends AbstractController
             }
 
             $results[] = [
-                'character' => $character,
+                'character' => [
+                    'name' => $characterName,
+                    'faction' => $characterData['faction'] ?? 'Unknown',
+                    'lastUpdate' => $characterData['lastUpdate'] ?? 0,
+                ],
                 'currency' => $specificCurrency,
                 'quantity' => $quantity,
             ];

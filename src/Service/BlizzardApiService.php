@@ -249,7 +249,7 @@ final readonly class BlizzardApiService
             $item->expiresAfter(self::CACHE_TTL_CURRENCY);
 
             $url = sprintf(
-                self::API_BASE_URL . '/profile/wow/character/%s/%s/currencies?namespace=profile-%s&locale=%s',
+                self::API_BASE_URL . '/profile/wow/character/%s/%s?namespace=profile-%s&locale=%s',
                 $this->region,
                 $realmSlug,
                 rawurlencode($characterNameLower),
@@ -257,9 +257,10 @@ final readonly class BlizzardApiService
                 $this->locale
             );
 
-            $this->logger->info('Fetching character currencies from Blizzard API', [
+            $this->logger->info('Fetching character profile for currencies from Blizzard API', [
                 'realm' => $realmSlug,
                 'character' => $characterNameLower,
+                'url' => $url,
             ]);
 
             $response = $this->httpClient->request('GET', $url, [
@@ -271,7 +272,7 @@ final readonly class BlizzardApiService
             $statusCode = $response->getStatusCode();
 
             if ($statusCode !== 200) {
-                $this->logger->warning('Failed to fetch character currencies', [
+                $this->logger->warning('Failed to fetch character profile for currencies', [
                     'realm' => $realmSlug,
                     'character' => $characterNameLower,
                     'status_code' => $statusCode,
@@ -281,12 +282,11 @@ final readonly class BlizzardApiService
             }
 
             $data = $response->toArray(false);
-            $currenciesData = $data['currencies'] ?? [];
 
-            $this->logger->debug('Character currencies fetched', [
+            $this->logger->debug('Character profile fetched, checking for currencies', [
                 'realm' => $realmSlug,
                 'character' => $characterNameLower,
-                'currencies_count' => is_array($currenciesData) ? count($currenciesData) : 0,
+                'keys' => array_keys($data),
             ]);
 
             return $data;
