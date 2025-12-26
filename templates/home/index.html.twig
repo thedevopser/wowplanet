@@ -15,7 +15,7 @@
 				Vos outils pour World of Warcraft
 			</p>
 			<p class="text-lg max-w-2xl mx-auto" style="color: var(--text-tertiary);">
-				Suivez vos réputations, analysez vos personnages et optimisez votre progression dans Azeroth.
+				Suivez vos réputations et monnaies, analysez vos personnages et optimisez votre progression dans Azeroth.
 			</p>
 		</div>
 
@@ -33,12 +33,11 @@
 
 			<div class="flex-1">
 				{{ component('Card', {
-                icon: '📊',
-                title: 'Statistiques',
-                description: 'Analysez vos performances et comparez vos personnages.',
-                buttonText: 'Bientôt disponible',
-                disabled: true,
-                hover: false
+                icon: '💰',
+                title: 'Monnaies',
+                description: 'Trouvez quel personnage possède le plus de monnaie pour chaque type.',
+                buttonText: 'Explorer →',
+                buttonUrl: path('app_currency_search')
             }) }}
 			</div>
 
@@ -82,7 +81,7 @@
 						Sélection
 					</h3>
 					<p class="text-sm" style="color: var(--text-secondary);">
-						Choisissez les réputations que vous souhaitez analyser.
+						Choisissez les réputations ou monnaies que vous souhaitez analyser.
 					</p>
 				</div>
 
