@@ -28,21 +28,65 @@
 
         {% if not has_data %}
             <!-- Upload Form -->
-            <div class="card-glass rounded-2xl p-8 md:p-10 shadow-glow max-w-2xl mx-auto mb-8" data-controller="currency-upload">
-                <h2 class="text-2xl font-bold mb-4">Charger les données de monnaie</h2>
+            <div class="card-glass rounded-2xl p-8 md:p-10 shadow-glow max-w-2xl mx-auto mb-8" data-controller="currency-tabs currency-upload">
+                <h2 class="text-2xl font-bold mb-6">Charger les données de monnaie</h2>
+
                 <form action="{{ path('app_currency_upload') }}" method="POST" enctype="multipart/form-data" data-action="submit->currency-upload#submit" data-currency-upload-target="form">
-                    <div class="mb-6">
-                        <label for="currency_file" class="block text-sm font-medium mb-3" style="color: var(--text-secondary);">
-                            Fichier JSON des monnaies
-                        </label>
-                        <input
-                            type="file"
-                            name="currency_file"
-                            id="currency_file"
-                            accept=".json"
-                            required
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all text-base"
-                        >
+                    <!-- Token CSRF -->
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('currency_upload') }}" data-controller="csrf-protection">
+
+                    <!-- Navigation onglets -->
+                    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                        <button type="button"
+                                data-currency-tabs-target="fileTab"
+                                data-action="click->currency-tabs#showFileTab"
+                                class="flex-1 px-4 py-3 font-semibold rounded-t-lg transition-all tab-active">
+                            📁 Fichier
+                        </button>
+                        <button type="button"
+                                data-currency-tabs-target="pasteTab"
+                                data-action="click->currency-tabs#showPasteTab"
+                                class="flex-1 px-4 py-3 font-semibold rounded-t-lg transition-all tab-inactive">
+                            📋 Coller
+                        </button>
+                    </div>
+
+                    <!-- Onglet 1: Upload fichier -->
+                    <div data-currency-tabs-target="fileInput">
+                        <div class="mb-6">
+                            <label for="currency_file" class="block text-sm font-medium mb-3" style="color: var(--text-secondary);">
+                                Fichier JSON des monnaies
+                            </label>
+                            <input
+                                type="file"
+                                name="currency_file"
+                                id="currency_file"
+                                accept=".json"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all text-base"
+                            >
+                            <p class="text-xs mt-2" style="color: var(--text-secondary);">
+                                Format attendu : fichier .json avec header CT_BASE64_V1: (max 5 Mo)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Onglet 2: Coller -->
+                    <div class="hidden" data-currency-tabs-target="pasteInput">
+                        <div class="mb-6">
+                            <label for="currency_paste" class="block text-sm font-medium mb-3" style="color: var(--text-secondary);">
+                                Collez vos données
+                            </label>
+                            <textarea
+                                name="currency_paste"
+                                id="currency_paste"
+                                rows="8"
+                                placeholder="CT_BASE64_V1:eyJjaGFyYWN0ZXJzIjpbey..."
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all font-mono text-sm"
+                            ></textarea>
+                            <p class="text-xs mt-2" style="color: var(--text-secondary);">
+                                Format attendu : CT_BASE64_V1:... (max 5 Mo après décodage)
+                            </p>
+                        </div>
                     </div>
 
                     <button
@@ -55,21 +99,8 @@
 
                 <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <p class="text-sm mb-3" style="color: var(--text-secondary);">
-                        Format attendu du fichier JSON :
+                        💡 Les données sont exportées depuis l'addon WoW CurrencyTracker au format Base64
                     </p>
-                    <pre class="text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-x-auto"><code>{
-  "characters": [
-    {
-      "name": "Prøtactinium",
-      "faction": "Alliance",
-      "lastUpdate": 1766745355,
-      "currencies": [
-        { "name": "Pierre de vol", "quantity": 1500 },
-        { "name": "Deniers", "quantity": 2625 }
-      ]
-    }
-  ]
-}</code></pre>
                 </div>
 
                 <!-- Animated Loader -->
@@ -155,6 +186,29 @@
 
     .animate-spin-reverse {
         animation: spin-reverse 1s linear infinite;
+    }
+
+    .tab-active {
+        background: linear-gradient(to right, rgb(59 130 246), rgb(168 85 247));
+        color: white;
+    }
+
+    .tab-inactive {
+        background-color: rgb(229 231 235);
+        color: rgb(55 65 81);
+    }
+
+    .dark .tab-inactive {
+        background-color: rgb(55 65 81);
+        color: rgb(209 213 219);
+    }
+
+    .tab-inactive:hover {
+        background-color: rgb(209 213 219);
+    }
+
+    .dark .tab-inactive:hover {
+        background-color: rgb(75 85 99);
     }
 </style>
 {% endblock %}

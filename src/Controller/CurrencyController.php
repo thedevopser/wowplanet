@@ -4,18 +4,31 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Exception\CurrencyDataTooLargeException;
+use App\Exception\CurrencyImportRateLimitException;
+use App\Exception\InvalidCurrencyDataException;
+use App\Exception\InvalidCurrencyDataHeaderException;
 use App\Service\BlizzardApiService;
+use App\Service\CurrencyDataDecoder;
+use App\Service\CurrencyDataValidator;
+use App\Service\CurrencyImportRateLimiter;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class CurrencyController extends AbstractController
 {
+    private const int MAX_FILE_SIZE_BYTES = 5242880;
+
     public function __construct(
         private readonly BlizzardApiService $apiService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly CurrencyDataDecoder $decoder,
+        private readonly CurrencyDataValidator $validator,
+        private readonly CurrencyImportRateLimiter $rateLimiter
     ) {
     }
 
@@ -52,84 +65,43 @@ final class CurrencyController extends AbstractController
     #[Route('/currency/upload', name: 'app_currency_upload', methods: ['POST'])]
     public function uploadCurrencyData(Request $request): Response
     {
-        $uploadedFile = $request->files->get('currency_file');
+        $session = $request->getSession();
 
-        if ($uploadedFile === null || !is_object($uploadedFile)) {
-            $this->addFlash('error', 'Veuillez sélectionner un fichier JSON.');
+        if (!$this->rateLimiter->canAttemptImport($session)) {
+            $this->addFlash('error', $this->buildRateLimitMessage($session));
             return $this->redirectToRoute('app_currency_search');
         }
 
-        if (!method_exists($uploadedFile, 'getClientOriginalExtension')) {
-            $this->addFlash('error', 'Fichier invalide.');
-            return $this->redirectToRoute('app_currency_search');
-        }
+        try {
+            $rawInput = $this->extractRawInput($request);
 
-        if ($uploadedFile->getClientOriginalExtension() !== 'json') {
-            $this->addFlash('error', 'Le fichier doit être au format JSON.');
-            return $this->redirectToRoute('app_currency_search');
-        }
+            if ($rawInput === null) {
+                $this->addFlash('error', 'Veuillez fournir un fichier ou coller vos données.');
+                return $this->redirectToRoute('app_currency_search');
+            }
 
-        if (!method_exists($uploadedFile, 'getPathname')) {
-            $this->addFlash('error', 'Fichier invalide.');
-            return $this->redirectToRoute('app_currency_search');
-        }
+            $decodedData = $this->decoder->decodeAndParse($rawInput);
 
-        $pathname = $uploadedFile->getPathname();
-        if (!is_string($pathname)) {
-            $this->addFlash('error', 'Impossible de lire le chemin du fichier.');
-            return $this->redirectToRoute('app_currency_search');
-        }
+            $characters = $this->validator->validateAndExtractCharacters($decodedData);
 
-        $jsonContent = file_get_contents($pathname);
-        if ($jsonContent === false) {
-            $this->addFlash('error', 'Impossible de lire le fichier.');
-            return $this->redirectToRoute('app_currency_search');
-        }
+            $this->rateLimiter->recordImportAttempt($session);
 
-        $cleanedJson = $this->cleanJsonControlCharacters($jsonContent);
-        $currencyData = json_decode($cleanedJson, true, 512, JSON_INVALID_UTF8_IGNORE);
-        $jsonError = json_last_error();
+            $session->set('currency_data', $characters);
 
-        if ($jsonError !== JSON_ERROR_NONE) {
-            $errorMsg = match ($jsonError) {
-                JSON_ERROR_DEPTH => 'Profondeur maximale atteinte',
-                JSON_ERROR_STATE_MISMATCH => 'JSON mal formé',
-                JSON_ERROR_CTRL_CHAR => 'Caractère de contrôle inattendu',
-                JSON_ERROR_SYNTAX => 'Erreur de syntaxe JSON',
-                JSON_ERROR_UTF8 => 'Caractères UTF-8 invalides',
-                default => 'Erreur JSON inconnue (code: ' . $jsonError . ')',
-            };
+            $source = $this->getInputSource($request);
 
-            $this->logger->error('JSON decode error', [
-                'error_code' => $jsonError,
-                'error_message' => $errorMsg,
-                'file_size' => strlen($jsonContent),
+            $this->logger->info('Currency data imported successfully', [
+                'source' => $source,
+                'characters_count' => count($characters),
             ]);
 
-            $this->addFlash('error', 'Erreur lors de la lecture du JSON : ' . $errorMsg);
+            $this->addFlash('success', 'Données de monnaie chargées avec succès !');
+
+            return $this->redirectToRoute('app_currency_search');
+        } catch (InvalidCurrencyDataHeaderException | InvalidCurrencyDataException | CurrencyDataTooLargeException $e) {
+            $this->addFlash('error', $e->getMessage());
             return $this->redirectToRoute('app_currency_search');
         }
-
-        if (!is_array($currencyData)) {
-            $this->addFlash('error', 'Le fichier JSON est invalide (pas un tableau).');
-            return $this->redirectToRoute('app_currency_search');
-        }
-
-        $characters = $currencyData['characters'] ?? $currencyData;
-        if (!is_array($characters)) {
-            $this->addFlash('error', 'Le fichier JSON ne contient pas de données de personnages.');
-            return $this->redirectToRoute('app_currency_search');
-        }
-
-        $session = $request->getSession();
-        $session->set('currency_data', $characters);
-
-        $this->logger->info('Currency data uploaded', [
-            'characters_count' => count($currencyData),
-        ]);
-
-        $this->addFlash('success', 'Données de monnaie chargées avec succès !');
-        return $this->redirectToRoute('app_currency_search');
     }
 
     #[Route('/currency/process', name: 'app_currency_process', methods: ['POST'])]
@@ -341,13 +313,73 @@ final class CurrencyController extends AbstractController
         ];
     }
 
-    private function cleanJsonControlCharacters(string $json): string
+    private function extractRawInput(Request $request): ?string
     {
-        $json = preg_replace('/"description":\s*"[^"]*(?:\\.[^"]*)*",?\s*/s', '', $json) ?? $json;
+        $pasteInput = $request->request->get('currency_paste');
 
-        $json = preg_replace('/,(\s*[}\]])/', '$1', $json) ?? $json;
+        if (is_string($pasteInput) && trim($pasteInput) !== '') {
+            return trim($pasteInput);
+        }
 
-        return $json;
+        $uploadedFile = $request->files->get('currency_file');
+
+        if ($uploadedFile === null) {
+            return null;
+        }
+
+        return $this->readUploadedFile($uploadedFile);
+    }
+
+    private function readUploadedFile(mixed $file): ?string
+    {
+        if (!$file instanceof UploadedFile) {
+            return null;
+        }
+
+        $fileSize = $file->getSize();
+
+        if ($fileSize === false || $fileSize > self::MAX_FILE_SIZE_BYTES) {
+            throw CurrencyDataTooLargeException::fromSize(
+                $fileSize === false ? 0 : $fileSize,
+                self::MAX_FILE_SIZE_BYTES
+            );
+        }
+
+        $pathname = $file->getPathname();
+
+        $content = file_get_contents($pathname);
+
+        if ($content === false) {
+            throw InvalidCurrencyDataException::invalidJsonStructure('Impossible de lire le fichier');
+        }
+
+        return $content;
+    }
+
+    private function getInputSource(Request $request): string
+    {
+        $pasteInput = $request->request->get('currency_paste');
+
+        if (is_string($pasteInput) && trim($pasteInput) !== '') {
+            return 'paste';
+        }
+
+        return 'file';
+    }
+
+    private function buildRateLimitMessage(mixed $session): string
+    {
+        if (!$session instanceof \Symfony\Component\HttpFoundation\Session\SessionInterface) {
+            return 'Limite d\'importation atteinte. Veuillez réessayer plus tard.';
+        }
+
+        $timeUntilReset = $this->rateLimiter->getTimeUntilReset($session);
+        $minutes = (int) ceil($timeUntilReset / 60);
+
+        return sprintf(
+            'Limite d\'importation atteinte (10 par heure). Réessayez dans %d minute(s).',
+            max(1, $minutes)
+        );
     }
 
     /**
