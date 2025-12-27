@@ -1,5 +1,75 @@
 @import "tailwindcss";
 
+@theme {
+    --color-blue: #3b82f6;
+    --color-purple: #a855f7;
+    --color-slate-950: #020617;
+    --color-slate-900: #0f172a;
+    --color-slate-800: #1e293b;
+    --color-slate-700: #334155;
+    --color-slate-600: #475569;
+    --color-slate-400: #94a3b8;
+    --color-slate-300: #cbd5e1;
+    --color-slate-100: #f1f5f9;
+    --color-gray-900: #111827;
+    --color-gray-700: #374151;
+    --color-gray-600: #4b5563;
+    --color-gray-400: #9ca3af;
+    --color-gray-200: #e5e7eb;
+    --color-gray-100: #f3f4f6;
+}
+
+:root {
+    --bg-gradient: linear-gradient(to bottom right, var(--color-gray-200), var(--color-gray-100), var(--color-gray-200));
+    --card-bg: rgba(243, 244, 246, 0.7);
+    --card-border: rgba(156, 163, 175, 0.5);
+    --text-primary: var(--color-gray-900);
+    --text-secondary: var(--color-gray-600);
+    --text-tertiary: var(--color-gray-700);
+    --border-color: rgba(156, 163, 175, 0.5);
+    --input-bg: white;
+    --modal-bg: var(--color-gray-100);
+    --modal-border: var(--color-gray-400);
+}
+
+.dark {
+    --bg-gradient: linear-gradient(to bottom right, var(--color-slate-950), var(--color-slate-900), black);
+    --card-bg: rgba(30, 41, 59, 0.5);
+    --card-border: rgba(51, 65, 85, 0.6);
+    --text-primary: var(--color-slate-100);
+    --text-secondary: var(--color-slate-400);
+    --text-tertiary: var(--color-slate-300);
+    --border-color: rgba(51, 65, 85, 0.6);
+    --input-bg: rgba(30, 41, 59, 0.8);
+    --modal-bg: var(--color-slate-800);
+    --modal-border: var(--color-slate-600);
+}
+
 body {
-    background-color: skyblue;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.card-glass {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-gradient {
+    background: linear-gradient(to right, var(--color-blue), var(--color-purple));
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(to right, #2563eb, #9333ea);
+    transform: translateY(-1px);
+}
+
+.btn-gradient:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }

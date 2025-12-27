@@ -1,0 +1,214 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résultats - WowPlanet{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-linear-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                ⚔️ WoW Reputation Tracker
+            </h1>
+            <p class="text-lg" style="color: var(--text-secondary);">
+                Trouvez quel personnage a la meilleure réputation
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Résultats pour : {{ faction }}</h2>
+                <a href="{{ path('app_reputation_search') }}" class="px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors text-sm font-medium">
+                    ← Nouvelle recherche
+                </a>
+            </div>
+        </div>
+
+        {% if results.error is defined %}
+            <div class="card-glass rounded-xl p-6 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                <p class="font-semibold">❌ Erreur</p>
+                <p class="mt-2">{{ results.error }}</p>
+            </div>
+        {% elseif results.characters is empty %}
+            <div class="card-glass rounded-xl p-8 text-center">
+                <p class="text-xl font-semibold mb-2">❌ Aucun personnage ne possède cette réputation</p>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Analysé {{ results.total_characters }} personnages
+                </p>
+            </div>
+        {% else %}
+            <p class="mb-6 text-sm" style="color: var(--text-secondary);">
+                ✓ Analysé {{ results.total_characters }} personnages - {{ results.characters|length }} résultats trouvés
+            </p>
+
+            {% if results.characters|length >= 3 %}
+                <div class="mb-16">
+                    <h3 class="text-3xl font-bold text-center mb-12">
+                        <span class="bg-linear-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">Meilleurs Personnages</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
+                        {% set top3 = results.characters|slice(0, 3) %}
+                        {% for r in top3 %}
+                            <div class="card-glass rounded-2xl p-6 text-center border-none shadow-lg flex flex-col justify-between h-full hover:shadow-xl transition-all group">
+                                <div class="mb-4">
+                                    <h4 class="text-3xl font-black mb-1 truncate text-white">
+                                        {{ r.character.name }}
+                                    </h4>
+                                    <p class="text-xs opacity-60 font-medium" style="color: var(--text-secondary);">
+                                        {{ r.character.realm.name }} - {{ r.character.playable_class.name }}
+                                    </p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    {% if r.reputation.standing.value is defined and r.reputation.standing.max is defined and r.reputation.standing.max > 0 %}
+                                        {% set percent = (r.reputation.standing.value / r.reputation.standing.max * 100)|round %}
+                                        <div class="pt-2">
+                                            <div class="text-[10px] mb-1.5 font-bold uppercase tracking-widest text-center opacity-70">
+                                                Niveau <span class="standing-text-{{ r.reputation.standing.name|lower|replace({' ': '-', 'é': 'e'}) }}">{{ r.reputation.standing.name }}</span>
+                                            </div>
+
+                                            <div class="relative w-full h-12 rounded-xl overflow-hidden bg-white/10 flex items-center shadow-inner">
+                                                <div class="absolute inset-y-0 left-0 standing-{{ r.reputation.standing.name|lower|replace({' ': '-', 'é': 'e'}) }} transition-all duration-1000 shadow-[offset-0_0_15px_rgba(0,0,0,0.3)]" style="width: {{ percent }}%"></div>
+                                                <div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                                                    <span class="text-[10px] font-black text-white/40">0</span>
+                                                    <span class="text-lg font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{{ percent }}%</span>
+                                                    <span class="text-[10px] font-black text-white/40">100</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="relative w-full h-10 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
+                                            <div class="absolute inset-y-0 left-0 standing-{{ r.reputation.standing.name|lower|replace({' ': '-', 'é': 'e'}) }} transition-all duration-1000 opacity-30" style="width: 100%"></div>
+                                            <span class="relative z-10 text-xs font-bold standing-text-{{ r.reputation.standing.name|lower|replace({' ': '-', 'é': 'e'}) }}">
+                                                {{ r.reputation.standing.name }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="mb-8 flex items-center justify-between">
+                <h3 class="text-2xl font-bold flex items-center gap-3" style="color: var(--text-primary);">
+                    <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                    Classement Complet
+                </h3>
+                <div class="text-xs font-semibold opacity-40 uppercase tracking-widest">
+                    <span data-results-pagination-target="pageInfo"></span>
+                </div>
+            </div>
+
+            <div data-controller="results-pagination" data-results-pagination-per-page-value="12">
+                <!-- Grid Layout -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-12">
+                    {% for r in results.characters %}
+                        <twig:CharacterCard :result="r" :index="loop.index" />
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% set totalPages = (results.characters|length / 12)|round(0, 'ceil') %}
+                {% if totalPages > 1 %}
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <!-- Previous Button -->
+                        <button
+                            data-results-pagination-target="prevButton"
+                            data-action="click->results-pagination#previousPage"
+                            class="px-4 py-2 rounded-lg card-glass hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        >
+                            ← Précédent
+                        </button>
+
+                        <!-- Page Numbers -->
+                        <div class="flex gap-1.5 flex-wrap justify-center">
+                            {% for page in 1..totalPages %}
+                                {% if page <= 3 or page > totalPages - 2 or (totalPages > 7 and page >= (totalPages / 2)|round - 1 and page <= (totalPages / 2)|round + 1) %}
+                                    <button
+                                        data-results-pagination-target="page"
+                                        data-page="{{ page }}"
+                                        data-action="click->results-pagination#goToPage"
+                                        class="w-9 h-9 rounded-lg text-sm font-bold transition-all {% if page == 1 %}bg-blue-600 text-white shadow-lg shadow-blue-500/20{% else %}bg-white/5 hover:bg-white/10 text-white/50 hover:text-white{% endif %}"
+                                    >
+                                        {{ page }}
+                                    </button>
+                                {% elseif (page == 4 and totalPages > 7) or (page == totalPages - 2 and totalPages > 7) %}
+                                    <span class="w-9 h-9 flex items-center justify-center opacity-30">...</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Next Button -->
+                        <button
+                            data-results-pagination-target="nextButton"
+                            data-action="click->results-pagination#nextPage"
+                            class="px-4 py-2 rounded-lg card-glass hover:shadow-glow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        >
+                            Suivant →
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .standing-exalté, .standing-exalte {
+        background: #ffd700 !important;
+        background: linear-gradient(90deg, #b8860b 0%, #ffd700 50%, #b8860b 100%) !important;
+        color: #000 !important;
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5) !important;
+    }
+    .standing-révéré, .standing-revere {
+        background: #b19cd9 !important;
+        background: linear-gradient(90deg, #6a5acd 0%, #b19cd9 100%) !important;
+    }
+    .standing-honoré, .standing-honore {
+        background: #90ee90 !important;
+        background: linear-gradient(90deg, #2e8b57 0%, #90ee90 100%) !important;
+    }
+    .standing-amical {
+        background: #87ceeb !important;
+        background: linear-gradient(90deg, #4682b4 0%, #87ceeb 100%) !important;
+    }
+    .standing-neutre {
+        background: #ffa500 !important;
+        background: linear-gradient(90deg, #d2691e 0%, #ffa500 100%) !important;
+    }
+    .standing-inamical {
+        background: #ff8c00 !important;
+        background: linear-gradient(90deg, #8b4513 0%, #ff8c00 100%) !important;
+    }
+    .standing-hostile {
+        background: #ff4500 !important;
+        background: linear-gradient(90deg, #8b0000 0%, #ff4500 100%) !important;
+    }
+    .standing-haï, .standing-hai {
+        background: #dc143c !important;
+        background: linear-gradient(90deg, #800000 0%, #dc143c 100%) !important;
+    }
+
+    .standing-text-exalté, .standing-text-exalte { color: #ffd700; }
+    .standing-text-révéré, .standing-text-revere { color: #b19cd9; }
+    .standing-text-honoré, .standing-text-honore { color: #90ee90; }
+    .standing-text-amical { color: #87ceeb; }
+    .standing-text-neutre { color: #ffa500; }
+    .standing-text-inamical { color: #ff8c00; }
+    .standing-text-hostile { color: #ff4500; }
+    .standing-text-haï, .standing-text-hai { color: #dc143c; }
+</style>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - WowPlanet{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-md mx-auto">
+        <div class="p-8 rounded-xl border card-glass">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2" style="color: var(--text-primary);">Connexion</h1>
+                <p style="color: var(--text-secondary);">Accédez à l'administration de WowPlanet</p>
+            </div>
+
+            {% if error %}
+                <div class="p-4 rounded-lg mb-6 alert-danger" style="background-color: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: rgb(220, 38, 38);">
+                    <strong>Erreur :</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ path('app_login') }}">
+                <div class="mb-6">
+                    <label for="username" class="block mb-2 font-medium" style="color: var(--text-primary);">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        id="username"
+                        name="_username"
+                        value="{{ last_username }}"
+                        required
+                        autofocus
+                        class="w-full px-4 py-3 rounded-lg border card-glass"
+                        style="border-color: var(--border-color); color: var(--text-primary);"
+                        placeholder="admin@wowplanet.com"
+                    >
+                </div>
+
+                <div class="mb-6">
+                    <label for="password" class="block mb-2 font-medium" style="color: var(--text-primary);">
+                        Mot de passe
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="_password"
+                        required
+                        class="w-full px-4 py-3 rounded-lg border card-glass"
+                        style="border-color: var(--border-color); color: var(--text-primary);"
+                        placeholder="••••••••"
+                    >
+                </div>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <button
+                    type="submit"
+                    class="w-full px-6 py-3 rounded-lg font-medium btn-gradient text-white"
+                >
+                    Se connecter
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="{{ path('app_home') }}" class="hover:opacity-70 transition-opacity" style="color: var(--text-secondary);">
+                    ← Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

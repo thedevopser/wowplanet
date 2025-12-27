@@ -1,9 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}WowPlanet - World of Warcraft Tools{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚔️</text></svg>">
+
+        <script>
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        </script>
+
         {% block stylesheets %}
         {% endblock %}
 
@@ -11,7 +21,25 @@
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
-    <body>
-        {% block body %}{% endblock %}
+    <body class="min-h-screen">
+        <div data-controller="theme" class="flex flex-col min-h-screen">
+            {% include 'components/_header.html.twig' %}
+
+            <main class="flex-1">
+                {% for label, messages in app.flashes %}
+                    <div class="container mx-auto px-4 pt-4">
+                        {% for message in messages %}
+                            <div class="p-4 rounded-lg mb-4 {% if label == 'success' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{% elseif label == 'error' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </main>
+
+            {% include 'components/_footer.html.twig' %}
+        </div>
     </body>
 </html>
