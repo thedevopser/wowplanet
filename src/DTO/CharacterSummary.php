@@ -23,7 +23,9 @@ final readonly class CharacterSummary
         $realmName = is_array($realm) ? (is_string($realm['name'] ?? null) ? $realm['name'] : 'Inconnu') : 'Inconnu';
 
         $faction = $characterData['faction'] ?? null;
-        $factionName = is_array($faction) ? (is_string($faction['name'] ?? null) ? $faction['name'] : 'Inconnu') : 'Inconnu';
+        $factionName = is_array($faction)
+            ? (is_string($faction['name'] ?? null) ? $faction['name'] : 'Inconnu')
+            : 'Inconnu';
 
         $name = $characterData['name'] ?? null;
         $level = $characterData['level'] ?? null;
