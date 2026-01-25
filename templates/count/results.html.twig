@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Resultats - Compteur de Personnages - WowPlanet{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-linear-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Compteur de Personnages
+            </h1>
+            <p class="text-lg" style="color: var(--text-secondary);">
+                Repartition de vos personnages par classe
+            </p>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold" style="color: var(--text-primary);">Vos personnages</h2>
+                <a href="{{ path('app_count_search') }}" class="px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors text-sm font-medium">
+                    &#8592; Nouvelle analyse
+                </a>
+            </div>
+        </div>
+
+        {% if results.error is defined %}
+            <div class="card-glass rounded-xl p-6 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                <p class="font-semibold">Erreur</p>
+                <p class="mt-2">{{ results.error }}</p>
+            </div>
+        {% elseif results.classes is empty %}
+            <div class="card-glass rounded-xl p-8 text-center">
+                <p class="text-xl font-semibold mb-2">Aucun personnage trouve</p>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Verifiez vos autorisations Battle.net
+                </p>
+            </div>
+        {% else %}
+            <p class="mb-6 text-sm" style="color: var(--text-secondary);">
+                Total : {{ results.total_characters }} personnages repartis en {{ results.classes|length }} classes
+            </p>
+
+            <!-- Top 3 Classes -->
+            {% if results.classes|length >= 3 %}
+                <div class="mb-16">
+                    <h3 class="text-3xl font-bold text-center mb-12">
+                        <span class="bg-linear-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">Vos Classes Favorites</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto px-4">
+                        {% set top3 = results.classes|slice(0, 3) %}
+                        {% for classData in top3 %}
+                            {% set classSlug = classData.name|lower|replace({' ': '-', 'é': 'e', 'è': 'e', 'ê': 'e', 'ô': 'o', 'û': 'u', 'î': 'i', 'ï': 'i', 'à': 'a', 'â': 'a'}) %}
+                            <div class="card-glass rounded-2xl p-6 text-center border-none shadow-lg flex flex-col justify-between h-full hover:shadow-xl transition-all group class-card-{{ classSlug }}">
+                                <div class="mb-4">
+                                    <div class="text-6xl mb-3">
+                                        {{ loop.index == 1 ? '&#127942;' : (loop.index == 2 ? '&#129352;' : '&#129353;') }}
+                                    </div>
+                                    <h4 class="text-2xl font-black mb-1 class-text-{{ classSlug }}">
+                                        {{ classData.name }}
+                                    </h4>
+                                    <p class="text-4xl font-bold text-white">
+                                        {{ classData.count }}
+                                    </p>
+                                    <p class="text-xs opacity-60 font-medium" style="color: var(--text-secondary);">
+                                        personnage{{ classData.count > 1 ? 's' : '' }}
+                                    </p>
+                                </div>
+
+                                <div class="space-y-2">
+                                    {% set percent = (classData.count / results.total_characters * 100)|round %}
+                                    <div class="pt-2">
+                                        <div class="relative w-full h-3 rounded-full overflow-hidden bg-white/10">
+                                            <div class="absolute inset-y-0 left-0 class-bg-{{ classSlug }} transition-all duration-1000" style="width: {{ percent }}%"></div>
+                                        </div>
+                                        <p class="text-xs mt-1 opacity-60">{{ percent }}% de vos personnages</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- All Classes Grid -->
+            <div class="mb-8 flex items-center justify-between">
+                <h3 class="text-2xl font-bold flex items-center gap-3" style="color: var(--text-primary);">
+                    <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                    Toutes les Classes
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-12">
+                {% for classData in results.classes %}
+                    <twig:ClassCountCard :classData="classData" :totalCharacters="results.total_characters" :index="loop.index" />
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* WoW Class Colors */
+    .class-text-warrior, .class-text-guerrier { color: #C79C6E; }
+    .class-text-paladin { color: #F58CBA; }
+    .class-text-hunter, .class-text-chasseur { color: #ABD473; }
+    .class-text-rogue, .class-text-voleur { color: #FFF569; }
+    .class-text-priest, .class-text-pretre { color: #FFFFFF; }
+    .class-text-death-knight, .class-text-chevalier-de-la-mort { color: #C41F3B; }
+    .class-text-shaman, .class-text-chaman { color: #0070DE; }
+    .class-text-mage { color: #69CCF0; }
+    .class-text-warlock, .class-text-demoniste { color: #9482C9; }
+    .class-text-monk, .class-text-moine { color: #00FF96; }
+    .class-text-druid, .class-text-druide { color: #FF7D0A; }
+    .class-text-demon-hunter, .class-text-chasseur-de-demons { color: #A330C9; }
+    .class-text-evoker, .class-text-evocateur { color: #33937F; }
+
+    .class-bg-warrior, .class-bg-guerrier { background: #C79C6E; }
+    .class-bg-paladin { background: #F58CBA; }
+    .class-bg-hunter, .class-bg-chasseur { background: #ABD473; }
+    .class-bg-rogue, .class-bg-voleur { background: #FFF569; }
+    .class-bg-priest, .class-bg-pretre { background: #FFFFFF; }
+    .class-bg-death-knight, .class-bg-chevalier-de-la-mort { background: #C41F3B; }
+    .class-bg-shaman, .class-bg-chaman { background: #0070DE; }
+    .class-bg-mage { background: #69CCF0; }
+    .class-bg-warlock, .class-bg-demoniste { background: #9482C9; }
+    .class-bg-monk, .class-bg-moine { background: #00FF96; }
+    .class-bg-druid, .class-bg-druide { background: #FF7D0A; }
+    .class-bg-demon-hunter, .class-bg-chasseur-de-demons { background: #A330C9; }
+    .class-bg-evoker, .class-bg-evocateur { background: #33937F; }
+
+    .class-card-warrior, .class-card-guerrier { border-left: 4px solid #C79C6E; }
+    .class-card-paladin { border-left: 4px solid #F58CBA; }
+    .class-card-hunter, .class-card-chasseur { border-left: 4px solid #ABD473; }
+    .class-card-rogue, .class-card-voleur { border-left: 4px solid #FFF569; }
+    .class-card-priest, .class-card-pretre { border-left: 4px solid #FFFFFF; }
+    .class-card-death-knight, .class-card-chevalier-de-la-mort { border-left: 4px solid #C41F3B; }
+    .class-card-shaman, .class-card-chaman { border-left: 4px solid #0070DE; }
+    .class-card-mage { border-left: 4px solid #69CCF0; }
+    .class-card-warlock, .class-card-demoniste { border-left: 4px solid #9482C9; }
+    .class-card-monk, .class-card-moine { border-left: 4px solid #00FF96; }
+    .class-card-druid, .class-card-druide { border-left: 4px solid #FF7D0A; }
+    .class-card-demon-hunter, .class-card-chasseur-de-demons { border-left: 4px solid #A330C9; }
+    .class-card-evoker, .class-card-evocateur { border-left: 4px solid #33937F; }
+</style>
+{% endblock %}

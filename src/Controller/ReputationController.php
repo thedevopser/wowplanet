@@ -28,6 +28,7 @@ final class ReputationController extends AbstractController
 
         if ($accessToken === null || $expiresAt <= time()) {
             $this->logger->warning('Reputation search attempted without valid token');
+            $session->set('oauth_redirect_after_login', 'app_reputation_search');
             $this->addFlash('warning', 'Vous devez vous authentifier avec Battle.net pour accéder aux réputations.');
             return $this->redirectToRoute('app_oauth_login');
         }

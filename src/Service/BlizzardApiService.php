@@ -9,7 +9,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final readonly class BlizzardApiService
+final readonly class BlizzardApiService implements BlizzardApiServiceInterface
 {
     private const string API_BASE_URL = 'https://%s.api.blizzard.com';
     private const int CACHE_TTL_PROFILE = 300; // 5 minutes for user profile
