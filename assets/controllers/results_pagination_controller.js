@@ -40,11 +40,11 @@ export default class extends Controller {
         this.pageTargets.forEach((button) => {
             const pageNum = parseInt(button.dataset.page);
             if (pageNum === this.currentPageValue) {
-                button.classList.add('bg-blue-500', 'text-white');
-                button.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                button.classList.add('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-500/30');
+                button.classList.remove('bg-white/5', 'text-white/60');
             } else {
-                button.classList.remove('bg-blue-500', 'text-white');
-                button.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                button.classList.remove('bg-blue-600', 'text-white', 'shadow-lg', 'shadow-blue-500/30');
+                button.classList.add('bg-white/5', 'text-white/60');
             }
         });
 

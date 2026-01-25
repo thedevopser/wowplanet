@@ -50,4 +50,13 @@ interface BlizzardApiServiceInterface
      * @param array<string, mixed> $currencyEntry
      */
     public function extractCurrencyQuantity(array $currencyEntry): int;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterProfile(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
 }

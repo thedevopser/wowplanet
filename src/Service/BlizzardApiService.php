@@ -15,6 +15,7 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
     private const int CACHE_TTL_PROFILE = 300; // 5 minutes for user profile
     private const int CACHE_TTL_REPUTATION = 600; // 10 minutes for reputations
     private const int CACHE_TTL_CURRENCY = 600; // 10 minutes for currencies
+    private const int CACHE_TTL_CHARACTER = 600; // 10 minutes for character details
 
     public function __construct(
         private HttpClientInterface $httpClient,
@@ -360,5 +361,66 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
         }
 
         return max(0, $quantity);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterProfile(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array {
+        $characterNameLower = strtolower($characterName);
+        $cacheKey = sprintf(
+            'blizzard_character_%s_%s',
+            $realmSlug,
+            $characterNameLower
+        );
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use (
+            $accessToken,
+            $realmSlug,
+            $characterNameLower
+        ): array {
+            $item->expiresAfter(self::CACHE_TTL_CHARACTER);
+
+            $url = sprintf(
+                self::API_BASE_URL . '/profile/wow/character/%s/%s?namespace=profile-%s&locale=%s',
+                $this->region,
+                $realmSlug,
+                rawurlencode($characterNameLower),
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->debug('Fetching character profile from Blizzard API', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch character profile', [
+                    'realm' => $realmSlug,
+                    'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            return $response->toArray(false);
+        });
+
+        return $cachedData;
     }
 }
