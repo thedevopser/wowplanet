@@ -30,8 +30,15 @@ final class BlizzardOAuthController extends AbstractController
         $isAuthenticated = $existingToken !== null && $expiresAt > time();
 
         if ($isAuthenticated) {
-            $this->logger->info('User already authenticated, redirecting to reputation page');
-            return $this->redirectToRoute('app_reputation_search');
+            $redirectRoute = $session->get('oauth_redirect_after_login', 'app_reputation_search');
+            $session->remove('oauth_redirect_after_login');
+
+            if (!is_string($redirectRoute)) {
+                $redirectRoute = 'app_reputation_search';
+            }
+
+            $this->logger->info('User already authenticated, redirecting', ['route' => $redirectRoute]);
+            return $this->redirectToRoute($redirectRoute);
         }
 
         $state = bin2hex(random_bytes(16));
@@ -75,13 +82,21 @@ final class BlizzardOAuthController extends AbstractController
         $session->set('blizzard_token_expires_at', $tokenData['expires_at']);
         $session->remove('oauth_state');
 
+        $redirectRoute = $session->get('oauth_redirect_after_login', 'app_reputation_search');
+        $session->remove('oauth_redirect_after_login');
+
+        if (!is_string($redirectRoute)) {
+            $redirectRoute = 'app_reputation_search';
+        }
+
         $this->logger->info('OAuth authentication successful', [
             'expires_at' => date('Y-m-d H:i:s', $tokenData['expires_at']),
+            'redirect_to' => $redirectRoute,
         ]);
 
-        $this->addFlash('success', 'Authentification réussie ! Vous pouvez maintenant rechercher vos réputations.');
+        $this->addFlash('success', 'Authentification réussie !');
 
-        return $this->redirectToRoute('app_reputation_search');
+        return $this->redirectToRoute($redirectRoute);
     }
 
     #[Route('/oauth/logout', name: 'app_oauth_logout', methods: ['GET'])]

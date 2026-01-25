@@ -1,4 +1,4 @@
-<div {{ attributes }} class="p-8 rounded-xl border card-glass transition-all duration-300 {{ hover ? 'hover:shadow-xl' : '' }} {{ disabled ? 'opacity-60' : '' }}">
+<div {{ attributes }} class="h-full flex flex-col p-8 rounded-xl border card-glass transition-all duration-300 {{ hover ? 'hover:shadow-xl' : '' }} {{ disabled ? 'opacity-60' : '' }}">
 	{% if icon %}
 		<div class="text-5xl mb-4">{{ icon }}</div>
 	{% endif %}
@@ -12,14 +12,16 @@
 	{% endif %}
 
 	{% if buttonText %}
-		{% if disabled %}
-			<span class="inline-block mt-6 px-6 py-3 rounded-lg font-medium card-glass" style="color: var(--text-tertiary);">
-				{{ buttonText }}
-			</span>
-		{% else %}
-			<a href="{{ buttonUrl ?? '#' }}" class="inline-block mt-6 px-6 py-3 rounded-lg font-medium btn-gradient text-white">
-				{{ buttonText }}
-			</a>
-		{% endif %}
+		<div class="mt-auto pt-6">
+			{% if disabled %}
+				<span class="inline-block px-6 py-3 rounded-lg font-medium card-glass" style="color: var(--text-tertiary);">
+					{{ buttonText }}
+				</span>
+			{% else %}
+				<a href="{{ buttonUrl ?? '#' }}" class="inline-block px-6 py-3 rounded-lg font-medium btn-gradient text-white">
+					{{ buttonText }}
+				</a>
+			{% endif %}
+		</div>
 	{% endif %}
 </div>

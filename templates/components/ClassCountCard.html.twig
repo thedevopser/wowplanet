@@ -1,0 +1,45 @@
+{% props classData, totalCharacters, index = null %}
+
+{% set classSlug = classData.name|lower|replace({' ': '-', 'é': 'e', 'è': 'e', 'ê': 'e', 'ô': 'o', 'û': 'u', 'î': 'i', 'ï': 'i', 'à': 'a', 'â': 'a'}) %}
+{% set percent = (classData.count / totalCharacters * 100)|round %}
+
+<div class="card-glass rounded-xl p-4 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm class-card-{{ classSlug }}"
+     {% if index %}data-results-pagination-target="item"{% endif %}>
+
+    <div class="flex items-center justify-between mb-3">
+        <div class="min-w-0 flex-1">
+            <h4 class="font-black text-lg leading-tight truncate class-text-{{ classSlug }}">
+                {{ classData.name }}
+            </h4>
+        </div>
+        <div class="flex-shrink-0 ml-3">
+            <span class="text-3xl font-black text-white">{{ classData.count }}</span>
+        </div>
+    </div>
+
+    <div class="mt-auto space-y-3">
+        <div class="pt-2">
+            <div class="relative w-full h-2 rounded-full overflow-hidden bg-white/10">
+                <div class="absolute inset-y-0 left-0 class-bg-{{ classSlug }} transition-all duration-700" style="width: {{ percent }}%"></div>
+            </div>
+            <p class="text-[10px] mt-1.5 opacity-60 text-center">{{ percent }}% de vos personnages</p>
+        </div>
+
+        {% if classData.characters|length > 0 %}
+            <details class="group">
+                <summary class="text-[10px] cursor-pointer opacity-60 hover:opacity-100 transition-opacity text-center list-none">
+                    <span class="group-open:hidden">Voir les {{ classData.count }} personnage{{ classData.count > 1 ? 's' : '' }} &#9660;</span>
+                    <span class="hidden group-open:inline">Masquer &#9650;</span>
+                </summary>
+                <div class="mt-2 pt-2 border-t border-white/10 space-y-1 max-h-32 overflow-y-auto">
+                    {% for char in classData.characters %}
+                        <div class="flex items-center justify-between text-[10px] opacity-70">
+                            <span class="truncate flex-1">{{ char.name }}</span>
+                            <span class="ml-2 text-white/40">{{ char.realm }} - Niv.{{ char.level }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </details>
+        {% endif %}
+    </div>
+</div>

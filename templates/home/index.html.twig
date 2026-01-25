@@ -19,38 +19,40 @@
 			</p>
 		</div>
 
-		<div class="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto mb-16">
+		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
 
-			<div class="flex-1">
-				{{ component('Card', {
-                icon: '⚔️',
-                title: 'Réputations',
-                description: 'Trouvez quel personnage possède le meilleur niveau de réputation pour chaque faction.',
-                buttonText: 'Explorer →',
-                buttonUrl: path('app_reputation_search')
-            }) }}
-			</div>
+			{{ component('Card', {
+				icon: '⚔️',
+				title: 'Réputations',
+				description: 'Trouvez quel personnage possède le meilleur niveau de réputation pour chaque faction.',
+				buttonText: 'Explorer →',
+				buttonUrl: path('app_reputation_search')
+			}) }}
 
-			<div class="flex-1">
-				{{ component('Card', {
-                icon: '💰',
-                title: 'Monnaies',
-                description: 'Trouvez quel personnage possède le plus de monnaie pour chaque type.',
-                buttonText: 'Explorer →',
-                buttonUrl: path('app_currency_search')
-            }) }}
-			</div>
+			{{ component('Card', {
+				icon: '💰',
+				title: 'Monnaies',
+				description: 'Trouvez quel personnage possède le plus de monnaie pour chaque type.',
+				buttonText: 'Explorer →',
+				buttonUrl: path('app_currency_search')
+			}) }}
 
-			<div class="flex-1">
-				{{ component('Card', {
-                icon: '🎯',
-                title: 'Objectifs',
-                description: 'Suivez votre progression vers vos objectifs en jeu.',
-                buttonText: 'Bientôt disponible',
-                disabled: true,
-                hover: false
-            }) }}
-			</div>
+			{{ component('Card', {
+				icon: '📊',
+				title: 'Compteur',
+				description: 'Comptez vos personnages par classe, toutes factions confondues.',
+				buttonText: 'Explorer →',
+				buttonUrl: path('app_count_search')
+			}) }}
+
+			{{ component('Card', {
+				icon: '🎯',
+				title: 'Objectifs',
+				description: 'Suivez votre progression vers vos objectifs en jeu.',
+				buttonText: 'Bientôt disponible',
+				disabled: true,
+				hover: false
+			}) }}
 
 		</div>
 
