@@ -1,0 +1,90 @@
+{% props character, index = null %}
+
+{% set realmSlug = character.realm.slug|default('') %}
+{% set charNameLower = character.name|default('')|lower %}
+{% set factionName = character.faction.name|default('Unknown') %}
+{% set factionType = character.faction.type|default('') %}
+{% set isHorde = factionName == 'Horde' or factionType == 'HORDE' %}
+{% set className = character.playable_class.name|default('Unknown') %}
+{% set classId = character.playable_class.id|default(0) %}
+{% set classSlug = className|lower|replace({' ': '-', 'é': 'e', 'è': 'e', 'ê': 'e', 'à': 'a', 'â': 'a', 'ô': 'o', 'î': 'i', 'û': 'u'}) %}
+
+{% set classIconSlugs = {
+    1: 'warrior',
+    2: 'paladin',
+    3: 'hunter',
+    4: 'rogue',
+    5: 'priest',
+    6: 'deathknight',
+    7: 'shaman',
+    8: 'mage',
+    9: 'warlock',
+    10: 'monk',
+    11: 'druid',
+    12: 'demonhunter',
+    13: 'evoker'
+} %}
+
+{% set classIconSlug = classIconSlugs[classId]|default('warrior') %}
+{% set classIconUrl = 'https://render.worldofwarcraft.com/eu/icons/56/classicon_' ~ classIconSlug ~ '.jpg' %}
+
+{% set guildName = null %}
+{% if character.guild is defined %}
+    {% if character.guild.name is defined %}
+        {% set guildName = character.guild.name %}
+    {% elseif character.guild is iterable and character.guild|length > 0 %}
+        {% set guildName = character.guild.name|default(null) %}
+    {% endif %}
+{% endif %}
+
+<a href="{{ path('app_character_detail', {realmSlug: realmSlug, characterName: charNameLower}) }}"
+   class="block no-underline"
+   {% if index %}data-results-pagination-target="item"{% endif %}>
+<div class="card-glass rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm cursor-pointer">
+
+    <div class="relative h-20 overflow-hidden class-header-{{ classSlug }}">
+        <div class="absolute inset-y-0 right-4 flex items-center">
+            <img src="{{ classIconUrl }}"
+                 alt="{{ className }}"
+                 class="w-16 h-16 opacity-30"
+                 loading="lazy"
+                 onerror="this.style.display='none';">
+        </div>
+        <div class="absolute bottom-2 left-3">
+            <span class="text-2xl font-black text-white/90 drop-shadow-lg">{{ character.name }}</span>
+        </div>
+    </div>
+
+    <div class="p-4 flex flex-col flex-1">
+        <p class="text-xs truncate opacity-70 uppercase tracking-wide mb-4" style="color: var(--text-secondary);">
+            {{ character.realm.name|default('Unknown Realm') }}
+        </p>
+
+        <div class="flex gap-2 mb-4 flex-wrap">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-linear-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border border-amber-500/20">
+                Niv. {{ character.level|default(1) }}
+            </span>
+            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold class-bg-{{ classSlug }} border border-white/10">
+                {{ className }}
+            </span>
+            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-white/10 {{ isHorde ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400' }}">
+                {{ factionName }}
+            </span>
+        </div>
+
+        <div class="mt-auto pt-3 border-t border-white/10">
+            {% if guildName %}
+                <p class="text-xs" style="color: var(--text-secondary);">
+                    <span class="opacity-50 mr-1">&lt;</span>
+                    <span class="font-semibold text-white/80">{{ guildName }}</span>
+                    <span class="opacity-50 ml-1">&gt;</span>
+                </p>
+            {% else %}
+                <p class="text-xs italic opacity-40" style="color: var(--text-tertiary);">
+                    Sans guilde
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</a>

@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cache: {{ key }} - WowPlanet Admin{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-5xl mx-auto">
+
+        <a href="{{ path('admin_cache_index') }}"
+           class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors text-sm font-medium"
+           style="color: var(--text-secondary);">
+            &larr; Retour au cache
+        </a>
+
+        <div class="card-glass rounded-xl border mb-6" style="border-color: var(--card-border);">
+            <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border-color);">
+                <h2 class="font-bold text-sm" style="color: var(--text-primary);">Detail de la cle</h2>
+                <form method="post" action="{{ path('admin_cache_delete_key') }}"
+                      onsubmit="return confirm('Supprimer cette cle ?');">
+                    <input type="hidden" name="key" value="{{ key }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_cache_key') }}">
+                    <button type="submit"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+
+            <div class="p-4 space-y-4">
+                <div>
+                    <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Cle</p>
+                    <p class="font-mono text-sm break-all" style="color: var(--text-primary);">{{ key }}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Type</p>
+                        <p class="text-sm font-mono" style="color: var(--text-primary);">{{ type }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">TTL</p>
+                        {% if ttl == -1 %}
+                            <p class="text-sm text-amber-500 font-medium">Persistant (pas d'expiration)</p>
+                        {% elseif ttl == -2 %}
+                            <p class="text-sm text-red-500 font-medium">Expire / Inexistant</p>
+                        {% else %}
+                            <p class="text-sm font-mono" style="color: var(--text-primary);">{{ ttl }}s ({{ (ttl / 60)|round(1) }} min)</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if rawValue is not null %}
+            <div class="card-glass rounded-xl border" style="border-color: var(--card-border);">
+                <div class="p-4 border-b" style="border-color: var(--border-color);">
+                    <h3 class="font-bold text-sm" style="color: var(--text-primary);">
+                        {{ decodedValue is not null ? 'Valeur decodee' : 'Valeur brute' }}
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <pre class="text-xs font-mono whitespace-pre-wrap break-all rounded-lg p-4 overflow-x-auto max-h-[600px] overflow-y-auto"
+                         style="background: var(--input-bg); color: var(--text-primary);">{{ decodedValue ?? rawValue }}</pre>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if rawValue is null and type != 'string' %}
+            <div class="card-glass rounded-xl border p-6 text-center" style="border-color: var(--card-border);">
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Le type "{{ type }}" ne peut pas etre affiche directement.
+                </p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

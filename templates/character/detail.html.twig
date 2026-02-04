@@ -1,0 +1,224 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ profile.name }} - WowPlanet{% endblock %}
+
+{% set classSlug = profile.className|lower|replace({' ': '-', "\u{00e9}": 'e', "\u{00e8}": 'e', "\u{00ea}": 'e', "\u{00e0}": 'a', "\u{00e2}": 'a', "\u{00f4}": 'o', "\u{00ee}": 'i', "\u{00fb}": 'u'}) %}
+{% set isHorde = profile.factionType == 'HORDE' %}
+
+{% set classIconSlugs = {
+    1: 'warrior',
+    2: 'paladin',
+    3: 'hunter',
+    4: 'rogue',
+    5: 'priest',
+    6: 'deathknight',
+    7: 'shaman',
+    8: 'mage',
+    9: 'warlock',
+    10: 'monk',
+    11: 'druid',
+    12: 'demonhunter',
+    13: 'evoker'
+} %}
+
+{% set classIconSlug = classIconSlugs[profile.classId]|default('warrior') %}
+{% set classIconUrl = 'https://render.worldofwarcraft.com/eu/icons/56/classicon_' ~ classIconSlug ~ '.jpg' %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-5xl mx-auto">
+
+        <a href="{{ path('app_characters_results') }}"
+           class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors text-sm font-medium"
+           style="color: var(--text-secondary);">
+            &larr; Retour aux personnages
+        </a>
+
+        <div class="card-glass rounded-2xl overflow-hidden mb-8">
+            <div class="relative overflow-hidden class-header-{{ classSlug }}" style="height: 120px;">
+                <div class="absolute inset-y-0 right-6 flex items-center">
+                    <img src="{{ classIconUrl }}"
+                         alt="{{ profile.className }}"
+                         style="width: 80px; height: 80px; opacity: 0.15;"
+                         loading="lazy"
+                         onerror="this.style.display='none';">
+                </div>
+
+                <div class="absolute inset-y-0 left-6 flex items-center" style="gap: 16px;">
+                    {% if media.avatarUrl %}
+                        <img src="{{ media.avatarUrl }}"
+                             alt="{{ profile.name }}"
+                             style="width: 84px; height: 84px; border-radius: 16px; border: 3px solid rgba(255,255,255,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.4); object-fit: cover; flex-shrink: 0;"
+                             loading="lazy"
+                             onerror="this.style.display='none';">
+                    {% endif %}
+                    <div>
+                        <h1 class="text-3xl font-black text-white drop-shadow-lg">{{ profile.name }}</h1>
+                        <p class="text-xs uppercase tracking-wider text-white/70">{{ profile.realmName }}</p>
+                        {% if profile.guildName %}
+                            <p style="font-size: 12px; margin-top: 2px; color: rgba(255,255,255,0.6);">
+                                &lt;<span class="font-semibold" style="color: rgba(255,255,255,0.85);">{{ profile.guildName }}</span>&gt;
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">
+                        Niv. {{ profile.level }}
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2);">
+                        iLvl {{ profile.equippedItemLevel }}
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold class-bg-{{ classSlug }}" style="border: 1px solid rgba(255,255,255,0.1);">
+                        {{ profile.className }}
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background: rgba(255,255,255,0.05); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1);">
+                        {{ profile.raceName }}
+                    </span>
+                    {% if profile.activeSpecializationName %}
+                        <span class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2);">
+                            {{ profile.activeSpecializationName }}
+                        </span>
+                    {% endif %}
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="border: 1px solid rgba(255,255,255,0.1); {{ isHorde ? 'background: rgba(239, 68, 68, 0.15); color: #f87171;' : 'background: rgba(59, 130, 246, 0.15); color: #60a5fa;' }}">
+                        {{ profile.factionName }}
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background: rgba(234, 179, 8, 0.15); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.2);">
+                        {{ profile.achievementPoints }} HF
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div data-controller="character-tabs">
+            <div class="flex border-b mb-6" style="border-color: var(--border-color);">
+                <button data-character-tabs-target="tab"
+                        data-action="click->character-tabs#switchTab"
+                        data-tab="quests"
+                        class="tab-active px-6 py-3 text-sm font-semibold transition-colors">
+                    Quetes
+                </button>
+            </div>
+
+            <div data-character-tabs-target="panel" data-tab="quests">
+                <div data-controller="quest-tabs">
+                    <div class="card-glass rounded-2xl overflow-hidden">
+                        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px;">
+                                {% for group in expansionGroups %}{% if group.hasQuests() %}
+                                    {% set percent = group.completionPercent() %}
+                                    <button data-quest-tabs-target="tab"
+                                            data-action="click->quest-tabs#switchTab"
+                                            data-tab="exp-{{ group.order }}"
+                                            class="quest-tab-inactive"
+                                            style="position: relative; padding: 10px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; transition: all 0.2s; cursor: pointer; border: none; text-align: left; overflow: hidden;">
+                                        <div style="position: relative; z-index: 1;">
+                                            <div style="margin-bottom: 2px;">{{ group.expansionName }}</div>
+                                            <div style="font-size: 10px; opacity: 0.7; font-weight: 500;">
+                                                {{ group.completedQuests }}/{{ group.totalQuests }}
+                                                <span style="margin-left: 4px; font-weight: 700; {{ percent == 100 ? 'color: #4ade80;' : '' }}">{{ percent }}%</span>
+                                            </div>
+                                        </div>
+                                        <div style="position: absolute; bottom: 0; left: 0; height: 3px; width: {{ percent }}%; {{ percent == 100 ? 'background: #4ade80;' : 'background: rgba(59, 130, 246, 0.5);' }} border-radius: 0 9999px 0 0; transition: width 0.3s;"></div>
+                                    </button>
+                                {% endif %}{% endfor %}
+                            </div>
+                        </div>
+
+                        {% for group in expansionGroups %}{% if group.hasQuests() %}
+                            <div data-quest-tabs-target="panel"
+                                 data-tab="exp-{{ group.order }}"
+                                 style="display: none;">
+                                <div style="padding: 20px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                                {{ group.expansionName }}
+                                            </h3>
+                                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                                {{ group.completedQuests }} / {{ group.totalQuests }} quetes completees
+                                            </p>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 120px; height: 6px; border-radius: 9999px; background: rgba(255,255,255,0.1); overflow: hidden;">
+                                                {% set percent = group.completionPercent() %}
+                                                <div style="height: 100%; border-radius: 9999px; transition: all 0.5s ease; width: {{ percent }}%; {{ percent == 100 ? 'background: linear-gradient(90deg, #22c55e, #4ade80);' : 'background: linear-gradient(90deg, #3b82f6, #a855f7);' }}"></div>
+                                            </div>
+                                            <span style="font-size: 14px; font-weight: 700; font-family: monospace; {{ percent == 100 ? 'color: #4ade80;' : 'color: var(--text-secondary);' }}">
+                                                {{ percent }}%
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <turbo-frame id="expansion-zones-{{ group.order }}"
+                                                 src="{{ path('app_character_expansion_quests', {realmSlug: realmSlug, characterName: characterName, expansionOrder: group.order}) }}"
+                                                 loading="lazy">
+                                        <div style="display: flex; align-items: center; justify-content: center; padding: 32px; gap: 8px;">
+                                            <div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                                            <span style="font-size: 13px; color: var(--text-secondary);">Chargement des zones...</span>
+                                        </div>
+                                    </turbo-frame>
+                                </div>
+                            </div>
+                        {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .quest-tab-active {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(168, 85, 247, 0.3));
+        color: white;
+        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+    }
+    .quest-tab-inactive {
+        background: rgba(255,255,255,0.05);
+        color: var(--text-secondary);
+    }
+    .quest-tab-inactive:hover {
+        background: rgba(255,255,255,0.1);
+        color: var(--text-primary);
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .class-bg-warrior, .class-bg-guerrier { background: rgba(199, 156, 110, 0.3); color: #C79C6E; }
+    .class-bg-paladin { background: rgba(245, 140, 186, 0.3); color: #F58CBA; }
+    .class-bg-hunter, .class-bg-chasseur { background: rgba(171, 212, 115, 0.3); color: #ABD473; }
+    .class-bg-rogue, .class-bg-voleur { background: rgba(255, 245, 105, 0.3); color: #FFF569; }
+    .class-bg-priest, .class-bg-pretre { background: rgba(255, 255, 255, 0.3); color: #FFFFFF; }
+    .class-bg-death-knight, .class-bg-chevalier-de-la-mort { background: rgba(196, 31, 59, 0.3); color: #C41F3B; }
+    .class-bg-shaman, .class-bg-chaman { background: rgba(0, 112, 222, 0.3); color: #0070DE; }
+    .class-bg-mage { background: rgba(105, 204, 240, 0.3); color: #69CCF0; }
+    .class-bg-warlock, .class-bg-demoniste { background: rgba(148, 130, 201, 0.3); color: #9482C9; }
+    .class-bg-monk, .class-bg-moine { background: rgba(0, 255, 150, 0.3); color: #00FF96; }
+    .class-bg-druid, .class-bg-druide { background: rgba(255, 125, 10, 0.3); color: #FF7D0A; }
+    .class-bg-demon-hunter, .class-bg-chasseur-de-demons { background: rgba(163, 48, 201, 0.3); color: #A330C9; }
+    .class-bg-evoker, .class-bg-evocateur { background: rgba(51, 147, 127, 0.3); color: #33937F; }
+    .class-bg-unknown { background: rgba(128, 128, 128, 0.3); color: #808080; }
+
+    .class-header-warrior, .class-header-guerrier { background: linear-gradient(135deg, rgba(199, 156, 110, 0.6) 0%, rgba(139, 109, 77, 0.8) 100%); }
+    .class-header-paladin { background: linear-gradient(135deg, rgba(245, 140, 186, 0.6) 0%, rgba(171, 98, 130, 0.8) 100%); }
+    .class-header-hunter, .class-header-chasseur { background: linear-gradient(135deg, rgba(171, 212, 115, 0.6) 0%, rgba(120, 148, 80, 0.8) 100%); }
+    .class-header-rogue, .class-header-voleur { background: linear-gradient(135deg, rgba(255, 245, 105, 0.6) 0%, rgba(178, 171, 73, 0.8) 100%); }
+    .class-header-priest, .class-header-pretre { background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(180, 180, 180, 0.7) 100%); }
+    .class-header-death-knight, .class-header-chevalier-de-la-mort { background: linear-gradient(135deg, rgba(196, 31, 59, 0.6) 0%, rgba(137, 22, 41, 0.8) 100%); }
+    .class-header-shaman, .class-header-chaman { background: linear-gradient(135deg, rgba(0, 112, 222, 0.6) 0%, rgba(0, 78, 155, 0.8) 100%); }
+    .class-header-mage { background: linear-gradient(135deg, rgba(105, 204, 240, 0.6) 0%, rgba(73, 143, 168, 0.8) 100%); }
+    .class-header-warlock, .class-header-demoniste { background: linear-gradient(135deg, rgba(148, 130, 201, 0.6) 0%, rgba(104, 91, 141, 0.8) 100%); }
+    .class-header-monk, .class-header-moine { background: linear-gradient(135deg, rgba(0, 255, 150, 0.5) 0%, rgba(0, 178, 105, 0.7) 100%); }
+    .class-header-druid, .class-header-druide { background: linear-gradient(135deg, rgba(255, 125, 10, 0.6) 0%, rgba(178, 87, 7, 0.8) 100%); }
+    .class-header-demon-hunter, .class-header-chasseur-de-demons { background: linear-gradient(135deg, rgba(163, 48, 201, 0.6) 0%, rgba(114, 34, 141, 0.8) 100%); }
+    .class-header-evoker, .class-header-evocateur { background: linear-gradient(135deg, rgba(51, 147, 127, 0.6) 0%, rgba(36, 103, 89, 0.8) 100%); }
+    .class-header-unknown { background: linear-gradient(135deg, rgba(128, 128, 128, 0.6) 0%, rgba(90, 90, 90, 0.8) 100%); }
+</style>
+{% endblock %}

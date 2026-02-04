@@ -50,4 +50,41 @@ interface BlizzardApiServiceInterface
      * @param array<string, mixed> $currencyEntry
      */
     public function extractCurrencyQuantity(array $currencyEntry): int;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterProfile(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterMedia(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCompletedQuests(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategoryIndex(string $accessToken): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategory(string $accessToken, int $categoryId): array;
 }

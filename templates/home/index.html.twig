@@ -19,7 +19,15 @@
 			</p>
 		</div>
 
-		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 max-w-6xl mx-auto mb-16">
+		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-6 max-w-7xl mx-auto mb-16">
+
+			{{ component('Card', {
+				icon: '👤',
+				title: 'Personnages',
+				description: 'Visualisez tous vos personnages World of Warcraft en un coup d\'oeil.',
+				buttonText: 'Explorer →',
+				buttonUrl: path('app_characters_list')
+			}) }}
 
 			{{ component('Card', {
 				icon: '⚔️',

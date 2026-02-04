@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Personnages - WowPlanet{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-linear-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Mes Personnages
+            </h1>
+            <p class="text-lg" style="color: var(--text-secondary);">
+                Tous vos personnages World of Warcraft
+            </p>
+        </div>
+
+        {% if characters is empty %}
+            <div class="card-glass rounded-xl p-8 text-center">
+                <p class="text-xl font-semibold mb-2">Aucun personnage trouve</p>
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    Aucun personnage n'a ete trouve sur votre compte Battle.net.
+                </p>
+            </div>
+        {% else %}
+            <div class="mb-6 flex items-center justify-between">
+                <p class="text-sm" style="color: var(--text-secondary);">
+                    <span class="font-bold text-white">{{ characters|length }}</span> personnages trouves
+                </p>
+                <div class="flex items-center gap-4">
+                    <div class="text-xs font-semibold opacity-40 uppercase tracking-widest">
+                        <span data-results-pagination-target="pageInfo"></span>
+                    </div>
+                    <form method="post" action="{{ path('app_characters_refresh') }}">
+                        <button type="submit"
+                                class="text-xs px-3 py-1.5 rounded-lg card-glass hover:bg-white/10 transition-colors font-medium"
+                                style="color: var(--text-secondary);">
+                            Rafraichir
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div data-controller="results-pagination" data-results-pagination-per-page-value="12">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+                    {% for character in characters %}
+                        <twig:PlayerCharacterCard :character="character" :index="loop.index" />
+                    {% endfor %}
+                </div>
+
+                {% set totalPages = (characters|length / 12)|round(0, 'ceil') %}
+                {% if totalPages > 1 %}
+                    <div class="card-glass rounded-xl p-6">
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button
+                                data-results-pagination-target="prevButton"
+                                data-action="click->results-pagination#previousPage"
+                                class="px-5 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+                            >
+                                ← Precedent
+                            </button>
+
+                            <div class="flex gap-2 flex-wrap justify-center">
+                                {% for page in 1..totalPages %}
+                                    <button
+                                        data-results-pagination-target="page"
+                                        data-page="{{ page }}"
+                                        data-action="click->results-pagination#goToPage"
+                                        class="w-10 h-10 rounded-lg text-sm font-bold transition-all hover:bg-white/10 hover:text-white {% if page == 1 %}bg-blue-600 text-white shadow-lg shadow-blue-500/30{% else %}bg-white/5 text-white/60{% endif %}"
+                                    >
+                                        {{ page }}
+                                    </button>
+                                {% endfor %}
+                            </div>
+
+                            <button
+                                data-results-pagination-target="nextButton"
+                                data-action="click->results-pagination#nextPage"
+                                class="px-5 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed font-medium"
+                            >
+                                Suivant →
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="mt-12 text-center">
+            <a href="{{ path('app_home') }}" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg card-glass hover:bg-white/5 transition-colors font-medium">
+                Retour a l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Class badge backgrounds */
+    .class-bg-warrior, .class-bg-guerrier { background: rgba(199, 156, 110, 0.3); color: #C79C6E; }
+    .class-bg-paladin { background: rgba(245, 140, 186, 0.3); color: #F58CBA; }
+    .class-bg-hunter, .class-bg-chasseur { background: rgba(171, 212, 115, 0.3); color: #ABD473; }
+    .class-bg-rogue, .class-bg-voleur { background: rgba(255, 245, 105, 0.3); color: #FFF569; }
+    .class-bg-priest, .class-bg-pretre { background: rgba(255, 255, 255, 0.3); color: #FFFFFF; }
+    .class-bg-death-knight, .class-bg-chevalier-de-la-mort { background: rgba(196, 31, 59, 0.3); color: #C41F3B; }
+    .class-bg-shaman, .class-bg-chaman { background: rgba(0, 112, 222, 0.3); color: #0070DE; }
+    .class-bg-mage { background: rgba(105, 204, 240, 0.3); color: #69CCF0; }
+    .class-bg-warlock, .class-bg-demoniste { background: rgba(148, 130, 201, 0.3); color: #9482C9; }
+    .class-bg-monk, .class-bg-moine { background: rgba(0, 255, 150, 0.3); color: #00FF96; }
+    .class-bg-druid, .class-bg-druide { background: rgba(255, 125, 10, 0.3); color: #FF7D0A; }
+    .class-bg-demon-hunter, .class-bg-chasseur-de-demons { background: rgba(163, 48, 201, 0.3); color: #A330C9; }
+    .class-bg-evoker, .class-bg-evocateur { background: rgba(51, 147, 127, 0.3); color: #33937F; }
+    .class-bg-unknown { background: rgba(128, 128, 128, 0.3); color: #808080; }
+
+    /* Class header gradients */
+    .class-header-warrior, .class-header-guerrier { background: linear-gradient(135deg, rgba(199, 156, 110, 0.6) 0%, rgba(139, 109, 77, 0.8) 100%); }
+    .class-header-paladin { background: linear-gradient(135deg, rgba(245, 140, 186, 0.6) 0%, rgba(171, 98, 130, 0.8) 100%); }
+    .class-header-hunter, .class-header-chasseur { background: linear-gradient(135deg, rgba(171, 212, 115, 0.6) 0%, rgba(120, 148, 80, 0.8) 100%); }
+    .class-header-rogue, .class-header-voleur { background: linear-gradient(135deg, rgba(255, 245, 105, 0.6) 0%, rgba(178, 171, 73, 0.8) 100%); }
+    .class-header-priest, .class-header-pretre { background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(180, 180, 180, 0.7) 100%); }
+    .class-header-death-knight, .class-header-chevalier-de-la-mort { background: linear-gradient(135deg, rgba(196, 31, 59, 0.6) 0%, rgba(137, 22, 41, 0.8) 100%); }
+    .class-header-shaman, .class-header-chaman { background: linear-gradient(135deg, rgba(0, 112, 222, 0.6) 0%, rgba(0, 78, 155, 0.8) 100%); }
+    .class-header-mage { background: linear-gradient(135deg, rgba(105, 204, 240, 0.6) 0%, rgba(73, 143, 168, 0.8) 100%); }
+    .class-header-warlock, .class-header-demoniste { background: linear-gradient(135deg, rgba(148, 130, 201, 0.6) 0%, rgba(104, 91, 141, 0.8) 100%); }
+    .class-header-monk, .class-header-moine { background: linear-gradient(135deg, rgba(0, 255, 150, 0.5) 0%, rgba(0, 178, 105, 0.7) 100%); }
+    .class-header-druid, .class-header-druide { background: linear-gradient(135deg, rgba(255, 125, 10, 0.6) 0%, rgba(178, 87, 7, 0.8) 100%); }
+    .class-header-demon-hunter, .class-header-chasseur-de-demons { background: linear-gradient(135deg, rgba(163, 48, 201, 0.6) 0%, rgba(114, 34, 141, 0.8) 100%); }
+    .class-header-evoker, .class-header-evocateur { background: linear-gradient(135deg, rgba(51, 147, 127, 0.6) 0%, rgba(36, 103, 89, 0.8) 100%); }
+    .class-header-unknown { background: linear-gradient(135deg, rgba(128, 128, 128, 0.6) 0%, rgba(90, 90, 90, 0.8) 100%); }
+
+</style>
+{% endblock %}
