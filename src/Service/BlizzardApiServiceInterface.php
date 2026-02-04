@@ -59,4 +59,32 @@ interface BlizzardApiServiceInterface
         string $realmSlug,
         string $characterName
     ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterMedia(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCompletedQuests(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategoryIndex(string $accessToken): array;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategory(string $accessToken, int $categoryId): array;
 }

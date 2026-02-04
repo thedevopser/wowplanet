@@ -20,6 +20,19 @@ services:
       - "traefik.http.routers.wowplanet.tls=true"
       - "traefik.http.services.wowplanet.loadbalancer.server.port=80"
 
+  redis:
+    image: redis:7-alpine
+    container_name: wowplanet_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - wowplanet
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
 networks:
   traefik_network:
     name: base_ops_traefik_network

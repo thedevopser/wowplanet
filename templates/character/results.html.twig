@@ -26,8 +26,17 @@
                 <p class="text-sm" style="color: var(--text-secondary);">
                     <span class="font-bold text-white">{{ characters|length }}</span> personnages trouves
                 </p>
-                <div class="text-xs font-semibold opacity-40 uppercase tracking-widest">
-                    <span data-results-pagination-target="pageInfo"></span>
+                <div class="flex items-center gap-4">
+                    <div class="text-xs font-semibold opacity-40 uppercase tracking-widest">
+                        <span data-results-pagination-target="pageInfo"></span>
+                    </div>
+                    <form method="post" action="{{ path('app_characters_refresh') }}">
+                        <button type="submit"
+                                class="text-xs px-3 py-1.5 rounded-lg card-glass hover:bg-white/10 transition-colors font-medium"
+                                style="color: var(--text-secondary);">
+                            Rafraichir
+                        </button>
+                    </form>
                 </div>
             </div>
 

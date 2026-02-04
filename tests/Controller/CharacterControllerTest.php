@@ -98,7 +98,7 @@ final class CharacterControllerTest extends WebTestCase
         $this->assertSelectorTextContains('h1', 'Mes Personnages');
     }
 
-    public function testCharactersResultsClearsSessionAfterDisplay(): void
+    public function testCharactersResultsKeepsSessionAfterDisplay(): void
     {
         $client = static::createClient();
         $client->request('GET', '/characters');
@@ -119,7 +119,7 @@ final class CharacterControllerTest extends WebTestCase
         $client->request('GET', '/characters/results');
         $this->assertResponseIsSuccessful();
 
-        $this->assertNull($client->getRequest()->getSession()->get('characters_results'));
+        $this->assertNotNull($client->getRequest()->getSession()->get('characters_results'));
     }
 
     public function testCharactersResultsDisplaysEmptyMessage(): void

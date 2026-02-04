@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cache Redis - WowPlanet Admin{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Cache Redis</h1>
+            <a href="{{ path('admin_dashboard') }}"
+               class="text-sm px-4 py-2 rounded-lg card-glass hover:bg-white/5 transition-colors"
+               style="color: var(--text-secondary);">
+                &larr; Dashboard
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div class="card-glass rounded-xl p-4 border" style="border-color: var(--card-border);">
+                <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Cles</p>
+                <p class="text-xl font-bold text-blue-500">{{ serverInfo.total_keys }}</p>
+            </div>
+            <div class="card-glass rounded-xl p-4 border" style="border-color: var(--card-border);">
+                <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Memoire</p>
+                <p class="text-xl font-bold text-purple-500">{{ serverInfo.used_memory }}</p>
+            </div>
+            <div class="card-glass rounded-xl p-4 border" style="border-color: var(--card-border);">
+                <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Clients</p>
+                <p class="text-xl font-bold text-green-500">{{ serverInfo.connected_clients }}</p>
+            </div>
+            <div class="card-glass rounded-xl p-4 border" style="border-color: var(--card-border);">
+                <p class="text-xs uppercase tracking-wide mb-1" style="color: var(--text-secondary);">Uptime</p>
+                <p class="text-xl font-bold text-amber-500">{{ serverInfo.uptime }}</p>
+            </div>
+        </div>
+
+        <div class="card-glass rounded-xl border mb-6" style="border-color: var(--card-border);">
+            <div class="p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between border-b" style="border-color: var(--border-color);">
+                <form method="get" action="{{ path('admin_cache_index') }}" class="flex gap-2 flex-1 w-full sm:w-auto">
+                    <input type="text"
+                           name="filter"
+                           value="{{ filter }}"
+                           placeholder="Filtrer les cles (ex: blizzard_quest_*)"
+                           class="flex-1 px-3 py-2 rounded-lg text-sm border"
+                           style="background: var(--input-bg); color: var(--text-primary); border-color: var(--border-color);">
+                    <button type="submit"
+                            class="btn-gradient text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        Filtrer
+                    </button>
+                </form>
+
+                <form method="post" action="{{ path('admin_cache_flush') }}"
+                      onsubmit="return confirm('Vider tout le cache Redis ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('flush_cache') }}">
+                    <button type="submit"
+                            class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition-colors">
+                        Vider le cache
+                    </button>
+                </form>
+            </div>
+
+            {% if keys is empty %}
+                <div class="p-8 text-center">
+                    <p class="text-sm" style="color: var(--text-secondary);">Aucune cle trouvee{{ filter ? ' pour "' ~ filter ~ '"' : '' }}.</p>
+                </div>
+            {% endif %}
+
+            {% if keys is not empty %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b" style="border-color: var(--border-color);">
+                                <th class="text-left px-4 py-3 font-semibold" style="color: var(--text-secondary);">Cle</th>
+                                <th class="text-left px-4 py-3 font-semibold w-24" style="color: var(--text-secondary);">Type</th>
+                                <th class="text-left px-4 py-3 font-semibold w-28" style="color: var(--text-secondary);">TTL</th>
+                                <th class="text-right px-4 py-3 font-semibold w-32" style="color: var(--text-secondary);">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in keys %}
+                                <tr class="border-b hover:bg-white/5 transition-colors" style="border-color: var(--border-color);">
+                                    <td class="px-4 py-2.5">
+                                        <a href="{{ path('admin_cache_key_detail', { key: entry.key }) }}"
+                                           class="font-mono text-xs text-blue-500 hover:text-blue-400 break-all">
+                                            {{ entry.key }}
+                                        </a>
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        <span class="text-xs font-mono px-2 py-0.5 rounded"
+                                              style="background: var(--card-bg); color: var(--text-secondary);">
+                                            {{ entry.type }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        {% if entry.ttl == -1 %}
+                                            <span class="text-xs text-amber-500 font-medium">Persistant</span>
+                                        {% elseif entry.ttl == -2 %}
+                                            <span class="text-xs text-red-500 font-medium">Expire</span>
+                                        {% else %}
+                                            <span class="text-xs font-mono" style="color: var(--text-secondary);">{{ entry.ttl }}s</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right">
+                                        <form method="post" action="{{ path('admin_cache_delete_key') }}" class="inline"
+                                              onsubmit="return confirm('Supprimer cette cle ?');">
+                                            <input type="hidden" name="key" value="{{ entry.key }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_cache_key') }}">
+                                            <button type="submit"
+                                                    class="text-xs text-red-500 hover:text-red-400 font-medium">
+                                                Supprimer
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-4 py-3 text-xs border-t" style="border-color: var(--border-color); color: var(--text-secondary);">
+                    {{ keys|length }} cle{{ keys|length > 1 ? 's' : '' }} affichee{{ keys|length > 1 ? 's' : '' }}
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

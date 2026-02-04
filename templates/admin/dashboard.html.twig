@@ -6,8 +6,13 @@
 <div class="container mx-auto px-4 py-16">
     <h1 class="text-4xl font-bold mb-8" style="color: var(--text-primary);">Dashboard Administration</h1>
 
-    <div class="card-glass p-8 rounded-xl border">
-        <p style="color: var(--text-secondary);">Bienvenue dans l'administration de WowPlanet !</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a href="{{ path('admin_cache_index') }}"
+           class="card-glass p-6 rounded-xl border hover:bg-white/5 transition-colors block"
+           style="border-color: var(--card-border);">
+            <h2 class="font-bold mb-2" style="color: var(--text-primary);">Cache Redis</h2>
+            <p class="text-sm" style="color: var(--text-secondary);">Inspecter, filtrer et gerer les entrees du cache Redis.</p>
+        </a>
     </div>
 </div>
 {% endblock %}

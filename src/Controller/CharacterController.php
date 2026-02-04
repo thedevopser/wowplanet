@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\CharacterDetailProfile;
+use App\DTO\CharacterMedia;
 use App\Service\BlizzardApiService;
+use App\Service\QuestExpansionMapper;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,6 +18,7 @@ final class CharacterController extends AbstractController
 {
     public function __construct(
         private readonly BlizzardApiService $apiService,
+        private readonly QuestExpansionMapper $questExpansionMapper,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -32,6 +36,10 @@ final class CharacterController extends AbstractController
             $this->addFlash('warning', 'Vous devez vous authentifier avec Battle.net pour voir vos personnages.');
 
             return $this->redirectToRoute('app_oauth_login');
+        }
+
+        if (is_array($session->get('characters_results'))) {
+            return $this->redirectToRoute('app_characters_results');
         }
 
         return $this->render('character/search.html.twig');
@@ -78,8 +86,6 @@ final class CharacterController extends AbstractController
             return $this->redirectToRoute('app_characters_list');
         }
 
-        $session->remove('characters_results');
-
         $this->logger->info('Characters list displayed', [
             'total_characters' => count($characters),
         ]);
@@ -87,6 +93,17 @@ final class CharacterController extends AbstractController
         return $this->render('character/results.html.twig', [
             'characters' => $characters,
         ]);
+    }
+
+    #[Route('/characters/refresh', name: 'app_characters_refresh', methods: ['POST'])]
+    public function refreshCharacters(Request $request): Response
+    {
+        $session = $request->getSession();
+        $session->remove('characters_results');
+
+        $this->logger->info('Characters cache cleared, redirecting to process');
+
+        return $this->redirectToRoute('app_characters_process');
     }
 
     /**
@@ -173,5 +190,131 @@ final class CharacterController extends AbstractController
         $character['guild'] = $guild;
 
         return $character;
+    }
+
+    #[Route('/characters/{realmSlug}/{characterName}', name: 'app_character_detail', methods: ['GET'])]
+    public function showCharacterDetail(
+        Request $request,
+        string $realmSlug,
+        string $characterName
+    ): Response {
+        $accessToken = $this->validateBlizzardToken($request);
+
+        if ($accessToken === null) {
+            $this->addFlash('warning', 'Vous devez vous authentifier avec Battle.net.');
+
+            return $this->redirectToRoute('app_oauth_login');
+        }
+
+        $this->logger->info('Fetching character detail', [
+            'realm' => $realmSlug,
+            'character' => $characterName,
+        ]);
+
+        $profileData = $this->apiService->fetchCharacterProfile($accessToken, $realmSlug, $characterName);
+        $mediaData = $this->apiService->fetchCharacterMedia($accessToken, $realmSlug, $characterName);
+        $completedQuestsData = $this->apiService->fetchCompletedQuests($accessToken, $realmSlug, $characterName);
+
+        $profile = CharacterDetailProfile::fromApiData($profileData);
+        $media = CharacterMedia::fromApiData($mediaData);
+        $completedQuestIds = $this->extractCompletedQuestIds($completedQuestsData);
+        $expansionGroups = $this->questExpansionMapper->buildExpansionProgress($completedQuestIds);
+
+        return $this->render('character/detail.html.twig', [
+            'profile' => $profile,
+            'media' => $media,
+            'expansionGroups' => $expansionGroups,
+            'realmSlug' => $realmSlug,
+            'characterName' => $characterName,
+        ]);
+    }
+
+    #[Route(
+        '/characters/{realmSlug}/{characterName}/quests/{expansionOrder}',
+        name: 'app_character_expansion_quests',
+        methods: ['GET'],
+        requirements: ['expansionOrder' => '\d+']
+    )]
+    public function loadExpansionQuests(
+        Request $request,
+        string $realmSlug,
+        string $characterName,
+        int $expansionOrder
+    ): Response {
+        $accessToken = $this->validateBlizzardToken($request);
+
+        if ($accessToken === null) {
+            return new Response('Unauthorized', Response::HTTP_UNAUTHORIZED);
+        }
+
+        $this->logger->info('Loading expansion zone quests', [
+            'realm' => $realmSlug,
+            'character' => $characterName,
+            'expansion_order' => $expansionOrder,
+        ]);
+
+        $completedQuestsData = $this->apiService->fetchCompletedQuests(
+            $accessToken,
+            $realmSlug,
+            $characterName
+        );
+        $completedQuestIds = $this->extractCompletedQuestIds($completedQuestsData);
+        $zoneProgressList = $this->questExpansionMapper->buildZoneProgress(
+            $expansionOrder,
+            $completedQuestIds
+        );
+
+        return $this->render('character/_expansion_zones.html.twig', [
+            'zones' => $zoneProgressList,
+            'expansionOrder' => $expansionOrder,
+        ]);
+    }
+
+    private function validateBlizzardToken(Request $request): ?string
+    {
+        $session = $request->getSession();
+        $accessToken = $session->get('blizzard_access_token');
+        $expiresAt = $session->get('blizzard_token_expires_at', 0);
+
+        if ($accessToken === null || $expiresAt <= time()) {
+            return null;
+        }
+
+        if (!is_string($accessToken)) {
+            return null;
+        }
+
+        return $accessToken;
+    }
+
+    /**
+     * @param array<string, mixed> $completedQuestsData
+     * @return array<int, bool>
+     */
+    private function extractCompletedQuestIds(array $completedQuestsData): array
+    {
+        $quests = $completedQuestsData['quests'] ?? [];
+
+        if (!is_array($quests)) {
+            return [];
+        }
+
+        $completedIds = [];
+
+        foreach ($quests as $quest) {
+            if (!is_array($quest)) {
+                continue;
+            }
+
+            $id = $quest['id'] ?? null;
+
+            if (!is_int($id)) {
+                continue;
+            }
+
+            $completedIds[$id] = true;
+        }
+
+        return $completedIds;
     }
 }

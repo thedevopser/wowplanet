@@ -73,3 +73,14 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.tab-active {
+    border-bottom: 2px solid var(--color-blue);
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.tab-inactive {
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+}

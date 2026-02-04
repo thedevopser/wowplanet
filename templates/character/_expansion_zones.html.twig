@@ -1,0 +1,103 @@
+<turbo-frame id="expansion-zones-{{ expansionOrder }}">
+    {% if zones is empty %}
+        <div style="padding: 20px; text-align: center;">
+            <p style="font-size: 13px; color: var(--text-secondary);">
+                Aucune donnee de zone disponible pour cette extension.
+            </p>
+        </div>
+    {% else %}
+        <div data-controller="zone-pagination" data-zone-pagination-per-page-value="10">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                {% for zone in zones %}
+                    <div data-zone-pagination-target="item" data-controller="accordion" style="border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); overflow: hidden;">
+                        <button data-action="click->accordion#toggle"
+                                style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: none; border: none; cursor: pointer; transition: background 0.15s;"
+                                onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+                                onmouseout="this.style.background='none'">
+                            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                <span data-accordion-target="icon"
+                                      style="font-size: 10px; color: var(--text-secondary); transition: transform 0.2s; flex-shrink: 0;">&#9654;</span>
+                                <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ zone.zoneName }}
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-left: 10px;">
+                                <div style="width: 60px; height: 4px; border-radius: 9999px; background: rgba(255,255,255,0.1); overflow: hidden;">
+                                    {% set zonePercent = zone.completionPercent() %}
+                                    <div style="height: 100%; border-radius: 9999px; width: {{ zonePercent }}%; {{ zonePercent == 100 ? 'background: #4ade80;' : 'background: #3b82f6;' }}"></div>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 600; font-family: monospace; min-width: 60px; text-align: right; {{ zonePercent == 100 ? 'color: #4ade80;' : 'color: var(--text-secondary);' }}">
+                                    {{ zone.completedQuests }}/{{ zone.totalQuests }}
+                                </span>
+                            </div>
+                        </button>
+
+                        <div data-accordion-target="content" class="hidden">
+                            <div style="padding: 8px 14px 10px; border-top: 1px solid rgba(255,255,255,0.04);">
+                                {% if zone.quests is empty %}
+                                    <p style="font-size: 12px; color: var(--text-secondary); padding: 8px 0;">
+                                        Aucune quete repertoriee dans cette zone.
+                                    </p>
+                                {% else %}
+                                    <div data-controller="quest-pagination" data-quest-pagination-per-page-value="10">
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px;">
+                                            {% for quest in zone.quests %}
+                                                <div data-quest-pagination-target="item"
+                                                     style="padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid {{ quest.completed ? '#4ade80' : '#ef4444' }}; {{ quest.completed ? 'opacity: 0.65;' : '' }}">
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        {% if quest.completed %}
+                                                            <span style="color: #4ade80; font-size: 12px; flex-shrink: 0;">&#10003;</span>
+                                                        {% else %}
+                                                            <span style="color: #ef4444; font-size: 10px; flex-shrink: 0;">&#9675;</span>
+                                                        {% endif %}
+                                                        <span style="font-size: 12px; font-weight: 500; {{ quest.completed ? 'color: var(--text-secondary);' : 'color: var(--text-primary);' }}">
+                                                            {{ quest.name }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        {% if zone.quests|length > 10 %}
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 0 4px;">
+                                                <button data-quest-pagination-target="prevButton"
+                                                        data-action="click->quest-pagination#previousPage"
+                                                        style="padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;"
+                                                        onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                                                        onmouseout="this.style.background='rgba(255,255,255,0.05)'">&larr;</button>
+                                                <span data-quest-pagination-target="info"
+                                                      style="font-size: 12px; font-weight: 600; color: var(--text-secondary); font-family: monospace; min-width: 50px; text-align: center;"></span>
+                                                <button data-quest-pagination-target="nextButton"
+                                                        data-action="click->quest-pagination#nextPage"
+                                                        style="padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;"
+                                                        onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                                                        onmouseout="this.style.background='rgba(255,255,255,0.05)'">&rarr;</button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if zones|length > 10 %}
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 0 4px;">
+                    <button data-zone-pagination-target="prevButton"
+                            data-action="click->zone-pagination#previousPage"
+                            style="padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                            onmouseout="this.style.background='rgba(255,255,255,0.05)'">&larr;</button>
+                    <span data-zone-pagination-target="info"
+                          style="font-size: 12px; font-weight: 600; color: var(--text-secondary); font-family: monospace; min-width: 50px; text-align: center;"></span>
+                    <button data-zone-pagination-target="nextButton"
+                            data-action="click->zone-pagination#nextPage"
+                            style="padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 12px; cursor: pointer; transition: background 0.15s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                            onmouseout="this.style.background='rgba(255,255,255,0.05)'">&rarr;</button>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</turbo-frame>

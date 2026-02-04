@@ -55,7 +55,7 @@ final class SecurityControllerTest extends WebTestCase
         $content = $client->getResponse()->getContent();
         $this->assertIsString($content);
         $this->assertStringContainsString(
-            'Bienvenue dans l\'administration de WowPlanet !',
+            'Cache Redis',
             $content
         );
     }

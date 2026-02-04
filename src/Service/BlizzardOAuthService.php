@@ -74,4 +74,29 @@ final readonly class BlizzardOAuthService
             'expires_at' => time() + $expiresIn,
         ];
     }
+
+    public function fetchClientCredentialsToken(): string
+    {
+        $tokenUrl = sprintf(self::OAUTH_BASE_URL . '/token', $this->region);
+
+        $this->logger->info('Fetching client credentials token');
+
+        $response = $this->httpClient->request('POST', $tokenUrl, [
+            'auth_basic' => [$this->clientId, $this->clientSecret],
+            'body' => [
+                'grant_type' => 'client_credentials',
+            ],
+        ]);
+
+        $data = $response->toArray();
+
+        if (!isset($data['access_token']) || !is_string($data['access_token'])) {
+            $this->logger->error('No access token received from client credentials', ['response' => $data]);
+            throw new \RuntimeException('Failed to obtain client credentials token');
+        }
+
+        $this->logger->info('Client credentials token received');
+
+        return $data['access_token'];
+    }
 }

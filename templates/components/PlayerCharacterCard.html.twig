@@ -37,8 +37,10 @@
     {% endif %}
 {% endif %}
 
-<div class="card-glass rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm"
-     {% if index %}data-results-pagination-target="item"{% endif %}>
+<a href="{{ path('app_character_detail', {realmSlug: realmSlug, characterName: charNameLower}) }}"
+   class="block no-underline"
+   {% if index %}data-results-pagination-target="item"{% endif %}>
+<div class="card-glass rounded-xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full border-none shadow-sm cursor-pointer">
 
     <div class="relative h-20 overflow-hidden class-header-{{ classSlug }}">
         <div class="absolute inset-y-0 right-4 flex items-center">
@@ -85,3 +87,4 @@
         </div>
     </div>
 </div>
+</a>

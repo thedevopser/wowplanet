@@ -6,20 +6,16 @@ namespace App\Service;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final readonly class BlizzardApiService implements BlizzardApiServiceInterface
 {
     private const string API_BASE_URL = 'https://%s.api.blizzard.com';
-    private const int CACHE_TTL_PROFILE = 300; // 5 minutes for user profile
-    private const int CACHE_TTL_REPUTATION = 600; // 10 minutes for reputations
-    private const int CACHE_TTL_CURRENCY = 600; // 10 minutes for currencies
-    private const int CACHE_TTL_CHARACTER = 600; // 10 minutes for character details
 
     public function __construct(
         private HttpClientInterface $httpClient,
-        private CacheInterface $cache,
+        private CacheInterface $profileCache,
+        private CacheInterface $gameDataCache,
         private LoggerInterface $logger,
         private string $region,
         private string $locale
@@ -34,9 +30,7 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
         $cacheKey = sprintf('blizzard_profile_%s', hash('sha256', $accessToken));
 
         /** @var array<string, mixed> $cachedData */
-        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use ($accessToken): array {
-            $item->expiresAfter(self::CACHE_TTL_PROFILE);
-
+        $cachedData = $this->profileCache->get($cacheKey, function () use ($accessToken): array {
             $url = sprintf(
                 self::API_BASE_URL . '/profile/user/wow?namespace=profile-%s&locale=%s',
                 $this->region,
@@ -81,13 +75,11 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
         );
 
         /** @var array<string, mixed> $cachedData */
-        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use (
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
             $accessToken,
             $realmSlug,
             $characterNameLower
         ): array {
-            $item->expiresAfter(self::CACHE_TTL_REPUTATION);
-
             $url = sprintf(
                 self::API_BASE_URL . '/profile/wow/character/%s/%s/reputations?namespace=profile-%s&locale=%s',
                 $this->region,
@@ -242,13 +234,11 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
         );
 
         /** @var array<string, mixed> $cachedData */
-        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use (
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
             $accessToken,
             $realmSlug,
             $characterNameLower
         ): array {
-            $item->expiresAfter(self::CACHE_TTL_CURRENCY);
-
             $url = sprintf(
                 self::API_BASE_URL . '/profile/wow/character/%s/%s?namespace=profile-%s&locale=%s',
                 $this->region,
@@ -379,13 +369,11 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
         );
 
         /** @var array<string, mixed> $cachedData */
-        $cachedData = $this->cache->get($cacheKey, function (ItemInterface $item) use (
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
             $accessToken,
             $realmSlug,
             $characterNameLower
         ): array {
-            $item->expiresAfter(self::CACHE_TTL_CHARACTER);
-
             $url = sprintf(
                 self::API_BASE_URL . '/profile/wow/character/%s/%s?namespace=profile-%s&locale=%s',
                 $this->region,
@@ -412,6 +400,222 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
                 $this->logger->warning('Failed to fetch character profile', [
                     'realm' => $realmSlug,
                     'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            return $response->toArray(false);
+        });
+
+        return $cachedData;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterMedia(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array {
+        $characterNameLower = strtolower($characterName);
+        $cacheKey = sprintf(
+            'blizzard_media_%s_%s',
+            $realmSlug,
+            $characterNameLower
+        );
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
+            $accessToken,
+            $realmSlug,
+            $characterNameLower
+        ): array {
+            $url = sprintf(
+                self::API_BASE_URL . '/profile/wow/character/%s/%s/character-media?namespace=profile-%s&locale=%s',
+                $this->region,
+                $realmSlug,
+                rawurlencode($characterNameLower),
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching character media from Blizzard API', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch character media', [
+                    'realm' => $realmSlug,
+                    'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            return $response->toArray(false);
+        });
+
+        return $cachedData;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCompletedQuests(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array {
+        $characterNameLower = strtolower($characterName);
+        $cacheKey = sprintf(
+            'blizzard_completed_quests_%s_%s',
+            $realmSlug,
+            $characterNameLower
+        );
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
+            $accessToken,
+            $realmSlug,
+            $characterNameLower
+        ): array {
+            $url = sprintf(
+                self::API_BASE_URL . '/profile/wow/character/%s/%s/quests/completed?namespace=profile-%s&locale=%s',
+                $this->region,
+                $realmSlug,
+                rawurlencode($characterNameLower),
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching completed quests from Blizzard API', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch completed quests', [
+                    'realm' => $realmSlug,
+                    'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            $data = $response->toArray(false);
+
+            $this->logger->debug('Completed quests fetched', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+                'quests_count' => is_array($data['quests'] ?? null) ? count($data['quests']) : 0,
+            ]);
+
+            return $data;
+        });
+
+        return $cachedData;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategoryIndex(string $accessToken): array
+    {
+        $cacheKey = 'blizzard_quest_category_index';
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->gameDataCache->get($cacheKey, function () use ($accessToken): array {
+            $url = sprintf(
+                self::API_BASE_URL . '/data/wow/quest/category/index?namespace=static-%s&locale=%s',
+                $this->region,
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching quest category index from Blizzard API');
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch quest category index', [
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            $data = $response->toArray(false);
+
+            $this->logger->info('Quest category index fetched', [
+                'categories_count' => is_array($data['categories'] ?? null) ? count($data['categories']) : 0,
+            ]);
+
+            return $data;
+        });
+
+        return $cachedData;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchQuestCategory(string $accessToken, int $categoryId): array
+    {
+        $cacheKey = sprintf('blizzard_quest_category_%d', $categoryId);
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->gameDataCache->get($cacheKey, function () use ($accessToken, $categoryId): array {
+            $url = sprintf(
+                self::API_BASE_URL . '/data/wow/quest/category/%d?namespace=static-%s&locale=%s',
+                $this->region,
+                $categoryId,
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching quest category from Blizzard API', [
+                'category_id' => $categoryId,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch quest category', [
+                    'category_id' => $categoryId,
                     'status_code' => $statusCode,
                 ]);
 
