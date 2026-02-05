@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\DTO\CharacterDetailProfile;
 use App\DTO\CharacterMedia;
+use App\Service\AchievementExpansionMapper;
 use App\Service\BlizzardApiService;
 use App\Service\QuestExpansionMapper;
 use Psr\Log\LoggerInterface;
@@ -19,6 +20,7 @@ final class CharacterController extends AbstractController
     public function __construct(
         private readonly BlizzardApiService $apiService,
         private readonly QuestExpansionMapper $questExpansionMapper,
+        private readonly AchievementExpansionMapper $achievementExpansionMapper,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -214,16 +216,21 @@ final class CharacterController extends AbstractController
         $profileData = $this->apiService->fetchCharacterProfile($accessToken, $realmSlug, $characterName);
         $mediaData = $this->apiService->fetchCharacterMedia($accessToken, $realmSlug, $characterName);
         $completedQuestsData = $this->apiService->fetchCompletedQuests($accessToken, $realmSlug, $characterName);
+        $achievementsData = $this->apiService->fetchCharacterAchievements($accessToken, $realmSlug, $characterName);
 
         $profile = CharacterDetailProfile::fromApiData($profileData);
         $media = CharacterMedia::fromApiData($mediaData);
         $completedQuestIds = $this->extractCompletedQuestIds($completedQuestsData);
         $expansionGroups = $this->questExpansionMapper->buildExpansionProgress($completedQuestIds);
 
+        $completedAchievementIds = $this->extractCompletedAchievementIds($achievementsData);
+        $achievementGroups = $this->achievementExpansionMapper->buildExpansionProgress($completedAchievementIds);
+
         return $this->render('character/detail.html.twig', [
             'profile' => $profile,
             'media' => $media,
             'expansionGroups' => $expansionGroups,
+            'achievementGroups' => $achievementGroups,
             'realmSlug' => $realmSlug,
             'characterName' => $characterName,
         ]);
@@ -270,6 +277,47 @@ final class CharacterController extends AbstractController
         ]);
     }
 
+    #[Route(
+        '/characters/{realmSlug}/{characterName}/achievements/{expansionOrder}',
+        name: 'app_character_expansion_achievements',
+        methods: ['GET'],
+        requirements: ['expansionOrder' => '\d+']
+    )]
+    public function loadExpansionAchievements(
+        Request $request,
+        string $realmSlug,
+        string $characterName,
+        int $expansionOrder
+    ): Response {
+        $accessToken = $this->validateBlizzardToken($request);
+
+        if ($accessToken === null) {
+            return new Response('Unauthorized', Response::HTTP_UNAUTHORIZED);
+        }
+
+        $this->logger->info('Loading expansion achievements', [
+            'realm' => $realmSlug,
+            'character' => $characterName,
+            'expansion_order' => $expansionOrder,
+        ]);
+
+        $achievementsData = $this->apiService->fetchCharacterAchievements(
+            $accessToken,
+            $realmSlug,
+            $characterName
+        );
+        $completedAchievementIds = $this->extractCompletedAchievementIds($achievementsData);
+        $categoryProgressList = $this->achievementExpansionMapper->buildCategoryProgress(
+            $expansionOrder,
+            $completedAchievementIds
+        );
+
+        return $this->render('character/_expansion_achievements.html.twig', [
+            'categories' => $categoryProgressList,
+            'expansionOrder' => $expansionOrder,
+        ]);
+    }
+
     private function validateBlizzardToken(Request $request): ?string
     {
         $session = $request->getSession();
@@ -307,6 +355,37 @@ final class CharacterController extends AbstractController
             }
 
             $id = $quest['id'] ?? null;
+
+            if (!is_int($id)) {
+                continue;
+            }
+
+            $completedIds[$id] = true;
+        }
+
+        return $completedIds;
+    }
+
+    /**
+     * @param array<string, mixed> $achievementsData
+     * @return array<int, bool>
+     */
+    private function extractCompletedAchievementIds(array $achievementsData): array
+    {
+        $achievements = $achievementsData['achievements'] ?? [];
+
+        if (!is_array($achievements)) {
+            return [];
+        }
+
+        $completedIds = [];
+
+        foreach ($achievements as $achievement) {
+            if (!is_array($achievement)) {
+                continue;
+            }
+
+            $id = $achievement['id'] ?? null;
 
             if (!is_int($id)) {
                 continue;

@@ -627,4 +627,71 @@ final readonly class BlizzardApiService implements BlizzardApiServiceInterface
 
         return $cachedData;
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchCharacterAchievements(
+        string $accessToken,
+        string $realmSlug,
+        string $characterName
+    ): array {
+        $characterNameLower = strtolower($characterName);
+        $cacheKey = sprintf(
+            'blizzard_achievements_%s_%s',
+            $realmSlug,
+            $characterNameLower
+        );
+
+        /** @var array<string, mixed> $cachedData */
+        $cachedData = $this->profileCache->get($cacheKey, function () use (
+            $accessToken,
+            $realmSlug,
+            $characterNameLower
+        ): array {
+            $url = sprintf(
+                self::API_BASE_URL . '/profile/wow/character/%s/%s/achievements?namespace=profile-%s&locale=%s',
+                $this->region,
+                $realmSlug,
+                rawurlencode($characterNameLower),
+                $this->region,
+                $this->locale
+            );
+
+            $this->logger->info('Fetching character achievements from Blizzard API', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+            ]);
+
+            $response = $this->httpClient->request('GET', $url, [
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $accessToken),
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode !== 200) {
+                $this->logger->warning('Failed to fetch character achievements', [
+                    'realm' => $realmSlug,
+                    'character' => $characterNameLower,
+                    'status_code' => $statusCode,
+                ]);
+
+                return [];
+            }
+
+            $data = $response->toArray(false);
+
+            $this->logger->debug('Character achievements fetched', [
+                'realm' => $realmSlug,
+                'character' => $characterNameLower,
+                'achievements_count' => is_array($data['achievements'] ?? null) ? count($data['achievements']) : 0,
+            ]);
+
+            return $data;
+        });
+
+        return $cachedData;
+    }
 }

@@ -101,6 +101,12 @@
                         class="tab-active px-6 py-3 text-sm font-semibold transition-colors">
                     Quetes
                 </button>
+                <button data-character-tabs-target="tab"
+                        data-action="click->character-tabs#switchTab"
+                        data-tab="achievements"
+                        class="tab-inactive px-6 py-3 text-sm font-semibold transition-colors">
+                    Hauts Faits
+                </button>
             </div>
 
             <div data-character-tabs-target="panel" data-tab="quests">
@@ -167,22 +173,109 @@
                     </div>
                 </div>
             </div>
+
+            <div data-character-tabs-target="panel" data-tab="achievements" class="hidden">
+                <div data-controller="achievement-tabs">
+                    <div class="card-glass rounded-2xl overflow-hidden">
+                        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px;">
+                                {% for group in achievementGroups %}{% if group.hasAchievements() %}
+                                    {% set percent = group.completionPercent() %}
+                                    <button data-achievement-tabs-target="tab"
+                                            data-action="click->achievement-tabs#switchTab"
+                                            data-tab="ach-{{ group.order }}"
+                                            class="achievement-tab-inactive"
+                                            style="position: relative; padding: 10px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; transition: all 0.2s; cursor: pointer; border: none; text-align: left; overflow: hidden;">
+                                        <div style="position: relative; z-index: 1;">
+                                            <div style="margin-bottom: 2px;">{{ group.expansionName }}</div>
+                                            <div style="font-size: 10px; opacity: 0.7; font-weight: 500;">
+                                                {{ group.completedAchievements }}/{{ group.totalAchievements }}
+                                                <span style="margin-left: 4px; font-weight: 700; {{ percent == 100 ? 'color: #4ade80;' : '' }}">{{ percent }}%</span>
+                                            </div>
+                                        </div>
+                                        <div style="position: absolute; bottom: 0; left: 0; height: 3px; width: {{ percent }}%; {{ percent == 100 ? 'background: #4ade80;' : 'background: rgba(59, 130, 246, 0.5);' }} border-radius: 0 9999px 0 0; transition: width 0.3s;"></div>
+                                    </button>
+                                {% endif %}{% endfor %}
+                            </div>
+                        </div>
+
+                        {% for group in achievementGroups %}{% if group.hasAchievements() %}
+                            <div data-achievement-tabs-target="panel"
+                                 data-tab="ach-{{ group.order }}"
+                                 style="display: none;">
+                                <div style="padding: 20px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                                        <div>
+                                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0;">
+                                                {{ group.expansionName }}
+                                            </h3>
+                                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                                {{ group.completedAchievements }} / {{ group.totalAchievements }} hauts faits completes
+                                            </p>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div style="width: 120px; height: 6px; border-radius: 9999px; background: rgba(255,255,255,0.1); overflow: hidden;">
+                                                {% set percent = group.completionPercent() %}
+                                                <div style="height: 100%; border-radius: 9999px; transition: all 0.5s ease; width: {{ percent }}%; {{ percent == 100 ? 'background: linear-gradient(90deg, #22c55e, #4ade80);' : 'background: linear-gradient(90deg, #3b82f6, #a855f7);' }}"></div>
+                                            </div>
+                                            <span style="font-size: 14px; font-weight: 700; font-family: monospace; {{ percent == 100 ? 'color: #4ade80;' : 'color: var(--text-secondary);' }}">
+                                                {{ percent }}%
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <turbo-frame id="expansion-achievements-{{ group.order }}"
+                                                 src="{{ path('app_character_expansion_achievements', {realmSlug: realmSlug, characterName: characterName, expansionOrder: group.order}) }}"
+                                                 loading="lazy">
+                                        <div style="display: flex; align-items: center; justify-content: center; padding: 32px; gap: 8px;">
+                                            <div style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                                            <span style="font-size: 13px; color: var(--text-secondary);">Chargement des categories...</span>
+                                        </div>
+                                    </turbo-frame>
+                                </div>
+                            </div>
+                        {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
 </div>
 
 <style>
+    .tab-active, .tab-inactive {
+        cursor: pointer;
+    }
+
     .quest-tab-active {
         background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(168, 85, 247, 0.3));
         color: white;
         box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+        cursor: pointer;
     }
     .quest-tab-inactive {
         background: rgba(255,255,255,0.05);
         color: var(--text-secondary);
+        cursor: pointer;
     }
     .quest-tab-inactive:hover {
+        background: rgba(255,255,255,0.1);
+        color: var(--text-primary);
+    }
+
+    .achievement-tab-active {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(168, 85, 247, 0.3));
+        color: white;
+        box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+        cursor: pointer;
+    }
+    .achievement-tab-inactive {
+        background: rgba(255,255,255,0.05);
+        color: var(--text-secondary);
+        cursor: pointer;
+    }
+    .achievement-tab-inactive:hover {
         background: rgba(255,255,255,0.1);
         color: var(--text-primary);
     }

@@ -1,0 +1,93 @@
+# ===========================================
+# Docker Build Ignore - Production Optimized
+# ===========================================
+
+# ------------------------------------------
+# Development/Local Only
+# ------------------------------------------
+/krowi/
+/oldScripts/
+/datas/
+/docs/
+
+# ------------------------------------------
+# Git
+# ------------------------------------------
+.git/
+.gitignore
+.gitattributes
+.githooks/
+.github/
+
+# ------------------------------------------
+# IDE/Editor
+# ------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+.editorconfig
+
+# ------------------------------------------
+# Cache/Build Artifacts
+# ------------------------------------------
+/var/
+/.phpunit.cache/
+/public/bundles/
+/public/assets/
+/assets/vendor/
+
+# ------------------------------------------
+# Dependencies (reinstalled in container)
+# ------------------------------------------
+/vendor/
+
+# ------------------------------------------
+# Environment/Secrets
+# ------------------------------------------
+.env.local
+.env.*.local
+.env.test
+.env.test.local
+/config/secrets/prod/prod.decrypt.private.php
+
+# ------------------------------------------
+# Quality Tools (dev only)
+# ------------------------------------------
+/quality/
+
+# ------------------------------------------
+# Tests (not needed in production)
+# ------------------------------------------
+/tests/
+phpunit.dist.xml
+phpunit.xml
+
+# ------------------------------------------
+# Documentation
+# ------------------------------------------
+CLAUDE.md
+*.md
+!README.md
+
+# ------------------------------------------
+# Claude Code
+# ------------------------------------------
+.claude/
+
+# ------------------------------------------
+# Docker (avoid recursive copy of compose files)
+# ------------------------------------------
+docker-compose*.yml
+docker-compose*.yaml
+docker/compose.yml
+
+# ------------------------------------------
+# Misc
+# ------------------------------------------
+Makefile
+*.log
+*.cache
+.DS_Store
+Thumbs.db
