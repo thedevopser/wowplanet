@@ -35,7 +35,7 @@ export default defineConfig({
         alias: [
             {
                 find: /^vue$/,
-                replacement: path.resolve(__dirname, 'node_modules/vue/dist/vue.esm-bundler.js'),
+                replacement: path.resolve(import.meta.dirname, 'node_modules/vue/dist/vue.esm-bundler.js'),
             },
         ],
     },
