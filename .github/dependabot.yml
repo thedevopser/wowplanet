@@ -26,7 +26,24 @@ updates:
       - thedevopser
     labels:
       - dependencies
+    # Packages that declare each other as peers only install together: a family moves
+    # as one pull request, major versions included, before the generic group below.
     groups:
+      vite:
+        patterns:
+          - vite
+          - "@vitejs/*"
+          - "@tailwindcss/vite"
+          - laravel-vite-plugin
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
+          - vitest-axe
+      pinia:
+        patterns:
+          - pinia
+          - "@pinia/*"
       npm-minor-and-patch:
         update-types:
           - minor
