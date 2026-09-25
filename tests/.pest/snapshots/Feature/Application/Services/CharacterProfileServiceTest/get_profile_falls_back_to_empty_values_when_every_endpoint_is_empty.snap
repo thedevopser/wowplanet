@@ -1,0 +1,341 @@
+{
+    "name": "",
+    "realm": "",
+    "race": "",
+    "class": "",
+    "classId": 0,
+    "level": 0,
+    "ilvl": 0,
+    "faction": "",
+    "avatarUrl": "",
+    "classIconUrl": "",
+    "collections": {
+        "0": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "1": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "2": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "3": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "4": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "5": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "6": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "7": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "8": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "9": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "10": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "11": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "99": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        }
+    },
+    "mountsCount": 0,
+    "petsCount": 0,
+    "achievementPoints": 0,
+    "guild": "",
+    "mounts": [],
+    "pets": [],
+    "professions": [],
+    "decorCount": 0,
+    "decor": [],
+    "exaltedCount": 0,
+    "mythicKeystone": null,
+    "completedQuestIds": [],
+    "completedAchievementIds": [],
+    "equipment": [],
+    "appearances": [],
+    "appearancesCount": 0,
+    "raids": null,
+    "raidsCount": 0,
+    "score": {
+        "version": 2,
+        "global": 0,
+        "rank": "Débutant",
+        "dimensions": [
+            {
+                "key": "quests",
+                "label": "Quêtes",
+                "weight": 0.13,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "achievements",
+                "label": "Hauts-faits",
+                "weight": 0.2,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "reputations",
+                "label": "Réputations",
+                "weight": 0.12,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "raids",
+                "label": "Raids",
+                "weight": 0.07,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "mounts",
+                "label": "Montures",
+                "weight": 0.13,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "transmog",
+                "label": "Garde-robe",
+                "weight": 0.12,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "pets",
+                "label": "Mascottes",
+                "weight": 0.08,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "decor",
+                "label": "Décorations",
+                "weight": 0.07,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "professions",
+                "label": "Métiers",
+                "weight": 0.08,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            }
+        ]
+    }
+}

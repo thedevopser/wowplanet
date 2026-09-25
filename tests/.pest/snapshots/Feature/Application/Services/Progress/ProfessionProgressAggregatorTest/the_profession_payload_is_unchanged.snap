@@ -1,0 +1,502 @@
+[
+    {
+        "profession_id": 171,
+        "profession_name": "Alchimie",
+        "type": "primary",
+        "is_archaeology": false,
+        "global_skill_points": 300,
+        "global_max_skill_points": 300,
+        "expansions": [
+            {
+                "total": 1,
+                "completed": 1,
+                "categories": [
+                    {
+                        "name": "Potions",
+                        "total": 1,
+                        "completed": 1,
+                        "items": [
+                            {
+                                "id": 2,
+                                "name": "Potion",
+                                "is_completed": true,
+                                "wowhead_spell_id": 112
+                            }
+                        ]
+                    }
+                ],
+                "has_tier": true,
+                "tier_exists": true,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 1,
+                "completed": 1,
+                "categories": [
+                    {
+                        "name": "Flacons",
+                        "total": 1,
+                        "completed": 1,
+                        "items": [
+                            {
+                                "id": 3,
+                                "name": "Flacon",
+                                "is_completed": true,
+                                "wowhead_spell_id": 113
+                            }
+                        ]
+                    }
+                ],
+                "has_tier": true,
+                "tier_exists": true,
+                "skill_points": 50,
+                "max_skill_points": 100
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            }
+        ]
+    },
+    {
+        "profession_id": 202,
+        "profession_name": "Ingénierie",
+        "type": "primary",
+        "is_archaeology": false,
+        "global_skill_points": 0,
+        "global_max_skill_points": 0,
+        "expansions": [
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            }
+        ]
+    },
+    {
+        "profession_id": 356,
+        "profession_name": "Pêche",
+        "type": "secondary",
+        "is_archaeology": false,
+        "global_skill_points": 10,
+        "global_max_skill_points": 300,
+        "expansions": [
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            }
+        ]
+    },
+    {
+        "profession_id": 794,
+        "profession_name": "Archéologie",
+        "type": "secondary",
+        "is_archaeology": true,
+        "global_skill_points": 0,
+        "global_max_skill_points": 0,
+        "expansions": [
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": true,
+                "tier_exists": false,
+                "skill_points": 5,
+                "max_skill_points": 950
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            },
+            {
+                "total": 0,
+                "completed": 0,
+                "categories": [],
+                "has_tier": false,
+                "tier_exists": false,
+                "skill_points": 0,
+                "max_skill_points": 0
+            }
+        ]
+    }
+]

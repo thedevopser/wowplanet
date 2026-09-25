@@ -1,0 +1,146 @@
+{
+    "pvp": {
+        "season_id": 40,
+        "honor_level": 120,
+        "honorable_kills": 4567,
+        "best_rating": 1842,
+        "battlegrounds": {
+            "played": 15,
+            "won": 7,
+            "lost": 8,
+            "win_rate": 46.7
+        },
+        "groups": [
+            {
+                "key": "arena",
+                "label": "Arène",
+                "brackets": [
+                    {
+                        "slug": "3v3",
+                        "group": "arena",
+                        "label": "Arène 3c3",
+                        "spec": null,
+                        "rating": 1842,
+                        "season_id": 40,
+                        "tier_name": "Duelliste",
+                        "tier_icon_url": "https://render.test/duelist.jpg",
+                        "played": 30,
+                        "won": 20,
+                        "lost": 10,
+                        "win_rate": 66.7,
+                        "weekly": {
+                            "played": 3,
+                            "won": 1,
+                            "lost": 2
+                        }
+                    }
+                ]
+            },
+            {
+                "key": "shuffle",
+                "label": "Mêlée solo",
+                "brackets": [
+                    {
+                        "slug": "shuffle-shaman-restoration",
+                        "group": "shuffle",
+                        "label": "Mêlée solo — Shaman Restoration",
+                        "spec": null,
+                        "rating": 1750,
+                        "season_id": 40,
+                        "tier_name": "Combattant",
+                        "tier_icon_url": null,
+                        "played": 30,
+                        "won": 20,
+                        "lost": 10,
+                        "win_rate": 66.7,
+                        "weekly": {
+                            "played": 0,
+                            "won": 0,
+                            "lost": 0
+                        }
+                    },
+                    {
+                        "slug": "shuffle-shaman-enhancement",
+                        "group": "shuffle",
+                        "label": "Mêlée solo — Amélioration",
+                        "spec": "Amélioration",
+                        "rating": 1600,
+                        "season_id": 40,
+                        "tier_name": "Rival",
+                        "tier_icon_url": "https://render.test/rival.jpg",
+                        "played": 30,
+                        "won": 20,
+                        "lost": 10,
+                        "win_rate": 66.7,
+                        "weekly": {
+                            "played": 3,
+                            "won": 1,
+                            "lost": 2
+                        }
+                    }
+                ]
+            },
+            {
+                "key": "blitz",
+                "label": "Blitz",
+                "brackets": [
+                    {
+                        "slug": "blitz-shaman-elemental",
+                        "group": "blitz",
+                        "label": "Blitz — Shaman Elemental",
+                        "spec": null,
+                        "rating": 0,
+                        "season_id": 40,
+                        "tier_name": null,
+                        "tier_icon_url": null,
+                        "played": 7,
+                        "won": 7,
+                        "lost": 0,
+                        "win_rate": 100,
+                        "weekly": {
+                            "played": 3,
+                            "won": 1,
+                            "lost": 2
+                        }
+                    }
+                ]
+            },
+            {
+                "key": "other",
+                "label": "Autres modes",
+                "brackets": [
+                    {
+                        "slug": "arena-skirmish",
+                        "group": "other",
+                        "label": "Arena Skirmish",
+                        "spec": null,
+                        "rating": 1234,
+                        "season_id": 40,
+                        "tier_name": null,
+                        "tier_icon_url": null,
+                        "played": 30,
+                        "won": 20,
+                        "lost": 10,
+                        "win_rate": 66.7,
+                        "weekly": {
+                            "played": 3,
+                            "won": 1,
+                            "lost": 2
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "tiers": [
+        {
+            "name": "Duelliste",
+            "icon_url": "https://render.test/duelist.jpg"
+        },
+        {
+            "name": "Combattant",
+            "icon_url": ""
+        },
+        null
+    ]
+}

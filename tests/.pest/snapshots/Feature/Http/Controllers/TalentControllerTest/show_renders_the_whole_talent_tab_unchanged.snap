@@ -1,0 +1,148 @@
+{
+    "spec_name": "Fureur",
+    "spec_id": 72,
+    "class_name": "Guerrier",
+    "class_nodes": [
+        {
+            "id": 1,
+            "x": 5,
+            "y": 1,
+            "type": "active",
+            "max_rank": 1,
+            "selected_rank": 1,
+            "locked_by": [],
+            "unlocks": [
+                2,
+                3
+            ],
+            "entries": [
+                {
+                    "talent_id": 10,
+                    "spell_id": 100,
+                    "name": "Charge",
+                    "icon_url": "https://render.com/charge.jpg"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "x": 4,
+            "y": 2,
+            "type": "passive",
+            "max_rank": 2,
+            "selected_rank": 1,
+            "locked_by": [
+                1
+            ],
+            "unlocks": [],
+            "entries": [
+                {
+                    "talent_id": 20,
+                    "spell_id": 200,
+                    "name": "Rage",
+                    "icon_url": "https://render.com/spell-200.jpg"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "x": 6,
+            "y": 2,
+            "type": "choice",
+            "max_rank": 1,
+            "selected_rank": 1,
+            "locked_by": [
+                1
+            ],
+            "unlocks": [],
+            "entries": [
+                {
+                    "talent_id": 30,
+                    "spell_id": 300,
+                    "name": "Choix A",
+                    "icon_url": "https://render.com/spell-300.jpg",
+                    "selected": false
+                },
+                {
+                    "talent_id": 31,
+                    "spell_id": 301,
+                    "name": "Choix B",
+                    "icon_url": null,
+                    "selected": true
+                }
+            ]
+        }
+    ],
+    "spec_nodes": [
+        {
+            "id": 50,
+            "x": 1,
+            "y": 1,
+            "type": "active",
+            "max_rank": 1,
+            "selected_rank": 1,
+            "locked_by": [],
+            "unlocks": [],
+            "entries": [
+                {
+                    "talent_id": 500,
+                    "spell_id": 5000,
+                    "name": "Tourbillon",
+                    "icon_url": "https://render.com/spell-5000.jpg"
+                }
+            ]
+        }
+    ],
+    "hero_trees": [
+        {
+            "id": 60,
+            "name": "Colosse",
+            "active": true,
+            "nodes": [
+                {
+                    "id": 900,
+                    "x": 1,
+                    "y": 1,
+                    "type": "active",
+                    "max_rank": 1,
+                    "selected_rank": 1,
+                    "locked_by": [],
+                    "unlocks": [],
+                    "entries": [
+                        {
+                            "talent_id": 9000,
+                            "spell_id": 90000,
+                            "name": "Doublon héroïque",
+                            "icon_url": "https://render.com/spell-90000.jpg"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 61,
+            "name": "Massacreur",
+            "active": false,
+            "nodes": [
+                {
+                    "id": 910,
+                    "x": 1,
+                    "y": 1,
+                    "type": "passive",
+                    "max_rank": 1,
+                    "selected_rank": 0,
+                    "locked_by": [],
+                    "unlocks": [],
+                    "entries": [
+                        {
+                            "talent_id": 9100,
+                            "spell_id": 91000,
+                            "name": "Massacre",
+                            "icon_url": "https://render.com/spell-91000.jpg"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

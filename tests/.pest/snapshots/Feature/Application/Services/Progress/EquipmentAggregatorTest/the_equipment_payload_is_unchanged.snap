@@ -1,0 +1,38 @@
+[
+    {
+        "slot": "HEAD",
+        "slot_name": "Tête",
+        "item_id": 12345,
+        "name": "Casque",
+        "item_level": 639,
+        "quality": "EPIC",
+        "icon_url": "https:\/\/render.test\/12345.jpg"
+    },
+    {
+        "slot": "NECK",
+        "slot_name": "",
+        "item_id": 23456,
+        "name": "Collier",
+        "item_level": 0,
+        "quality": "COMMON",
+        "icon_url": null
+    },
+    {
+        "slot": "",
+        "slot_name": "",
+        "item_id": 0,
+        "name": "Rien",
+        "item_level": 0,
+        "quality": "COMMON",
+        "icon_url": null
+    },
+    {
+        "slot": "",
+        "slot_name": "",
+        "item_id": 0,
+        "name": "",
+        "item_level": 0,
+        "quality": "COMMON",
+        "icon_url": null
+    }
+]

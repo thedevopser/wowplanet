@@ -1,0 +1,71 @@
+name: Signaler un bogue
+description: Quelque chose ne fonctionne pas comme attendu
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de le signaler.
+
+        **Une faille de sécurité ne se signale pas ici** : la marche à suivre est dans [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Ce qui se passe
+      description: Le comportement constaté, et le message d'erreur exact s'il y en a un.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ce qui devrait se passer
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Comment le reproduire
+      description: Les étapes exactes, depuis un état de départ connu.
+      placeholder: |
+        1. Ouvrir la page …
+        2. Cliquer sur …
+        3. Le message … apparaît
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Où
+      options:
+        - Sur le site en ligne
+        - En local, après installation depuis le dépôt
+    validations:
+      required: true
+
+  - type: input
+    id: character
+    attributes:
+      label: Personnage concerné
+      description: Nom et royaume, si le bogue touche un personnage en particulier. Ça permet de rejouer exactement le même appel à l'API Blizzard.
+      placeholder: Nomdupersonnage — Hyjal
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environnement
+      description: Navigateur et version pour un bogue d'affichage. Pour une installation locale, la sortie de `make quality` si elle échoue.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Avant d'envoyer
+      options:
+        - label: J'ai cherché dans les issues existantes, ouvertes et fermées.
+          required: true
+        - label: Ce rapport ne contient ni jeton, ni identifiant, ni donnée personnelle.
+          required: true

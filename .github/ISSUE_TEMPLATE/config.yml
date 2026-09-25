@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Signaler une faille de sécurité
+    url: https://github.com/thedevopser/wowplanet/security/advisories/new
+    about: Le signalement est privé et n'est visible que du mainteneur. Ne passe jamais par une issue publique.
+  - name: Guide de contribution
+    url: https://github.com/thedevopser/wowplanet/blob/main/CONTRIBUTING.md
+    about: Installation, TDD, seuils de couverture et conventions, avant d'ouvrir une pull request.

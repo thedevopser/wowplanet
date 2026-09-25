@@ -1,0 +1,647 @@
+{
+    "name": "Thrall",
+    "realm": "Hyjal",
+    "race": "Orc",
+    "class": "Chaman",
+    "classId": 7,
+    "level": 80,
+    "ilvl": 620,
+    "faction": "Horde",
+    "avatarUrl": "https://render.com/inset.jpg",
+    "classIconUrl": "https://render.com/class-icon.jpg",
+    "collections": {
+        "0": {
+            "quests": {
+                "total": 2,
+                "completed": 1,
+                "zones": [
+                    {
+                        "name": "Elwynn",
+                        "total": 2,
+                        "completed": 1,
+                        "items": [
+                            {
+                                "id": 100,
+                                "name": "Quête A",
+                                "is_completed": true
+                            },
+                            {
+                                "id": 102,
+                                "name": "Quête B",
+                                "is_completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "1": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "2": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "3": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "4": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "5": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "6": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "7": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "8": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "9": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "10": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "11": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        },
+        "99": {
+            "quests": {
+                "total": 0,
+                "completed": 0,
+                "zones": []
+            },
+            "achievements": {
+                "total": 0,
+                "completed": 0,
+                "categories": []
+            },
+            "reputations": {
+                "total": 0,
+                "completed": 0,
+                "factions": []
+            }
+        }
+    },
+    "mountsCount": 1,
+    "petsCount": 2,
+    "achievementPoints": 12345,
+    "guild": "Les Loups",
+    "mounts": [
+        {
+            "id": 200,
+            "name": "Loup noir",
+            "is_completed": true,
+            "source": null,
+            "category": null,
+            "wowhead_id": null,
+            "icon_url": null
+        },
+        {
+            "id": 201,
+            "name": "Loup blanc",
+            "is_completed": false,
+            "source": "Vendeur",
+            "category": null,
+            "wowhead_id": null,
+            "icon_url": null
+        }
+    ],
+    "pets": [
+        {
+            "id": 300,
+            "name": "Dragonnet",
+            "is_completed": true,
+            "source": "Drop",
+            "category": null,
+            "wowhead_id": null,
+            "icon_url": null
+        }
+    ],
+    "professions": [
+        {
+            "profession_id": 164,
+            "profession_name": "Forge",
+            "type": "primary",
+            "is_archaeology": false,
+            "global_skill_points": 100,
+            "global_max_skill_points": 100,
+            "expansions": [
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": true,
+                    "tier_exists": false,
+                    "skill_points": 50,
+                    "max_skill_points": 100
+                },
+                {
+                    "total": 0,
+                    "completed": 0,
+                    "categories": [],
+                    "has_tier": false,
+                    "tier_exists": false,
+                    "skill_points": 0,
+                    "max_skill_points": 0
+                }
+            ]
+        }
+    ],
+    "decorCount": 1,
+    "decor": [
+        {
+            "id": 500,
+            "name": "Foyer",
+            "is_completed": true,
+            "item_id": 245000,
+            "icon_url": null,
+            "category": null,
+            "source": null
+        }
+    ],
+    "exaltedCount": 0,
+    "mythicKeystone": {
+        "rating": 2456.8,
+        "rating_color": {
+            "r": 255,
+            "g": 128,
+            "b": 0,
+            "a": 1
+        },
+        "season_id": 15,
+        "best_runs": [
+            {
+                "dungeon_name": "Prieuré",
+                "dungeon_id": 502,
+                "level": 14,
+                "duration_ms": 2000000,
+                "completed_at": 1700000100000,
+                "is_timed": false,
+                "score": 280,
+                "score_color": null,
+                "map_score": 311,
+                "map_score_color": null,
+                "members": []
+            },
+            {
+                "dungeon_name": "Faille",
+                "dungeon_id": 501,
+                "level": 12,
+                "duration_ms": 1800000,
+                "completed_at": 1700000000000,
+                "is_timed": true,
+                "score": 250.5,
+                "score_color": {
+                    "r": 1,
+                    "g": 2,
+                    "b": 3,
+                    "a": 1
+                },
+                "map_score": 300,
+                "map_score_color": {
+                    "r": 4,
+                    "g": 5,
+                    "b": 6,
+                    "a": 1
+                },
+                "members": [
+                    {
+                        "name": "Thrall",
+                        "realm": "Hyjal",
+                        "spec": "Amélioration",
+                        "ilvl": 620
+                    },
+                    {
+                        "name": "Jaina",
+                        "realm": "",
+                        "spec": "",
+                        "ilvl": 0
+                    }
+                ]
+            }
+        ]
+    },
+    "completedQuestIds": [
+        100,
+        101
+    ],
+    "completedAchievementIds": [
+        6
+    ],
+    "equipment": [
+        {
+            "slot": "HEAD",
+            "slot_name": "Tête",
+            "item_id": 12345,
+            "name": "Casque du Néant",
+            "item_level": 639,
+            "quality": "EPIC",
+            "icon_url": "https://render.com/icon-12345.jpg"
+        },
+        {
+            "slot": "NECK",
+            "slot_name": "Cou",
+            "item_id": 23456,
+            "name": "Collier",
+            "item_level": 610,
+            "quality": "RARE",
+            "icon_url": null
+        }
+    ],
+    "appearances": [
+        {
+            "slot": "CHEST",
+            "category": "Armure",
+            "total": 1,
+            "completed": 0
+        },
+        {
+            "slot": "HEAD",
+            "category": "Armure",
+            "total": 1,
+            "completed": 1
+        }
+    ],
+    "appearancesCount": 1,
+    "raids": [
+        {
+            "instance_id": 1307,
+            "instance_name": "La Flèche du Vide",
+            "modes": [
+                {
+                    "difficulty_type": "NORMAL",
+                    "difficulty_label": "Normal",
+                    "completed_count": 1,
+                    "total_count": 1,
+                    "encounters": [
+                        {
+                            "id": 2733,
+                            "name": "Empereur Averzian",
+                            "last_kill_timestamp": 1775411018000
+                        }
+                    ]
+                },
+                {
+                    "difficulty_type": "HEROIC",
+                    "difficulty_label": "Héroïque",
+                    "completed_count": 1,
+                    "total_count": 2,
+                    "encounters": [
+                        {
+                            "id": 2733,
+                            "name": "Empereur Averzian",
+                            "last_kill_timestamp": 1775411018000
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "raidsCount": 1,
+    "score": {
+        "version": 2,
+        "global": 59.7,
+        "rank": "Rare",
+        "dimensions": [
+            {
+                "key": "quests",
+                "label": "Quêtes",
+                "weight": 0.13,
+                "completed": 1,
+                "total": 2,
+                "score": 50,
+                "applicable": true
+            },
+            {
+                "key": "achievements",
+                "label": "Hauts-faits",
+                "weight": 0.2,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "reputations",
+                "label": "Réputations",
+                "weight": 0.12,
+                "completed": 0,
+                "total": 0,
+                "score": 0,
+                "applicable": false
+            },
+            {
+                "key": "raids",
+                "label": "Raids",
+                "weight": 0.07,
+                "completed": 0.75,
+                "total": 2,
+                "score": 37.5,
+                "applicable": true
+            },
+            {
+                "key": "mounts",
+                "label": "Montures",
+                "weight": 0.13,
+                "completed": 1,
+                "total": 2,
+                "score": 50,
+                "applicable": true
+            },
+            {
+                "key": "transmog",
+                "label": "Garde-robe",
+                "weight": 0.12,
+                "completed": 1,
+                "total": 2,
+                "score": 50,
+                "applicable": true
+            },
+            {
+                "key": "pets",
+                "label": "Mascottes",
+                "weight": 0.08,
+                "completed": 1,
+                "total": 1,
+                "score": 100,
+                "applicable": true
+            },
+            {
+                "key": "decor",
+                "label": "Décorations",
+                "weight": 0.07,
+                "completed": 1,
+                "total": 1,
+                "score": 100,
+                "applicable": true
+            },
+            {
+                "key": "professions",
+                "label": "Métiers",
+                "weight": 0.08,
+                "completed": 50,
+                "total": 100,
+                "score": 50,
+                "applicable": true
+            }
+        ]
+    }
+}

@@ -1,0 +1,143 @@
+[
+    {
+        "total": 1,
+        "completed": 1,
+        "factions": [
+            {
+                "id": 72,
+                "name": "Hurlevent",
+                "standing_name": "Exalté",
+                "tier": 7,
+                "value": 0,
+                "max": 0,
+                "raw": 42999,
+                "renown_level": 0,
+                "completed": true,
+                "started": true,
+                "account_wide": false
+            }
+        ]
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 1,
+        "completed": 0,
+        "factions": [
+            {
+                "id": 1037,
+                "name": "Lame d'ébène",
+                "standing_name": "Honoré",
+                "tier": 5,
+                "value": 5000,
+                "max": 12000,
+                "raw": 14000,
+                "renown_level": 0,
+                "completed": false,
+                "started": true,
+                "account_wide": false
+            }
+        ]
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    },
+    {
+        "total": 4,
+        "completed": 2,
+        "factions": [
+            {
+                "id": 2590,
+                "name": "Conseil de Dornogal",
+                "standing_name": "Renom 20",
+                "tier": 0,
+                "value": 0,
+                "max": 2500,
+                "raw": 50000,
+                "renown_level": 20,
+                "completed": true,
+                "started": true,
+                "account_wide": true
+            },
+            {
+                "id": 2594,
+                "name": "Assemblée",
+                "standing_name": "Renom 3",
+                "tier": 0,
+                "value": 10,
+                "max": 2500,
+                "raw": 7510,
+                "renown_level": 3,
+                "completed": false,
+                "started": true,
+                "account_wide": true
+            },
+            {
+                "id": 2601,
+                "name": "Doublon",
+                "standing_name": "",
+                "tier": 2,
+                "value": 0,
+                "max": 0,
+                "raw": 0,
+                "renown_level": 0,
+                "completed": true,
+                "started": true,
+                "account_wide": false
+            },
+            {
+                "id": 2600,
+                "name": "Tisse-nuit",
+                "standing_name": "Non commencée",
+                "tier": -1,
+                "value": 0,
+                "max": 0,
+                "raw": 0,
+                "renown_level": 0,
+                "completed": false,
+                "started": false,
+                "account_wide": true
+            }
+        ]
+    },
+    {
+        "total": 0,
+        "completed": 0,
+        "factions": []
+    }
+]

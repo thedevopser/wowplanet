@@ -1,0 +1,54 @@
+name: Proposer une évolution
+description: Une fonctionnalité qui manque, ou une existante à améliorer
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        WowPlanet est un projet personnel : une proposition peut être refusée parce qu'elle n'entre pas dans la direction prévue, même si elle est bonne. Autant en parler avant d'écrire du code.
+
+  - type: textarea
+    id: need
+    attributes:
+      label: Le besoin
+      description: Ce que tu cherches à faire et que l'application ne permet pas aujourd'hui. Décris la situation, pas encore la solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Ce que tu proposes
+      description: Comment tu vois la chose à l'écran ou dans le comportement de l'application.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Ce que tu fais en attendant
+      description: Le contournement actuel, s'il y en a un. C'est souvent ce qui dit le mieux l'urgence.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Partie concernée
+      options:
+        - Profil de personnage
+        - Collections (montures, mascottes, garde-robe, décorations)
+        - Raids et Mythic+
+        - Score de compte
+        - Base de données du site
+        - Panneau d'administration
+        - Autre ou je ne sais pas
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Avant d'envoyer
+      options:
+        - label: J'ai cherché dans les issues existantes, ouvertes et fermées.
+          required: true
+        - label: J'ai lu le [guide de contribution](../blob/main/CONTRIBUTING.md) si je compte proposer la pull request moi-même.

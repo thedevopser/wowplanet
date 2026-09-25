@@ -1,0 +1,45 @@
+# Code under mutation testing, run by `make mutate` and `make mutate-changed`.
+#
+# Mutation only covers code that carries business rules: survivors elsewhere would be noise.
+# One path per line, file or directory, each with the rule that earns it a place.
+# Each class is mutated against its dedicated tests only, tests/**/<Class>*Test.php: a rule
+# must be protected by the tests of its own class, not by chance through another feature.
+# An entry that no longer exists fails the target: a silent gap is worse than a short list.
+
+# Pure domain: the score formula, bracket classification and expansion identifiers. The other
+# Domain classes are data carriers with no executable logic, so they hold nothing to mutate.
+app/Domain/Services/ScoreCalculator.php
+app/Domain/Services/PvpBracketClassifier.php
+app/Domain/ValueObjects/ExpansionId.php
+
+# Account-wide rules: which character's progress wins when several know the same thing.
+app/Application/DTOs/AccountScoreProgress.php
+app/Application/DTOs/CrossCharacterProgress.php
+app/Application/Services/AccountScoreService.php
+app/Application/Services/CrossCharacterService.php
+app/Jobs/ComputeCrossCharacterJob.php
+
+# The progress figures that feed the score: what counts as done, earned or known per dimension.
+app/Application/Services/Progress/AchievementProgressAggregator.php
+app/Application/Services/Progress/CollectionProgressAggregator.php
+app/Application/Services/Progress/ProfessionProgressAggregator.php
+app/Application/Services/Progress/PvpProgressAggregator.php
+app/Application/Services/Progress/QuestProgressAggregator.php
+app/Application/Services/Progress/RaidProgressAggregator.php
+app/Application/Services/Progress/ReputationProgressAggregator.php
+
+# Which talents show as selected, and which hero tree belongs to the active spec.
+app/Application/Services/Progress/TalentAggregator.php
+
+# The import chain: stage order and dependencies, run state transitions, waits and closing.
+app/Application/Import/ImportPipeline.php
+app/Application/Import/ImportRun.php
+app/Application/Import/ImportStage.php
+
+# Resuming an import: a stage already done for the current build is skipped, each family
+# judged against its own upstream.
+app/Application/Import/StageFreshness.php
+app/Infrastructure/Blizzard/ImportBuildGate.php
+
+# The single threshold that flags a catalogue losing volume after a load.
+app/Application/Import/VolumeShrink.php

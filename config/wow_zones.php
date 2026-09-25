@@ -1,0 +1,182 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Supplementary zone→expansion map for zones not covered by addon data or BTW Index files.
+ * Covers: Classic zones, TBC starter zones, patch zones, capitals, dungeons, raids.
+ */
+return [
+    // === Classic (0) — Starter zones, capitals, dungeons ===
+    'Dun Morogh' => 0, 'Durotar' => 0, "Forêt d'Elwynn" => 0, 'Mulgore' => 0,
+    'Teldrassil' => 0, 'Clairières de Tirisfal' => 0, 'Hurlevent' => 0,
+    'Orgrimmar' => 0, 'Forgefer' => 0, 'Darnassus' => 0, 'Les Pitons-du-Tonnerre' => 0,
+    'Fossoyeuse' => 0, "Vallée d'Alterac" => 0, "Ahn'Qiraj" => 0,
+    "Ahn'Qiraj : le royaume Déchu" => 0, "Ruines d'Ahn'Qiraj" => 0,
+    'Vallée des Épreuves' => 0, 'Camp Narache' => 0, "Val d'Ammen" => 0,
+    'Comté-du-Nord' => 0, 'Gnomeregan' => 0, 'Stratholme' => 0,
+    'Profondeurs de Rochenoire' => 0, 'Gouffre de Ragefeu' => 0, 'Les Mortemines' => 0,
+    "Donjon d'Ombrecroc" => 0, 'Scholomance' => 0, 'Maraudon' => 0,
+    "Zul'Farrak" => 0, "Zul'Gurub" => 0, "Le temple d'Atal'Hakkar" => 0,
+    'Cavernes des Lamentations' => 0, 'Kraal de Tranchebauge' => 0,
+    'Souilles de Tranchebauge' => 0, 'Pic Rochenoire' => 0,
+    'Sommet du pic Rochenoire' => 0, 'Cœur du Magma' => 0,
+    'Cavernes de Rochenoire' => 0, 'Uldaman' => 0, 'Naxxramas' => 0,
+    'Tram des profondeurs' => 0, 'La Basse-tourbière' => 0,
+    'Île de Sombrelune' => 0, 'Baie-du-Butin' => 0, 'Grottes du Temps' => 0,
+    "L'Épuration de Stratholme" => 0, 'Le Noir marécage' => 0,
+
+    // === The Burning Crusade (1) ===
+    'Bois des Chants éternels' => 1, 'Bois des Chants éternels (The Burning Crusade)' => 1,
+    'Les terres Fantômes' => 1, 'Île de Brume-Sang' => 1, 'Île de Brume-Azur' => 1,
+    'Shattrath' => 1, "Île de Quel'Danas" => 1, "Lune-d'Argent" => 1,
+    "Lune-d'Argent (The Burning Crusade)" => 1, "L'Exodar" => 1,
+    "Zul'Aman" => 1, 'Citadelle des Flammes infernales' => 1,
+    'Remparts des Flammes infernales' => 1, 'La Fournaise du sang' => 1,
+    'Les enclos aux esclaves' => 1, 'Le caveau de la Vapeur' => 1,
+    'Le Méchanar' => 1, 'La Botanica' => 1, "L'Arcatraz" => 1,
+    'Cryptes Auchenaï' => 1, 'Les salles des Sethekk' => 1,
+    'Labyrinthe des Ombres' => 1, 'Terrasse des Magistères' => 1,
+    'Temple Halo-du-Néant' => 1, 'Tombes-mana' => 1,
+    'Plateau du Puits de soleil' => 1, 'Le repaire de Magtheridon' => 1,
+    'Temple noir' => 1, 'Donjon de la Tempête' => 1,
+    'Sanctum Occidental' => 1, 'Île de Haut-Soleil' => 1,
+    'Havre de Saltheril' => 1,
+    "Quel'thalas" => 1,
+
+    // === Wrath of the Lich King (2) ===
+    'Dalaran' => 2, 'Citadelle de la Couronne de glace' => 2,
+    "Joug-d'Hiver" => 2, "Donjon d'Utgarde" => 2, "Cime d'Utgarde" => 2,
+    'Gundrak' => 2, 'Le Nexus' => 2, "L'Oculus" => 2,
+    'Fosse de Saron' => 2, 'La Forge des Âmes' => 2,
+    "Donjon de Drak'Tharon" => 2, "Ahn'kahet : l'Ancien royaume" => 2,
+    'Azjol-Nérub' => 2, 'Salles Écarlates' => 2,
+    "L'Œil de l'éternité" => 2, 'Ulduar' => 2,
+    'Le Jugement des Valeureux' => 2, "L'épreuve du champion" => 2,
+    "L'épreuve du croisé" => 2, 'Salles des Reflets' => 2,
+    'Forêt du Chant de cristal' => 2,
+
+    // === Cataclysm (3) ===
+    'Gilnéas' => 3, 'Ruines de Gilnéas' => 3, 'Les îles Perdues' => 3,
+    'Kezan' => 3, 'Hache-Tripes' => 3, 'Péninsule de Tol Barad' => 3,
+    'Tol Barad' => 3, 'Les Serres-Rocheuses' => 3, 'Les Hinterlands' => 3,
+    'Profondeurs Abyssales' => 3, 'Rivages de Tranchevent' => 3,
+    "Contreforts de Hautebrande d'antan" => 3, 'Grim Batol' => 3,
+    'Cité perdue des Tol\'vir' => 3, 'Trône des marées' => 3,
+    'La Fin des temps' => 3, "L'Heure du Crépuscule" => 3,
+    "Puits d'éternité" => 3, 'Sombrevallon' => 3,
+    'La cime du Vortex' => 3, "Citadelle d'Obsidienne" => 3,
+    'Terres de Feu' => 3, "Sommet d'Hyjal" => 3,
+    'Les salles de Pierre' => 3, "Salles de l'Origine" => 3,
+    'Monastère Écarlate' => 3,
+    'Défilé de Deuillevent' => 3, 'Colline Meurtrière' => 3,
+    'Le Maelström' => 3,
+
+    // === Mists of Pandaria (4) ===
+    "Val de l'Éternel printemps" => 4, 'Île du Tonnerre' => 4,
+    "L'île Vagabonde" => 4, 'Île du Temps figé' => 4, 'Île des Géants' => 4,
+    'Temple du Serpent de jade' => 4, "Brasserie Brune d'Orage" => 4,
+    "Palais Mogu'shan" => 4, 'Siège du temple de Niuzao' => 4,
+    'Monastère des Pandashan' => 4, "Siège d'Orgrimmar" => 4,
+    'Trône du tonnerre' => 4, 'Cœur de la Peur' => 4,
+    'Terrasse du Printemps éternel' => 4, 'Unga Ingou' => 4,
+
+    // === Warlords of Draenor (5) ===
+    "A'shran" => 5, "Terres sacrées d'Ombrelune" => 5,
+    'Auchindoun' => 5, 'Quais de Fer' => 5,
+    'Fonderie des Rochenoires' => 5, 'Profondeurs de Brassenoire' => 5,
+    'Cognefort' => 5, 'Cité des Fils' => 5,
+    'Mine de la Masse-Sanglante' => 5, 'Bouclier-des-Tempêtes' => 5,
+
+    // === Legion (6) ===
+    'Krokuun' => 6, 'Érédath' => 6, 'Étendues Antoréennes' => 6,
+    'Tombe de Sargeras' => 6, 'Antorus, le Trône ardent' => 6,
+    'Palais Sacrenuit' => 6, "Le Cauchemar d'émeraude" => 6,
+    'Cour des Étoiles' => 6, "L'Arcavia" => 6,
+    'Les salles Brisées' => 6, 'Helheim' => 6,
+    "L'Œil d'Azshara" => 6, "Œil d'Azshara" => 6,
+    'Caveau des Gardiennes' => 6, 'Cathédrale de la Nuit éternelle' => 6,
+    'Siège du triumvirat' => 6, 'Niskara' => 6,
+    'Fer-de-Lance' => 6, 'Pavillon du Traqueur' => 6,
+    'Orée-du-Ciel' => 6, 'Haut-Maul' => 6,
+    'Hall du Gardien' => 6, 'Le Vindicaar' => 6,
+    'Sanctum de la Lumière' => 6, 'Marges des Éons' => 6,
+    "Achérus : le fort d'Ébène" => 6, 'Bastion du Freux' => 6,
+    'Flèche d\'Aubétoile' => 6, 'La Mugambala' => 6,
+
+    // === Battle for Azeroth (7) ===
+    "Confins de l'Exil" => 7,
+    'La Nouvelle-Brikabrok' => 7, 'Silithus : la Plaie' => 7,
+    'Port de Boralus' => 7, 'Port de Zandalar' => 7,
+    "Bataille de Dazar'alor" => 7, "Ny'alotha, la cité en éveil" => 7,
+    'Campagne militaire - Horde' => 7, 'Campagne militaire - Alliance' => 7,
+    'Palais Éternel' => 7, 'Port de Hurlevent' => 7,
+    'Île de Theramore' => 7, 'Le Glas' => 7,
+    'Fief' => 7, 'Porte du Soleil couchant' => 7,
+    'La Sylverêve' => 7, 'Rivage Bouillonnant' => 7,
+    "Îles de l'Écho" => 7,
+
+    // === Shadowlands (8) ===
+    'Antre' => 8, 'Korthia' => 8, 'Zereth Mortis' => 8, 'Oribos' => 8,
+    'Tourment, la tour des Damnés' => 8,
+    'Tazavesh, le marché dissimulé' => 8,
+    'Château Nathria' => 8, 'Sanctum de Domination' => 8,
+    'Sépulcre des Fondateurs' => 8,
+    "Jardin d'hiver de la Reine" => 8,
+    'Salles des Valeureux' => 8, 'Le Cœur-de-Pierre' => 8,
+    'Les salles de Foudre' => 8, 'Trône brisé' => 8,
+    'Les Écheveaux' => 8, 'Sillage nécrotique' => 8,
+    'Faille de Scareffroi' => 8, 'Fourré Sombrecœur' => 8,
+    'Quartier général des archéologues' => 8, 'Cap Fondateur' => 8,
+
+    // === Dragonflight (9) ===
+    'Grotte de Zaralek' => 9, "Rêve d'émeraude" => 9,
+    'Valdrakken' => 9, 'Îles aux Dragons' => 9,
+    'Caveaux de Zskera' => 9, 'Amirdrassil' => 9,
+    "Amirdrassil, l'Espoir du Rêve" => 9, "Aube de l'Infini" => 9,
+    "Aberrus, le creuset de l'Ombre" => 9,
+    'Caveau des Incarnations' => 9,
+    'La Flore éternelle' => 9, 'Arcantina' => 9,
+    'Randonneraie' => 9, 'Dépôt de Tristerail' => 9,
+    'Creuset des Tempêtes' => 9, 'Bastion de Tyr' => 9,
+    'Le sanctum Rubis' => 9, 'Repaire de Neltharion' => 9,
+    'Repos du Vigilant' => 9, 'Azmerloth' => 9,
+    'Le cloaque aux Dragons' => 9, 'Confins Interdits' => 9,
+
+    // === The War Within (10) ===
+    'Harandar' => 10, 'Tempête du Vide' => 10,
+    'Étendues Chatoyantes' => 10, "L'Oasis" => 10,
+    "Forêt de Varech'thar" => 10, 'Dornogal' => 10,
+    'Libération de Terremine' => 10,
+    "Palais des Nérub'ar" => 10, 'Frimarra' => 10,
+    'Larmes de Morgaen' => 10, 'Les Abîmes Retentissants' => 10,
+    "Amani'Zar" => 10, 'Vallée des Frigères' => 10,
+    'Village de Morqut' => 10, 'Mine de Nibelgaz' => 10,
+    'Oubliettes du Runomancien' => 10, 'Pierre-Verte' => 10,
+    'Reflet-de-Lune' => 10, 'Ruisse-Braise' => 10,
+    'Repos de Kriegval' => 10, "Ravin d'Abondabîme" => 10,
+    'Mereldar' => 10, 'Pointe du Crochet' => 10,
+    "Épée de l'Aube" => 10, 'Tombe-Vice' => 10,
+    'Grotte de Mycomancie' => 10, 'Répit du gardien' => 10,
+    'Séjour céleste' => 10, 'Duos infâmes' => 10,
+    'Le repaire de la Tisserande' => 10, 'Arène de la Cicatrice du Vide' => 10,
+    "Har'mara" => 10, 'Champs des Tempêtes' => 10, 'Manaforge Oméga' => 10,
+
+    // === Midnight (11) ===
+    'Hâle solaarien' => 11,
+
+    // === Extra: zones missed by other sources ===
+    'Karazhan' => 1,
+    'Bassin Arathi' => 0, "L'escalier Dérobé" => 0,
+    'La Prison' => 0, 'Le fort Pourpre' => 0, 'Fort Pourpre' => 0,
+    "Falaises de l'embouchure de Hel" => 6,
+    "Site d'invasion" => 6, "Site d'invasion prioritaire : Occularus" => 6,
+    "Site d'invasion prioritaire : Sotanathor" => 6,
+    "Site d'invasion prioritaire : inquisiteur Méto" => 6,
+    "Site d'invasion prioritaire : matrone Folnuna" => 6,
+    "Site d'invasion prioritaire : maîtresse Alluradel" => 6,
+    "Site d'invasion prioritaire : seigneur des abîmes Vilemus" => 6,
+    'Chambre du Cœur' => 7,
+    'Le sanctum Obsidien' => 9, 'Passage du Temps' => 9,
+    'Festival de Brasse-Lune' => 0,
+];

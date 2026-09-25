@@ -1,0 +1,90 @@
+[
+    {
+        "instance_id": 1307,
+        "instance_name": "La Flèche du Vide",
+        "modes": [
+            {
+                "difficulty_type": "LFR",
+                "difficulty_label": "LFR",
+                "completed_count": 6,
+                "total_count": 6,
+                "encounters": [
+                    {
+                        "id": 2733,
+                        "name": "Empereur Averzian",
+                        "last_kill_timestamp": 0
+                    },
+                    {
+                        "id": 2734,
+                        "name": "Salhadaar",
+                        "last_kill_timestamp": 1775000000000
+                    }
+                ]
+            },
+            {
+                "difficulty_type": "HEROIC",
+                "difficulty_label": "Héroïque",
+                "completed_count": 3,
+                "total_count": 6,
+                "encounters": [
+                    {
+                        "id": 2735,
+                        "name": "Inconnu",
+                        "last_kill_timestamp": 0
+                    }
+                ]
+            },
+            {
+                "difficulty_type": "MYTHIC",
+                "difficulty_label": "Mythique",
+                "completed_count": 1,
+                "total_count": 6,
+                "encounters": [
+                    {
+                        "id": 2733,
+                        "name": "Empereur Averzian",
+                        "last_kill_timestamp": 1775411018000
+                    }
+                ]
+            },
+            {
+                "difficulty_type": "STORY",
+                "difficulty_label": "STORY",
+                "completed_count": 6,
+                "total_count": 6,
+                "encounters": []
+            }
+        ]
+    },
+    {
+        "instance_id": 1308,
+        "instance_name": "March on Quel'Danas",
+        "modes": [
+            {
+                "difficulty_type": "NORMAL",
+                "difficulty_label": "Normal",
+                "completed_count": 2,
+                "total_count": 2,
+                "encounters": [
+                    {
+                        "id": 3001,
+                        "name": "",
+                        "last_kill_timestamp": 1775000000001
+                    }
+                ]
+            },
+            {
+                "difficulty_type": "HEROIC",
+                "difficulty_label": "Héroïque",
+                "completed_count": 0,
+                "total_count": 0,
+                "encounters": []
+            }
+        ]
+    },
+    {
+        "instance_id": 0,
+        "instance_name": "",
+        "modes": []
+    }
+]

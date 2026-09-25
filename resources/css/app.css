@@ -1,0 +1,308 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource/cinzel/400.css";
+@import "@fontsource/cinzel/600.css";
+@import "@fontsource/cinzel/700.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    /* Tailwind's default palette is switched off: only the colours of the design system exist. */
+    --color-*: initial;
+
+    --color-night-950: #0b0f1a;
+    --color-night-900: #121826;
+    --color-night-800: #1a2233;
+    --color-night-700: #263047;
+    --color-night-600: #3a4663;
+    --color-parchment-50: #f7f4ec;
+    --color-parchment-100: #f1ece2;
+    --color-gold-400: #d4a844;
+    --color-gold-700: #7a5d0e;
+
+    /* The only third-party brand: Discord. Its blue is a background under white text only (3.8:1 as text on night);
+       its embed colours only paint the announcement preview of the admin panel. */
+    --color-brand-discord: #5865f2;
+    --color-on-brand-discord: #ffffff;
+    --color-brand-discord-embed: #2b2d31;
+    --color-brand-discord-text: #dbdee1;
+    --color-brand-discord-muted: #b5bac1;
+    --color-brand-discord-link: #00a8fc;
+
+    --font-sans: 'Inter Variable', 'Inter Fallback', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Cinzel', 'Cinzel Fallback', 'Times New Roman', serif;
+
+    /* The sticky header is h-16: a sticky side column fills what is left of the viewport. */
+    --spacing-header: 4rem;
+    --spacing-below-header: calc(100dvh - 4rem);
+
+    /* Prefixed so as not to be mistaken for Tailwind's default radius scale, which is still compiled. */
+    --radius-ui-sm: 6px;
+    --radius-ui-md: 10px;
+
+    --shadow-elevation-1: 0 1px 2px rgb(0 0 0 / 0.2), 0 4px 12px rgb(0 0 0 / 0.12);
+    --shadow-elevation-2: 0 4px 8px rgb(0 0 0 / 0.2), 0 16px 40px rgb(0 0 0 / 0.24);
+
+    --z-index-base: 0;
+    --z-index-sticky: 10;
+    --z-index-header: 20;
+    --z-index-overlay: 40;
+    --z-index-dialog: 50;
+    --z-index-toast: 60;
+
+    /* An exit runs at 70 % of its entry duration. */
+    --transition-duration-fast: 150ms;
+    --transition-duration-base: 200ms;
+    --transition-duration-slow: 300ms;
+    --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+    --animate-fade-in: fade-in var(--transition-duration-base) var(--ease-enter);
+    --animate-fade-out: fade-out calc(var(--transition-duration-base) * 0.7) var(--ease-exit);
+    --animate-dialog-in: dialog-in var(--transition-duration-base) var(--ease-enter);
+    --animate-dialog-out: dialog-out calc(var(--transition-duration-base) * 0.7) var(--ease-exit);
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+    }
+    @keyframes fade-out {
+        to { opacity: 0; }
+    }
+    @keyframes dialog-in {
+        from { opacity: 0; transform: scale(0.96); }
+    }
+    @keyframes dialog-out {
+        to { opacity: 0; transform: scale(0.96); }
+    }
+}
+
+/* Arial reshaped to Inter's metrics, so swapping to Inter once loaded does not move the text. */
+@font-face {
+    font-family: 'Inter Fallback';
+    src: local('Arial');
+    size-adjust: 107.12%;
+    ascent-override: 90.44%;
+    descent-override: 22.52%;
+    line-gap-override: 0%;
+}
+
+/* Times New Roman reshaped to Cinzel's metrics: the titles keep their size and line breaks when Cinzel arrives. */
+@font-face {
+    font-family: 'Cinzel Fallback';
+    src: local('Times New Roman'), local('Liberation Serif');
+    size-adjust: 132.1%;
+    ascent-override: 73.91%;
+    descent-override: 28.17%;
+    line-gap-override: 0%;
+}
+
+/*
+ * Semantic tokens: one value per theme, read by role (bg-surface, text-muted,
+ * border-default). Contrasts are enforced by resources/js/tests/themeTokens.test.js.
+ */
+:root {
+    --wp-background: #f7f4ec;
+    --wp-surface: #ffffff;
+    --wp-surface-raised: #f1ece2;
+    --wp-border: #e2dbcb;
+    --wp-border-strong: #98865e;
+    --wp-text: #1b1e27;
+    --wp-text-muted: #4f5566;
+    --wp-text-subtle: #5f6475;
+    --wp-accent: #7a5d0e;
+    --wp-on-accent: #ffffff;
+    --wp-info: #1f5fbf;
+    --wp-success: #1b7a4b;
+    --wp-warning: #9a5b00;
+    --wp-danger: #c42b30;
+}
+
+.dark {
+    --wp-background: #0b0f1a;
+    --wp-surface: #121826;
+    --wp-surface-raised: #1a2233;
+    --wp-border: #263047;
+    --wp-border-strong: #596b97;
+    --wp-text: #e8e4d8;
+    --wp-text-muted: #a7adbb;
+    --wp-text-subtle: #8a92a5;
+    --wp-accent: #d4a844;
+    --wp-on-accent: #0b0f1a;
+    --wp-info: #6fa8f5;
+    --wp-success: #4cc38a;
+    --wp-warning: #e8a33d;
+    --wp-danger: #f2555a;
+}
+
+@theme inline {
+    --background-color-background: var(--wp-background);
+    --background-color-surface: var(--wp-surface);
+    --background-color-surface-raised: var(--wp-surface-raised);
+    --border-color-default: var(--wp-border);
+    --border-color-strong: var(--wp-border-strong);
+    --text-color-default: var(--wp-text);
+    --text-color-muted: var(--wp-text-muted);
+    --text-color-subtle: var(--wp-text-subtle);
+    --color-accent: var(--wp-accent);
+    --color-on-accent: var(--wp-on-accent);
+    --color-info: var(--wp-info);
+    --color-success: var(--wp-success);
+    --color-warning: var(--wp-warning);
+    --color-danger: var(--wp-danger);
+}
+
+body {
+    @apply bg-background text-default antialiased;
+}
+
+@layer base {
+    *:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+}
+
+/* Hides the scrollbar of the horizontal rows that scroll on a phone (admin tabs, database sections). */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/*
+ * Themed scrollbars, on every scrolling area and not only the document. The universal selector
+ * has a (0,0,0) specificity, below .no-scrollbar, which keeps hiding the horizontal rows.
+ */
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--wp-border-strong);
+    border-radius: 9999px;
+    /* Bordure transparente + background-clip : marge visuelle sans réduire la
+       zone cliquable du pouce. */
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--wp-text-subtle);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/*
+ * Firefox ne connaît pas ces pseudo-éléments et se rabat sur les propriétés
+ * standard, héritées depuis html. Le @supports exclut Chromium, qui sinon
+ * ignorerait les règles ci-dessus dès que scrollbar-color est défini.
+ */
+@supports not selector(::-webkit-scrollbar) {
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--wp-border-strong) transparent;
+    }
+}
+
+/* Last in the sheet, so that it overrides every animation declared above. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0s !important;
+        scroll-behavior: auto !important;
+    }
+
+    .animate-spin, .animate-pulse {
+        animation: none !important;
+        opacity: 0.75 !important;
+    }
+}
+
+/*
+ * Reading layout of the editorial pages (FAQ, terms, privacy, addons): the text keeps its
+ * plain markup and takes its colours from the tokens here, never from utility classes.
+ */
+@layer components {
+    .editorial {
+        color: var(--wp-text-muted);
+        line-height: 1.7;
+    }
+
+    /* Each section reads as a panel, and stops below the sticky header when reached by an anchor. */
+    .editorial > section {
+        padding: 1.5rem;
+        border: 1px solid var(--wp-border);
+        border-radius: var(--radius-ui-md);
+        background: var(--wp-surface);
+        scroll-margin-top: calc(var(--spacing-header) + 1.5rem);
+    }
+
+    .editorial h2 {
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--wp-text);
+    }
+
+    .editorial h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.0625rem;
+        font-weight: 600;
+        color: var(--wp-text);
+    }
+
+    .editorial p + p,
+    .editorial p + ul,
+    .editorial ul + p {
+        margin-top: 0.75rem;
+    }
+
+    .editorial ul {
+        padding-left: 1.25rem;
+        list-style: disc;
+    }
+
+    .editorial ol {
+        padding-left: 1.25rem;
+        list-style: decimal;
+    }
+
+    .editorial li + li {
+        margin-top: 0.25rem;
+    }
+
+    .editorial strong {
+        font-weight: 600;
+        color: var(--wp-text);
+    }
+
+    .editorial a {
+        color: var(--wp-accent);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .editorial code {
+        padding: 0.1rem 0.35rem;
+        border-radius: var(--radius-ui-sm, 0.25rem);
+        background: var(--wp-surface-raised);
+        font-size: 0.875em;
+        color: var(--wp-text);
+    }
+}
+

@@ -1,0 +1,455 @@
+// French labels of the categories and sources of the three collections. The catalogue
+// keeps Blizzard's English names; expansion names stay in English, as in game.
+
+const MOUNTS = Object.freeze({
+    categories: Object.freeze({
+        "Mounts": "Montures",
+        "Limited Time": "Durée limitée",
+        "Past Limited Time": "Ancien durée limitée",
+        "Racial": "Raciales",
+        "Professions": "Métiers",
+        "PVP": "JcJ",
+        "World Events": "Événements mondiaux",
+        "Promotion": "Promotion",
+        "Other": "Autre",
+        "Non classé": "Non classé"
+    }),
+    sources: Object.freeze({
+        "Achievement": "Haut-fait",
+        "Quest": "Quête",
+        "Vendor": "Vendeur",
+        "Raid Drop": "Butin de raid",
+        "Dungeon Drop": "Butin de donjon",
+        "Drop": "Butin",
+        "Discovery": "Découverte",
+        "Zone Drop": "Butin de zone",
+        "Reputation": "Réputation",
+        "Paragon Reputation": "Réputation parangon",
+        "Treasure": "Trésor",
+        "Rare Spawn": "Rare",
+        "Rare": "Rare",
+        "World Boss": "Boss mondial",
+        "Renown": "Renom",
+        "Raid Renown": "Renom de raid",
+        "Riddle": "Énigme",
+        "Daily Activities": "Activités journalières",
+        "Zone Feature": "Activité de zone",
+        "Campaign": "Campagne",
+        "Prey": "Proie",
+        "Allied Race": "Race alliée",
+        "Allied Races": "Races alliées",
+        "Pre-launch Event": "Événement de pré-lancement",
+        "Pre-launch event": "Événement de pré-lancement",
+        "Zone": "Zone",
+        "Collect": "Collection",
+        "Reputations": "Réputations",
+        "Toys": "Jouets",
+        "Heirlooms": "Héritages",
+        "Promotions": "Promotions",
+        "Blizzard Store": "Boutique Blizzard",
+        "Midnight Pre-Patch": "Pré-patch Midnight",
+        "Delves": "Gouffres",
+        "Visions Revisited": "Visions revisitées",
+        "Obsidian Citadel": "Citadelle d'obsidienne",
+        "Zskera Vaults": "Caveaux de Zskera",
+        "Events": "Événements",
+        "Time Rifts": "Failles temporelles",
+        "Dream Infusion": "Infusion de rêve",
+        "Emerald Bounty": "Prime d'émeraude",
+        "Archives": "Archives",
+        "Torghast": "Tourment",
+        "Adventures": "Aventures",
+        "Tormentors": "Tourmenteurs",
+        "Maw Assaults": "Assauts de l'Antre",
+        "Maldraxxus Callings": "Appels de Maldraxxus",
+        "Covenant Feature": "Fonctionnalité de congrégation",
+        "Protoform Synthesis": "Synthèse de protoforme",
+        "Night Fae Quest": "Quête Faë nocturne",
+        "Night Fae Renown": "Renom Faë nocturne",
+        "Night Fae Vendor": "Vendeur Faë nocturne",
+        "Night Fae Covenant Features": "Fonctionnalités Faë nocturne",
+        "Night Fae Rare Spawn": "Rare Faë nocturne",
+        "Kyrian Quest": "Quête Kyrien",
+        "Kyrian Renown": "Renom Kyrien",
+        "Kyrian Vendor": "Vendeur Kyrien",
+        "Kyrian Covenant Features": "Fonctionnalités Kyrien",
+        "Kyrian Rare Spawn": "Rare Kyrien",
+        "Necrolord Quest": "Quête Nécro-seigneur",
+        "Necrolord Renown": "Renom Nécro-seigneur",
+        "Necrolord Vendor": "Vendeur Nécro-seigneur",
+        "Necrolord Covenant Features": "Fonctionnalités Nécro-seigneur",
+        "Necrolord Rare Spawn": "Rare Nécro-seigneur",
+        "Venthyr Quest": "Quête Venthyr",
+        "Venthyr Renown": "Renom Venthyr",
+        "Venthyr Vendor": "Vendeur Venthyr",
+        "Venthyr Covenant Features": "Fonctionnalités Venthyr",
+        "Venthyr Rare Spawn": "Rare Venthyr",
+        "Medals": "Médailles",
+        "Tinkering": "Bricolage",
+        "Dubloons": "Doublons",
+        "Visions": "Visions",
+        "Island Expedition": "Expédition insulaire",
+        "Warfront: Arathi": "Front de guerre : Arathi",
+        "Warfront: Darkshore": "Front de guerre : Sombrivage",
+        "Assault: Vale of Eternal Blossoms": "Assaut : Val de l'Éternel printemps",
+        "Assault: Uldum": "Assaut : Uldum",
+        "Mage Tower": "Tour des mages",
+        "Class Hall": "Domaine de classe",
+        "Garrison": "Fief",
+        "Missions": "Missions",
+        "Stables": "Écuries",
+        "Trading Post": "Comptoir commercial",
+        "Fishing Shack": "Cabane de pêche",
+        "Challenge Mode": "Mode défi",
+        "Golden Lotus": "Lotus doré",
+        "Order of the Cloud Serpent": "Ordre du Serpent-nuage",
+        "Shado-Pan": "Ombrepan",
+        "Kun-Lai Vendor": "Vendeur de Kun-Lai",
+        "The Tillers": "Les Laboureurs",
+        "Primal Eggs": "Œufs primordiaux",
+        "Argent Tournament": "Tournoi d'argent",
+        "Cenarion Expedition": "Expédition cénarienne",
+        "Kurenai/The Mag'har": "Kurenai / Mag'har",
+        "Netherwing": "Aile-du-Néant",
+        "Sha'tari Skyguard": "Garde-ciel sha'tari",
+        "Human": "Humain",
+        "Dwarf": "Nain",
+        "Night Elf": "Elfe de la nuit",
+        "Gnome": "Gnome",
+        "Draenei": "Draeneï",
+        "Worgen": "Worgen",
+        "Pandaren": "Pandaren",
+        "Dracthyr": "Dracthyr",
+        "Orc": "Orc",
+        "Undead": "Mort-vivant",
+        "Tauren": "Tauren",
+        "Troll": "Troll",
+        "Goblin": "Gobelin",
+        "Blood Elf": "Elfe de sang",
+        "Alchemy": "Alchimie",
+        "Archaeology": "Archéologie",
+        "Engineering": "Ingénierie",
+        "Fishing": "Pêche",
+        "Jewelcrafting": "Joaillerie",
+        "Tailoring": "Couture",
+        "Leatherworking": "Travail du cuir",
+        "Blacksmith": "Forge",
+        "Mark of Honor": "Marque d'honneur",
+        "Honor": "Honneur",
+        "Halaa": "Halaa",
+        "Timeless Isle": "Île du temps figé",
+        "Ashran": "Ashran",
+        "Vicious Saddle": "Selle vicieuse",
+        "Gladiator": "Gladiateur",
+        "Talon's Vengeance": "Vengeance de la Serre",
+        "Brewfest": "Fête des Brasseurs",
+        "Hallow's End": "Sanssaint",
+        "Love is in the Air": "De l'amour dans l'air",
+        "Noblegarden": "Le jardin noble",
+        "Winter Veil": "Voile d'hiver",
+        "Lunar Festival": "Fête lunaire",
+        "Brawler's Guild": "Guilde des bagarreurs",
+        "Darkmoon Faire": "Foire de Sombrelune",
+        "Timewalking": "Marche du temps",
+        "Secrets of Azeroth": "Secrets d'Azeroth",
+        "Anniversary": "Anniversaire",
+        "Trading Post Re-Releases": "Rééditions du Comptoir",
+        "Trading Post Originals": "Originaux du Comptoir",
+        "Plunderstorm": "Plunderstorm",
+        "Dastardly Duos": "Duos infâmes",
+        "Greedy Emissary": "Émissaire cupide",
+        "Remix: Pandaria": "Remix : Pandaria",
+        "Remix: Legion": "Remix : Légion",
+        "Blizzcon": "BlizzCon",
+        "Player Vote": "Vote des joueurs",
+        "Collector's Edition": "Édition collector",
+        "WoW Classic": "WoW Classic",
+        "Blizzard Anniversary": "Anniversaire Blizzard",
+        "20th Anniversary": "20e anniversaire",
+        "HotS": "HotS",
+        "Hearthstone": "Hearthstone",
+        "Warcraft III Reforged": "Warcraft III Reforged",
+        "Diablo IV": "Diablo IV",
+        "Mountain Dew": "Mountain Dew",
+        "Razer": "Razer",
+        "Recruit-A-Friend": "Parrainage",
+        "Azeroth Choppers": "Azeroth Choppers",
+        "Trading Card Game / Auction House": "Jeu de cartes / Hôtel des ventes",
+        "Annual Subscription": "Abonnement annuel",
+        "Twitch Drops": "Drops Twitch",
+        "Paladin": "Paladin",
+        "Demon Hunter": "Chasseur de démons",
+        "Warlock": "Démoniste",
+        "Death Knight": "Chevalier de la mort",
+        "Guild Vendor": "Vendeur de guilde",
+        "BMAH": "HNE",
+        "Feats of Strength": "Exploits",
+        "Old School Ride": "Monture classique",
+        "Make-A-Wish": "Make-A-Wish",
+        "Unknown": "Inconnu"
+    }),
+});
+
+const PETS = Object.freeze({
+    categories: Object.freeze({
+        "Pets": "Mascottes",
+        "Promotion": "Promotion",
+        "World Events": "Événements mondiaux",
+        "PVP": "JcJ",
+        "Non classé": "Non classé"
+    }),
+    sources: Object.freeze({
+        "Achievement": "Haut-fait",
+        "Quest": "Quête",
+        "Vendor": "Vendeur",
+        "Raid Drop": "Butin de raid",
+        "Dungeon Drop": "Butin de donjon",
+        "Drop": "Butin",
+        "Discovery": "Découverte",
+        "Zone Drop": "Butin de zone",
+        "Reputation": "Réputation",
+        "Paragon Reputation": "Réputation parangon",
+        "Treasure": "Trésor",
+        "Rare Spawn": "Rare",
+        "Rare": "Rare",
+        "World Boss": "Boss mondial",
+        "Renown": "Renom",
+        "Collect": "Collection",
+        "Zone Feature": "Activité de zone",
+        "Campaign": "Campagne",
+        "Prey": "Proie",
+        "Delves": "Gouffres",
+        "Profession": "Métier",
+        "Fishing": "Pêche",
+        "Archaeology": "Archéologie",
+        "Engineering": "Ingénierie",
+        "Cooking": "Cuisine",
+        "Pet Battle": "Combat de mascottes",
+        "Wild Pet": "Mascotte sauvage",
+        "Wild": "Sauvage",
+        "Tamer": "Maître mascotte",
+        "Trainer": "Dresseur",
+        "TCG/AH": "JCC/HV",
+        "Trading Card Game / Auction House": "JCC / Hôtel des ventes",
+        "Blizzard Store": "Boutique Blizzard",
+        "Promotions": "Promotions",
+        "Blizzcon": "BlizzCon",
+        "Collector's Edition": "Édition collector",
+        "Recruit-A-Friend": "Parrainage",
+        "Twitch Drops": "Drops Twitch",
+        "Brewfest": "Fête des Brasseurs",
+        "Hallow's End": "Sanssaint",
+        "Love is in the Air": "De l'amour dans l'air",
+        "Noblegarden": "Le jardin noble",
+        "Winter Veil": "Voile d'hiver",
+        "Lunar Festival": "Fête lunaire",
+        "Midsummer Festival": "Solstice d'été",
+        "Darkmoon Faire": "Foire de Sombrelune",
+        "Children's Week": "Semaine des enfants",
+        "Day of the Dead": "Jour des morts",
+        "Pilgrim's Bounty": "Bienfaits du pèlerin",
+        "Timewalking": "Marche du temps",
+        "Secrets of Azeroth": "Secrets d'Azeroth",
+        "Anniversary": "Anniversaire",
+        "Torghast": "Tourment",
+        "Adventures": "Aventures",
+        "Covenant Feature": "Fonctionnalité de congrégation",
+        "Protoform Synthesis": "Synthèse de protoforme",
+        "Garrison": "Fief",
+        "Missions": "Missions",
+        "Island": "Île",
+        "Primal Eggs": "Œufs primordiaux",
+        "Honor": "Honneur",
+        "Gladiator": "Gladiateur"
+    }),
+});
+
+const DECOR = Object.freeze({
+    categories: Object.freeze({
+        "General": "Général",
+        "Limited Time": "Durée limitée",
+        "Neighbourhoods": "Quartiers",
+        "Profession": "Métier",
+        "Undiscovered": "Non découvert",
+        "Promotion": "Promotion",
+        "PVP": "JcJ",
+        "World Events": "Événements mondiaux",
+        "Non classé": "Non classé"
+    }),
+    sources: Object.freeze({
+        "Achievement": "Haut-fait",
+        "Quest": "Quête",
+        "Vendor": "Vendeur",
+        "Raid Drop": "Butin de raid",
+        "Dungeon Drop": "Butin de donjon",
+        "Drop": "Butin",
+        "Reputation": "Réputation",
+        "Horde Reputation": "Réputation Horde",
+        "Alliance Reputation": "Réputation Alliance",
+        "Treasure": "Trésor",
+        "Delves": "Gouffres",
+        "Prey": "Proie",
+        "Heritage": "Héritage",
+        "Twitch Drop": "Drop Twitch",
+        "Login": "Connexion",
+        "Zone Feature": "Activité de zone",
+        "Rare": "Rare",
+        "Dubloons": "Doublons",
+        "Allied Races": "Races alliées",
+        "Paragon": "Parangon",
+        "Lorewalking": "Maître du savoir",
+        "Renown": "Renom",
+        "Raid Renown": "Renom de raid",
+        "Dracthyr Quest": "Quête Dracthyr",
+        "Midnight Pre-Patch": "Pré-patch Midnight",
+        "Mechagon Tinkering": "Bricolage de Mécagone",
+        "Mechagon Dailies": "Journalières de Mécagone",
+        "Pawdo Quests": "Quêtes Pawdo",
+        "Alchemy": "Alchimie",
+        "Archaeology": "Archéologie",
+        "Blacksmithing": "Forge",
+        "Cooking": "Cuisine",
+        "Enchanting": "Enchantement",
+        "Engineering": "Ingénierie",
+        "Fishing": "Pêche",
+        "Herbalism": "Herboristerie",
+        "Inscription": "Calligraphie",
+        "Jewelcrafting": "Joaillerie",
+        "Leatherworking": "Travail du cuir",
+        "Tailoring": "Couture",
+        "Mining": "Minage",
+        "Skinning": "Dépeçage",
+        "Dreamweavers": "Tisseurs de rêves",
+        "Highmountain Tribe": "Tribu de Haut-Roc",
+        "Nightfallen": "Soûlâmes",
+        "Class Hall Vendors": "Vendeurs de domaine de classe",
+        "Class Hall Achievements": "Hauts-faits de domaine de classe",
+        "Withered Army Training": "Entraînement de l'armée flétrie",
+        "Alliance Garrison Vendor": "Vendeur de fief Alliance",
+        "Horde Garrison Vendor": "Vendeur de fief Horde",
+        "Garrison Vendor": "Vendeur de fief",
+        "Alliance Vendor": "Vendeur Alliance",
+        "Assaults": "Assauts",
+        "Participation": "Participation",
+        "Marks of Honor": "Marques d'honneur",
+        "Brawler's Guild": "Guilde des bagarreurs",
+        "Remix: Legion": "Remix : Légion",
+        "Neighbourhood Vendor": "Vendeur de quartier",
+        "Niffen Endeavors": "Initiatives flairan",
+        "Silvermoon Endeavors": "Initiatives de Lune-d'argent",
+        "Grummle Endeavors": "Initiatives grumelot",
+        "Draconic Endeavors": "Initiatives draconiques",
+        "Mechagnome Endeavors": "Initiatives mécagnomes",
+        "K'areshi Endeavors": "Initiatives k'areshi",
+        "House Level": "Niveau de maison",
+        "Expansion Editions": "Éditions d'extension",
+        "Diablo IV": "Diablo IV",
+        "Undiscovered Sources": "Sources non découvertes"
+    }),
+});
+
+const WOWHEAD = 'https://www.wowhead.com/fr';
+
+const byWowhead = (path, key) => (item) => (item[key]
+    ? `${WOWHEAD}/${path}=${item[key]}`
+    : `${WOWHEAD}/search?q=${encodeURIComponent(item.name)}`);
+
+export const UNCATEGORIZED = 'Non classé';
+
+export const COLLECTIONS = Object.freeze({
+    mounts: Object.freeze({
+        field: 'mounts',
+        title: 'Montures',
+        dimension: 'mounts',
+        search: 'Rechercher une monture…',
+        hide: 'Masquer les montures obtenues',
+        uncategorized: 'Montures non classées',
+        empty: 'Aucune monture connue pour ce personnage.',
+        extraCategories: ['Mounts', 'Racial', 'Professions', 'PVP', 'World Events', 'Limited Time', 'Past Limited Time', 'Promotion', 'Other'],
+        wowheadUrl: byWowhead('spell', 'wowhead_id'),
+        labels: MOUNTS,
+    }),
+    pets: Object.freeze({
+        field: 'pets',
+        title: 'Mascottes',
+        dimension: 'pets',
+        search: 'Rechercher une mascotte…',
+        hide: 'Masquer les mascottes obtenues',
+        uncategorized: 'Mascottes non classées',
+        empty: 'Aucune mascotte connue pour ce personnage.',
+        extraCategories: ['Pets', 'World Events', 'PVP', 'Promotion'],
+        wowheadUrl: byWowhead('npc', 'wowhead_id'),
+        labels: PETS,
+    }),
+    decor: Object.freeze({
+        field: 'decor',
+        title: 'Décorations',
+        dimension: 'decor',
+        search: 'Rechercher une décoration…',
+        hide: 'Masquer les décorations obtenues',
+        uncategorized: 'Décorations non classées',
+        empty: 'Aucune décoration connue pour ce personnage.',
+        extraCategories: ['Profession', 'Neighbourhoods', 'General', 'Limited Time', 'World Events', 'PVP', 'Promotion', 'Undiscovered'],
+        wowheadUrl: byWowhead('item', 'item_id'),
+        labels: DECOR,
+    }),
+});
+
+// Sources named "<scope>: <name>" are translated by their scope.
+const SOURCE_PREFIXES = Object.freeze([
+    ['Renown: ', 'Renom : '],
+    ['Trading Post: ', 'Comptoir : '],
+    ['War Within: ', 'The War Within : '],
+    ['Midnight: ', 'Midnight : '],
+]);
+
+export function translateCategory(kind, name) {
+    return COLLECTIONS[kind].labels.categories[name] ?? name;
+}
+
+export function translateSource(kind, name) {
+    const known = COLLECTIONS[kind].labels.sources[name];
+    if (known) {
+        return known;
+    }
+
+    const prefix = SOURCE_PREFIXES.find(([english]) => name.startsWith(english));
+
+    return prefix ? prefix[1] + name.slice(prefix[0].length) : name;
+}
+
+const count = (items) => ({ total: items.length, completed: items.filter((item) => item.is_completed).length });
+const byName = (a, b) => a.name.localeCompare(b.name, 'fr');
+
+// Category, then source, then items. Items without category or source form one last group.
+export function groupCollection(items, categoryOrder) {
+    const classified = new Map();
+    const loose = [];
+
+    for (const item of items) {
+        if (!item.category || !item.source) {
+            loose.push(item);
+            continue;
+        }
+        const sources = classified.get(item.category) ?? new Map();
+        sources.set(item.source, [...(sources.get(item.source) ?? []), item]);
+        classified.set(item.category, sources);
+    }
+
+    const known = categoryOrder.filter((name) => classified.has(name));
+    const others = [...classified.keys()].filter((name) => !categoryOrder.includes(name));
+
+    const groups = [...known, ...others].map((name) => {
+        const sources = [...classified.get(name)]
+            .map(([source, sourceItems]) => ({ name: source, items: sourceItems, ...count(sourceItems) }))
+            .toSorted(byName);
+
+        return { name, sources, items: sources.flatMap((source) => source.items), ...count(sources.flatMap((source) => source.items)) };
+    });
+
+    if (loose.length) {
+        groups.push({ name: UNCATEGORIZED, sources: [], items: loose, ...count(loose) });
+    }
+
+    return groups;
+}

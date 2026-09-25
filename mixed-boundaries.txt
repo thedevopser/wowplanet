@@ -1,0 +1,28 @@
+# Files allowed to spell `mixed`, checked by `make mixed-check`.
+#
+# A value of unknown shape may only enter the code here, and is narrowed on the line
+# that receives it: nothing outside these files ever holds or passes on a `mixed`.
+# One path per line. Keep the list short: a growing list means `mixed` was moved, not removed.
+
+# The JSON decoding door: `get()` returns the decoded body to the few callers that cache
+# raw data (journal instance, talent tree); every other caller goes through `getResponse()`.
+app/Infrastructure/Blizzard/BlizzardApiClient.php
+
+# The typed reader of any decoded external JSON: it holds the decoded array and hands out
+# nothing but typed values.
+app/Infrastructure/Blizzard/Responses/ResponsePayload.php
+
+# Carries the offending value of a broken contract, whatever its type.
+app/Infrastructure/Blizzard/Responses/Exceptions/UnexpectedFieldTypeException.php
+
+# A Guzzle promise rejection reason is untyped: it is narrowed to a Throwable on arrival.
+app/Infrastructure/Blizzard/Concerns/ImportsFromBlizzardApi.php
+
+# `wow_ref_*` rows come from the query builder as stdClass with untyped properties.
+app/Infrastructure/Reference/ReferenceValue.php
+
+# The jsonb column is decoded by the Eloquent cast and served to the front as stored.
+app/Models/CrossCharacterData.php
+
+# Overrides Inertia's `share()`, whose default shared props are untyped.
+app/Http/Middleware/HandleInertiaRequests.php
