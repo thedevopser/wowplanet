@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const reload = vi.fn();
 
@@ -15,6 +15,7 @@ vi.mock('axios');
 import { mountWithPlugins } from '../tests/helpers';
 import AdminHealthPage from './AdminHealthPage.vue';
 import { expectNoAxeViolations } from '../tests/axe';
+import { BUSY_INTERVAL_MS, IDLE_INTERVAL_MS, QUEUE_ENDPOINT } from '../composables/useQueuePolling';
 
 const failedJob = { uuid: 'a1b2', queue: 'imports', job: 'App\\Jobs\\RunImportJob', exception: 'RuntimeException: boom', failed_at: '2026-09-22 09:15:00' };
 
@@ -24,7 +25,7 @@ const healthy = () => ({
         { service: 'redis:cache', status: 'ok', issue: null, detail: null },
     ],
     quota: { status: 'ok', issue: null, used: 1_200, import_ceiling: 30_000, enforced_limit: 34_000, published_quota: 36_000 },
-    queue: { status: 'ok', issue: null, queue: 'imports', pending: 0, delayed: 1, reserved: 0, current: null, failed: [] },
+    queue: { status: 'ok', issue: null, queue: 'imports', pending: 0, delayed: 1, reserved: 0, current: null, running: [], waiting: [], failed: [] },
     volumes: {
         status: 'ok',
         issue: null,
@@ -79,14 +80,20 @@ describe('AdminHealthPage', () => {
         expect(quota).toContain('36 000');
     });
 
-    it('gives the queue counts and the running import', async () => {
+    it('gives the queue counts', async () => {
+        const queue = (await mountPage()).get('[data-section="queue"]');
+
+        expect(queue.get('[data-count="delayed"]').text()).toBe('1');
+    });
+
+    it('no longer names a single running import apart from the job lists', async () => {
         const health = healthy();
         health.queue.current = { job_id: 'job-42', started_at: 1_758_530_000 };
 
         const queue = (await mountPage(health)).get('[data-section="queue"]');
 
-        expect(queue.get('[data-count="delayed"]').text()).toBe('1');
-        expect(queue.text()).toContain('job-42');
+        expect(queue.text()).not.toContain('Import en cours');
+        expect(queue.text()).not.toContain('job-42');
     });
 
     it('says a section it could not measure is unavailable rather than showing it empty', async () => {
@@ -188,5 +195,113 @@ describe('AdminHealthPage', () => {
         const wrapper = await mountPage();
 
         await expectNoAxeViolations(wrapper.element);
+    });
+
+    describe('jobs in the queue', () => {
+        const NOW = 1_700_000_000;
+        const scoreJob = { label: 'Calcul du score de compte', account: 'Thrall#1234', since: NOW - 72 };
+        const importJob = { label: 'Import du catalogue', account: null, since: NOW - 5 };
+
+        const withJobs = (running, waiting = []) => {
+            const health = healthy();
+            health.queue = { ...health.queue, running, waiting };
+
+            return health;
+        };
+
+        const measured = (running, waiting = [], overrides = {}) => ({ data: { ...healthy().queue, running, waiting, ...overrides } });
+
+        let wrapper;
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            vi.setSystemTime(NOW * 1000);
+            axios.get = vi.fn().mockResolvedValue(measured([]));
+        });
+
+        afterEach(() => {
+            wrapper?.unmount();
+            vi.useRealTimers();
+        });
+
+        it('lists the running and the waiting jobs with their account and duration', async () => {
+            wrapper = await mountPage(withJobs([scoreJob], [importJob]));
+
+            const running = wrapper.get('[data-jobs="running"]');
+            expect(running.text()).toContain('En cours');
+            expect(running.text()).toContain('Calcul du score de compte');
+            expect(running.text()).toContain('Thrall#1234');
+            expect(running.text()).toContain('depuis 1 min 12 s');
+            expect(wrapper.get('[data-jobs="waiting"]').text()).toContain('Import du catalogue');
+        });
+
+        it('says no job is running, and shows nothing for an empty wait', async () => {
+            wrapper = await mountPage();
+
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Aucun job en cours.');
+            expect(wrapper.find('[data-jobs="waiting"]').exists()).toBe(false);
+        });
+
+        it('lets the duration run between two measures without asking the server', async () => {
+            wrapper = await mountPage(withJobs([scoreJob]));
+
+            await vi.advanceTimersByTimeAsync(3000);
+
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('depuis 1 min 15 s');
+            expect(axios.get).not.toHaveBeenCalled();
+        });
+
+        it('shows a job appear and disappear without a click', async () => {
+            axios.get = vi.fn().mockResolvedValueOnce(measured([scoreJob])).mockResolvedValue(measured([]));
+            wrapper = await mountPage();
+
+            await vi.advanceTimersByTimeAsync(IDLE_INTERVAL_MS);
+            expect(axios.get).toHaveBeenCalledWith(QUEUE_ENDPOINT);
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Calcul du score de compte');
+
+            await vi.advanceTimersByTimeAsync(BUSY_INTERVAL_MS);
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Aucun job en cours.');
+        });
+
+        it('announces the jobs coming and going, not the running durations', async () => {
+            axios.get = vi.fn().mockResolvedValue(measured([scoreJob], [importJob]));
+            wrapper = await mountPage(withJobs([scoreJob]));
+
+            const summary = wrapper.get('[data-role="queue-summary"]');
+            expect(summary.attributes('aria-live')).toBe('polite');
+            expect(summary.text()).toBe('1 job en cours, aucun en attente.');
+
+            await vi.advanceTimersByTimeAsync(BUSY_INTERVAL_MS);
+
+            expect(summary.text()).toBe('1 job en cours, 1 en attente.');
+            expect(summary.text()).not.toContain('depuis');
+        });
+
+        it('keeps the last measure and says the tracking is interrupted when the network fails', async () => {
+            axios.get = vi.fn().mockRejectedValue(new Error('network'));
+            wrapper = await mountPage(withJobs([scoreJob]));
+
+            await vi.advanceTimersByTimeAsync(BUSY_INTERVAL_MS);
+
+            expect(wrapper.get('[data-role="queue-interrupted"]').text()).toBe('Mesure de la file interrompue.');
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Calcul du score de compte');
+        });
+
+        it('raises the anomaly of a job that failed since the page was opened', async () => {
+            axios.get = vi.fn().mockResolvedValue(measured([], [], { status: 'warning', issue: '1 job échoué en attente de décision.', failed: [failedJob] }));
+            wrapper = await mountPage();
+
+            await vi.advanceTimersByTimeAsync(IDLE_INTERVAL_MS);
+
+            expect(wrapper.findAll('[data-alert]').map(alert => alert.text())).toEqual(['1 job échoué en attente de décision.']);
+            expect(wrapper.find('[data-job="a1b2"]').exists()).toBe(true);
+        });
+
+        it('shows no accessibility violation with jobs listed', async () => {
+            vi.useRealTimers();
+            wrapper = await mountPage(withJobs([scoreJob], [importJob]));
+
+            await expectNoAxeViolations(wrapper.element);
+        });
     });
 });

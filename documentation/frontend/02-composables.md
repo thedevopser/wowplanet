@@ -141,3 +141,34 @@ await tracking.start(jobId);          // suit un import qu'on vient de lancer
 - Le journal gardé en mémoire est borné à `MAX_LOG_LINES` (2 000 lignes) : un import volumineux ne fait pas enfler l'onglet.
 
 > Le polling est un choix assumé — un seul administrateur, un objet observé qui dure des minutes — et le contrat « curseur plus delta » rend un passage ultérieur à SSE contenu.
+
+---
+
+## `useQueuePolling` (`composables/useQueuePolling.js`)
+
+Tient à jour la section Queue de la page Santé sans recharger le reste du diagnostic : jobs pris et en attente, compteurs, jobs échoués.
+
+**Utilisation**
+
+```js
+import { useQueuePolling } from '../composables/useQueuePolling';
+
+const { queue, interrupted, now } = useQueuePolling(() => props.health.queue);
+```
+
+**Ce qu'il expose**
+
+| Membre | Rôle |
+|---|---|
+| `queue` | La dernière section mesurée : celle de la page au départ, puis celle de `GET /api/admin/health/queue` |
+| `interrupted` | Vrai quand la dernière mesure a échoué ; la mesure précédente reste affichée |
+| `now` | L'heure du navigateur en secondes, avancée chaque seconde pour faire courir les durées entre deux mesures |
+
+**Comportement**
+
+- Mesure toutes les `BUSY_INTERVAL_MS` (5 s) tant qu'un job est pris ou en attente, toutes les `IDLE_INTERVAL_MS` (30 s) sinon : un job lancé après l'ouverture de l'onglet finit toujours par apparaître.
+- **Jamais deux mesures en vol** : la suivante n'est programmée qu'à la réponse de la précédente, par un `setTimeout` et non un `setInterval`. FrankenPHP plante en dev sous requêtes concurrentes, et une réponse lente ne doit pas s'empiler.
+- Un échec réseau garde la mesure affichée, lève `interrupted` et réessaie au rythme suivant.
+- Onglet masqué (`visibilitychange`) : plus aucune mesure ni aucun tic d'horloge ; au retour, une mesure immédiate.
+- Suit la source qu'on lui donne : quand la page recharge `health` (bouton « Rafraîchir », action sur un job échoué), la section rechargée remplace la mesure et règle le rythme.
+- S'arrête avec la portée qui l'a créé (`onScopeDispose`), donc au démontage de la page.

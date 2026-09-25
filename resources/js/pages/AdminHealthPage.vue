@@ -58,34 +58,39 @@
         <section data-section="queue" class="rounded-ui-md border border-default bg-surface p-5 sm:p-6 space-y-6">
             <h2 class="flex items-center gap-3 font-display text-2xl font-semibold text-default">
                 Queue
-                <AdminStatusBadge kind="health" :status="health.queue.status" />
+                <AdminStatusBadge kind="health" :status="queue.status" />
             </h2>
 
-            <p v-if="health.queue.status === 'unavailable'" class="font-mono text-xs text-danger break-all">
-                {{ health.queue.detail }}
+            <p v-if="interrupted" data-role="queue-interrupted" class="text-sm text-warning">Mesure de la file interrompue.</p>
+
+            <p v-if="queue.status === 'unavailable'" class="font-mono text-xs text-danger break-all">
+                {{ queue.detail }}
             </p>
 
             <template v-else>
                 <dl class="grid grid-cols-3 gap-4 text-sm max-w-md">
                     <div v-for="count in QUEUE_COUNTS" :key="count.key">
                         <dt class="text-muted">{{ count.label }}</dt>
-                        <dd :data-count="count.key" class="font-mono text-xl tabular-nums text-default">{{ health.queue[count.key] }}</dd>
+                        <dd :data-count="count.key" class="font-mono text-xl tabular-nums text-default">{{ queue[count.key] }}</dd>
                     </div>
                 </dl>
 
-                <p class="text-sm">
-                    <span class="text-muted">Import en cours :</span>
-                    <template v-if="health.queue.current">
-                        <span class="font-mono tabular-nums text-default ml-1">{{ health.queue.current.job_id }}</span>
-                        <span class="text-muted ml-1">depuis {{ formatTimestamp(health.queue.current.started_at) }}</span>
-                    </template>
-                    <span v-else class="text-muted ml-1">aucun.</span>
-                </p>
+                <p data-role="queue-summary" aria-live="polite" class="sr-only">{{ queueSummary }}</p>
+
+                <div data-jobs="running" class="space-y-3">
+                    <h3 class="text-sm font-semibold text-default">En cours</h3>
+                    <QueueJobList :jobs="queue.running" :now="now" empty-text="Aucun job en cours." />
+                </div>
+
+                <div v-if="queue.waiting.length > 0" data-jobs="waiting" class="space-y-3">
+                    <h3 class="text-sm font-semibold text-default">En attente</h3>
+                    <QueueJobList :jobs="queue.waiting" :now="now" />
+                </div>
 
                 <div class="space-y-3">
                     <h3 class="text-sm font-semibold text-default">Jobs échoués</h3>
                     <FailedJobList
-                        :jobs="health.queue.failed"
+                        :jobs="queue.failed"
                         :disabled="busy"
                         @retry="ask('retry', $event)"
                         @forget="ask('forget', $event)"
@@ -151,9 +156,11 @@ import AdminStatusBadge from '../components/admin/AdminStatusBadge.vue';
 import HealthServiceList from '../components/admin/HealthServiceList.vue';
 import HealthVolumetryTable from '../components/admin/HealthVolumetryTable.vue';
 import FailedJobList from '../components/admin/FailedJobList.vue';
+import QueueJobList from '../components/admin/QueueJobList.vue';
 import ApplicationErrorList from '../components/admin/ApplicationErrorList.vue';
 import AdminPageHeader from '../components/admin/AdminPageHeader.vue';
 import Button from '../components/ui/Button.vue';
+import { useQueuePolling } from '../composables/useQueuePolling';
 
 const QUEUE_COUNTS = [
     { key: 'pending', label: 'En attente' },
@@ -180,6 +187,8 @@ const props = defineProps({
     health: { type: Object, required: true },
 });
 
+const { queue, interrupted, now } = useQueuePolling(() => props.health.queue);
+
 const refreshing = ref(false);
 const pending = ref(null);
 const busy = ref(false);
@@ -191,10 +200,23 @@ const error = ref(null);
 const anomalies = computed(() => [
     ...props.health.services.map(probe => probe.issue),
     props.health.quota.issue,
-    props.health.queue.issue,
+    queue.value.issue,
     props.health.volumes.issue,
     props.health.errors.issue,
 ].filter(issue => issue));
+
+// Seules l'arrivée et le départ d'un job sont annoncés : les durées avancent chaque
+// seconde, et un lecteur d'écran les lirait sans fin.
+const queueSummary = computed(() => {
+    const running = queue.value.running.length;
+    const waiting = queue.value.waiting.length;
+
+    if (running === 0 && waiting === 0) {
+        return 'Aucun job en cours ni en attente.';
+    }
+
+    return `${running === 0 ? 'Aucun job' : `${running} job${running > 1 ? 's' : ''}`} en cours, ${waiting === 0 ? 'aucun' : waiting} en attente.`;
+});
 
 function refresh() {
     refreshing.value = true;
@@ -227,9 +249,4 @@ function formatCount(count) {
     return count.toLocaleString('fr-FR');
 }
 
-function formatTimestamp(timestamp) {
-    return new Date(timestamp * 1000).toLocaleString('fr-FR', {
-        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-    });
-}
 </script>
