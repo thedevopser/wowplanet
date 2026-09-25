@@ -20,6 +20,9 @@ class MutationScopeCommand extends Command
 
     private const string TESTS_DIRECTORY = 'tests';
 
+    // GitHub sends the null object id as the previous commit of a branch's first push.
+    private const string NULL_COMMIT = '0000000000000000000000000000000000000000';
+
     protected $signature = 'mutation:scope
         {--base= : Git reference the branch is compared to; without it, the whole perimeter is listed}';
 
@@ -50,7 +53,9 @@ class MutationScopeCommand extends Command
         $base = $this->option('base');
 
         try {
-            $files = is_string($base) && $base !== '' ? $this->touchedBy($base, $entries) : $this->phpFilesOf($entries);
+            $files = is_string($base) && $base !== '' && $base !== self::NULL_COMMIT
+                ? $this->touchedBy($base, $entries)
+                : $this->phpFilesOf($entries);
         } catch (GitCommandFailedException $gitCommandFailedException) {
             $this->error($gitCommandFailedException->getMessage());
 
