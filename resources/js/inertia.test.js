@@ -7,6 +7,7 @@ import { h } from 'vue';
 
 const useAuthGuard = vi.fn();
 const inertiaAppOptions = {};
+let routerEvents = [];
 
 vi.mock('@inertiajs/vue3', () => ({
     createInertiaApp: (options) => {
@@ -24,8 +25,12 @@ vi.mock('./bootstrap', () => ({}));
 vi.mock('./composables/useAuthGuard', () => ({ useAuthGuard }));
 
 
+// The entry point subscribes to the router once, on import: Vitest clears mock calls
+// before each test, so they are read here.
 beforeAll(async () => {
     await import('./inertia');
+    const { router } = await import('@inertiajs/vue3');
+    routerEvents = router.on.mock.calls.map(([event]) => event);
 });
 
 function runSetup() {
@@ -55,9 +60,7 @@ describe('amorçage Inertia', () => {
 });
 
 describe('navigation', () => {
-    it('lays no overlay over the page during a visit', async () => {
-        const { router } = await import('@inertiajs/vue3');
-
-        expect(router.on.mock.calls.map(([event]) => event)).toEqual(['navigate']);
+    it('lays no overlay over the page during a visit', () => {
+        expect(routerEvents).toEqual(['navigate']);
     });
 });
