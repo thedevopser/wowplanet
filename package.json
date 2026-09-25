@@ -10,7 +10,7 @@
         "test:watch": "vitest"
     },
     "devDependencies": {
-        "@pinia/testing": "^1.0.3",
+        "@pinia/testing": "^2.0.1",
         "@tailwindcss/vite": "^4.3.3",
         "@vitest/coverage-v8": "^5.0.2",
         "@vue/test-utils": "^2.5.1",
