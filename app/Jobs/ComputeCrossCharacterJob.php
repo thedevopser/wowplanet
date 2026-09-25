@@ -6,13 +6,14 @@ namespace App\Jobs;
 
 use App\Application\DTOs\CrossCharacterProgress;
 use App\Application\Services\CrossCharacterService;
+use App\Jobs\Contracts\DescribedJob;
 use App\Models\CrossCharacterData;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class ComputeCrossCharacterJob implements ShouldQueue
+class ComputeCrossCharacterJob implements DescribedJob, ShouldQueue
 {
     use Queueable;
 
@@ -27,6 +28,7 @@ class ComputeCrossCharacterJob implements ShouldQueue
         public readonly string $bnetUserId,
         public readonly array $characters,
         public readonly string $accessToken,
+        public readonly string $battleTag,
     ) {
         $this->queue = 'imports';
     }
@@ -58,6 +60,16 @@ class ComputeCrossCharacterJob implements ShouldQueue
 
             Cache::put($this->cacheKey(), ['status' => 'failed'], 3600);
         }
+    }
+
+    public function label(): string
+    {
+        return 'Calcul du score de compte';
+    }
+
+    public function account(): string
+    {
+        return $this->battleTag;
     }
 
     private function cacheKey(): string

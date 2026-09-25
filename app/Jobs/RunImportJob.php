@@ -15,6 +15,7 @@ use App\Application\Import\ImportRun;
 use App\Application\Import\ImportRunState;
 use App\Application\Import\ImportStage;
 use App\Application\Import\ImportWaitReason;
+use App\Jobs\Contracts\DescribedJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Artisan;
@@ -35,7 +36,7 @@ use Illuminate\Support\Facades\Log;
  * liste blanche est réduite à l'import orchestré — mais le contrat du job ne présume pas
  * de cette liste.
  */
-class RunImportJob implements ShouldQueue
+class RunImportJob implements DescribedJob, ShouldQueue
 {
     use Queueable;
 
@@ -69,6 +70,16 @@ class RunImportJob implements ShouldQueue
         public readonly string $trigger = self::PANEL_TRIGGER,
     ) {
         $this->queue = 'imports';
+    }
+
+    public function label(): string
+    {
+        return 'Import du catalogue';
+    }
+
+    public function account(): null
+    {
+        return null;
     }
 
     /** Garde-fou : le chaînage de re-dispatch peut s'étaler sur plusieurs heures. */

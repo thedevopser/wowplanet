@@ -125,7 +125,7 @@ Orchestre le calcul de progression agrégée sur tous les personnages d'un compt
 
 | Méthode | Retour | Description |
 |---|---|---|
-| `compute()` | `array{status, data?, characterCount?, jobId?}` | Déclenche ou retourne le calcul cross-personnage. Si déjà calculé, retourne `ready`. Sinon, dispatche un `ComputeCrossCharacterJob` et retourne `computing` + `jobId`. |
+| `compute(string $battleTag)` | `array{status, data?, characterCount?, jobId?}` | Déclenche ou retourne le calcul cross-personnage. Si déjà calculé, retourne `ready`. Sinon, dispatche un `ComputeCrossCharacterJob` et retourne `computing` + `jobId`. Le BattleTag, lu en session par le contrôleur, est l'étiquette du calcul dans la page Santé : une chaîne vide lève `MissingBattleTagException` au lieu de mettre en file un calcul anonyme. |
 | `getJobStatus` | `array{status}` | Lit l'état d'un job cross-personnage depuis le cache. |
 | `getStoredData` | `?array{data, character_count}` | Retourne les données déjà calculées, **telles qu'elles sont stockées** — ancien format compris. |
 | `mergeCurrentCharacter` | `CharacterProfileDTO` | Fusionne les données du personnage courant dans une progression cross-personnage. |
@@ -232,6 +232,8 @@ Ce que `/admin/health` affiche, section par section. C'est un outil de diagnosti
 **`BlizzardQuota`** situe le quota consommé sur l'heure glissante (`HourlyBudgetGuard::usedInWindow()`, sans second compteur) face aux trois plafonds : le quota publié par Blizzard, la limite que le client s'impose, et le plafond que les imports se réservent. Le statut est une fonction pure. Il passe à `warning` au-delà de `NEAR_CEILING_RATIO` (0,9) du plafond des imports, car un import lancé à ce moment-là passerait l'essentiel de son temps à attendre, et à `critical` à la limite appliquée.
 
 **`QueueState`** compte les jobs de la queue `imports` en attente, différés et pris par le worker, et désigne l'import en cours par `CurrentImport`. Les différés sont comptés à part : un import qui attend la libération du quota se redispatche avec un délai, et le confondre avec un job en souffrance ferait croire à un worker arrêté. Une queue qui n'est pas sur Redis ne se mesure pas.
+
+Elle liste aussi les jobs eux-mêmes : `running`, les jobs pris par le worker (sorted set `queues:imports:reserved`, dont le score est l'expiration de la réservation, d'où une prise à score − `retry_after`), et `waiting`, les jobs en attente dans l'ordre de la file (liste `queues:imports`, depuis leur `createdAt`). La source est la file Redis elle-même et non un registre tenu par les jobs : un job tué par une erreur fatale ou un redémarrage du worker disparaît avec la file, sans ligne fantôme. Chaque charge utile est lue par **`QueuedJob`**, qui ne prend que l'étiquette publique `described`, à défaut le nom court de la classe (`displayName`), et `createdAt` — jamais `data`, où un job peut porter le jeton Blizzard d'un joueur. Une charge utile illisible lève `UnreadableQueuedJobException`, que `QueueState` attrape : le job est écarté de la liste avec un avertissement, sans faire tomber la page qui sert justement à diagnostiquer la file.
 
 **`FailedJobs`** liste les jobs abandonnés par le worker, du plus récent au plus ancien, avec la première ligne de leur exception. La trace complète reste en base. Deux actions sont possibles, journalisées avec leur auteur :
 

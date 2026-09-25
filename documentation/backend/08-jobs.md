@@ -2,6 +2,17 @@
 
 Les jobs s'exécutent sur la queue `imports` via le worker dédié (`php artisan queue:work --queue=imports`). Ils communiquent leur état via le cache Laravel (`Cache::put`).
 
+## Étiquette publique : `DescribedJob`
+
+Un job qui implémente `App\Jobs\Contracts\DescribedJob` se présente dans la page Santé par un libellé (`label()`) et le compte qu'il sert (`account()`, `null` pour un job sans compte). Le hook `DescribeQueuedJob`, enregistré par `Queue::createPayloadUsing` dans `AppServiceProvider`, recopie ces deux valeurs à la racine de la charge utile, sous la clé `described`, au moment où elle est créée — `data.command` y est encore l'objet job. Un job qui n'implémente pas l'interface ne reçoit rien et s'affiche sous le nom court de sa classe.
+
+La page lit la file sans jamais ouvrir `data` : l'étiquette est la seule chose qu'un job montre de lui-même.
+
+| Job | Libellé | Compte |
+|---|---|---|
+| `RunImportJob` | Import du catalogue | aucun |
+| `ComputeCrossCharacterJob` | Calcul du score de compte | BattleTag reçu au lancement |
+
 ---
 
 ## `RunImportJob`
@@ -45,6 +56,7 @@ Récupère les données de tous les personnages d'un compte et calcule la progre
 | `$bnetUserId` | `readonly string` | Identifiant Battle.net de l'utilisateur |
 | `$characters` | `readonly list<array<string, mixed>>` | Liste des personnages à traiter |
 | `$accessToken` | `readonly string` | Token OAuth2 utilisateur pour l'API Blizzard |
+| `$battleTag` | `readonly string` | BattleTag du compte, pris en session au lancement : son étiquette dans la page Santé |
 | `$timeout` | `int` | `600` secondes (10 min) |
 
 **Cycle de vie**

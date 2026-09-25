@@ -37,7 +37,7 @@ function crossCharacterJobCharacters(): array
 
 function crossCharacterJob(): ComputeCrossCharacterJob
 {
-    return new ComputeCrossCharacterJob('job-1', '42', crossCharacterJobCharacters(), 'app-token');
+    return new ComputeCrossCharacterJob('job-1', '42', crossCharacterJobCharacters(), 'app-token', 'Thrall#1234');
 }
 
 /**
@@ -171,3 +171,9 @@ test('the final status stays readable for an hour so the page can poll it', func
     'completed' => [false, 'completed'],
     'failed' => [true, 'failed'],
 ]);
+
+test('the account computation is shown under a readable label and the BattleTag of its account', function (): void {
+    expect(crossCharacterJob())
+        ->label()->toBe('Calcul du score de compte')
+        ->account()->toBe('Thrall#1234');
+});

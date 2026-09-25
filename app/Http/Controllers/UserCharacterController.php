@@ -8,6 +8,7 @@ use App\Application\Services\AccountScoreService;
 use App\Application\Services\CrossCharacterService;
 use App\Application\Services\UserCharacterService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class UserCharacterController extends Controller
@@ -83,10 +84,12 @@ class UserCharacterController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function crossCharacter(): JsonResponse
+    public function crossCharacter(Request $request): JsonResponse
     {
+        $battleTag = $request->session()->get('bnet_battletag');
+
         try {
-            $result = $this->crossCharacterService->compute();
+            $result = $this->crossCharacterService->compute(is_string($battleTag) ? $battleTag : '');
 
             if ($result['status'] === 'unauthenticated') {
                 return response()->json(['error' => 'Not authenticated'], 401);

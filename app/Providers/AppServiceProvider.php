@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Application\Import\ImportWaitReporter;
+use App\Jobs\DescribeQueuedJob;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         if (str_contains($appUrl, 'https://')) {
             URL::forceScheme('https');
         }
+
+        Queue::createPayloadUsing(new DescribeQueuedJob);
 
         RateLimiter::for('api', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
 

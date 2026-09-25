@@ -294,3 +294,9 @@ test('a job that hands over to its next pass keeps who launched it', function ()
 
     Bus::assertDispatched(fn (\App\Jobs\RunImportJob $runImportJob): bool => $runImportJob->trigger === '12345');
 });
+
+test('the catalogue import is shown under a readable label and belongs to no account', function (): void {
+    expect(new RunImportJob('job-1', 'app:wow-data-import'))
+        ->label()->toBe('Import du catalogue')
+        ->account()->toBeNull();
+});

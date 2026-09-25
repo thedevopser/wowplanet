@@ -46,8 +46,10 @@ class CrossCharacterService
      * Returns cached data if fresh, otherwise queues the computation.
      *
      * @return array{status: string, data?: StoredCrossCharacterData|null, characterCount?: int, jobId?: string}
+     *
+     * @throws MissingBattleTagException
      */
-    public function compute(): array
+    public function compute(string $battleTag): array
     {
         if (! $this->userCharacterService->isAuthenticated()) {
             return ['status' => 'unauthenticated'];
@@ -68,6 +70,8 @@ class CrossCharacterService
             return ['status' => 'ready', 'data' => null];
         }
 
+        throw_if($battleTag === '', MissingBattleTagException::forAccount($bnetUserId));
+
         $jobId = Str::uuid()->toString();
         $token = $this->blizzardApiClient->getAccessToken();
 
@@ -78,7 +82,7 @@ class CrossCharacterService
             'realmSlug' => $character['realmSlug'],
         ], $characters);
 
-        dispatch(new ComputeCrossCharacterJob($jobId, $bnetUserId, $characterReferences, $token));
+        dispatch(new ComputeCrossCharacterJob($jobId, $bnetUserId, $characterReferences, $token, $battleTag));
 
         return ['status' => 'computing', 'jobId' => $jobId];
     }
