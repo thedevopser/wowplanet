@@ -49,6 +49,18 @@ test('without a base it plans every class of the perimeter with its dedicated te
         ->assertExitCode(0);
 });
 
+test('the null commit of a branch first push plans the whole perimeter without asking git', function (): void {
+    Process::fake();
+
+    $this->artisan('mutation:scope', ['--base' => '0000000000000000000000000000000000000000'])
+        ->expectsOutput('app/Application/Import/VolumeShrink.php tests/Unit/Application/Import/VolumeShrinkTest.php')
+        ->expectsOutput('app/Domain/Services/ScoreCalculator.php tests/Unit/Domain/Services/ScoreCalculatorEdgeCasesTest.php tests/Unit/Domain/Services/ScoreCalculatorTest.php')
+        ->expectsOutput('app/Domain/ValueObjects/ScoreInput.php')
+        ->assertExitCode(0);
+
+    Process::assertNothingRan();
+});
+
 test('an entry that no longer exists fails and is named', function (): void {
     scopeFile($this->scopeRoot, 'mutation-perimeter.txt', "app/Domain\napp/Gone.php\n");
 

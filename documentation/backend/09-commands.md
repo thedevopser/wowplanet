@@ -147,7 +147,7 @@ Planifie la mutation : une ligne par classe à muter, suivie de ses tests dédi�
 
 **Signature** : `mutation:scope {--base=}` — **Classe** : `MutationScopeCommand`
 
-Sans `--base`, elle rend chaque fichier PHP du périmètre déclaré dans `mutation-perimeter.txt`, les répertoires étant développés. Avec `--base`, elle compare la branche au point où elle a quitté cette référence : fichiers modifiés depuis le `merge-base`, fichiers non suivis, et entrées absentes du périmètre à ce point. Les tests dédiés d'une classe sont les fichiers `tests/**/<Classe>*Test.php`. Une classe qui n'en a aucun sort seule sur sa ligne. La sélection et l'appariement sont ceux de `MutationScope`, décrits dans [Infrastructure](05-infrastructure.md).
+Sans `--base`, elle rend chaque fichier PHP du périmètre déclaré dans `mutation-perimeter.txt`, les répertoires étant développés. Avec `--base`, elle compare la branche au point où elle a quitté cette référence : fichiers modifiés depuis le `merge-base`, fichiers non suivis, et entrées absentes du périmètre à ce point. Une base égale à l'identifiant nul de Git (`0000…`), que GitHub envoie comme commit précédent au premier push d'une branche, compte comme une absence de base : rien ne précède la branche, tout le périmètre est rendu. Les tests dédiés d'une classe sont les fichiers `tests/**/<Classe>*Test.php`. Une classe qui n'en a aucun sort seule sur sa ligne. La sélection et l'appariement sont ceux de `MutationScope`, décrits dans [Infrastructure](05-infrastructure.md).
 
 `scripts/mutate.sh` déroule ce plan, une invocation Pest par ligne. Une branche qui ne touche rien du périmètre ne rend rien, et le script s'arrête alors sans lancer Pest.
 
