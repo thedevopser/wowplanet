@@ -61,11 +61,13 @@ Récupère les données de tous les personnages d'un compte et calcule la progre
 
 **Cycle de vie**
 
-1. À la création : clé `cross_character:{jobId}` → `{status: 'running'}`
+1. Au démarrage : clé `cross_character:{jobId}` → `{status: 'running'}`
 2. Appelle `CrossCharacterService::fetchAndMergeCharacters()`
 3. Persiste le résultat dans `CrossCharacterData` (upsert sur `bnet_user_id`)
 4. En cas de succès : clé → `{status: 'completed'}`
-5. En cas d'erreur : clé → `{status: 'failed'}`
+5. En cas d'échec, l'exception n'est pas attrapée : le worker appelle `failed()`, qui journalise « Cross-character job failed » et pose `{status: 'failed'}` pour le hub. `failed()` est aussi appelé quand le job dépasse son `timeout`, si bien que le hub ne reste jamais sur `running`.
+
+**Échec et relance** — `tries = 1` : pas de relance automatique, le job part dans `failed_jobs` et apparaît dans « Jobs échoués » de la page Santé sous son libellé, d'où un administrateur peut le relancer ou le supprimer. Le job implémente `ShouldBeEncrypted` : sa charge utile, qui porte un jeton Blizzard, est chiffrée dans la file comme dans `failed_jobs`, et seule l'étiquette publique `described` reste en clair. Une relance après expiration du jeton échoue sur `ExpiredBlizzardTokenException`, qui dit de relancer le calcul depuis le hub.
 
 > La limite mémoire est portée à 256 Mo via `ini_set('memory_limit', '256M')` car le calcul cross-personnage peut traiter des dizaines de personnages en parallèle.
 

@@ -46,6 +46,29 @@ test('a payload without a job name is listed under an explicit placeholder', fun
     expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Job illisible');
 });
 
+test('a failed job that describes itself is listed under its public label', function (): void {
+    $uuid = recordFailedJob();
+    DB::table('failed_jobs')->where('uuid', $uuid)->update(['payload' => json_encode([
+        'uuid' => $uuid,
+        'displayName' => \App\Jobs\ComputeCrossCharacterJob::class,
+        'described' => ['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234'],
+        'data' => ['command' => 'encrypted'],
+    ])]);
+
+    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Calcul du score de compte');
+});
+
+test('a failed job with an unreadable label falls back on its class', function (): void {
+    $uuid = recordFailedJob();
+    DB::table('failed_jobs')->where('uuid', $uuid)->update(['payload' => json_encode([
+        'uuid' => $uuid,
+        'displayName' => \App\Jobs\ComputeCrossCharacterJob::class,
+        'described' => ['label' => 42],
+    ])]);
+
+    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe(\App\Jobs\ComputeCrossCharacterJob::class);
+});
+
 test('retrying a failed job pushes it back onto its queue instead of running it', function (): void {
     $uuid = recordFailedJob();
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\DTOs\CharacterProfileDTO;
 use App\Application\DTOs\CrossCharacterProgress;
 use App\Application\Services\CrossCharacterService;
+use App\Application\Services\ExpiredBlizzardTokenException;
 use App\Application\Services\MissingBattleTagException;
 use App\Application\Services\UserCharacterService;
 use App\Jobs\ComputeCrossCharacterJob;
@@ -406,6 +407,18 @@ test('an endpoint that keeps failing is given up after four attempts without los
         Sleep::for(5)->seconds(), Sleep::for(10)->seconds(), Sleep::for(20)->seconds(),
         Sleep::for(5)->seconds(), Sleep::for(10)->seconds(), Sleep::for(20)->seconds(),
     ]);
+});
+
+test('an expired token stops the computation at once instead of storing an empty account', function (): void {
+    Http::fake([
+        ...fakeCrossCharacter('hyjal', 'thrall', crossCharacterPayloads(100, 200, 2600, 900)),
+        crossCharacterUrl('hyjal', 'thrall', 'quests/completed') => Http::response(status: 401),
+    ]);
+
+    expect(fn (): array => mergeCrossCharacters([['name' => 'Thrall', 'realmSlug' => 'hyjal']]))
+        ->toThrow(ExpiredBlizzardTokenException::class, 'The Blizzard token of this computation has expired: launch it again from the account hub instead of retrying it. (https://eu.api.blizzard.com/profile/wow/character/hyjal/thrall/quests/completed)');
+    Http::assertSentCount(1);
+    Sleep::assertNeverSlept();
 });
 
 test('empty responses merge into nothing', function (): void {

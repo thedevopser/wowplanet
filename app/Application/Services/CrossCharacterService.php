@@ -15,6 +15,7 @@ use App\Infrastructure\Blizzard\Responses\Profile\CompletedQuestsResponse;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Jobs\ComputeCrossCharacterJob;
 use App\Models\CrossCharacterData;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -212,7 +213,10 @@ class CrossCharacterService
 
     /**
      * Fetch a single endpoint with retry. A missing character (404) or an endpoint that keeps
-     * failing gives an empty payload: the other characters still merge.
+     * failing gives an empty payload: the other characters still merge. An expired token
+     * (401) stops the whole computation: every other endpoint would answer the same.
+     *
+     * @throws ExpiredBlizzardTokenException
      */
     private function fetchPayload(string $url, string $namespace, string $token): ResponsePayload
     {
@@ -221,29 +225,42 @@ class CrossCharacterService
                 Sleep::sleep(self::RETRY_BASE_DELAY_S * (2 ** ($attempt - 1)));
             }
 
-            try {
-                $response = Http::withToken($token)
-                    ->withHeaders(['Battlenet-Namespace' => $namespace])
-                    ->timeout(15)
-                    ->get($url, ['locale' => 'fr_FR']);
+            $response = $this->request($url, $namespace, $token);
 
-                if ($response->successful()) {
-                    $decoded = $response->json();
-
-                    return ResponsePayload::forEndpoint($url, is_array($decoded) ? $decoded : []);
-                }
-
-                if ($response->status() === 404) {
-                    return ResponsePayload::forEndpoint($url, []);
-                }
-
-                Log::debug(sprintf('Cross-character fetch error: HTTP %d for %s', $response->status(), $url));
-            } catch (\Throwable $e) {
-                Log::debug(sprintf('Cross-character fetch error: %s for %s', $e->getMessage(), $url));
+            if (! $response instanceof Response) {
+                continue;
             }
+
+            throw_if($response->status() === 401, ExpiredBlizzardTokenException::forUrl($url));
+
+            if ($response->successful()) {
+                $decoded = $response->json();
+
+                return ResponsePayload::forEndpoint($url, is_array($decoded) ? $decoded : []);
+            }
+
+            if ($response->status() === 404) {
+                return ResponsePayload::forEndpoint($url, []);
+            }
+
+            Log::debug(sprintf('Cross-character fetch error: HTTP %d for %s', $response->status(), $url));
         }
 
         return ResponsePayload::forEndpoint($url, []);
+    }
+
+    private function request(string $url, string $namespace, string $token): ?Response
+    {
+        try {
+            return Http::withToken($token)
+                ->withHeaders(['Battlenet-Namespace' => $namespace])
+                ->timeout(15)
+                ->get($url, ['locale' => 'fr_FR']);
+        } catch (\Throwable $throwable) {
+            Log::debug(sprintf('Cross-character fetch error: %s for %s', $throwable->getMessage(), $url));
+
+            return null;
+        }
     }
 
     private function getBnetUserId(): string
