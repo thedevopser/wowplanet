@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Application\Services\CrossCharacterService;
 use App\Application\Services\UserCharacterService;
 
 test('the auth state is no longer served by a dedicated endpoint', function (): void {
@@ -69,4 +70,21 @@ test('class icons returns 500 when service throws exception', function (): void 
 
     $this->getJson('/api/class-icons')
         ->assertStatus(500);
+});
+
+test('the account computation is queued under the BattleTag of the session', function (): void {
+    $mock = $this->mock(CrossCharacterService::class);
+    $mock->shouldReceive('compute')->once()->with('Thrall#1234')->andReturn(['status' => 'computing', 'jobId' => 'job-1']);
+
+    $this->withSession(['bnet_battletag' => 'Thrall#1234'])
+        ->getJson('/api/account/cross-character')
+        ->assertOk()
+        ->assertExactJson(['status' => 'computing', 'jobId' => 'job-1']);
+});
+
+test('the account computation gets no BattleTag from a session that lost it', function (): void {
+    $mock = $this->mock(CrossCharacterService::class);
+    $mock->shouldReceive('compute')->once()->with('')->andReturn(['status' => 'unauthenticated']);
+
+    $this->getJson('/api/account/cross-character')->assertUnauthorized();
 });

@@ -13,7 +13,7 @@ use App\Jobs\RunImportJob;
 test('every queue connection waits longer than the slowest job before retrying', function (string $connection): void {
     $longestTimeout = max(
         (new RunImportJob('job', 'app:wow-data-import'))->timeout,
-        (new ComputeCrossCharacterJob('job', 'bnet', [], 'token'))->timeout,
+        (new ComputeCrossCharacterJob('job', 'bnet', [], 'token', 'Thrall#1234'))->timeout,
     );
 
     $retryAfter = config(sprintf('queue.connections.%s.retry_after', $connection));

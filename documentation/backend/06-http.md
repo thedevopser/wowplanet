@@ -105,7 +105,7 @@ Les endpoints JSON liés au compte connecté, sous le limiteur `authenticated`.
 | `classIcons()` | `GET /api/class-icons` | Icône de chaque classe, par identifiant. |
 | `accountScore()` | `GET /api/account/score` | Score de compte, depuis le cache ou en cours de calcul. |
 | `refreshAccountScore()` | `POST /api/account/score/refresh` | Invalide le score de compte pour le recalculer. |
-| `crossCharacter()` | `GET /api/account/cross-character` | Lance ou rend le calcul de progression sur tous les personnages. |
+| `crossCharacter(Request)` | `GET /api/account/cross-character` | Lance ou rend le calcul de progression sur tous les personnages. Passe au service le BattleTag de la session (`bnet_battletag`), qui étiquette le calcul dans la page Santé. |
 | `crossCharacterStatus(string $jobId)` | `GET /api/account/cross-character/{jobId}` | État d'un calcul en cours. |
 | `crossCharacterData()` | `GET /api/account/cross-character-data` | Données stockées du dernier calcul. |
 
@@ -246,6 +246,7 @@ Le panneau a son propre limiteur, `admin`, à 180 requêtes par minute et par se
 | `ImportsController` | `GET /admin/imports` | `AdminImportsPage` | Lancement et suivi des imports. Passe `entities`, l'inventaire des sept entités de catalogue. |
 | `ReferenceController` | `GET /admin/reference` | `AdminReferencePage` | Socle de référence et fichiers téléchargés. |
 | `HealthController` | `GET /admin/health` | `AdminHealthPage` | Diagnostic de l'application. Passe `health`, le rapport de `HealthReport` : services, quota Blizzard, queue et jobs échoués, volumétries, erreurs récentes. Chaque section porte son statut, et une section qu'on n'a pas pu mesurer rend `unavailable` au lieu de faire tomber la page. |
+| `HealthController::queue()` | `GET /api/admin/health/queue` | — (JSON) | La section Queue seule, remesurée par le suivi en direct de l'onglet Santé sans refaire les volumétries ni les sondes. Rend le tableau de `HealthReport::queue()`, sous la même garde que la page : jobs pris (`running`) et en attente (`waiting`) avec leur libellé, leur compte et leur date, compteurs et jobs échoués. Une queue Redis injoignable rend `unavailable` et non une 500. Seule l'étiquette publique d'un job est lue, jamais sa charge utile. Un appel sans session admin reçoit un 403 JSON. |
 | `HistoryController` | `GET /admin/history` | `AdminHistoryPage` | Historique des imports, 25 par page (`?page=`). Passe `history` : les entrées, la page courante et le nombre de pages. |
 | `HistoryController::entry()` | `GET /admin/history/{jobId}` | `AdminHistoryEntryPage` | Rapport d'un import, chaque entité située face au précédent import qui l'a mesurée, et son journal tant qu'il vit. 404 si l'import est inconnu. |
 | `HistoryController::compare()` | `GET /admin/history/compare?first=&second=` | `AdminHistoryComparePage` | Comparaison de deux imports différents, du plus ancien au plus récent. Déclarée avant la route à paramètre. |

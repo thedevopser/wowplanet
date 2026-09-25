@@ -7,6 +7,7 @@ namespace App\Application\Health;
 use App\Application\Import\CurrentImport;
 use App\Application\Import\ImportAlreadyRunningException;
 use App\Infrastructure\Logging\AdminAudit;
+use App\Jobs\Contracts\DescribedJob;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Support\Facades\Artisan;
 
@@ -95,7 +96,8 @@ final readonly class FailedJobs
 
     /**
      * La ligne vient de la table des échecs, non typée : elle est rétrécie ici, dès sa
-     * lecture. Seule la première ligne de l'exception est gardée — la trace complète
+     * lecture. Un job qui se décrit est nommé par son étiquette publique, à défaut par sa
+     * classe. Seule la première ligne de l'exception est gardée — la trace complète
      * reste en base pour qui la cherche, la page n'a besoin que du motif.
      *
      * @return array{uuid: string, queue: string, job: string, exception: string, failed_at: string}
@@ -109,7 +111,14 @@ final readonly class FailedJobs
         $exception = $fields['exception'] ?? null;
         $failedAt = $fields['failed_at'] ?? null;
         $payload = json_decode(is_string($fields['payload'] ?? null) ? $fields['payload'] : '', true);
-        $job = is_array($payload) && is_string($payload['displayName'] ?? null) ? $payload['displayName'] : self::UNREADABLE_JOB;
+        $described = is_array($payload) ? ($payload[DescribedJob::PAYLOAD_KEY] ?? null) : null;
+        $label = is_array($described) ? ($described['label'] ?? null) : null;
+        $displayName = is_array($payload) ? ($payload['displayName'] ?? null) : null;
+        $job = match (true) {
+            is_string($label) => $label,
+            is_string($displayName) => $displayName,
+            default => self::UNREADABLE_JOB,
+        };
 
         throw_unless(
             is_string($uuid) && is_string($queue) && is_string($exception) && is_string($failedAt),

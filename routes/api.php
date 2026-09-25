@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterFavoriteController;
@@ -52,6 +53,7 @@ Route::middleware(['throttle:admin', 'admin'])->prefix('admin')->group(function 
     Route::post('/taxonomy/arbitrate', [AdminController::class, 'arbitrateTaxonomy']);
     Route::post('/taxonomy/load', [AdminController::class, 'loadTaxonomySnapshot']);
     Route::get('/taxonomy/snapshot', [AdminController::class, 'downloadTaxonomySnapshot']);
+    Route::get('/health/queue', [HealthController::class, 'queue']);
     Route::post('/failed-jobs/{uuid}/retry', [AdminController::class, 'retryFailedJob']);
     Route::delete('/failed-jobs/{uuid}', [AdminController::class, 'forgetFailedJob']);
     Route::post('/discord', [AdminController::class, 'discord']);

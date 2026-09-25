@@ -24,5 +24,9 @@ app/Infrastructure/Reference/ReferenceValue.php
 # The jsonb column is decoded by the Eloquent cast and served to the front as stored.
 app/Models/CrossCharacterData.php
 
+# Laravel's payload hook hands over the raw job payload, whose `data` is untyped: only the job
+# object is picked from it.
+app/Jobs/DescribeQueuedJob.php
+
 # Overrides Inertia's `share()`, whose default shared props are untyped.
 app/Http/Middleware/HandleInertiaRequests.php

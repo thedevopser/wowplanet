@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Application\DTOs\CharacterProfileDTO;
 use App\Application\DTOs\CrossCharacterProgress;
 use App\Application\Services\CrossCharacterService;
+use App\Application\Services\ExpiredBlizzardTokenException;
+use App\Application\Services\MissingBattleTagException;
 use App\Application\Services\UserCharacterService;
 use App\Jobs\ComputeCrossCharacterJob;
 use App\Models\CrossCharacterData;
@@ -136,19 +138,19 @@ function signInCrossCharacterUser(string $bnetUserId = '42'): void
 // ─── compute ────────────────────────────────────────────────
 
 test('compute refuses a visitor without a Battle.net session', function (): void {
-    expect(resolve(CrossCharacterService::class)->compute())->toBe(['status' => 'unauthenticated']);
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234'))->toBe(['status' => 'unauthenticated']);
 });
 
 test('compute refuses a Battle.net user id whose session token is gone', function (): void {
     Session::put('bnet_user_id', '42');
 
-    expect(resolve(CrossCharacterService::class)->compute())->toBe(['status' => 'unauthenticated']);
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234'))->toBe(['status' => 'unauthenticated']);
 });
 
 test('compute refuses a session that carries no Battle.net user id', function (): void {
     Session::put('blizzard_user_token', 'user-token');
 
-    expect(resolve(CrossCharacterService::class)->compute())->toBe(['status' => 'unauthenticated']);
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234'))->toBe(['status' => 'unauthenticated']);
 });
 
 test('compute serves fresh stored data without queuing anything', function (): void {
@@ -161,7 +163,7 @@ test('compute serves fresh stored data without queuing anything', function (): v
         'fetched_at' => now()->subHour(),
     ]);
 
-    expect(resolve(CrossCharacterService::class)->compute())->toBe([
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234'))->toBe([
         'status' => 'ready',
         'data' => ['completedQuestIds' => [1]],
         'characterCount' => 3,
@@ -174,7 +176,7 @@ test('compute is ready with no data for an account without characters', function
     signInCrossCharacterUser();
     $this->partialMock(UserCharacterService::class)->shouldReceive('getUserCharacters')->andReturn([]);
 
-    expect(resolve(CrossCharacterService::class)->compute())->toBe(['status' => 'ready', 'data' => null]);
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234'))->toBe(['status' => 'ready', 'data' => null]);
     Queue::assertNothingPushed();
 });
 
@@ -186,7 +188,7 @@ test('compute queues the computation of every character of the account', functio
         ['name' => 'Jaina', 'realmSlug' => 'ysondre', 'level' => 80],
     ]);
 
-    $result = resolve(CrossCharacterService::class)->compute();
+    $result = resolve(CrossCharacterService::class)->compute('Thrall#1234');
 
     expect($result['status'])->toBe('computing')
         ->and($result['jobId'])->toBeUuid()
@@ -195,10 +197,22 @@ test('compute queues the computation of every character of the account', functio
     Queue::assertPushedOn('imports', ComputeCrossCharacterJob::class, fn (ComputeCrossCharacterJob $computeCrossCharacterJob): bool => $computeCrossCharacterJob->jobId === $result['jobId']
         && $computeCrossCharacterJob->bnetUserId === '42'
         && $computeCrossCharacterJob->accessToken === 'app-token'
+        && $computeCrossCharacterJob->account() === 'Thrall#1234'
         && $computeCrossCharacterJob->characters === [
             ['name' => 'Thrall', 'realmSlug' => 'hyjal'],
             ['name' => 'Jaina', 'realmSlug' => 'ysondre'],
         ]);
+});
+
+test('compute refuses to queue a computation for an account without a BattleTag', function (): void {
+    Queue::fake();
+    signInCrossCharacterUser();
+    $this->partialMock(UserCharacterService::class)->shouldReceive('getUserCharacters')->andReturn([
+        ['name' => 'Thrall', 'realmSlug' => 'hyjal', 'level' => 80],
+    ]);
+
+    expect(fn (): array => resolve(CrossCharacterService::class)->compute(''))->toThrow(MissingBattleTagException::class);
+    Queue::assertNothingPushed();
 });
 
 // ─── getJobStatus ───────────────────────────────────────────
@@ -393,6 +407,18 @@ test('an endpoint that keeps failing is given up after four attempts without los
         Sleep::for(5)->seconds(), Sleep::for(10)->seconds(), Sleep::for(20)->seconds(),
         Sleep::for(5)->seconds(), Sleep::for(10)->seconds(), Sleep::for(20)->seconds(),
     ]);
+});
+
+test('an expired token stops the computation at once instead of storing an empty account', function (): void {
+    Http::fake([
+        ...fakeCrossCharacter('hyjal', 'thrall', crossCharacterPayloads(100, 200, 2600, 900)),
+        crossCharacterUrl('hyjal', 'thrall', 'quests/completed') => Http::response(status: 401),
+    ]);
+
+    expect(fn (): array => mergeCrossCharacters([['name' => 'Thrall', 'realmSlug' => 'hyjal']]))
+        ->toThrow(ExpiredBlizzardTokenException::class, 'The Blizzard token of this computation has expired: launch it again from the account hub instead of retrying it. (https://eu.api.blizzard.com/profile/wow/character/hyjal/thrall/quests/completed)');
+    Http::assertSentCount(1);
+    Sleep::assertNeverSlept();
 });
 
 test('empty responses merge into nothing', function (): void {
