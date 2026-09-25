@@ -199,7 +199,7 @@ describe('AdminHealthPage', () => {
 
     describe('jobs in the queue', () => {
         const NOW = 1_700_000_000;
-        const scoreJob = { label: 'Calcul du score de compte', account: 'Thrall#1234', since: NOW - 72 };
+        const scoreJob = { label: 'Données des autres personnages', account: 'Thrall#1234', since: NOW - 72 };
         const importJob = { label: 'Import du catalogue', account: null, since: NOW - 5 };
 
         const withJobs = (running, waiting = []) => {
@@ -229,7 +229,7 @@ describe('AdminHealthPage', () => {
 
             const running = wrapper.get('[data-jobs="running"]');
             expect(running.text()).toContain('En cours');
-            expect(running.text()).toContain('Calcul du score de compte');
+            expect(running.text()).toContain('Données des autres personnages');
             expect(running.text()).toContain('Thrall#1234');
             expect(running.text()).toContain('depuis 1 min 12 s');
             expect(wrapper.get('[data-jobs="waiting"]').text()).toContain('Import du catalogue');
@@ -257,7 +257,7 @@ describe('AdminHealthPage', () => {
 
             await vi.advanceTimersByTimeAsync(IDLE_INTERVAL_MS);
             expect(axios.get).toHaveBeenCalledWith(QUEUE_ENDPOINT);
-            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Calcul du score de compte');
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Données des autres personnages');
 
             await vi.advanceTimersByTimeAsync(BUSY_INTERVAL_MS);
             expect(wrapper.get('[data-jobs="running"]').text()).toContain('Aucun job en cours.');
@@ -284,7 +284,7 @@ describe('AdminHealthPage', () => {
             await vi.advanceTimersByTimeAsync(BUSY_INTERVAL_MS);
 
             expect(wrapper.get('[data-role="queue-interrupted"]').text()).toBe('Mesure de la file interrompue.');
-            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Calcul du score de compte');
+            expect(wrapper.get('[data-jobs="running"]').text()).toContain('Données des autres personnages');
         });
 
         it('raises the anomaly of a job that failed since the page was opened', async () => {

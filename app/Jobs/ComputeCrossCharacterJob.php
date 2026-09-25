@@ -77,7 +77,7 @@ class ComputeCrossCharacterJob implements DescribedJob, ShouldBeEncrypted, Shoul
 
     public function label(): string
     {
-        return 'Calcul du score de compte';
+        return 'Données des autres personnages';
     }
 
     public function account(): string

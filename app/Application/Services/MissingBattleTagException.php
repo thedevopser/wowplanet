@@ -7,7 +7,7 @@ namespace App\Application\Services;
 use RuntimeException;
 
 /**
- * Le calcul du score se présente dans la page Santé sous le BattleTag du compte : sans
+ * Le calcul inter-personnages se présente dans la page Santé sous le BattleTag du compte : sans
  * lui, l'administrateur verrait un calcul sans savoir pour qui il tourne.
  */
 final class MissingBattleTagException extends RuntimeException

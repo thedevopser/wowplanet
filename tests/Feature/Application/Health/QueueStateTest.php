@@ -45,7 +45,7 @@ test('a job taken by the worker is listed as running since it was taken', functi
 
     $snapshot = resolve(QueueState::class)->snapshot();
 
-    expect($snapshot['running'])->toBe([['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234', 'since' => 1_700_000_030]])
+    expect($snapshot['running'])->toBe([['label' => 'Données des autres personnages', 'account' => 'Thrall#1234', 'since' => 1_700_000_030]])
         ->and($snapshot['waiting'])->toBe([]);
 });
 
@@ -57,7 +57,7 @@ test('jobs waiting for the worker are listed in queue order since they were queu
 
     expect(resolve(QueueState::class)->snapshot()['waiting'])->toBe([
         ['label' => 'Import du catalogue', 'account' => null, 'since' => 1_700_000_000],
-        ['label' => 'Calcul du score de compte', 'account' => 'Jaina#5678', 'since' => 1_700_000_005],
+        ['label' => 'Données des autres personnages', 'account' => 'Jaina#5678', 'since' => 1_700_000_005],
     ]);
 });
 

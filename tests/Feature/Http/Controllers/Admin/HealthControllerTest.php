@@ -60,8 +60,8 @@ test('the queue section is measured alone, with the jobs taken and waiting', fun
         ->assertJsonPath('status', 'ok')
         ->assertJsonPath('pending', 1)
         ->assertJsonPath('reserved', 1)
-        ->assertJsonPath('running', [['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234', 'since' => 1_700_000_000]])
-        ->assertJsonPath('waiting', [['label' => 'Calcul du score de compte', 'account' => 'Jaina#5678', 'since' => 1_700_000_000]])
+        ->assertJsonPath('running', [['label' => 'Données des autres personnages', 'account' => 'Thrall#1234', 'since' => 1_700_000_000]])
+        ->assertJsonPath('waiting', [['label' => 'Données des autres personnages', 'account' => 'Jaina#5678', 'since' => 1_700_000_000]])
         ->assertJsonMissingPath('volumes')
         ->assertJsonMissingPath('services');
 });

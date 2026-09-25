@@ -7,7 +7,7 @@ vi.mock('axios');
 
 const NOW = 1_700_000_000;
 
-const job = (overrides = {}) => ({ label: 'Calcul du score de compte', account: 'Thrall#1234', since: NOW - 72, ...overrides });
+const job = (overrides = {}) => ({ label: 'Données des autres personnages', account: 'Thrall#1234', since: NOW - 72, ...overrides });
 
 const section = (overrides = {}) => ({
     status: 'ok',

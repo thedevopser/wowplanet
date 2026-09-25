@@ -11,7 +11,7 @@ La page lit la file sans jamais ouvrir `data` : l'étiquette est la seule chose 
 | Job | Libellé | Compte |
 |---|---|---|
 | `RunImportJob` | Import du catalogue | aucun |
-| `ComputeCrossCharacterJob` | Calcul du score de compte | BattleTag reçu au lancement |
+| `ComputeCrossCharacterJob` | Données des autres personnages | BattleTag reçu au lancement |
 
 ---
 

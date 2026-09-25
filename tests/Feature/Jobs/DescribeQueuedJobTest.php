@@ -27,7 +27,7 @@ function lastQueuedPayload(): array
 test('a described job carries its public label and account at the top of its payload', function (): void {
     dispatch(new ComputeCrossCharacterJob('job-1', '42', [], 'secret-token', 'Thrall#1234'));
 
-    expect(lastQueuedPayload()['described'])->toBe(['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234']);
+    expect(lastQueuedPayload()['described'])->toBe(['label' => 'Données des autres personnages', 'account' => 'Thrall#1234']);
 });
 
 test('the catalogue import is described without an account', function (): void {

@@ -7,7 +7,7 @@ namespace App\Application\Services;
 use RuntimeException;
 
 /**
- * Le calcul du score part avec le jeton du moment : une relance tardive depuis les jobs
+ * Le calcul inter-personnages part avec le jeton du moment : une relance tardive depuis les jobs
  * échoués le rejoue avec un jeton expiré. Le traiter comme un endpoint vide enregistrerait
  * un compte sans aucune progression par-dessus le précédent.
  */

@@ -51,11 +51,11 @@ test('a failed job that describes itself is listed under its public label', func
     DB::table('failed_jobs')->where('uuid', $uuid)->update(['payload' => json_encode([
         'uuid' => $uuid,
         'displayName' => \App\Jobs\ComputeCrossCharacterJob::class,
-        'described' => ['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234'],
+        'described' => ['label' => 'Données des autres personnages', 'account' => 'Thrall#1234'],
         'data' => ['command' => 'encrypted'],
     ])]);
 
-    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Calcul du score de compte');
+    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Données des autres personnages');
 });
 
 test('a failed job with an unreadable label falls back on its class', function (): void {

@@ -185,7 +185,7 @@ test('a failing computation lands in the failed jobs after a single attempt', fu
     expect(crossCharacterJob()->tries)->toBe(1)
         ->and(DB::table('failed_jobs')->count())->toBe(1)
         ->and(Queue::connection('redis')->size('imports'))->toBe(0)
-        ->and(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Calcul du score de compte');
+        ->and(resolve(FailedJobs::class)->all()[0]['job'])->toBe('Données des autres personnages');
 });
 
 test('a computation killed without an exception still tells the hub it failed', function (): void {
@@ -203,7 +203,7 @@ test('the token never sits in clear in the queue nor in the failed jobs', functi
     Artisan::call('queue:work', ['connection' => 'redis', '--queue' => 'imports', '--once' => true]);
 
     expect($queued)->not->toContain('app-token')
-        ->and(json_decode($queued, true)['described'])->toBe(['label' => 'Calcul du score de compte', 'account' => 'Thrall#1234'])
+        ->and(json_decode($queued, true)['described'])->toBe(['label' => 'Données des autres personnages', 'account' => 'Thrall#1234'])
         ->and((string) DB::table('failed_jobs')->value('payload'))->not->toContain('app-token');
 });
 
@@ -251,6 +251,6 @@ test('the final status stays readable for an hour so the page can poll it', func
 
 test('the account computation is shown under a readable label and the BattleTag of its account', function (): void {
     expect(crossCharacterJob())
-        ->label()->toBe('Calcul du score de compte')
+        ->label()->toBe('Données des autres personnages')
         ->account()->toBe('Thrall#1234');
 });

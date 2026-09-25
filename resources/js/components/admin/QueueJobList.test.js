@@ -4,7 +4,7 @@ import QueueJobList from './QueueJobList.vue';
 
 const NOW = 1_700_000_000;
 
-const job = (overrides = {}) => ({ label: 'Calcul du score de compte', account: 'Thrall#1234', since: NOW - 72, ...overrides });
+const job = (overrides = {}) => ({ label: 'Données des autres personnages', account: 'Thrall#1234', since: NOW - 72, ...overrides });
 
 const mountList = props => mountWithPlugins(QueueJobList, { props: { now: NOW, ...props } });
 
@@ -13,7 +13,7 @@ describe('QueueJobList', () => {
         const wrapper = await mountList({ jobs: [job()] });
 
         const entry = wrapper.get('[data-queued-job]');
-        expect(entry.text()).toContain('Calcul du score de compte');
+        expect(entry.text()).toContain('Données des autres personnages');
         expect(entry.get('[data-role="account"]').text()).toBe('Thrall#1234');
         expect(entry.get('[data-role="since"]').text()).toBe('depuis 1 min 12 s');
         expect(entry.get('[data-role="since"]').classes()).toContain('tabular-nums');
