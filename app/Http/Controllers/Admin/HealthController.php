@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Application\Health\HealthReport;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -20,5 +21,10 @@ class HealthController extends Controller
         return Inertia::render('AdminHealthPage', [
             'health' => $this->healthReport->snapshot(),
         ]);
+    }
+
+    public function queue(): JsonResponse
+    {
+        return response()->json($this->healthReport->queue());
     }
 }
