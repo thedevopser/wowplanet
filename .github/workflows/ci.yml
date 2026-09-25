@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # 8.4 is the FrankenPHP version, not the ^8.2 of composer.json.
       - name: Set up PHP
@@ -126,7 +126,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -218,7 +218,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -305,7 +305,7 @@ jobs:
     steps:
       # The whole history: the selection diffs the branch against its merge base.
       - name: Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
