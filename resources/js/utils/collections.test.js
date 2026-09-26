@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { COLLECTIONS, UNCATEGORIZED, groupCollection, translateCategory, translateSource } from './collections';
 
@@ -80,5 +82,47 @@ describe('groupCollection', () => {
 
     it('gives nothing for an empty collection', () => {
         expect(groupCollection([], order)).toEqual([]);
+    });
+});
+
+describe('versioned taxonomy snapshot', () => {
+    const SNAPSHOT = resolve(import.meta.dirname, '../../../database/data/collection_taxonomy.csv');
+    const KIND_BY_ENTITY = { mount: 'mounts', pet: 'pets', decor: 'decor' };
+
+    // Expansion names stay in English, as in the French client.
+    const EXPANSIONS = new Set([
+        'Classic', 'The Burning Crusade', 'Burning Crusade', 'Wrath of the Lich King', 'Cataclysm', 'Mists of Pandaria',
+        'Warlords of Draenor', 'Legion', 'Battle for Azeroth', 'Shadowlands', 'Dragonflight', 'The War Within', 'Midnight',
+    ]);
+
+    // A curation placeholder, to be fixed by arbitration rather than translated.
+    const PLACEHOLDERS = new Set(['TODO']);
+
+    const parseLine = (line) => [...line.matchAll(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)]
+        .map(([, field]) => field.replace(/^"|"$/g, '').replaceAll('""', '"'));
+
+    const labels = (column) => {
+        const [, ...lines] = readFileSync(SNAPSHOT, 'utf8').trim().split('\n');
+        const pairs = lines.map(parseLine).map((fields) => [KIND_BY_ENTITY[fields[0]], fields[column]]);
+
+        return [...new Set(pairs.filter(([, label]) => label).map((pair) => pair.join('|')))]
+            .map((pair) => pair.split('|'));
+    };
+
+    const isHandled = (kind, label, vocabulary, translate) => EXPANSIONS.has(label)
+        || PLACEHOLDERS.has(label)
+        || Object.hasOwn(COLLECTIONS[kind].labels[vocabulary], label)
+        || translate(kind, label) !== label;
+
+    it('gives every category a French label', () => {
+        const missing = labels(2).filter(([kind, label]) => !isHandled(kind, label, 'categories', translateCategory));
+
+        expect(missing).toEqual([]);
+    });
+
+    it('gives every source a French label', () => {
+        const missing = labels(3).filter(([kind, label]) => !isHandled(kind, label, 'sources', translateSource));
+
+        expect(missing).toEqual([]);
     });
 });
