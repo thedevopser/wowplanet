@@ -120,4 +120,23 @@ describe('DatabaseMountsPage', () => {
 
         await expectNoAxeViolations(wrapper.element);
     });
+
+    it('shows the source in French', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: 'Heirlooms', icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Héritages');
+        expect(wrapper.find('tbody').text()).not.toContain('Heirlooms');
+    });
+
+    it('names an unknown source as such', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: null, icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Inconnu');
+    });
+
+    it('names the active category in French', async () => {
+        const wrapper = await mountPage({ category: 'past-limited-time', categories: [{ slug: 'past-limited-time', name: 'Past Limited Time', count: 1 }] });
+
+        expect(wrapper.find('header').text()).toContain('Ancien durée limitée');
+    });
 });

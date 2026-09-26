@@ -38,13 +38,13 @@
                                         :class="[SUB_LINK, isExactActive(section.path) ? SUB_CURRENT : SUB_IDLE]"
                                     >Tous</Link>
                                 </li>
-                                <li v-for="sub in subCategories[section.key]" :key="sub.slug">
+                                <li v-for="sub in namedSubCategories(section)" :key="sub.slug">
                                     <Link
                                         :href="`${section.path}/${sub.slug}`"
                                         :aria-current="isExactActive(`${section.path}/${sub.slug}`) ? 'page' : undefined"
                                         :class="[SUB_LINK, isExactActive(`${section.path}/${sub.slug}`) ? SUB_CURRENT : SUB_IDLE]"
                                     >
-                                        <span class="truncate">{{ sub.name }}</span>
+                                        <span class="truncate">{{ sub.label }}</span>
                                         <span class="ml-2 shrink-0 tabular-nums text-subtle">{{ sub.count }}</span>
                                     </Link>
                                 </li>
@@ -93,7 +93,7 @@
                     :href="`${activeMobileSection.path}/${sub.slug}`"
                     :aria-current="isExactActive(`${activeMobileSection.path}/${sub.slug}`) ? 'page' : undefined"
                     :class="[PILL, isExactActive(`${activeMobileSection.path}/${sub.slug}`) ? SUB_CURRENT : SUB_IDLE]"
-                >{{ sub.name }}</Link>
+                >{{ sub.label }}</Link>
             </nav>
 
             <div class="relative flex-1">
@@ -125,6 +125,7 @@ import { ArrowLeft, ChevronRight, LoaderCircle } from 'lucide-vue-next';
 import CategoryIcon from '../components/CategoryIcon.vue';
 import Icon from '../components/ui/Icon.vue';
 import { useWowColor } from '../composables/useWowColor';
+import { translateCategory } from '../utils/collections';
 import { dimensionColor } from '../utils/wowColors';
 
 const SUB_LINK = 'flex min-h-9 items-center justify-between py-1.5 pl-11 pr-4 text-sm transition-colors duration-fast';
@@ -169,6 +170,7 @@ const sections = [
         label: 'Montures',
         icon: 'mounts',
         countKey: 'mounts',
+        collection: 'mounts',
     },
     {
         key: 'achievements',
@@ -193,6 +195,7 @@ const sections = [
         label: 'Mascottes',
         icon: 'pets',
         countKey: 'pets',
+        collection: 'pets',
     },
     {
         key: 'decors',
@@ -201,6 +204,7 @@ const sections = [
         label: 'Décorations',
         icon: 'decor',
         countKey: 'decors',
+        collection: 'decor',
     },
     {
         key: 'appearances',
@@ -221,6 +225,18 @@ const sections = [
 ];
 
 const colorOf = (section) => dimensionColor(section.dimension);
+
+// Collection categories are curated in English: they are shown in French and sorted as read.
+function namedSubCategories(section) {
+    const subs = subCategories.value[section.key] ?? [];
+    if (!section.collection) {
+        return subs.map((sub) => ({ ...sub, label: sub.name }));
+    }
+
+    return subs
+        .map((sub) => ({ ...sub, label: translateCategory(section.collection, sub.name) }))
+        .toSorted((a, b) => a.label.localeCompare(b.label, 'fr'));
+}
 
 function isSectionActive(path) {
     return currentPath.value === path || currentPath.value.startsWith(path + '/');
@@ -253,7 +269,7 @@ function expandActiveSection() {
 const activeMobileSection = computed(() => sections.find(s => isSectionActive(s.path)) || null);
 const activeMobileSubCategories = computed(() => {
     if (!activeMobileSection.value) return [];
-    return subCategories.value[activeMobileSection.value.key] || [];
+    return namedSubCategories(activeMobileSection.value);
 });
 
 const mobileSections = ref(null);

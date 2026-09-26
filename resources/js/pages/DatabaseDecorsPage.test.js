@@ -97,4 +97,23 @@ describe('DatabaseDecorsPage', () => {
         expect(paginations.map((pagination) => pagination.props('placement'))).toEqual(['top', 'bottom']);
         expect(paginations[0].element.compareDocumentPosition(wrapper.find('table').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
+
+    it('shows the source in French', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: 'Neighbourhood Vendor', icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Vendeur de quartier');
+        expect(wrapper.find('tbody').text()).not.toContain('Neighbourhood Vendor');
+    });
+
+    it('names an unknown source as such', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: null, icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Inconnu');
+    });
+
+    it('names the active category in French', async () => {
+        const wrapper = await mountPage({ category: 'neighbourhoods', categories: [{ slug: 'neighbourhoods', name: 'Neighbourhoods', count: 1 }] });
+
+        expect(wrapper.find('header').text()).toContain('Quartiers');
+    });
 });
