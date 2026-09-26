@@ -33,7 +33,7 @@ final readonly class PendingTaxonomyEntries
             ->whereNotIn('id', $this->curatedIds($collectionEntity))
             ->orderBy('id');
 
-        $this->applySearch($builder, $search);
+        CatalogueSearch::apply($builder, $search);
 
         return array_values($builder->get(['id', 'name_fr', 'source'])
             ->map(static fn (WowMount|WowPet|WowDecor $model): array => [
@@ -70,26 +70,6 @@ final readonly class PendingTaxonomyEntries
     public function total(): int
     {
         return array_sum(array_column($this->counts(), 'pending'));
-    }
-
-    /**
-     * @param  Builder<WowMount>|Builder<WowPet>|Builder<WowDecor>  $query
-     */
-    private function applySearch(Builder $query, ?string $search): void
-    {
-        $term = trim((string) $search);
-
-        if ($term === '') {
-            return;
-        }
-
-        $query->where(static function (Builder $builder) use ($term): void {
-            $builder->where('name_fr', 'ilike', '%'.$term.'%');
-
-            if (ctype_digit($term)) {
-                $builder->orWhere('id', (int) $term);
-            }
-        });
     }
 
     /**

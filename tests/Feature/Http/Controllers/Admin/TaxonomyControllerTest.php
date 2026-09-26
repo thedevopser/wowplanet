@@ -137,3 +137,115 @@ test('the dashboard carries the count, which is the only way not to forget it', 
             ->where('pendingTaxonomy.mount.pending', 1)
             ->etc());
 });
+
+test('the page opens on the pending entries, and tells how many entries each collection already ranks', function (): void {
+    mountNamed(7, 'Loup gris');
+    mountNamed(8, 'Étalon blanc');
+    ranked(CollectionEntity::Mount, 8, 'Racial', 'Human');
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('mode', 'pending')
+            ->where('curatedCounts', ['mount' => 1, 'pet' => 0, 'decor' => 0])
+            ->where('entries.0.id', 7)
+            ->has('entries', 1)
+            ->missing('categories')
+            ->etc());
+});
+
+test('in curated mode, it lists the ranked entries with their current ranking', function (): void {
+    mountNamed(7, 'Loup gris');
+    mountNamed(8, 'Étalon blanc');
+    ranked(CollectionEntity::Mount, 8, 'Racial', 'Human');
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('mode', 'curated')
+            ->where('entries', [['id' => 8, 'name' => 'Étalon blanc', 'category' => 'Racial', 'source' => 'Human']])
+            ->where('matched', 1)
+            ->where('counts.mount.pending', 1)
+            ->where('curatedCounts.mount', 1)
+            ->where('categories', [['value' => 'Racial', 'category' => 'Racial', 'entries' => 1]])
+            ->where('category', null)
+            ->etc());
+});
+
+test('in curated mode, a category filter opens what sits under it', function (): void {
+    mountNamed(7, 'Loup gris');
+    mountNamed(8, 'Étalon blanc');
+    ranked(CollectionEntity::Mount, 7, 'Other', null);
+    ranked(CollectionEntity::Mount, 8, 'Legion', null);
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated&category=Other')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('category', 'Other')
+            ->where('matched', 1)
+            ->where('entries.0.id', 7)
+            ->etc());
+});
+
+test('in curated mode, the uncategorised filter opens the entries ranked nowhere', function (): void {
+    mountNamed(7, 'Loup gris');
+    mountNamed(8, 'Étalon blanc');
+    ranked(CollectionEntity::Mount, 7, null, null);
+    ranked(CollectionEntity::Mount, 8, 'Legion', null);
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated&category=__none__')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('category', '__none__')
+            ->where('entries.0.id', 7)
+            ->has('entries', 1)
+            ->etc());
+});
+
+test('in curated mode, the search works as it does on the pending entries', function (): void {
+    mountNamed(7, 'Loup gris');
+    mountNamed(8, 'Étalon blanc');
+    ranked(CollectionEntity::Mount, 7, 'Other', null);
+    ranked(CollectionEntity::Mount, 8, 'Other', null);
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated&search=loup')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('search', 'loup')
+            ->where('matched', 1)
+            ->where('entries.0.id', 7)
+            ->etc());
+});
+
+test('in curated mode, a long list is served one page at a time', function (): void {
+    for ($id = 1; $id <= 55; $id++) {
+        mountNamed($id, sprintf('Monture %02d', $id));
+        ranked(CollectionEntity::Mount, $id, 'Other', null);
+    }
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->has('entries', 50)
+            ->where('matched', 55)
+            ->etc());
+});
+
+test('a mode the server does not know falls back to the pending entries', function (): void {
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=everything')
+        ->assertOk()
+        ->assertInertia(fn (Assert $assert): Assert => $assert->where('mode', 'pending')->etc());
+});
+
+test('a blank category filter is no filter at all', function (): void {
+    mountNamed(7, 'Loup gris');
+    ranked(CollectionEntity::Mount, 7, 'Other', null);
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?mode=curated&category=%20')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('category', null)
+            ->has('entries', 1)
+            ->etc());
+});

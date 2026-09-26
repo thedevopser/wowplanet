@@ -507,9 +507,13 @@ Levée quand l'amont curé refuse le téléchargement ou répond vide. Un tirage
 
 ### L'arbitrage vu du panneau (`app/Application/Taxonomy/`)
 
-Six classes de la couche Application portent ce que `/admin/taxonomy` affiche et écrit. Sans écran, le rapport d'entrées à arbitrer restait un fichier de log que personne ne lisait, et le rangement se dégradait patch après patch.
+Huit classes de la couche Application portent ce que `/admin/taxonomy` affiche et écrit. Sans écran, le rapport d'entrées à arbitrer restait un fichier de log que personne ne lisait, et le rangement se dégradait patch après patch.
 
 **`PendingTaxonomyEntries`** rend les entrées de catalogue que la taxonomie ne range pas. Rien n'est stocké : l'absence de ligne de taxonomie pour une ligne de catalogue *est* le rapport. La règle vit ici et non dans la commande, parce que trois appelants la partagent — la commande de rapport, l'écran d'arbitrage et le compteur du tableau de bord. `forEntity()` accepte une recherche par nom ou par identifiant, `counts()` rend le couple « en attente / au catalogue » par collection, `total()` la somme.
+
+**`CuratedTaxonomyEntries`** rend les entrées de catalogue que la taxonomie range déjà, avec leur rangement actuel : c'est là que l'écran retrouve une entrée mal rangée pour la réaffecter. Le rangement affiché est celui de la taxonomie, qui fait foi, et non la copie qu'en porte le catalogue. Une ligne de taxonomie dont l'entrée a quitté le catalogue n'est pas listée. `forEntity()` accepte la même recherche que les entrées en attente et un filtre de catégorie exacte, la constante `UNCATEGORISED` (`__none__`) visant les entrées rangées nulle part ; les entrées sont triées par nom puis par identifiant. `categories()` rend les catégories employées avec leur effectif, les entrées rangées nulle part en dernier, et `counts()` le nombre d'entrées rangées par collection.
+
+**`CatalogueSearch`** porte la règle de recherche commune aux deux listes : le nom français sans égard à la casse (`ilike`), et l'identifiant exact quand le terme est un nombre. Une seule implémentation, pour que les deux modes de l'écran trouvent la même chose avec le même terme.
 
 **`TaxonomyVocabulary`** rend les catégories et les sources qu'une collection emploie réellement, lues en base et non figées dans le code : ce vocabulaire est de la curation, il grossit d'un patch à l'autre, et une liste codée en dur aurait divergé dès le premier arbitrage. Elle propose l'existant à la saisie sans l'imposer — une valeur neuve reste saisissable, c'est ainsi qu'une catégorie entre.
 
