@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Import;
 
 use App\Application\Reference\LiveReferenceBuild;
+use App\Application\Services\DatabaseQueryService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Blizzard\ImportBuildGate;
@@ -39,6 +40,7 @@ final readonly class ImportPipeline
         private CurrentImport $currentImport,
         private ImportControl $importControl,
         private ImportHistory $importHistory,
+        private DatabaseQueryService $databaseQueryService,
     ) {}
 
     /**
@@ -91,7 +93,8 @@ final readonly class ImportPipeline
 
     /**
      * Clôt un import qui ne repartira pas : son rapport part au journal comme celui d'un
-     * import abouti, mais sous son propre titre, et le verrou est rendu au panneau.
+     * import abouti, mais sous son propre titre, et le verrou est rendu au panneau. Les
+     * étapes déjà faites ont écrit le catalogue : la barre latérale est rafraîchie aussi.
      */
     private function close(ImportRun $importRun, string $reason, int $now): ImportRun
     {
@@ -103,6 +106,7 @@ final readonly class ImportPipeline
         $this->importHistory->close($importRun, $now);
         $this->importControl->clear($importRun->jobId);
         $this->currentImport->clear();
+        $this->databaseQueryService->forgetSidebar();
 
         return $importRun;
     }
@@ -237,7 +241,8 @@ final readonly class ImportPipeline
 
     /**
      * Un import qui n'a plus d'étape devant lui cesse d'être celui que le panneau suit,
-     * et son journal se referme sur le rapport que l'historique archivera.
+     * et son journal se referme sur le rapport que l'historique archivera. La barre latérale
+     * de la base, en cache une heure, est rafraîchie sur le catalogue qu'il vient d'écrire.
      */
     private function closeIfDone(ImportRun $importRun): void
     {
@@ -251,6 +256,7 @@ final readonly class ImportPipeline
         $this->importHistory->close($importRun, $now);
 
         $this->currentImport->clear();
+        $this->databaseQueryService->forgetSidebar();
     }
 
     private function report(ImportRun $importRun, int $now): void
