@@ -29,6 +29,7 @@ const props = (overrides = {}) => ({
         decor: { pending: 0, catalogue: 2131 },
     },
     entries: [entry(), entry({ id: 8, name: 'Étalon blanc', pending_source: null })],
+    curatedCounts: { mount: 1661, pet: 1497, decor: 2131 },
     matched: 2,
     perPage: 50,
     vocabulary: { categories: ['Racial', 'Professions'], sources: ['Human', 'Fishing'] },
@@ -182,6 +183,205 @@ describe('AdminTaxonomyPage', () => {
 
     it('shows no accessibility violation that axe can detect', async () => {
         const wrapper = await mountPage();
+
+        await expectNoAxeViolations(wrapper.element);
+    });
+});
+
+const curatedEntry = (overrides = {}) => ({ id: 7, name: 'Loup gris', category: 'Other', source: 'Drop', ...overrides });
+
+const curatedProps = (overrides = {}) => ({
+    mode: 'curated',
+    entries: [curatedEntry(), curatedEntry({ id: 8, name: 'Étalon blanc', category: 'Legion', source: 'Class Hall' })],
+    category: null,
+    categories: [
+        { value: 'Legion', category: 'Legion', entries: 120 },
+        { value: 'Other', category: 'Other', entries: 42 },
+        { value: '__none__', category: null, entries: 3 },
+    ],
+    ...overrides,
+});
+
+const selectField = (wrapper) => wrapper.findAllComponents({ name: 'Select' }).find((field) => field.props('label') === 'Catégorie actuelle');
+
+describe('AdminTaxonomyPage, mode toggle', () => {
+    it('tells both sides of the toggle with the size of the current collection', async () => {
+        const wrapper = await mountPage();
+
+        expect(wrapper.get('[data-mode="pending"]').text()).toBe('À arbitrer (2)');
+        expect(wrapper.get('[data-mode="curated"]').text()).toBe(`Déjà rangées (${(1661).toLocaleString('fr-FR')})`);
+    });
+
+    it('opens on the entries to arbitrate', async () => {
+        const wrapper = await mountPage();
+
+        expect(wrapper.get('[data-mode="pending"]').attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('[data-mode="curated"]').attributes('aria-pressed')).toBe('false');
+        expect(wrapper.find('[data-role="pending-source"]').exists()).toBe(true);
+    });
+
+    it('switches to the ranked entries through the address, so a link or a reload lands there again', async () => {
+        const wrapper = await mountPage();
+
+        await wrapper.get('[data-mode="curated"]').trigger('click');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=mount&mode=curated', expect.anything());
+    });
+
+    it('switches back to the entries to arbitrate without a mode in the address', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        await wrapper.get('[data-mode="pending"]').trigger('click');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=mount', expect.anything());
+    });
+
+    it('keeps the mode when the collection changes', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        await wrapper.get('[data-tab="pet"]').trigger('click');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=pet&mode=curated', expect.anything());
+    });
+
+    it('empties the selection when the mode or the collection changes', async () => {
+        const wrapper = await mountPage(curatedProps());
+        await wrapper.get('[data-action="select-entry"]').setValue(true);
+
+        await wrapper.get('[data-mode="pending"]').trigger('click');
+
+        expect(wrapper.get('#file-heading').text()).toContain('0 entrée');
+    });
+});
+
+describe('AdminTaxonomyPage, ranked entries', () => {
+    it('lists the ranked entries with their current category and source', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        expect(wrapper.findAll('[data-role="category"]').map((cell) => cell.text())).toEqual(['Other', 'Legion']);
+        expect(wrapper.find('[data-role="pending-source"]').exists()).toBe(false);
+    });
+
+    it('says how many ranked entries matched', async () => {
+        const wrapper = await mountPage(curatedProps({ matched: 42 }));
+
+        expect(wrapper.text()).toContain('42 rangées');
+    });
+
+    it('offers every category of the collection as a filter, with its size, the uncategorised ones included', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        expect(selectField(wrapper).props('options')).toEqual([
+            { value: '__all__', label: 'Toutes les catégories' },
+            { value: 'Legion', label: 'Legion', hint: '120' },
+            { value: 'Other', label: 'Other', hint: '42' },
+            { value: '__none__', label: 'Sans catégorie', hint: '3' },
+        ]);
+        expect(selectField(wrapper).props('modelValue')).toBe('__all__');
+    });
+
+    it('shows the active filter', async () => {
+        const wrapper = await mountPage(curatedProps({ category: 'Other' }));
+
+        expect(selectField(wrapper).props('modelValue')).toBe('Other');
+    });
+
+    it('filters on a category by asking the server, keeping the search', async () => {
+        const wrapper = await mountPage(curatedProps({ search: 'loup' }));
+
+        selectField(wrapper).vm.$emit('update:modelValue', 'Other');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=mount&mode=curated&search=loup&category=Other', expect.anything());
+    });
+
+    it('drops the filter when every category is asked for', async () => {
+        const wrapper = await mountPage(curatedProps({ category: 'Other' }));
+
+        selectField(wrapper).vm.$emit('update:modelValue', '__all__');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=mount&mode=curated', expect.anything());
+    });
+
+    it('searches within the mode and the filter', async () => {
+        const wrapper = await mountPage(curatedProps({ category: 'Other' }));
+
+        await wrapper.get('input[type="search"]').setValue('loup');
+        await buttonLabelled(wrapper, 'Chercher').trigger('click');
+
+        expect(visit).toHaveBeenCalledWith('/admin/taxonomy?entity=mount&mode=curated&search=loup&category=Other', expect.anything());
+    });
+
+    it('fills the fields with the current ranking when a single entry is ticked', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        await wrapper.findAll('[data-action="select-entry"]')[1].setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('Legion');
+        expect(wrapper.get('[data-field="source"] input').element.value).toBe('Class Hall');
+    });
+
+    it('leaves the fields empty when several entries are ticked, since they may not share a ranking', async () => {
+        const wrapper = await mountPage(curatedProps());
+
+        await wrapper.get('[data-action="select-all"]').setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('');
+        expect(wrapper.get('[data-field="source"] input').element.value).toBe('');
+    });
+
+    it('fills an entry ranked nowhere with empty fields', async () => {
+        const wrapper = await mountPage(curatedProps({ entries: [curatedEntry({ category: null, source: null })] }));
+
+        await wrapper.get('[data-action="select-entry"]').setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('');
+    });
+
+    it('reassigns the selection through the arbitration endpoint', async () => {
+        axios.post = vi.fn().mockResolvedValue({ data: { arbitrated: 1, snapshot: props().snapshot } });
+
+        const wrapper = await mountPage(curatedProps());
+        await wrapper.get('[data-action="select-entry"]').setValue(true);
+        await wrapper.get('[data-field="category"] input').setValue('Legion');
+        await buttonLabelled(wrapper, 'Réaffecter').trigger('click');
+
+        expect(axios.post).toHaveBeenCalledWith('/api/admin/taxonomy/arbitrate', {
+            entity: 'mount',
+            entries: [7],
+            category: 'Legion',
+            source: 'Drop',
+        });
+    });
+
+    it('says how many entries it reassigned, and reads the list, the counters and the snapshot again', async () => {
+        axios.post = vi.fn().mockResolvedValue({ data: { arbitrated: 2, snapshot: props().snapshot } });
+
+        const wrapper = await mountPage(curatedProps());
+        await wrapper.get('[data-action="select-all"]').setValue(true);
+        await wrapper.get('[data-field="category"] input').setValue('Legion');
+        await buttonLabelled(wrapper, 'Réaffecter').trigger('click');
+
+        await vi.waitFor(() => expect(wrapper.text()).toContain('2 entrées réaffectées'));
+        expect(reload).toHaveBeenCalledWith({
+            only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot'],
+        });
+    });
+
+    it('keeps the selection when the server refuses, and says why', async () => {
+        axios.post = vi.fn().mockRejectedValue({
+            response: { data: { message: 'Certaines entrées ne sont pas au catalogue de cette collection (mount) : 7.' } },
+        });
+
+        const wrapper = await mountPage(curatedProps());
+        await wrapper.get('[data-action="select-entry"]').setValue(true);
+        await buttonLabelled(wrapper, 'Réaffecter').trigger('click');
+
+        await vi.waitFor(() => expect(wrapper.get('[role="alert"]').text()).toContain('ne sont pas au catalogue'));
+        expect(wrapper.get('[data-action="select-entry"]').element.checked).toBe(true);
+    });
+
+    it('shows no accessibility violation that axe can detect', async () => {
+        const wrapper = await mountPage(curatedProps());
 
         await expectNoAxeViolations(wrapper.element);
     });
