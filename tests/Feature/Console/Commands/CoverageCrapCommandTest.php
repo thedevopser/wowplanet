@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 beforeEach(function (): void {
-    $this->cloverPath = sys_get_temp_dir().'/pest-coverage-crap-'.uniqid().'.xml';
+    $this->cloverPath = testTempPath('coverage-crap').'.xml';
 });
 
 afterEach(function (): void {
@@ -92,7 +92,7 @@ test('an unreadable clover fails with a message rather than a stack trace', func
 });
 
 test('the clover is read from the coverage directory by default', function (): void {
-    $basePath = sys_get_temp_dir().'/pest-coverage-crap-base-'.uniqid();
+    $basePath = testTempPath('coverage-crap-base');
     mkdir($basePath.'/coverage', 0755, true);
     writeClover($basePath.'/coverage/clover.xml', '<line num="1" type="method" name="handle" complexity="1" crap="1" count="1"/>');
     $this->app->setBasePath($basePath);

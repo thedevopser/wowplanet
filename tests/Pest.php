@@ -40,7 +40,7 @@ pest()->extend(TestCase::class)
         // écrit en base peut demander son réexport — l'arbitrage du panneau le fait à
         // chaque écriture. Sans cette redirection, une suite de tests réécrit la curation
         // du dépôt avec ses quelques lignes de doublure.
-        $this->taxonomySnapshotPath = sys_get_temp_dir().'/pest-taxonomy-'.uniqid().'/'.CollectionTaxonomySnapshot::FILENAME;
+        $this->taxonomySnapshotPath = testTempPath('taxonomy').'/'.CollectionTaxonomySnapshot::FILENAME;
 
         $this->app->bind(
             CollectionTaxonomySnapshot::class,
@@ -151,6 +151,25 @@ function useRedisCache(): void
 function testRedisPrefix(): string
 {
     return 'wowplanet-test-'.(getenv('TEST_TOKEN') ?: '0').':';
+}
+
+/**
+ * Chemin temporaire propre au test. Un identifiant tiré de la seule horloge ne sépare pas deux
+ * processus parallèles qui démarrent un test à la même microseconde : ils partageaient le dossier,
+ * et le premier à finir l'effaçait sous l'autre. Le numéro de processus sépare les processus,
+ * l'aléa les tests d'un même processus. Le dossier du processus est créé ici et gardé.
+ */
+function testTempPath(string $name): string
+{
+    throw_if($name === '', InvalidArgumentException::class, 'A temporary path needs a name.');
+
+    $processDirectory = sys_get_temp_dir().'/wowplanet-test-'.(getenv('TEST_TOKEN') ?: '0');
+
+    if (! is_dir($processDirectory)) {
+        mkdir($processDirectory, 0o777, true);
+    }
+
+    return $processDirectory.'/'.$name.'-'.bin2hex(random_bytes(8));
 }
 
 /**

@@ -8,7 +8,7 @@ use App\Models\WowCollectionTaxonomy;
 use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function (): void {
-    $this->exportPath = sys_get_temp_dir().'/pest-taxonomy-export-'.uniqid().'/collection_taxonomy.csv';
+    $this->exportPath = testTempPath('taxonomy-export-command').'/collection_taxonomy.csv';
 });
 
 afterEach(function (): void {

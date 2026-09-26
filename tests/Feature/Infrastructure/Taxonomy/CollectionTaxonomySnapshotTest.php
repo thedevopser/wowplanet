@@ -9,7 +9,7 @@ use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 
 beforeEach(function (): void {
-    $this->snapshotPath = sys_get_temp_dir().'/pest-taxonomy-'.uniqid().'/collection_taxonomy.csv';
+    $this->snapshotPath = testTempPath('taxonomy-snapshot').'/collection_taxonomy.csv';
 });
 
 afterEach(function (): void {

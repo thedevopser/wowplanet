@@ -41,6 +41,7 @@ The pipeline runs on every branch and every pull request. **A red pull request d
 | Coverage | `make coverage` | Anything below the thresholds |
 | Documentation | `make docs-coverage` | A class created and left undocumented |
 | Typing | `make mixed-check` | A `mixed` outside its declared boundaries |
+| Parallel tests | `make temp-paths-check` | A `uniqid()` under `tests/`: temporary paths go through `testTempPath()` |
 
 `make quality` chains all of it locally. Run it before pushing — it is exactly what the CI will replay.
 

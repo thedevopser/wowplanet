@@ -82,6 +82,9 @@ jobs:
       - name: Check that mixed stays within its declared boundaries
         run: make mixed-check
 
+      - name: Check that test temporary paths never rely on uniqid
+        run: make temp-paths-check
+
       # Catches the day someone swaps pint --test for pint, or drops --dry-run.
       - name: Check that no step rewrote the working tree
         run: |

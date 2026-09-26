@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 beforeEach(function (): void {
-    $this->docsTmpDir = sys_get_temp_dir().'/pest-docs-coverage-'.uniqid();
+    $this->docsTmpDir = testTempPath('docs-coverage');
     mkdir($this->docsTmpDir.'/app', 0755, true);
     mkdir($this->docsTmpDir.'/documentation', 0755, true);
 

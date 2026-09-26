@@ -1,4 +1,4 @@
-.PHONY: help build up down install install-hooks check-db drop-test-disks build-assets dev dev-stop worker worker-stop psql psql-test redis-cli clean test test-js tokens-check lint lint-check static refactor refactor-check quality coverage coverage-php coverage-php-ci coverage-js crap mutate mutate-changed build-prod build-prod-ssr build-prod-all push push-ssr push-all deploy redeploy prod-up prod-down
+.PHONY: help build up down install install-hooks check-db drop-test-disks build-assets dev dev-stop worker worker-stop psql psql-test redis-cli clean test test-js tokens-check temp-paths-check lint lint-check static refactor refactor-check quality coverage coverage-php coverage-php-ci coverage-js crap mutate mutate-changed build-prod build-prod-ssr build-prod-all push push-ssr push-all deploy redeploy prod-up prod-down
 
 # Development database coordinates. Not read from .env on purpose: make would
 # parse the whole file as makefile syntax and choke on the first '#' inside a
@@ -102,6 +102,15 @@ mixed-check: ## Fail on any `mixed` outside the boundary files declared in mixed
 	fi; \
 	echo "No mixed outside the $$(printf '%s\n' "$$boundaries" | wc -l | tr -d ' ') declared boundary files."
 
+# A clock-based identifier is shared by two parallel processes starting a test in the
+# same microsecond, and the first to finish deletes the directory under the other.
+temp-paths-check: ## Fail on any uniqid() in the tests: temporary paths go through testTempPath()
+	@if grep -rn 'uniqid(' tests; then \
+		echo "uniqid() in the tests: build temporary paths with testTempPath() instead."; \
+		exit 1; \
+	fi; \
+	echo "No uniqid() in the tests."
+
 refactor: ## Run Rector automated refactoring
 	vendor/bin/rector process
 
@@ -114,7 +123,7 @@ test-js: ## Run Vitest (Vue component tests)
 tokens-check: ## Fail on any raw Tailwind palette class, arbitrary size or arbitrary colour in the front end
 	node scripts/check-design-tokens.mjs
 
-quality: lint static refactor docs-coverage mixed-check tokens-check test test-js ## Run all quality checks
+quality: lint static refactor docs-coverage mixed-check temp-paths-check tokens-check test test-js ## Run all quality checks
 
 # Pest running in the container writes storage/framework/testing/disks as root,
 # which the local user can then neither read nor clear: every later local test run

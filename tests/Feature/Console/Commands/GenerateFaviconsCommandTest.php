@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 beforeEach(function (): void {
     $this->originalPublicPath = app()->publicPath();
-    $this->publicTmpDir = sys_get_temp_dir().'/pest-favicons-'.uniqid();
+    $this->publicTmpDir = testTempPath('favicons');
 
     mkdir($this->publicTmpDir.'/images', 0755, true);
     copy($this->originalPublicPath.'/images/logo.png', $this->publicTmpDir.'/images/logo.png');

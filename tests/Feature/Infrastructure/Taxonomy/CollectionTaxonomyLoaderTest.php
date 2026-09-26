@@ -10,7 +10,7 @@ use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 
 beforeEach(function (): void {
-    $this->loaderSnapshotPath = sys_get_temp_dir().'/pest-taxonomy-loader-'.uniqid().'/collection_taxonomy.csv';
+    $this->loaderSnapshotPath = testTempPath('taxonomy-loader').'/collection_taxonomy.csv';
 });
 
 afterEach(function (): void {

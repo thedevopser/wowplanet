@@ -9,7 +9,7 @@ use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 
 beforeEach(function (): void {
-    $this->snapshotPath = sys_get_temp_dir().'/taxonomy-export-'.uniqid().'/'.CollectionTaxonomySnapshot::FILENAME;
+    $this->snapshotPath = testTempPath('taxonomy-exporter').'/'.CollectionTaxonomySnapshot::FILENAME;
 });
 
 afterEach(function (): void {

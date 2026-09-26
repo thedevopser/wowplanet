@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function (): void {
-    $this->syncSnapshotPath = sys_get_temp_dir().'/pest-taxonomy-sync-'.uniqid().'/collection_taxonomy.csv';
+    $this->syncSnapshotPath = testTempPath('taxonomy-sync').'/collection_taxonomy.csv';
 
     $this->app->bind(
         CollectionTaxonomySnapshot::class,
