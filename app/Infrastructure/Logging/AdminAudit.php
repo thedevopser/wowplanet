@@ -22,7 +22,7 @@ final readonly class AdminAudit
     ) {}
 
     /**
-     * @param  array<string, int|string|list<int>|list<string>|null>  $context
+     * @param  array<string, int|string|list<int>|list<string>|list<array<string, int|string|bool|null>>|null>  $context
      */
     public function record(string $action, string $actor, array $context = []): void
     {

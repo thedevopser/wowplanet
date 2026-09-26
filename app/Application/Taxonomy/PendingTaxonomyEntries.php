@@ -29,7 +29,7 @@ final readonly class PendingTaxonomyEntries
      */
     public function forEntity(CollectionEntity $collectionEntity, ?string $search = null): array
     {
-        $builder = $this->catalogue($collectionEntity)
+        $builder = $collectionEntity->catalogue()
             ->whereNotIn('id', $this->curatedIds($collectionEntity))
             ->orderBy('id');
 
@@ -57,10 +57,10 @@ final readonly class PendingTaxonomyEntries
 
         foreach (CollectionEntity::cases() as $collectionEntity) {
             $counts[$collectionEntity->value] = [
-                'pending' => $this->catalogue($collectionEntity)
+                'pending' => $collectionEntity->catalogue()
                     ->whereNotIn('id', $this->curatedIds($collectionEntity))
                     ->count(),
-                'catalogue' => $this->catalogue($collectionEntity)->count(),
+                'catalogue' => $collectionEntity->catalogue()->count(),
             ];
         }
 
@@ -100,17 +100,5 @@ final readonly class PendingTaxonomyEntries
         return WowCollectionTaxonomy::query()
             ->where('entity', $collectionEntity->value)
             ->select('entry_id');
-    }
-
-    /**
-     * @return Builder<WowMount>|Builder<WowPet>|Builder<WowDecor>
-     */
-    private function catalogue(CollectionEntity $collectionEntity): Builder
-    {
-        return match ($collectionEntity) {
-            CollectionEntity::Mount => WowMount::query(),
-            CollectionEntity::Pet => WowPet::query(),
-            CollectionEntity::Decor => WowDecor::query(),
-        };
     }
 }

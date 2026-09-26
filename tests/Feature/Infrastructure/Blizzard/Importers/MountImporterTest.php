@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Importers\MountImporter;
 use App\Infrastructure\Taxonomy\CollectionEntity;
@@ -289,4 +290,23 @@ test('it checks only the icons whose URL changes, so a second pass asks the CDN 
     resolve(MountImporter::class)->import();
 
     Http::assertSentCount(1);
+});
+
+test('an import run after a reassignment from the panel keeps the new ranking', function (): void {
+    curateMount(100, 'Other', 'Drop');
+    fakeIconCdn(200);
+
+    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
+    mockMountSearch($client, []);
+
+    resolve(MountImporter::class)->import();
+
+    resolve(TaxonomyArbitration::class)->arbitrate(CollectionEntity::Mount, [100], 'Legion', 'Class Hall', '12345');
+
+    resolve(MountImporter::class)->import();
+
+    expect(WowMount::query()->findOrFail(100)->only(['category', 'source']))
+        ->toBe(['category' => 'Legion', 'source' => 'Class Hall']);
 });
