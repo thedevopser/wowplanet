@@ -9,7 +9,7 @@
             description="Le rangement des montures, mascottes et décorations — catégorie puis source — est de la curation que ni l'API ni les DB2 ne portent. Chaque patch apporte des entrées que personne n'a encore rangées : elles sont ici."
         />
 
-        <Card as="section" aria-label="Entrées à arbitrer" class="space-y-6 p-5 sm:p-6">
+        <Card as="section" :aria-label="curated ? 'Entrées déjà rangées' : 'Entrées à arbitrer'" class="space-y-6 p-5 sm:p-6">
             <div role="group" aria-label="Collection" class="flex flex-wrap gap-2">
                 <Button
                     v-for="(count, name) in counts"
@@ -25,6 +25,28 @@
                 </Button>
             </div>
 
+            <div role="group" aria-label="Entrées affichées" class="inline-flex flex-wrap gap-1 rounded-ui-md border border-default bg-surface p-1">
+                <Button
+                    v-for="option in modes"
+                    :key="option.value"
+                    :data-mode="option.value"
+                    size="sm"
+                    :variant="option.value === mode ? 'primary' : 'ghost'"
+                    :aria-pressed="option.value === mode ? 'true' : 'false'"
+                    @click="switchMode(option.value)"
+                >
+                    {{ option.label }}
+                </Button>
+            </div>
+
+            <Select
+                v-if="curated"
+                :model-value="category ?? ALL_CATEGORIES"
+                label="Catégorie actuelle"
+                :options="categoryOptions"
+                @update:model-value="filterOn"
+            />
+
             <div class="flex flex-wrap items-center gap-3">
                 <input
                     v-model="term"
@@ -38,21 +60,29 @@
                     Chercher
                 </Button>
                 <span class="text-sm tabular-nums text-muted">
-                    {{ matched.toLocaleString('fr-FR') }} à arbitrer<template v-if="matched > entries.length">, {{ perPage }} affichées</template>
+                    {{ matched.toLocaleString('fr-FR') }} {{ curated ? 'rangées' : 'à arbitrer' }}<template v-if="matched > entries.length">, {{ perPage }} affichées</template>
                 </span>
             </div>
 
-            <PendingTaxonomyTable
+            <CuratedTaxonomyTable
+                v-if="curated"
                 :entries="entries"
                 :selected="selection"
                 :disabled="busy"
-                @update:selected="selection = $event"
+                @update:selected="select"
+            />
+            <PendingTaxonomyTable
+                v-else
+                :entries="entries"
+                :selected="selection"
+                :disabled="busy"
+                @update:selected="select"
             />
         </Card>
 
         <Card as="section" aria-labelledby="file-heading" class="space-y-5 p-5 sm:p-6">
             <div>
-                <h2 id="file-heading" class="font-display text-2xl font-semibold text-default">Ranger {{ selection.length }} entrée{{ selection.length > 1 ? 's' : '' }}</h2>
+                <h2 id="file-heading" class="font-display text-2xl font-semibold text-default">{{ curated ? 'Réaffecter' : 'Ranger' }} {{ selection.length }} entrée{{ selection.length > 1 ? 's' : '' }}</h2>
                 <p class="mt-1 text-sm text-muted">
                     Les libellés sont stockés en anglais, comme le reste de la curation : les pages de collection les
                     traduisent à l'affichage.
@@ -60,8 +90,8 @@
             </div>
 
             <div class="grid gap-4 sm:grid-cols-2">
-                <Combobox v-model="category" data-field="category" label="Catégorie" :options="vocabulary.categories" />
-                <Combobox v-model="source" data-field="source" label="Source" :options="vocabulary.sources" />
+                <Combobox v-model="chosenCategory" data-field="category" label="Catégorie" :options="vocabulary.categories" />
+                <Combobox v-model="chosenSource" data-field="source" label="Source" :options="vocabulary.sources" />
             </div>
 
             <p
@@ -69,14 +99,14 @@
                 data-alert="new-category"
                 class="rounded-ui-md border border-warning/40 bg-warning/10 p-3 text-sm text-default"
             >
-                « {{ category.trim() }} » n'existe pas encore dans cette collection : elle apparaîtra comme un nouvel
+                « {{ chosenCategory.trim() }} » n'existe pas encore dans cette collection : elle apparaîtra comme un nouvel
                 onglet dans les pages de collection, et se rangera en fin de liste tant qu'elle n'est ni une extension
                 ni une catégorie connue du front.
             </p>
 
             <div class="flex flex-wrap items-center gap-3">
-                <Button variant="primary" :disabled="busy || selection.length === 0" @click="file(category, source)">
-                    Ranger la sélection
+                <Button variant="primary" :disabled="busy || selection.length === 0" @click="file(chosenCategory, chosenSource)">
+                    {{ curated ? 'Réaffecter' : 'Ranger la sélection' }}
                 </Button>
                 <Button :disabled="busy || selection.length === 0" @click="file(null, null)">
                     Ranger nulle part
@@ -98,6 +128,12 @@
 import AppLayout from '../layouts/AppLayout.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 
+const CURATED = 'curated';
+const PENDING = 'pending';
+
+// A select item cannot carry an empty value: « all categories » needs a value of its own.
+const ALL_CATEGORIES = '__all__';
+
 export default {
     layout: [AppLayout, AdminLayout],
 };
@@ -113,6 +149,8 @@ import AdminPageHeader from '../components/admin/AdminPageHeader.vue';
 import Button from '../components/ui/Button.vue';
 import Card from '../components/ui/Card.vue';
 import Combobox from '../components/ui/Combobox.vue';
+import Select from '../components/ui/Select.vue';
+import CuratedTaxonomyTable from '../components/admin/CuratedTaxonomyTable.vue';
 
 const LABELS = {
     mount: 'Montures',
@@ -123,7 +161,11 @@ const LABELS = {
 const props = defineProps({
     entity: { type: String, required: true },
     search: { type: String, default: '' },
+    mode: { type: String, default: PENDING },
     counts: { type: Object, required: true },
+    curatedCounts: { type: Object, default: () => ({}) },
+    category: { type: String, default: null },
+    categories: { type: Array, default: () => [] },
     entries: { type: Array, required: true },
     matched: { type: Number, required: true },
     perPage: { type: Number, required: true },
@@ -133,8 +175,8 @@ const props = defineProps({
 
 const selection = ref([]);
 const term = ref(props.search);
-const category = ref('');
-const source = ref('');
+const chosenCategory = ref('');
+const chosenSource = ref('');
 const busy = ref(false);
 const filed = ref('');
 const error = ref('');
@@ -142,18 +184,61 @@ const error = ref('');
 // Une catégorie neuve n'est pas une faute — c'est ainsi qu'une catégorie entre — mais elle
 // se voit immédiatement dans les pages de collection, ce qui mérite d'être dit avant.
 const isNewCategory = computed(() => {
-    const typed = category.value.trim();
+    const typed = chosenCategory.value.trim();
 
     return typed !== '' && ! props.vocabulary.categories.includes(typed);
 });
 
-// La liste vient du serveur : changer de collection ou chercher, c'est redemander la page.
-const switchTo = name => router.visit(query({ entity: name }), { preserveScroll: true });
-const runSearch = () => router.visit(query({ entity: props.entity, search: term.value }), { preserveScroll: true });
+const curated = computed(() => props.mode === CURATED);
 
-const query = params => {
+const modes = computed(() => [
+    { value: PENDING, label: `À arbitrer (${formatCount(props.counts[props.entity]?.pending)})` },
+    { value: CURATED, label: `Déjà rangées (${formatCount(props.curatedCounts[props.entity])})` },
+]);
+
+const categoryOptions = computed(() => [
+    { value: ALL_CATEGORIES, label: 'Toutes les catégories' },
+    ...props.categories.map(option => ({
+        value: option.value,
+        label: option.category ?? 'Sans catégorie',
+        hint: formatCount(option.entries),
+    })),
+]);
+
+const formatCount = count => (count ?? 0).toLocaleString('fr-FR');
+
+// Une seule entrée cochée se corrige à partir de son rangement actuel ; plusieurs n'en
+// partagent pas forcément un, les champs restent donc vides.
+const select = ids => {
+    selection.value = ids;
+
+    if (! curated.value) {
+        return;
+    }
+
+    const single = ids.length === 1 ? props.entries.find(entry => entry.id === ids[0]) : null;
+    chosenCategory.value = single?.category ?? '';
+    chosenSource.value = single?.source ?? '';
+};
+
+// La liste vient du serveur : changer de collection, de mode, de filtre ou chercher, c'est
+// redemander la page. La sélection ne survit pas à un changement de liste.
+const visit = params => {
+    selection.value = [];
+    router.visit(query({ entity: props.entity, mode: props.mode, ...params }), { preserveScroll: true });
+};
+
+const switchTo = name => visit({ entity: name, search: '', category: null });
+const switchMode = mode => visit({ mode, search: '', category: null });
+const filterOn = value => visit({ search: props.search, category: value === ALL_CATEGORIES ? null : value });
+const runSearch = () => visit({ search: term.value, category: props.category });
+
+const query = ({ mode, ...params }) => {
+    params.mode = mode === CURATED ? CURATED : null;
+    const ordered = { entity: params.entity, mode: params.mode, search: params.search, category: params.category };
+
     const search = new URLSearchParams(
-        Object.entries(params).filter(([, value]) => value !== '' && value !== null)
+        Object.entries(ordered).filter(([, value]) => value !== '' && value !== null && value !== undefined)
     );
 
     return `/admin/taxonomy?${search.toString()}`;
@@ -173,9 +258,10 @@ const file = async (chosenCategory, chosenSource) => {
         });
 
         const count = response.data.arbitrated;
-        filed.value = `${count} entrée${count > 1 ? 's' : ''} rangée${count > 1 ? 's' : ''}`;
+        const plural = count > 1 ? 's' : '';
+        filed.value = `${count} entrée${plural} ${curated.value ? 'réaffectée' : 'rangée'}${plural}`;
         selection.value = [];
-        router.reload({ only: ['entries', 'counts', 'matched', 'vocabulary', 'snapshot'] });
+        router.reload({ only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot'] });
     } catch (err) {
         error.value = err.response?.data?.message || "Erreur lors de l'arbitrage";
     } finally {

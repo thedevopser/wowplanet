@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Taxonomy;
 
+use App\Models\WowDecor;
+use App\Models\WowMount;
+use App\Models\WowPet;
+use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 
 /**
@@ -27,6 +31,20 @@ enum CollectionEntity: string
             $name,
             implode(', ', array_column(self::cases(), 'value')),
         ));
+    }
+
+    /**
+     * The catalogue table the site reads for this collection.
+     *
+     * @return Builder<WowMount>|Builder<WowPet>|Builder<WowDecor>
+     */
+    public function catalogue(): Builder
+    {
+        return match ($this) {
+            self::Mount => WowMount::query(),
+            self::Pet => WowPet::query(),
+            self::Decor => WowDecor::query(),
+        };
     }
 
     public function simpleArmoryFile(): string

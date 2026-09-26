@@ -72,3 +72,32 @@ test('catalogue counts are kept for an hour, then read again', function (): void
     $this->travel(61)->minutes();
     expect($this->service->cachedCounts()['mounts'])->toBe(3);
 });
+
+test('sidebar subcategories are kept for an hour, then read again', function (): void {
+    WowMount::factory()->create(['is_active' => true, 'category' => 'Legion']);
+
+    expect($this->service->cachedSubcategories()['mounts'])->toBe([['name' => 'Legion', 'slug' => 'legion', 'count' => 1]]);
+
+    WowMount::factory()->create(['is_active' => true, 'category' => 'Legion']);
+    expect($this->service->cachedSubcategories()['mounts'][0]['count'])->toBe(1);
+
+    $this->travel(61)->minutes();
+    expect($this->service->cachedSubcategories()['mounts'][0]['count'])->toBe(2);
+});
+
+test('sidebar subcategories cover every section of the database sidebar', function (): void {
+    expect(array_keys($this->service->cachedSubcategories()))
+        ->toBe(['mounts', 'achievements', 'quests', 'pets', 'decors', 'appearances', 'professions']);
+});
+
+test('forgetting the sidebar makes both its counts and its subcategories read the catalogue again', function (): void {
+    WowMount::factory()->create(['is_active' => true, 'category' => 'Legion']);
+    $this->service->cachedCounts();
+    $this->service->cachedSubcategories();
+
+    WowMount::factory()->create(['is_active' => true, 'category' => 'Legion']);
+    $this->service->forgetSidebar();
+
+    expect($this->service->cachedCounts()['mounts'])->toBe(2)
+        ->and($this->service->cachedSubcategories()['mounts'][0]['count'])->toBe(2);
+});

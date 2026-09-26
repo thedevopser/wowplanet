@@ -427,6 +427,7 @@ Elle vit dans la table `wow_collection_taxonomy`, hors de la famille `wow_ref_*`
 | Méthode | Description |
 |---|---|
 | `fromOption(string $name): self` | Résout l'entité d'une option de commande, insensible à la casse. Lève `InvalidArgumentException` en listant les entités connues. |
+| `catalogue(): Builder` | Requête sur la table du catalogue que le site lit pour cette collection (`wow_mounts`, `wow_pets`, `wow_decors`). Partagée par `PendingTaxonomyEntries` et `TaxonomyArbitration`. |
 | `simpleArmoryFile(): string` | Nom du fichier curé dont cette collection s'amorce. |
 
 ### `TaxonomyEntry`
@@ -506,15 +507,21 @@ Levée quand l'amont curé refuse le téléchargement ou répond vide. Un tirage
 
 ### L'arbitrage vu du panneau (`app/Application/Taxonomy/`)
 
-Cinq classes de la couche Application portent ce que `/admin/taxonomy` affiche et écrit. Sans écran, le rapport d'entrées à arbitrer restait un fichier de log que personne ne lisait, et le rangement se dégradait patch après patch.
+Huit classes de la couche Application portent ce que `/admin/taxonomy` affiche et écrit. Sans écran, le rapport d'entrées à arbitrer restait un fichier de log que personne ne lisait, et le rangement se dégradait patch après patch.
 
 **`PendingTaxonomyEntries`** rend les entrées de catalogue que la taxonomie ne range pas. Rien n'est stocké : l'absence de ligne de taxonomie pour une ligne de catalogue *est* le rapport. La règle vit ici et non dans la commande, parce que trois appelants la partagent — la commande de rapport, l'écran d'arbitrage et le compteur du tableau de bord. `forEntity()` accepte une recherche par nom ou par identifiant, `counts()` rend le couple « en attente / au catalogue » par collection, `total()` la somme.
 
+**`CuratedTaxonomyEntries`** rend les entrées de catalogue que la taxonomie range déjà, avec leur rangement actuel : c'est là que l'écran retrouve une entrée mal rangée pour la réaffecter. Le rangement affiché est celui de la taxonomie, qui fait foi, et non la copie qu'en porte le catalogue. Une ligne de taxonomie dont l'entrée a quitté le catalogue n'est pas listée. `forEntity()` accepte la même recherche que les entrées en attente et un filtre de catégorie exacte, la constante `UNCATEGORISED` (`__none__`) visant les entrées rangées nulle part ; les entrées sont triées par nom puis par identifiant. `categories()` rend les catégories employées avec leur effectif, les entrées rangées nulle part en dernier, et `counts()` le nombre d'entrées rangées par collection.
+
+**`CatalogueSearch`** porte la règle de recherche commune aux deux listes : le nom français sans égard à la casse (`ilike`), et l'identifiant exact quand le terme est un nombre. Une seule implémentation, pour que les deux modes de l'écran trouvent la même chose avec le même terme.
+
 **`TaxonomyVocabulary`** rend les catégories et les sources qu'une collection emploie réellement, lues en base et non figées dans le code : ce vocabulaire est de la curation, il grossit d'un patch à l'autre, et une liste codée en dur aurait divergé dès le premier arbitrage. Elle propose l'existant à la saisie sans l'imposer — une valeur neuve reste saisissable, c'est ainsi qu'une catégorie entre.
 
-**`TaxonomyArbitration`** écrit le rangement et remet l'instantané en phase dans la foulée. Trois points la gouvernent.
+**`TaxonomyArbitration`** écrit le rangement, l'applique tout de suite au catalogue et remet l'instantané en phase dans la foulée. Quatre points la gouvernent.
 
 L'écriture passe par le constructeur de requêtes : la clé primaire de `WowCollectionTaxonomy` est composite, et un `save()` sur une instance chargée ne saurait pas la retrouver. Une entrée déjà curée est corrigée, une entrée inconnue est créée, et **le drapeau d'obtention trouvé en place n'est jamais touché** — le panneau range, il ne statue pas sur l'existence d'une monture.
+
+**La correction se voit tout de suite sur le site.** Le site ne lit pas la taxonomie : les importers recopient `category` et `source` dans `wow_mounts`, `wow_pets` et `wow_decors`. L'arbitrage fait donc la même copie, dans la même transaction que la taxonomie, puis vide le cache de la barre latérale par `DatabaseQueryService::forgetSidebar()`. Sans cela, un arbitrage n'apparaissait qu'au prochain import de la collection. Cet import conserve la correction, puisqu'il relit la taxonomie en base. Une entrée absente du catalogue de la collection — y compris une entrée curée dont la monture a quitté le catalogue — lève `UnknownCollectionEntryException` avant toute écriture, et le contrôleur rend un 422 avec son motif et les identifiants refusés. La piste d'audit garde, entrée par entrée, le rangement d'avant (`previous`) : une entrée en attente y est marquée `pending`, ce qui la distingue d'une entrée rangée nulle part.
 
 Un libellé vide est un rangement nul et non une chaîne vide : c'est la distinction que l'instantané et les importers lisent, et c'est ce qui permet de **ranger une entrée nulle part en connaissance de cause**. Sans ce geste, une entrée qui n'a vraiment aucune catégorie reviendrait à arbitrer pour toujours.
 
@@ -525,6 +532,8 @@ Un libellé vide est un rangement nul et non une chaîne vide : c'est la distinc
 **`TaxonomySnapshotExporter`** regénère l'instantané depuis la base et dit s'il en est encore le reflet. La comparaison de `state()` porte sur **le contenu et non sur un nombre de lignes** : une correction de libellé ne change aucun décompte et ferait passer pour en phase un fichier périmé. Un instantané absent ou illisible se lit comme vide, pour que l'écran puisse signaler la dérive plutôt que tomber en erreur. `app:collection-taxonomy-export` délègue à cette classe, il n'y a donc qu'une implémentation de l'export.
 
 **La dérive est orientée**, parce que le remède en dépend. `state()` compte les entrées du fichier absentes de la base (`missing_in_base`), qui se rechargent, les entrées de la base absentes du fichier (`missing_in_file`), et celles que les deux côtés tiennent différemment (`differing`), qui se téléchargent pour être commitées. L'écran ne conseillait autrefois que l'export, qui va dans l'autre sens : face à une base de production jamais amorcée, il aurait écrasé le fichier curé par une base vide, et seul son refus d'écrire un instantané vide l'en a empêché. `download()` rend l'instantané régénéré depuis la base, sans toucher au fichier en place, par `CollectionTaxonomySnapshot::render()`.
+
+**`UnknownCollectionEntryException`** est levée par l'arbitrage quand il nomme des entrées que le catalogue de la collection ne porte pas. Elle expose `entryIds`, la liste triée des identifiants refusés, que le contrôleur rend tels quels.
 
 **`TaxonomySnapshotMerge`** recharge en base la curation versionnée des trois collections, depuis le bouton de l'écran : c'est le remède d'une base en retard sur le fichier. La fusion est additive, comme celle que font les étapes d'import avant d'importer une collection, et elle est tracée sur la piste d'audit.
 

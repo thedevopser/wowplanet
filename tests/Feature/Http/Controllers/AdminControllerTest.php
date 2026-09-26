@@ -754,6 +754,22 @@ test('an entry that is not in this collection catalogue is refused', function ()
     expect(WowCollectionTaxonomy::query()->count())->toBe(0);
 });
 
+test('an entry curated in the taxonomy but gone from the catalogue is refused with its reason', function (): void {
+    WowCollectionTaxonomy::query()->insert([
+        'entity' => 'mount', 'entry_id' => 999, 'category' => 'Other', 'source' => null, 'obtainable' => true,
+    ]);
+
+    $this->withSession(adminSession())
+        ->postJson('/api/admin/taxonomy/arbitrate', [
+            'entity' => 'mount', 'entries' => [999], 'category' => 'Legion', 'source' => 'Drop',
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('entries', [999])
+        ->assertJsonPath('message', 'Certaines entrées ne sont pas au catalogue de cette collection (mount) : 999.');
+
+    expect(taxonomyOf(999)?->category)->toBe('Other');
+});
+
 test('a collection the server does not know is refused', function (): void {
     $this->withSession(adminSession())
         ->postJson('/api/admin/taxonomy/arbitrate', [

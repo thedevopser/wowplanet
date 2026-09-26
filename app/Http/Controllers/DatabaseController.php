@@ -8,19 +8,11 @@ use App\Application\Services\DatabaseQueryService;
 use App\Application\Services\DatabaseSeoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
 class DatabaseController extends Controller
 {
-    /**
-     * Sections dont la sidebar affiche les sous-catégories (accordéon).
-     *
-     * @var list<string>
-     */
-    private const SIDEBAR_SECTIONS = ['mounts', 'achievements', 'quests', 'pets', 'decors', 'appearances', 'professions'];
-
     public function __construct(
         private readonly DatabaseSeoService $databaseSeoService,
         private readonly DatabaseQueryService $databaseQueryService,
@@ -173,8 +165,9 @@ class DatabaseController extends Controller
      * database. Closures lazy : non évaluées lors des rechargements partiels Inertia
      * (pagination/recherche) qui ne les incluent pas dans `only`.
      *
-     * Ces données ne changent qu'à l'import admin → mises en cache (1 h) pour éviter
-     * de recalculer ~15 requêtes d'agrégation à chaque navigation dans la base.
+     * Ces données ne changent qu'à l'import admin ou à un arbitrage de taxonomie, qui les
+     * invalide : mises en cache (1 h) pour éviter de recalculer ~15 requêtes d'agrégation
+     * à chaque navigation dans la base.
      *
      * @return array<string, \Closure>
      */
@@ -182,18 +175,7 @@ class DatabaseController extends Controller
     {
         return [
             'counts' => $this->databaseQueryService->cachedCounts(...),
-            'subCategories' => fn (): array => Cache::remember(
-                'database_sidebar_subcategories',
-                3600,
-                function (): array {
-                    $map = [];
-                    foreach (self::SIDEBAR_SECTIONS as $section) {
-                        $map[$section] = $this->databaseQueryService->subcategories($section) ?? [];
-                    }
-
-                    return $map;
-                },
-            ),
+            'subCategories' => $this->databaseQueryService->cachedSubcategories(...),
         ];
     }
 

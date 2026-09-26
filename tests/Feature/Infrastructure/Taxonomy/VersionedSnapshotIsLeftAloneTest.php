@@ -6,6 +6,7 @@ use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowMount;
 
 /**
  * L'instantané de la taxonomie est un fichier versionné, et l'arbitrage du panneau le
@@ -24,6 +25,7 @@ test('an arbitration leaves the snapshot versioned with the repository untouched
     $before = md5_file($versioned);
 
     WowCollectionTaxonomy::factory()->create();
+    WowMount::factory()->create(['id' => 7]);
     resolve(TaxonomyArbitration::class)->arbitrate(CollectionEntity::Mount, [7], 'Racial', 'Human', 'test');
 
     expect(md5_file($versioned))->toBe($before);

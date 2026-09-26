@@ -14,15 +14,14 @@ use App\Application\Import\ImportSignal;
 use App\Application\Import\ImportStage;
 use App\Application\Reference\ReferenceFileInventory;
 use App\Application\Services\AdminService;
-use App\Application\Taxonomy\PendingTaxonomyEntries;
 use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Application\Taxonomy\TaxonomySnapshotExporter;
 use App\Application\Taxonomy\TaxonomySnapshotMerge;
+use App\Application\Taxonomy\UnknownCollectionEntryException;
 use App\Http\Controllers\Concerns\ResolvesBnetUser;
 use App\Infrastructure\Reference\ReferenceCatalog;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Jobs\RunImportJob;
-use App\Models\WowCollectionTaxonomy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -228,13 +227,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Range des entrées de collection que la taxonomie ne connaissait pas.
-     *
-     * Les identifiants sont confrontés à ce qui est réellement en attente pour cette
-     * collection : on ne range que ce que l'écran proposait de ranger, et une correction
-     * d'entrée déjà curée passe par le même chemin puisqu'elle nomme une entrée existante.
+     * Range des entrées de collection, qu'elles soient en attente ou déjà curées : une
+     * réaffectation passe par le même chemin. Une entrée absente du catalogue de la
+     * collection est refusée par l'arbitrage lui-même, avant toute écriture.
      */
-    public function arbitrateTaxonomy(Request $request, PendingTaxonomyEntries $pendingTaxonomyEntries): JsonResponse
+    public function arbitrateTaxonomy(Request $request): JsonResponse
     {
         $entities = implode(',', array_column(CollectionEntity::cases(), 'value'));
 
@@ -256,49 +253,27 @@ class AdminController extends Controller
         $raw = $request->input('entries', []);
         $entries = array_map(static fn (int|string $entry): int => (int) $entry, $raw);
 
-        $known = array_column($pendingTaxonomyEntries->forEntity($collectionEntity), 'id');
-        $unknown = array_values(array_diff($entries, $known, $this->curatedIds($collectionEntity, $entries)));
-
-        if ($unknown !== []) {
-            return response()->json([
-                'message' => 'Certaines entrées ne sont pas au catalogue de cette collection.',
-                'entries' => $unknown,
-            ], 422);
-        }
-
         /** @var string|null $category */
         $category = $request->input('category');
         /** @var string|null $source */
         $source = $request->input('source');
 
-        $report = $this->taxonomyArbitration->arbitrate(
-            $collectionEntity,
-            $entries,
-            $category,
-            $source,
-            $this->getAuthenticatedUserId() ?? RunImportJob::PANEL_TRIGGER,
-        );
+        try {
+            $report = $this->taxonomyArbitration->arbitrate(
+                $collectionEntity,
+                $entries,
+                $category,
+                $source,
+                $this->getAuthenticatedUserId() ?? RunImportJob::PANEL_TRIGGER,
+            );
+        } catch (UnknownCollectionEntryException $unknownCollectionEntryException) {
+            return response()->json([
+                'message' => $unknownCollectionEntryException->getMessage(),
+                'entries' => $unknownCollectionEntryException->entryIds,
+            ], 422);
+        }
 
         return response()->json($report);
-    }
-
-    /**
-     * Les entrées déjà curées parmi celles demandées : une correction les nomme, et elles
-     * ne figurent par définition pas dans la liste des entrées en attente.
-     *
-     * @param  list<int>  $entries
-     * @return list<int>
-     */
-    private function curatedIds(CollectionEntity $collectionEntity, array $entries): array
-    {
-        /** @var list<int> $ids */
-        $ids = WowCollectionTaxonomy::query()
-            ->where('entity', $collectionEntity->value)
-            ->whereIn('entry_id', $entries)
-            ->pluck('entry_id')
-            ->all();
-
-        return $ids;
     }
 
     /**

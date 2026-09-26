@@ -13,12 +13,14 @@ use App\Application\Import\ImportSignal;
 use App\Application\Import\ImportStage;
 use App\Application\Import\ImportStepStatus;
 use App\Application\Import\ImportWaitReason;
+use App\Application\Services\DatabaseQueryService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\BlizzardBatchImporter;
 use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Models\ImportHistoryEntry;
 use App\Models\ImportHistoryStep;
 use App\Models\WowImportState;
+use App\Models\WowPet;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 
@@ -499,4 +501,58 @@ test('a cancelled import is done even with stages left', function (): void {
     $importRun = App\Application\Import\ImportRun::start('job-1', [ImportStage::Pets], 1_000)->cancelled(at: 1_100);
 
     expect(pipeline()->isDone($importRun))->toBeTrue();
+});
+
+/**
+ * La barre latérale de la base garde ses compteurs une heure : l'import qui vient de changer
+ * le catalogue doit la rafraîchir en se refermant, pas la laisser mentir jusque-là.
+ */
+function sidebarPets(): int
+{
+    return resolve(DatabaseQueryService::class)->cachedCounts()['pets'];
+}
+
+function importPetsWritesOne(\Mockery\MockInterface $mock): void
+{
+    $mock->shouldReceive('importPets')->once()->andReturnUsing(function (): void {
+        WowPet::factory()->create(['is_active' => true]);
+    });
+}
+
+test('an import that reaches its end refreshes the database sidebar', function (): void {
+    expect(sidebarPets())->toBe(0);
+    importPetsWritesOne($this->importerMock);
+
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+
+    expect(sidebarPets())->toBe(1);
+});
+
+test('an import with stages left keeps the database sidebar until it ends', function (): void {
+    expect(sidebarPets())->toBe(0);
+    importPetsWritesOne($this->importerMock);
+
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'), false, null);
+
+    expect(sidebarPets())->toBe(0);
+});
+
+test('a cancelled import refreshes the database sidebar, since the stages already done did write', function (): void {
+    $importRun = pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console');
+    expect(sidebarPets())->toBe(0);
+    WowPet::factory()->create(['is_active' => true]);
+
+    pipeline()->interrupt($importRun, new ImportRequest(ImportSignal::Cancel, '12345', now()->getTimestamp()));
+
+    expect(sidebarPets())->toBe(1);
+});
+
+test('a paused import keeps the database sidebar, since it has not ended', function (): void {
+    $importRun = pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console');
+    expect(sidebarPets())->toBe(0);
+    WowPet::factory()->create(['is_active' => true]);
+
+    pipeline()->interrupt($importRun, new ImportRequest(ImportSignal::Pause, '12345', now()->getTimestamp()));
+
+    expect(sidebarPets())->toBe(0);
 });

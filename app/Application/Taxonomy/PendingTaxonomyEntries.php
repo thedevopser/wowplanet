@@ -29,11 +29,11 @@ final readonly class PendingTaxonomyEntries
      */
     public function forEntity(CollectionEntity $collectionEntity, ?string $search = null): array
     {
-        $builder = $this->catalogue($collectionEntity)
+        $builder = $collectionEntity->catalogue()
             ->whereNotIn('id', $this->curatedIds($collectionEntity))
             ->orderBy('id');
 
-        $this->applySearch($builder, $search);
+        CatalogueSearch::apply($builder, $search);
 
         return array_values($builder->get(['id', 'name_fr', 'source'])
             ->map(static fn (WowMount|WowPet|WowDecor $model): array => [
@@ -57,10 +57,10 @@ final readonly class PendingTaxonomyEntries
 
         foreach (CollectionEntity::cases() as $collectionEntity) {
             $counts[$collectionEntity->value] = [
-                'pending' => $this->catalogue($collectionEntity)
+                'pending' => $collectionEntity->catalogue()
                     ->whereNotIn('id', $this->curatedIds($collectionEntity))
                     ->count(),
-                'catalogue' => $this->catalogue($collectionEntity)->count(),
+                'catalogue' => $collectionEntity->catalogue()->count(),
             ];
         }
 
@@ -73,26 +73,6 @@ final readonly class PendingTaxonomyEntries
     }
 
     /**
-     * @param  Builder<WowMount>|Builder<WowPet>|Builder<WowDecor>  $query
-     */
-    private function applySearch(Builder $query, ?string $search): void
-    {
-        $term = trim((string) $search);
-
-        if ($term === '') {
-            return;
-        }
-
-        $query->where(static function (Builder $builder) use ($term): void {
-            $builder->where('name_fr', 'ilike', '%'.$term.'%');
-
-            if (ctype_digit($term)) {
-                $builder->orWhere('id', (int) $term);
-            }
-        });
-    }
-
-    /**
      * @return Builder<WowCollectionTaxonomy>
      */
     private function curatedIds(CollectionEntity $collectionEntity): Builder
@@ -100,17 +80,5 @@ final readonly class PendingTaxonomyEntries
         return WowCollectionTaxonomy::query()
             ->where('entity', $collectionEntity->value)
             ->select('entry_id');
-    }
-
-    /**
-     * @return Builder<WowMount>|Builder<WowPet>|Builder<WowDecor>
-     */
-    private function catalogue(CollectionEntity $collectionEntity): Builder
-    {
-        return match ($collectionEntity) {
-            CollectionEntity::Mount => WowMount::query(),
-            CollectionEntity::Pet => WowPet::query(),
-            CollectionEntity::Decor => WowDecor::query(),
-        };
     }
 }

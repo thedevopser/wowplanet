@@ -35,6 +35,7 @@ Moteur d'un import complet : **une passe d'étape par invocation**, puis re-disp
 1. Première invocation : `ImportPipeline::begin()` publie une étape par entité demandée, les étapes déjà à jour pour ce build étant marquées ignorées.
 2. Chaque invocation : `ImportPipeline::advance()` exécute une passe de la première étape non aboutie, puis republie l'import.
 3. Tant qu'il reste une étape : re-dispatch, retardé du temps d'attente si le plafond horaire est atteint.
+4. À la clôture, que l'import aboutisse ou qu'il soit annulé ou abandonné : rapport au journal, entrée d'historique refermée, verrou rendu, et cache de la barre latérale de la base vidé par `DatabaseQueryService::forgetSidebar()`, pour que ses compteurs et ses catégories suivent le catalogue qui vient d'être écrit. Une pause ne clôt rien et ne vide rien.
 
 `retryUntil()` est fixé à 24 h : le chaînage peut s'étaler sur plusieurs heures si le quota Blizzard impose des pauses.
 

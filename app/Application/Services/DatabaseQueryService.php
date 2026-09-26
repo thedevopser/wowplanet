@@ -57,6 +57,15 @@ class DatabaseQueryService
 
     private const COUNTS_CACHE_KEY = 'database_sidebar_counts';
 
+    private const SUBCATEGORIES_CACHE_KEY = 'database_sidebar_subcategories';
+
+    /**
+     * Sections dont la sidebar affiche les sous-catégories (accordéon).
+     *
+     * @var list<string>
+     */
+    private const SIDEBAR_SECTIONS = ['mounts', 'achievements', 'quests', 'pets', 'decors', 'appearances', 'professions'];
+
     // The catalogue only changes on an admin import: an hour saves some fifteen aggregate queries per page.
     private const COUNTS_CACHE_SECONDS = 3600;
 
@@ -315,6 +324,31 @@ class DatabaseQueryService
     public function cachedCounts(): array
     {
         return Cache::remember(self::COUNTS_CACHE_KEY, self::COUNTS_CACHE_SECONDS, $this->counts(...));
+    }
+
+    /**
+     * @return array<string, array<int, array{name: string, slug: string, count: int, type?: string}>>
+     */
+    public function cachedSubcategories(): array
+    {
+        return Cache::remember(self::SUBCATEGORIES_CACHE_KEY, self::COUNTS_CACHE_SECONDS, function (): array {
+            $map = [];
+            foreach (self::SIDEBAR_SECTIONS as $section) {
+                $map[$section] = $this->subcategories($section) ?? [];
+            }
+
+            return $map;
+        });
+    }
+
+    /**
+     * A taxonomy arbitration moves entries between categories outside of any import: the
+     * sidebar must not keep showing the old ranking for the rest of the hour.
+     */
+    public function forgetSidebar(): void
+    {
+        Cache::forget(self::COUNTS_CACHE_KEY);
+        Cache::forget(self::SUBCATEGORIES_CACHE_KEY);
     }
 
     /**
