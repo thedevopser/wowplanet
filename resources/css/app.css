@@ -4,6 +4,9 @@
 @import "@fontsource/cinzel/600.css";
 @import "@fontsource/cinzel/700.css";
 
+/* The versioned collection taxonomy snapshot is rewritten by every arbitration in dev: scanning it made the dev server reload the admin page. */
+@source not "../../database";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
