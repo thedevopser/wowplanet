@@ -173,6 +173,21 @@ Le trait `SweepsIdWindows` porte la boucle commune aux balayages — construire 
 
 ---
 
+### `BlizzardInternalName`
+
+L'API sert tels quels les noms de travail de Blizzard : objets provisoires, jamais sortis ou périmés. `isInternal(string $name): bool` les reconnaît :
+
+| Forme | Exemples |
+|---|---|
+| Balise en tête, `[` ou `<` | `[PH] Rainbow Axe - 1h - Purple`, `[PÉRIMÉ]Semez votre graine`, `<NYI> <TXT> Pirate Hats` |
+| Numéro de patch en tête | `9.0 PvP - PvP Reward - Tabard - 4`, `10.0 Rare Reward TBD - …` |
+| Marqueur en majuscules, mot entier : `TBD`, `NYI`, `DNT`, `TXT`, `TEST` | `Le héraut <NYI>`, `DNT Ula'tek Pole Dummy F`, `TEST 130 Epic Paladin DPS Chest` |
+| Nom exact | `Test`, `Test Quest` |
+
+Les marqueurs ne comptent qu'en majuscules : « Test de courage » ou « Testament d'espoir » sont de vrais noms français. Seules la garde-robe et les quêtes en portent ; montures, mascottes, décorations et hauts-faits n'en ont aucun.
+
+---
+
 ### `ItemSearchSweep`
 
 Balayage du catalogue d'items sur cette grille. Un document de recherche d'item porte déjà nom, qualité, media et apparences, là où le détail unitaire demandait un appel par apparence.
@@ -385,7 +400,7 @@ Chaque importeur lit les données sources, les transforme et les sauvegarde via 
 | `MountImporter` | `mount/index` + balayage `search/mount` + taxonomie curée + socle pour le sort et l'icône | `WowMount` |
 | `PetImporter` | `pet/index` + détail de chaque mascotte + taxonomie curée | `WowPet` |
 | `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée | `WowDecor` |
-| `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps | `WowQuest` |
+| `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps, sans les quêtes au nom interne, supprimées si déjà en base | `WowQuest` |
 | `ProfessionImporter` | `skill_line_ability.csv` + API Blizzard | `WowProfession`, `WowRecipe` |
 
 Pour les trois collections, le partage d'autorité est explicite : **l'API tranche l'existence**, la **taxonomie curée tranche le rangement**. Une entrée que l'API ignore n'entre pas au catalogue ; une entrée que la taxonomie ne range pas entre avec le type de source de l'API en valeur d'attente, et figure au rapport d'entrées à arbitrer. Voir [Taxonomie des collections](#taxonomie-des-collections-appinfrastructuretaxonomy).
@@ -411,6 +426,8 @@ Deux autorités, jamais mélangées. Les 18 index de slots de l'`Item Appearance
 L'item représentatif d'une apparence est choisi par un ordre total : **meilleure qualité, puis plus petit identifiant d'item**. Le départage par identifiant n'est pas cosmétique — un critère dépendant de l'ordre de parcours ne rendrait pas le même représentant après une reprise. Un changement de représentant remet l'icône à nul, ce qui suffit à la faire reprendre par la passe media ; hors `--full`, cette passe ne vise que les lignes sans icône.
 
 Une ligne identique à ce qui est déjà en base n'est pas réécrite, sans quoi chaque passe toucherait les 22 000 lignes et le mode incrémental ne voudrait plus rien dire.
+
+**Un item au nom interne n'est jamais représentant** (voir [`BlizzardInternalName`](#blizzardinternalname)), et une ligne stockée sous un tel nom cède la place à tout candidat valide, quelle que soit sa qualité. Une apparence listée dans les index mais qu'aucun item sorti ne nomme n'a pas de ligne : le balayage complet supprime donc aussi celles qui restent sous un nom interne, y compris les « [EN] Appearance #id » qu'écrivait l'ancien repli de nommage.
 
 ---
 
