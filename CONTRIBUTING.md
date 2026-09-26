@@ -41,6 +41,7 @@ Le pipeline tourne sur chaque branche et chaque pull request. **Une pull request
 | Couverture | `make coverage` | Un passage sous les seuils |
 | Documentation | `make docs-coverage` | Une classe créée et non documentée |
 | Typage | `make mixed-check` | Un `mixed` hors des frontières déclarées |
+| Tests parallèles | `make temp-paths-check` | Un `uniqid()` dans `tests/` : un chemin temporaire passe par `testTempPath()` |
 
 `make quality` enchaîne tout en local. Lance-la avant de pousser, c'est exactement ce que la CI rejouera.
 

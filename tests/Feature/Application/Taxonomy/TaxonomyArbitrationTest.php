@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Monolog\Handler\TestHandler;
 
 beforeEach(function (): void {
-    $this->snapshotPath = sys_get_temp_dir().'/taxonomy-arbitration-'.uniqid().'/'.CollectionTaxonomySnapshot::FILENAME;
+    $this->snapshotPath = testTempPath('taxonomy-arbitration').'/'.CollectionTaxonomySnapshot::FILENAME;
 });
 
 afterEach(function (): void {

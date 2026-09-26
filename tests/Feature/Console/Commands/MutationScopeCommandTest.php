@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Process;
 
 beforeEach(function (): void {
-    $this->scopeRoot = sys_get_temp_dir().'/pest-mutation-scope-'.uniqid();
+    $this->scopeRoot = testTempPath('mutation-scope');
     mkdir($this->scopeRoot, 0755, true);
     $this->app->setBasePath($this->scopeRoot);
 

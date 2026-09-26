@@ -21,7 +21,7 @@ test('the audit trail is kept at the information level whatever the application 
 });
 
 test('an audit trail that cannot be written never undoes the action, and the failure shows among the recent errors', function (): void {
-    $unwritable = sys_get_temp_dir().'/audit-'.uniqid();
+    $unwritable = testTempPath('audit');
     mkdir($unwritable);
     config(['logging.channels.audit' => ['driver' => 'single', 'path' => $unwritable, 'level' => 'info']]);
 
