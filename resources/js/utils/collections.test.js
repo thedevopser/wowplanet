@@ -43,6 +43,11 @@ describe('translations', () => {
         expect(translateSource('pets', source)).toBe(expected);
     });
 
+    it('names the black market auction house as players do', () => {
+        expect(translateSource('mounts', 'BMAH')).toBe('Marché noir');
+        expect(translateSource('pets', 'BMAH')).toBe('Marché noir');
+    });
+
     it('keeps an unknown source as it is', () => {
         expect(translateSource('decor', 'Somewhere new')).toBe('Somewhere new');
     });
