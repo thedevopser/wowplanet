@@ -206,3 +206,27 @@ test('a faction carried by the reference maps still wins over the stored one', f
 
     expect(WowQuest::query()->find(100)->faction)->toBe('Horde');
 });
+
+test('a quest carrying an internal Blizzard name is not imported', function (): void {
+    questApiReturning([
+        ['id' => 100, 'name' => 'Test de courage'],
+        ['id' => 101, 'name' => '[PH] Acheter une bride'],
+        ['id' => 102, 'name' => 'Le héraut <NYI>'],
+    ]);
+
+    resolve(QuestImporter::class)->import([10 => 0]);
+
+    expect(WowQuest::query()->pluck('name_fr')->all())->toBe(['Test de courage']);
+});
+
+test('a stored quest carrying an internal Blizzard name is removed on the next import', function (): void {
+    WowQuest::query()->create(['id' => 101, 'name_fr' => '[PÉRIMÉ]Semez votre graine', 'expansion_id' => 0, 'is_active' => true]);
+    questApiReturning([
+        ['id' => 100, 'name' => 'Quete de Durotar'],
+        ['id' => 101, 'name' => '[PÉRIMÉ]Semez votre graine'],
+    ]);
+
+    resolve(QuestImporter::class)->import([10 => 0]);
+
+    expect(WowQuest::query()->pluck('id')->all())->toBe([100]);
+});

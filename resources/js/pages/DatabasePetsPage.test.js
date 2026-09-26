@@ -97,4 +97,23 @@ describe('DatabasePetsPage', () => {
         expect(paginations.map((pagination) => pagination.props('placement'))).toEqual(['top', 'bottom']);
         expect(paginations[0].element.compareDocumentPosition(wrapper.find('table').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
+
+    it('shows the source in French', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: 'Pet Battle', icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Combat de mascottes');
+        expect(wrapper.find('tbody').text()).not.toContain('Pet Battle');
+    });
+
+    it('names an unknown source as such', async () => {
+        const wrapper = await mountPage({ items: [{ id: 9, name_fr: 'Objet', source: null, icon_url: '' }] });
+
+        expect(wrapper.find('tbody').text()).toContain('Inconnu');
+    });
+
+    it('names the active category in French', async () => {
+        const wrapper = await mountPage({ category: 'world-events', categories: [{ slug: 'world-events', name: 'World Events', count: 1 }] });
+
+        expect(wrapper.find('header').text()).toContain('Événements mondiaux');
+    });
 });

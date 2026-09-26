@@ -657,3 +657,60 @@ test('a sweep stopped mid-flight keeps what it swept and spares the catalog', fu
         ->and(WowAppearance::query()->find(999))->not->toBeNull()
         ->and(WowAppearance::query()->find(321))->not->toBeNull();
 });
+
+test('an item carrying an internal Blizzard name never represents an appearance', function (): void {
+    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockSlotIndexes($client, ['WEAPON' => [321, 322]]);
+    mockHighestItemId($client, 12);
+    mockSearchWindows($client, 'data/wow/search/item', [0 => [
+        itemDocument(10, '[PH] Rainbow Axe - 1h - Purple', 'EPIC', [321]),
+        itemDocument(11, 'Hache du grizzly', 'RARE', [321]),
+        itemDocument(12, '9.0 PvP - PvP Reward - Tabard - 4', 'EPIC', [322]),
+    ]]);
+    mockSearchWindows($client, 'data/wow/search/media', []);
+
+    resolve(AppearanceImporter::class)->import();
+
+    expect(WowAppearance::query()->find(321)->name_fr)->toBe('Hache du grizzly')
+        ->and(WowAppearance::query()->find(322))->toBeNull();
+});
+
+test('a stored appearance under an internal name yields to any released representative', function (): void {
+    WowAppearance::factory()->create([
+        'id' => 321, 'name_fr' => '[PH] Rainbow Axe - 1h - Purple', 'slot' => 'WEAPON',
+        'quality' => 4, 'item_id' => 10,
+    ]);
+
+    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockSlotIndexes($client, ['WEAPON' => [321]]);
+    mockHighestItemId($client, 11);
+    mockSearchWindows($client, 'data/wow/search/item', [0 => [itemDocument(11, 'Hache du grizzly', 'RARE', [321])]]);
+    mockSearchWindows($client, 'data/wow/search/media', []);
+
+    resolve(AppearanceImporter::class)->import();
+
+    expect(WowAppearance::query()->find(321))
+        ->name_fr->toBe('Hache du grizzly')
+        ->item_id->toBe(11);
+});
+
+test('a full sweep removes the listed appearances still named by a placeholder', function (): void {
+    WowAppearance::factory()->create(['id' => 116141, 'name_fr' => '[EN] Appearance #116141', 'slot' => 'CLOAK', 'category' => null]);
+    WowAppearance::factory()->create(['id' => 322, 'name_fr' => "DNT Ula'tek Pole Dummy F", 'slot' => 'WEAPON']);
+
+    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockSlotIndexes($client, ['CLOAK' => [116141, 321], 'WEAPON' => [322]]);
+    mockHighestItemId($client, 10);
+    mockSearchWindows($client, 'data/wow/search/item', [0 => [itemDocument(10, 'Cape du grizzly', 'RARE', [321])]]);
+    mockSearchWindows($client, 'data/wow/search/media', []);
+
+    resolve(AppearanceImporter::class)->import();
+
+    expect(WowAppearance::query()->pluck('id')->all())->toBe([321]);
+});

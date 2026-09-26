@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Blizzard\Importers;
 
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\BlizzardInternalName;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Models\WowQuest;
@@ -53,10 +54,26 @@ final readonly class QuestImporter
         $areaDetails = $this->fetchAreaDetailsConcurrently($areas);
         $this->info(sprintf('Fetched %d area details. Building quest rows...', count(array_filter($areaDetails))));
 
-        $rows = $this->buildQuestRows($areas, $areaDetails, $areaExpansionMap, $questExpansionMap, $questFactionMap, $zoneFactionMap);
+        $builtRows = $this->buildQuestRows($areas, $areaDetails, $areaExpansionMap, $questExpansionMap, $questFactionMap, $zoneFactionMap);
+        $rows = array_values(array_filter($builtRows, static fn (array $row): bool => ! BlizzardInternalName::isInternal($row['name_fr'])));
         $this->info(sprintf('Built %d quest rows. Saving to database...', count($rows)));
 
         $this->saveQuests($rows);
+        $this->deleteInternalQuests(array_values(array_diff(array_column($builtRows, 'id'), array_column($rows, 'id'))));
+    }
+
+    /**
+     * @param  list<int>  $internalIds
+     */
+    private function deleteInternalQuests(array $internalIds): void
+    {
+        if ($internalIds === []) {
+            return;
+        }
+
+        $deleted = WowQuest::destroy($internalIds);
+
+        $this->info(sprintf('  %d quests with an internal Blizzard name skipped, %d deleted.', count($internalIds), $deleted));
     }
 
     /**

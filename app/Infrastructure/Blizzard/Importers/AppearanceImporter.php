@@ -6,6 +6,7 @@ namespace App\Infrastructure\Blizzard\Importers;
 
 use App\Application\DTOs\AppearanceImportProgress;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\BlizzardInternalName;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Blizzard\ItemSearchSweep;
@@ -160,7 +161,11 @@ final readonly class AppearanceImporter
         }
 
         if ($limit === null) {
-            $this->deleteRowsOutsideCatalog(WowAppearance::class, array_keys($slotByAppearance), 'appearances');
+            $this->deleteRowsOutsideCatalog(
+                WowAppearance::class,
+                array_values(array_diff(array_keys($slotByAppearance), $this->internallyNamedIds())),
+                'appearances',
+            );
         }
 
         return new AppearanceImportProgress(done: true, offset: $total, total: $total, secondsUntilBudget: 0);
@@ -245,7 +250,7 @@ final readonly class AppearanceImporter
         $candidates = [];
 
         $this->itemSearchSweep->sweepItems($windows, function (ItemSearchDocument $itemSearchDocument) use (&$candidates, $slotByAppearance): void {
-            if ($itemSearchDocument->nameFr === null) {
+            if ($itemSearchDocument->nameFr === null || BlizzardInternalName::isInternal($itemSearchDocument->nameFr)) {
                 return;
             }
 
@@ -332,9 +337,23 @@ final readonly class AppearanceImporter
         $this->upsertRows($rows, ['name_fr', 'slot', 'category', 'quality', 'item_id', 'icon_file_data_id', 'icon_url', 'expansion_id', 'source', 'is_active']);
     }
 
+    /**
+     * Listed appearances that no released item names: Blizzard placeholders, and the
+     * « [EN] Appearance #id » rows left by the former fallback naming.
+     *
+     * @return list<int>
+     */
+    private function internallyNamedIds(): array
+    {
+        /** @var array<int, string> $names */
+        $names = WowAppearance::query()->pluck('name_fr', 'id')->all();
+
+        return array_keys(array_filter($names, BlizzardInternalName::isInternal(...)));
+    }
+
     private function storedWins(WowAppearance $wowAppearance, int $quality, int $itemId): bool
     {
-        if ($wowAppearance->item_id === null) {
+        if ($wowAppearance->item_id === null || BlizzardInternalName::isInternal($wowAppearance->name_fr)) {
             return false;
         }
 

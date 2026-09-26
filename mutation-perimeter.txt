@@ -43,3 +43,6 @@ app/Infrastructure/Blizzard/ImportBuildGate.php
 
 # The single threshold that flags a catalogue losing volume after a load.
 app/Application/Import/VolumeShrink.php
+
+# Which Blizzard names are development placeholders, kept out of the wardrobe and quests.
+app/Infrastructure/Blizzard/BlizzardInternalName.php

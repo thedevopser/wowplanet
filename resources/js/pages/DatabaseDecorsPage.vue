@@ -35,7 +35,7 @@
         <CatalogTable v-if="filteredItems.length" caption="Liste des décorations" :columns="COLUMNS" :rows="visibleItems">
             <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="D" size="sm" class="text-muted" /></template>
             <template #cell-name="{ row }"><a :href="row.item_id ? `https://www.wowhead.com/fr/item=${row.item_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a></template>
-            <template #cell-source="{ row }"><span class="text-muted">{{ row.source || 'Inconnu' }}</span></template>
+            <template #cell-source="{ row }"><span class="text-muted">{{ row.source ? translateSource(COLLECTION, row.source) : 'Inconnu' }}</span></template>
         </CatalogTable>
         <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune entrée ne correspond à cette recherche." />
 
@@ -69,8 +69,10 @@ import DatabasePageHeader from '../components/DatabasePageHeader.vue';
 import DatabasePagination from '../components/DatabasePagination.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import { useClientPaging } from '../composables/useClientPaging';
+import { translateCategory, translateSource } from '../utils/collections';
 
 const PER_PAGE = 50;
+const COLLECTION = 'decor';
 
 const COLUMNS = [
     { key: 'icon', label: 'Icône', visuallyHidden: true, class: 'w-12' },
@@ -90,7 +92,7 @@ const search = ref('');
 
 const activeCategoryName = computed(() => {
     const cat = props.categories.find(c => c.slug === props.category);
-    return cat?.name || '';
+    return cat ? translateCategory(COLLECTION, cat.name) : '';
 });
 
 const displayCount = computed(() => (props.category ? props.items.length : props.total));

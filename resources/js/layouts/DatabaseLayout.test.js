@@ -273,4 +273,66 @@ describe('DatabaseLayout', () => {
 
         expect(wrapper.find('aside a[href="/"]').classes()).toContain('min-h-11');
     });
+
+    const mountCategories = [
+        { slug: 'pvp', name: 'PVP', count: 127 },
+        { slug: 'mounts', name: 'Mounts', count: 17 },
+        { slug: 'past-limited-time', name: 'Past Limited Time', count: 168 },
+    ];
+
+    const subCategoryLinks = (links) => links
+        .filter((link) => link.attributes('href').startsWith('/base-de-donnees/montures/'))
+        .map((link) => [link.text().replace(/\d+$/, '').trim(), link.attributes('href')]);
+
+    it('names the collection sub-categories in French, sorted in French, behind their English slugs', async () => {
+        __page.url = '/base-de-donnees/montures';
+        __page.props = { subCategories: { mounts: mountCategories } };
+
+        const wrapper = await mountLayout();
+
+        expect(subCategoryLinks(sidebarNav(wrapper).findAll('a'))).toEqual([
+            ['Ancien durée limitée', '/base-de-donnees/montures/past-limited-time'],
+            ['JcJ', '/base-de-donnees/montures/pvp'],
+            ['Montures', '/base-de-donnees/montures/mounts'],
+        ]);
+    });
+
+    it('names the collection sub-categories in French in the mobile row', async () => {
+        __page.url = '/base-de-donnees/montures';
+        __page.props = { subCategories: { mounts: mountCategories } };
+
+        const wrapper = await mountLayout();
+
+        expect(subCategoryLinks(wrapper.findAll('[data-mobile-subcategories] a'))).toEqual([
+            ['Ancien durée limitée', '/base-de-donnees/montures/past-limited-time'],
+            ['JcJ', '/base-de-donnees/montures/pvp'],
+            ['Montures', '/base-de-donnees/montures/mounts'],
+        ]);
+    });
+
+    it('translates the pet and decor sub-categories with their own vocabulary', async () => {
+        __page.url = '/base-de-donnees/mascottes';
+        __page.props = { subCategories: {
+            pets: [{ slug: 'pets', name: 'Pets', count: 1 }],
+            decors: [{ slug: 'neighbourhoods', name: 'Neighbourhoods', count: 1 }],
+        } };
+
+        const wrapper = await mountLayout();
+
+        expect(sidebarNav(wrapper).text()).toContain('Mascottes');
+        expect(sidebarNav(wrapper).text()).toContain('Quartiers');
+    });
+
+    it('leaves the sub-categories of the other sections as the server names them', async () => {
+        __page.url = '/base-de-donnees/hauts-faits';
+        __page.props = { subCategories: { achievements: [
+            { slug: 'the-war-within', name: 'The War Within', count: 2 },
+            { slug: 'classic', name: 'Classic', count: 1 },
+        ] } };
+
+        const wrapper = await mountLayout();
+        const names = wrapper.findAll('[data-mobile-subcategories] a').slice(1).map((link) => link.text());
+
+        expect(names).toEqual(['The War Within', 'Classic']);
+    });
 });
