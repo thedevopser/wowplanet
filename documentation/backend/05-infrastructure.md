@@ -24,6 +24,7 @@ Client HTTP vers l'API Blizzard (OAuth2 client credentials). Gère automatiqueme
 | `lastSeenBuild()`, `lastModifiedSeen()` | — | `?string` | Le dernier build et le dernier `Last-Modified` vus passer, que l'import retient pour sa prochaine revalidation (`ImportBuildGate`). |
 | `getRegion()` | — | `string` | Région configurée (ex. : `eu`). |
 | `getCurrentMythicSeasonId()`, `getCurrentPvpSeasonId()` | — | `int` | Saison Mythique+ ou JcJ courante. `0` hors saison, valeur d'absence attendue par les appelants. |
+| `getCurrentMythicDungeons()` | — | `list<MythicDungeon>` | Donjons de la rotation Mythique+ de la saison, en cache 24 h. Liste vide si l'appel échoue ou si l'index est vide, et dans ce cas rien n'est mis en cache. |
 | `getClient()`, `getBaseOptions()` | — | `Client`, `array{headers, query}` | Le client Guzzle sous-jacent, et les en-têtes et paramètres de base d'une requête statique. Plus aucun appelant dans l'application : seuls leurs tests les exercent. |
 
 ---
@@ -387,6 +388,8 @@ Un bracket qu'on n'a pas pu lire rend une réponse vide, signalée par `isEmpty`
 ### Index de saison
 
 `SeasonIndexResponse` lit `mythic-keystone/season/index` et `pvp-season/index`, servis à l'identique. `currentSeasonId` est nul entre deux saisons, ce qui est un cas normal ; une `current_season` présente sans `id` lève `MissingFieldException`. `BlizzardApiClient::getCurrentMythicSeasonId()` et `getCurrentPvpSeasonId()` en rendent `0` à défaut de saison.
+
+`getCurrentMythicDungeons()` lit la rotation de la saison en deux appels sur le namespace `dynamic-{région}` : `connected-realm/index`, dont `ConnectedRealmIndexResponse` tire l'identifiant du premier royaume connecté depuis son lien, puis `connected-realm/{id}/mythic-leaderboard/index`, dont `MythicLeaderboardIndexResponse` lit `current_leaderboards` en `MythicDungeon` (`id`, `name`). Un classement sans identifiant ou sans nom est écarté. La rotation est la même sur tous les royaumes d'une région, un seul royaume suffit. `mythic-keystone/dungeon/index` n'est pas utilisable pour cela : il liste tous les donjons que le mode a connus, pas ceux de la saison. Les identifiants sont ceux de `best_runs[].dungeon.id` dans le profil d'un personnage.
 
 ---
 

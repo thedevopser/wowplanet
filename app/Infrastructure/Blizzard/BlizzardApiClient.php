@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Blizzard;
 
+use App\Infrastructure\Blizzard\Responses\ConnectedRealmIndexResponse;
 use App\Infrastructure\Blizzard\Responses\Exceptions\UnexpectedFieldTypeException;
+use App\Infrastructure\Blizzard\Responses\MythicDungeon;
+use App\Infrastructure\Blizzard\Responses\MythicLeaderboardIndexResponse;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\Responses\SeasonIndexResponse;
 use GuzzleHttp\Client;
@@ -12,8 +15,10 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 class BlizzardApiClient
 {
@@ -21,6 +26,10 @@ class BlizzardApiClient
 
     /** Le plus petit index statique du catalogue : treize entrées pour lire un en-tête. */
     private const BUILD_PROBE_ENDPOINT = 'data/wow/playable-class/index';
+
+    private const MYTHIC_DUNGEONS_CACHE_KEY = 'blizzard_current_m_plus_dungeons';
+
+    private const MYTHIC_DUNGEONS_CACHE_SECONDS = 86400;
 
     private readonly string $clientId;
 
@@ -295,6 +304,63 @@ class BlizzardApiClient
         );
 
         return (int) $seasonId;
+    }
+
+    /**
+     * The rotation is the same on every realm of a region: the first connected realm of the
+     * index is enough. An empty list is never cached, so that a passing failure does not hide
+     * the rotation for a day.
+     *
+     * @return list<MythicDungeon>
+     */
+    public function getCurrentMythicDungeons(): array
+    {
+        /** @var array<int, string>|null $cached */
+        $cached = Cache::get(self::MYTHIC_DUNGEONS_CACHE_KEY);
+        $names = $cached ?? $this->fetchCurrentMythicDungeonNames();
+
+        if ($cached === null && $names !== []) {
+            Cache::put(self::MYTHIC_DUNGEONS_CACHE_KEY, $names, self::MYTHIC_DUNGEONS_CACHE_SECONDS);
+        }
+
+        return array_map(
+            static fn (int $id, string $name): MythicDungeon => new MythicDungeon($id, $name),
+            array_keys($names),
+            array_values($names),
+        );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function fetchCurrentMythicDungeonNames(): array
+    {
+        $query = ['namespace' => 'dynamic-'.$this->region];
+
+        try {
+            $connectedRealmId = ConnectedRealmIndexResponse::fromPayload(
+                $this->getResponse('data/wow/connected-realm/index', $query),
+            )->firstConnectedRealmId;
+
+            if ($connectedRealmId === null) {
+                return [];
+            }
+
+            $mythicLeaderboardIndexResponse = MythicLeaderboardIndexResponse::fromPayload(
+                $this->getResponse(sprintf('data/wow/connected-realm/%d/mythic-leaderboard/index', $connectedRealmId), $query),
+            );
+        } catch (Throwable $throwable) {
+            Log::debug('M+ dungeons fetch failed: '.$throwable->getMessage());
+
+            return [];
+        }
+
+        $names = [];
+        foreach ($mythicLeaderboardIndexResponse->dungeons as $mythicDungeon) {
+            $names[$mythicDungeon->id] = $mythicDungeon->name;
+        }
+
+        return $names;
     }
 
     public function getCurrentPvpSeasonId(): int
