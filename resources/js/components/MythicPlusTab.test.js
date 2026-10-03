@@ -41,6 +41,20 @@ const mythicData = {
     ],
 };
 
+function makeResilience(overrides = {}) {
+    return {
+        level: null,
+        min_level: 12,
+        max_level: 25,
+        dungeons: [
+            { dungeon_id: 1, name: 'Ara-Kara', best_timed_level: 12 },
+            { dungeon_id: 2, name: 'Stonevault', best_timed_level: null },
+        ],
+        targets: Array.from({ length: 14 }, (_, index) => ({ level: 12 + index, remaining: index === 0 ? [2] : [1, 2] })),
+        ...overrides,
+    };
+}
+
 const mountTab = (mythicKeystone) => mountWithPlugins(MythicPlusTab, {
     initialState: { character: { character: { mythicKeystone } } },
 });
@@ -76,6 +90,26 @@ describe('MythicPlusTab', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-rating]').attributes('style')).toContain(readableVariants('#FF8000').onLight);
+    });
+
+    it('shows the resilience level beside the rating', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience({ level: 13 }) });
+
+        expect(wrapper.find('[data-resilience]').text()).toBe('Rési+13');
+    });
+
+    it('says so when the character has no resilience', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience({ level: null }) });
+
+        expect(wrapper.find('[data-resilience]').text()).toBe('RésiAucune');
+    });
+
+    it('says nothing about resilience when the dungeons of the season are unknown', async () => {
+        const withoutKey = await mountTab(mythicData);
+        const withNull = await mountTab({ ...mythicData, resilience: null });
+
+        expect(withoutKey.find('[data-resilience]').exists()).toBe(false);
+        expect(withNull.find('[data-resilience]').exists()).toBe(false);
     });
 
     it('sums up the season: dungeons played, highest key in time, dungeons done in time', async () => {

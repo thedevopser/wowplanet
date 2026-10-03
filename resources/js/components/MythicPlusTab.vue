@@ -4,7 +4,7 @@
 
         <template v-else>
             <Card class="grid gap-6 p-5 sm:p-6 md:grid-cols-[auto_1fr] md:items-center">
-                <div class="flex items-center gap-5">
+                <div class="flex flex-wrap items-center gap-x-5 gap-y-4">
                     <div>
                         <h2 class="font-display text-2xl font-semibold text-default">Mythique+</h2>
                         <p class="mt-1 text-sm text-muted">Saison {{ mythic.season_id }}</p>
@@ -14,6 +14,11 @@
                         <p data-rating class="text-4xl font-bold leading-none tabular-nums" :style="{ color: readable(apiColor(mythic.rating_color)) }">
                             {{ formatNumber(Math.round(mythic.rating)) }}
                         </p>
+                    </div>
+                    <div v-if="mythic.resilience" data-resilience class="border-l border-default pl-5">
+                        <p class="text-xs font-medium text-subtle">Rési</p>
+                        <p v-if="mythic.resilience.level" class="text-4xl font-bold leading-none tabular-nums text-default">+{{ mythic.resilience.level }}</p>
+                        <p v-else class="text-lg font-semibold leading-10 text-muted">Aucune</p>
                     </div>
                 </div>
                 <dl data-season-stats class="grid grid-cols-3 gap-3 md:justify-self-end">
