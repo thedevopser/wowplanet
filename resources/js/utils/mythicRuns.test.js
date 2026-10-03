@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { bestRunsByTiming, dungeonCards, formatRunDuration, seasonStats, uniqueDungeonCount } from './mythicRuns';
+import { bestRunsByTiming, dungeonCards, formatRunDuration, seasonStats, uniqueDungeonCount, defaultResilienceTarget, remainingDungeons } from './mythicRuns';
 
 const run = (dungeon, level, timed) => ({ dungeon_id: dungeon, level, is_timed: timed });
 
@@ -86,5 +86,55 @@ describe('seasonStats', () => {
 
     it('has no highest key without a run in time', () => {
         expect(seasonStats([{ dungeon_id: 1, level: 12, is_timed: false }]).highestTimed).toBeNull();
+    });
+});
+
+const resilience = (level) => ({
+    level,
+    min_level: 12,
+    max_level: 25,
+    dungeons: [
+        { dungeon_id: 249, name: 'Repos des rois', best_timed_level: 13 },
+        { dungeon_id: 250, name: 'Temple de Sephraliss', best_timed_level: null },
+        { dungeon_id: 399, name: 'Bassins', best_timed_level: 11 },
+    ],
+    targets: [
+        { level: 12, remaining: [250, 399] },
+        { level: 13, remaining: [250, 399] },
+        { level: 14, remaining: [249, 250, 399] },
+    ],
+});
+
+describe('defaultResilienceTarget', () => {
+    it('aims at the lowest level for a character without resilience', () => {
+        expect(defaultResilienceTarget(resilience(null))).toBe(12);
+    });
+
+    it('aims one level above the resilience reached', () => {
+        expect(defaultResilienceTarget(resilience(12))).toBe(13);
+        expect(defaultResilienceTarget(resilience(24))).toBe(25);
+    });
+
+    it('stays at the ceiling once it is reached', () => {
+        expect(defaultResilienceTarget(resilience(25))).toBe(25);
+    });
+});
+
+describe('remainingDungeons', () => {
+    it('gives the dungeons left for a level, with their best run in time, in the order of the target', () => {
+        expect(remainingDungeons(resilience(null), 12)).toEqual([
+            { dungeon_id: 250, name: 'Temple de Sephraliss', best_timed_level: null },
+            { dungeon_id: 399, name: 'Bassins', best_timed_level: 11 },
+        ]);
+    });
+
+    it('gives nothing for a level the profile does not carry', () => {
+        expect(remainingDungeons(resilience(null), 30)).toEqual([]);
+    });
+
+    it('leaves out a dungeon the season does not list', () => {
+        const broken = { ...resilience(null), targets: [{ level: 12, remaining: [250, 9999] }] };
+
+        expect(remainingDungeons(broken, 12).map((dungeon) => dungeon.dungeon_id)).toEqual([250]);
     });
 });

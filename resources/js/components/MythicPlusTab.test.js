@@ -13,8 +13,6 @@ import { readableVariants } from '../utils/wowColors';
 import MythicPlusTab from './MythicPlusTab.vue';
 import { mountWithPlugins } from '../tests/helpers';
 
-const baseMember = { name: 'Player1', realm: 'Dalaran', spec: 'Fury', ilvl: 480 };
-
 function makeRun(overrides = {}) {
     return {
         dungeon_id: 1,
@@ -25,7 +23,6 @@ function makeRun(overrides = {}) {
         map_score_color: { r: 163, g: 53, b: 238 },
         duration_ms: 1920000,
         completed_at: 1709251200000,
-        members: [baseMember],
         ...overrides,
     };
 }
@@ -36,10 +33,24 @@ const mythicData = {
     rating_color: { r: 255, g: 128, b: 0 },
     best_runs: [
         makeRun(),
-        makeRun({ dungeon_id: 1, level: 14, is_timed: false, map_score: 200, members: [{ ...baseMember, name: 'Player2' }] }),
+        makeRun({ dungeon_id: 1, level: 14, is_timed: false, map_score: 200 }),
         makeRun({ dungeon_id: 2, dungeon_name: 'Stonevault', level: 11, is_timed: false, map_score: 150 }),
     ],
 };
+
+function makeResilience(overrides = {}) {
+    return {
+        level: null,
+        min_level: 12,
+        max_level: 25,
+        dungeons: [
+            { dungeon_id: 1, name: 'Ara-Kara', best_timed_level: 12 },
+            { dungeon_id: 2, name: 'Stonevault', best_timed_level: null },
+        ],
+        targets: Array.from({ length: 14 }, (_, index) => ({ level: 12 + index, remaining: index === 0 ? [2] : [1, 2] })),
+        ...overrides,
+    };
+}
 
 const mountTab = (mythicKeystone) => mountWithPlugins(MythicPlusTab, {
     initialState: { character: { character: { mythicKeystone } } },
@@ -76,6 +87,41 @@ describe('MythicPlusTab', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-rating]').attributes('style')).toContain(readableVariants('#FF8000').onLight);
+    });
+
+    it('shows the resilience level beside the rating', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience({ level: 13 }) });
+
+        expect(wrapper.find('[data-resilience]').text()).toBe('Rési+13');
+    });
+
+    it('says so when the character has no resilience', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience({ level: null }) });
+
+        expect(wrapper.find('[data-resilience]').text()).toBe('RésiAucune');
+    });
+
+    it('says nothing about resilience when the dungeons of the season are unknown', async () => {
+        const withoutKey = await mountTab(mythicData);
+        const withNull = await mountTab({ ...mythicData, resilience: null });
+
+        expect(withoutKey.find('[data-resilience]').exists()).toBe(false);
+        expect(withNull.find('[data-resilience]').exists()).toBe(false);
+    });
+
+    it('puts the resilience goal between the header and the dungeon cards', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience() });
+        const goal = wrapper.find('[data-resilience-goal]');
+
+        expect(goal.exists()).toBe(true);
+        expect(goal.text()).toContain('1 donjon restant sur 2');
+        expect(goal.element.compareDocumentPosition(wrapper.find('[data-dungeon]').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('has no resilience goal when the dungeons of the season are unknown', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: null });
+
+        expect(wrapper.find('[data-resilience-goal]').exists()).toBe(false);
     });
 
     it('sums up the season: dungeons played, highest key in time, dungeons done in time', async () => {
@@ -119,14 +165,10 @@ describe('MythicPlusTab', () => {
         expect(cards(wrapper)[1].find('[data-other]').exists()).toBe(false);
     });
 
-    it('keeps the group of each run behind a disclosure', async () => {
+    it('does not show the group of a run', async () => {
         const wrapper = await mountTab(mythicData);
-        const groups = cards(wrapper)[0].findAll('details');
 
-        expect(groups).toHaveLength(2);
-        expect(groups[0].find('summary').text()).toBe('Composition du groupe');
-        expect(groups[0].text()).toContain('Player1');
-        expect(groups[0].text()).toContain('Fury');
-        expect(groups[1].text()).toContain('Player2');
+        expect(wrapper.find('details').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('Composition du groupe');
     });
 });

@@ -4,7 +4,7 @@
 
         <template v-else>
             <Card class="grid gap-6 p-5 sm:p-6 md:grid-cols-[auto_1fr] md:items-center">
-                <div class="flex items-center gap-5">
+                <div class="flex flex-wrap items-center gap-x-5 gap-y-4">
                     <div>
                         <h2 class="font-display text-2xl font-semibold text-default">Mythique+</h2>
                         <p class="mt-1 text-sm text-muted">Saison {{ mythic.season_id }}</p>
@@ -15,6 +15,11 @@
                             {{ formatNumber(Math.round(mythic.rating)) }}
                         </p>
                     </div>
+                    <div v-if="mythic.resilience" data-resilience class="border-l border-default pl-5">
+                        <p class="text-xs font-medium text-subtle">Rési</p>
+                        <p v-if="mythic.resilience.level" class="text-4xl font-bold leading-none tabular-nums text-default">+{{ mythic.resilience.level }}</p>
+                        <p v-else class="text-lg font-semibold leading-10 text-muted">Aucune</p>
+                    </div>
                 </div>
                 <dl data-season-stats class="grid grid-cols-3 gap-3 md:justify-self-end">
                     <div v-for="stat in statsList" :key="stat.label" class="rounded-ui-md bg-surface-raised px-3 py-2">
@@ -23,6 +28,8 @@
                     </div>
                 </dl>
             </Card>
+
+            <ResilienceGoal v-if="mythic.resilience" :resilience="mythic.resilience" />
 
             <EmptyState v-if="!cards.length" :icon="Timer" title="Aucune course" message="Aucune course enregistrée cette saison." />
 
@@ -50,7 +57,6 @@
                             <p class="text-xs text-subtle">{{ formatDate(card.lead.completed_at) }}</p>
                         </div>
                     </div>
-                    <RunGroup :members="card.lead.members" class="border-t border-default px-4" />
 
                     <div v-if="card.other" data-other class="mt-auto border-t border-default bg-surface-raised px-4 py-3">
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -60,7 +66,6 @@
                             <span class="tabular-nums text-subtle">{{ formatRunDuration(card.other.duration_ms) }}</span>
                             <span class="text-xs text-subtle">{{ formatDate(card.other.completed_at) }}</span>
                         </div>
-                        <RunGroup :members="card.other.members" />
                     </div>
                 </Card>
             </ul>
@@ -77,7 +82,7 @@ import { dungeonCards, formatRunDuration, seasonStats } from '../utils/mythicRun
 import { readableVariants, rgbToHex } from '../utils/wowColors';
 import Card from './ui/Card.vue';
 import EmptyState from './ui/EmptyState.vue';
-import RunGroup from './sheet/RunGroup.vue';
+import ResilienceGoal from './sheet/ResilienceGoal.vue';
 import RunTiming from './sheet/RunTiming.vue';
 
 const store = useCharacterStore();

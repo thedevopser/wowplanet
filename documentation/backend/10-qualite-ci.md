@@ -107,6 +107,7 @@ Elle ne s'applique qu'au code qui porte des règles métier, parce qu'ailleurs l
 | Entrée | Pourquoi elle y est |
 | --- | --- |
 | `ScoreCalculator`, `PvpBracketClassifier`, `ExpansionId` | Le domaine pur : la formule du score, le classement des brackets PvP, les identifiants d'extension. |
+| `ResilientKeystone` | Les clés résilientes : le niveau atteint, et les donjons restants pour un niveau cible. |
 | `AccountScoreProgress`, `CrossCharacterProgress`, `AccountScoreService`, `CrossCharacterService`, `ComputeCrossCharacterJob` | Les règles à l'échelle du compte : quel personnage l'emporte quand plusieurs connaissent la même chose. |
 | Les agrégateurs de `Progress/` (hauts-faits, collections, métiers, PvP, quêtes, raids, réputations) | Les chiffres qui alimentent le score : ce qui compte comme fait, obtenu ou connu, dimension par dimension. |
 | `TalentAggregator` | Quels talents apparaissent sélectionnés, et quel arbre de héros revient à la spécialisation active. |

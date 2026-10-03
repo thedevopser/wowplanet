@@ -7,13 +7,10 @@ namespace App\Infrastructure\Blizzard\Responses\Profile;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 
 /**
- * Une meilleure clé de la saison : le donjon, le niveau, le temps, les deux cotes et le groupe.
+ * Une meilleure clé de la saison : le donjon, le niveau, le temps et les deux cotes.
  */
 final readonly class MythicRun
 {
-    /**
-     * @param  list<MythicRunMember>  $members
-     */
     public function __construct(
         public ?int $dungeonId,
         public ?string $dungeonName,
@@ -25,7 +22,6 @@ final readonly class MythicRun
         public ?RatingColor $ratingColor,
         public ?float $mapRating,
         public ?RatingColor $mapRatingColor,
-        public array $members,
     ) {}
 
     public static function fromPayload(ResponsePayload $responsePayload): self
@@ -45,7 +41,6 @@ final readonly class MythicRun
             ratingColor: RatingColor::fromRating($mythicRating),
             mapRating: $mapRating?->optionalFloat('rating'),
             mapRatingColor: RatingColor::fromRating($mapRating),
-            members: array_map(MythicRunMember::fromPayload(...), $responsePayload->objectList('members')),
         );
     }
 }

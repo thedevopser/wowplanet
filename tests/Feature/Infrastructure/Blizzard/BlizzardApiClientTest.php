@@ -8,6 +8,7 @@ use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -282,6 +283,124 @@ test('getCurrentMythicSeasonId fetches and caches the current season', function 
 
     // Deuxième appel servi par le cache : aucune requête supplémentaire dans la queue
     expect($client->getCurrentMythicSeasonId())->toBe(14);
+});
+
+// ─── getCurrentMythicDungeons ───────────────────────────────
+
+/**
+ * @param  list<Response|Throwable>  $responses
+ * @param  array<int, array<string, mixed>>  $history
+ */
+function mythicDungeonsClient(array $responses, array &$history = []): BlizzardApiClient
+{
+    Cache::put('blizzard_access_token', 'dungeon-token', 3600);
+
+    $handlerStack = HandlerStack::create(new MockHandler($responses));
+    $handlerStack->push(Middleware::history($history));
+
+    return new BlizzardApiClient(new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']));
+}
+
+function connectedRealmIndexBody(): string
+{
+    return (string) json_encode(['connected_realms' => [
+        ['href' => 'https://eu.api.blizzard.com/data/wow/connected-realm/1080?namespace=dynamic-eu'],
+    ]]);
+}
+
+function mythicLeaderboardIndexBody(): string
+{
+    return (string) json_encode(['current_leaderboards' => [
+        ['id' => 249, 'name' => 'Repos des rois'],
+        ['id' => 584, 'name' => 'Le val Aveuglant'],
+    ]]);
+}
+
+test('the dungeons of the season come from the leaderboards of the first connected realm', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ], $history);
+
+    $dungeons = $blizzardApiClient->getCurrentMythicDungeons();
+
+    expect($dungeons)->toHaveCount(2)
+        ->and($dungeons[0]->id)->toBe(249)
+        ->and($dungeons[0]->name)->toBe('Repos des rois')
+        ->and($dungeons[1]->id)->toBe(584)
+        ->and($history[0]['request']->getUri()->getPath())->toBe('/data/wow/connected-realm/index')
+        ->and($history[0]['request']->getHeaderLine('Battlenet-Namespace'))->toBe('dynamic-eu')
+        ->and($history[1]['request']->getUri()->getPath())->toBe('/data/wow/connected-realm/1080/mythic-leaderboard/index')
+        ->and($history[1]['request']->getHeaderLine('Battlenet-Namespace'))->toBe('dynamic-eu');
+});
+
+test('the dungeons of the season are served from the cache on the next call', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ], $history);
+
+    $blizzardApiClient->getCurrentMythicDungeons();
+
+    $dungeons = $blizzardApiClient->getCurrentMythicDungeons();
+
+    expect($history)->toHaveCount(2)
+        ->and($dungeons)->toHaveCount(2)
+        ->and($dungeons[1]->name)->toBe('Le val Aveuglant');
+});
+
+test('the dungeons of the season keep their types through the redis cache', function (): void {
+    useRedisCache();
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ]);
+
+    $blizzardApiClient->getCurrentMythicDungeons();
+
+    $dungeons = $blizzardApiClient->getCurrentMythicDungeons();
+
+    expect($dungeons[0]->id)->toBe(249)
+        ->and($dungeons[0]->name)->toBe('Repos des rois')
+        ->and($dungeons[1]->id)->toBe(584);
+});
+
+test('a failed call gives no dungeon and is tried again on the next call', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(500, [], 'boom'),
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ], $history);
+
+    expect($blizzardApiClient->getCurrentMythicDungeons())->toBe([])
+        ->and($blizzardApiClient->getCurrentMythicDungeons())->toHaveCount(2)
+        ->and($history)->toHaveCount(3);
+});
+
+test('an empty leaderboard index gives no dungeon and is not kept in cache', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], (string) json_encode(['current_leaderboards' => []])),
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ], $history);
+
+    expect($blizzardApiClient->getCurrentMythicDungeons())->toBe([])
+        ->and($blizzardApiClient->getCurrentMythicDungeons())->toHaveCount(2);
+});
+
+test('a region without a connected realm gives no dungeon and asks for no leaderboard', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], (string) json_encode(['connected_realms' => []])),
+    ], $history);
+
+    expect($blizzardApiClient->getCurrentMythicDungeons())->toBe([])
+        ->and($history)->toHaveCount(1);
 });
 
 // ─── getCurrentPvpSeasonId ──────────────────────────────────

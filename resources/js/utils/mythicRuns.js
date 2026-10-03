@@ -56,3 +56,18 @@ export function seasonStats(runs = []) {
         timedDungeons: timed.length,
     };
 }
+
+// Resilient keystones: the server has already worked out, for each target level, which
+// dungeons are left. Nothing of the rule is redone here.
+
+export function defaultResilienceTarget(resilience) {
+    return resilience.level === null ? resilience.min_level : Math.min(resilience.level + 1, resilience.max_level);
+}
+
+export function remainingDungeons(resilience, level) {
+    const target = resilience.targets.find((entry) => entry.level === level);
+
+    return (target?.remaining ?? [])
+        .map((id) => resilience.dungeons.find((dungeon) => dungeon.dungeon_id === id))
+        .filter(Boolean);
+}

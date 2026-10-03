@@ -33,7 +33,7 @@ DTO principal représentant le profil complet d'un personnage après traitement.
 | `$decorCount` | `int` | Nombre de décorations possédées |
 | `$decor` | `list<DecorProgress>` | Liste complète des décorations avec `is_completed` |
 | `$exaltedCount` | `int` | Nombre de réputations exaltées |
-| `$mythicKeystone` | `?MythicKeystoneArray` | Cote, couleur et meilleures clés de la saison Mythique+ courante |
+| `$mythicKeystone` | `?MythicKeystoneArray` | Cote, couleur et meilleures clés de la saison Mythique+ courante, et la résilience sous `resilience` |
 | `$completedQuestIds` | `list<int>` | IDs des quêtes complétées |
 | `$completedAchievementIds` | `list<int>` | IDs des hauts-faits complétés |
 | `$equipment` | `list<EquippedItem>` | Équipement par emplacement avec niveau d'objet et icône |
@@ -44,6 +44,8 @@ DTO principal représentant le profil complet d'un personnage après traitement.
 | `$score` | `?CompletionScore` | Score calculé côté serveur |
 
 Les formes des tableaux sont des alias PHPStan. Ceux qui décrivent la sortie d'un agrégateur (`QuestProgress`, `CollectibleProgress`, `ProfessionProgress`, `RaidProgress`, `EquippedItem`…) sont déclarés par `@phpstan-type` dans l'agrégateur qui la produit, et importés ici. Ceux qui décrivent ce que le DTO assemble lui-même (`ExpansionCollection`, `MythicKeystoneArray` et ses runs) sont déclarés sur le DTO.
+
+`mythicKeystone.resilience` porte les clés résilientes, calculées par `ResilientKeystone` (alias `ResilienceArray`, déclaré sur la classe du domaine) : `level`, le niveau de rési atteint ou `null` ; `min_level` et `max_level`, les bornes des niveaux cibles (12 et 25) ; `dungeons`, tous les donjons de la saison, joués ou non, avec `dungeon_id`, `name` et `best_timed_level` (`null` pour un donjon jamais terminé dans les temps) ; `targets`, une entrée par niveau cible avec `level` et `remaining`, la liste des `dungeon_id` qu'il reste à timer. `resilience` vaut `null` quand Blizzard n'a pas rendu la rotation de la saison : le front n'affiche alors rien sur la rési. La rotation n'est demandée que pour un personnage qui a des données Mythique+.
 
 ---
 

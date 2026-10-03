@@ -6,6 +6,7 @@ use App\Application\Services\CharacterProfileService;
 use App\Application\Services\UserCharacterService;
 use App\Domain\ValueObjects\ScoreWeights;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\Responses\MythicDungeon;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
 use App\Models\WowMount;
@@ -740,10 +741,6 @@ function fullMythicSeason(): array
                 'is_completed_within_time' => true,
                 'mythic_rating' => ['rating' => 250.45, 'color' => ['r' => 1, 'g' => 2, 'b' => 3, 'a' => 1.0]],
                 'map_rating' => ['rating' => 300.04, 'color' => ['r' => 4, 'g' => 5, 'b' => 6, 'a' => 1.0]],
-                'members' => [
-                    ['character' => ['name' => 'Thrall', 'realm' => ['name' => 'Hyjal']], 'specialization' => ['name' => 'Amélioration'], 'equipped_item_level' => 620],
-                    ['character' => ['name' => 'Jaina']],
-                ],
             ],
             [
                 'dungeon' => ['id' => 502, 'name' => 'Prieuré'],
@@ -753,7 +750,6 @@ function fullMythicSeason(): array
                 'is_completed_within_time' => false,
                 'mythic_rating' => ['rating' => 280],
                 'map_rating' => ['rating' => 310.96],
-                'members' => [],
             ],
         ],
     ];
@@ -819,12 +815,84 @@ function seedFullProfileCatalog(): void
 
 test('get profile renders the full profile unchanged', function (): void {
     seedFullProfileCatalog();
-    configureFullProfileClient($this->partialMock(BlizzardApiClient::class));
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([new MythicDungeon(501, 'Faille'), new MythicDungeon(502, 'Prieuré')]);
     $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([7 => 'https://render.com/class-icon.jpg']);
 
     $characterProfileDTO = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall');
 
     expect(json_encode($characterProfileDTO, PROFILE_SNAPSHOT_FLAGS))->toMatchSnapshot();
+});
+
+test('the profile carries the resilience over every dungeon of the season, played or not', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([
+        new MythicDungeon(501, 'Faille'),
+        new MythicDungeon(502, 'Prieuré'),
+        new MythicDungeon(503, 'Colonie'),
+    ]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $resilience = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone['resilience'] ?? null;
+
+    expect($resilience)->not->toBeNull()
+        ->and($resilience['level'])->toBeNull()
+        ->and($resilience['min_level'])->toBe(12)
+        ->and($resilience['max_level'])->toBe(25)
+        ->and($resilience['dungeons'])->toBe([
+            ['dungeon_id' => 501, 'name' => 'Faille', 'best_timed_level' => 12],
+            ['dungeon_id' => 502, 'name' => 'Prieuré', 'best_timed_level' => null],
+            ['dungeon_id' => 503, 'name' => 'Colonie', 'best_timed_level' => null],
+        ])
+        ->and($resilience['targets'][0])->toBe(['level' => 12, 'remaining' => [502, 503]])
+        ->and($resilience['targets'][1])->toBe(['level' => 13, 'remaining' => [501, 502, 503]]);
+});
+
+test('a mythic plus run of the profile does not carry its group', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $bestRuns = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone['best_runs'] ?? [];
+
+    expect($bestRuns)->toHaveCount(2)
+        ->and($bestRuns[0])->not->toHaveKey('members')
+        ->and($bestRuns[0])->toHaveKeys(['dungeon_name', 'dungeon_id', 'level', 'duration_ms', 'completed_at', 'is_timed', 'score', 'map_score']);
+});
+
+test('the profile carries no resilience when the dungeons of the season are unknown', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $mythicKeystone = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone;
+
+    expect($mythicKeystone)->not->toBeNull()
+        ->and($mythicKeystone['resilience'])->toBeNull()
+        ->and($mythicKeystone['best_runs'])->toHaveCount(2);
+});
+
+test('the dungeons of the season are not asked for a character without mythic plus data', function (): void {
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    $mock->shouldReceive('get')->andReturn([
+        'name' => 'Thrall',
+        'realm' => ['name' => 'Hyjal'],
+        'character_class' => ['id' => 7, 'name' => 'Chaman'],
+    ]);
+    $mock->shouldReceive('getCurrentMythicSeasonId')->andReturn(0);
+    $mock->shouldReceive('getRegion')->andReturn('eu');
+    $mock->shouldReceive('getAsync')->andReturnUsing(fn (): FulfilledPromise => asyncResponse([]));
+    $mock->shouldNotReceive('getCurrentMythicDungeons');
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    expect(resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone)->toBeNull();
 });
 
 test('get profile falls back to empty values when every endpoint is empty', function (): void {

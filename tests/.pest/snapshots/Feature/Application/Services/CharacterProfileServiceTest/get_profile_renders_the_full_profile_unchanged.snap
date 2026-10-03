@@ -438,8 +438,7 @@
                 "score": 280,
                 "score_color": null,
                 "map_score": 311,
-                "map_score_color": null,
-                "members": []
+                "map_score_color": null
             },
             {
                 "dungeon_name": "Faille",
@@ -461,23 +460,125 @@
                     "g": 5,
                     "b": 6,
                     "a": 1
-                },
-                "members": [
-                    {
-                        "name": "Thrall",
-                        "realm": "Hyjal",
-                        "spec": "Amélioration",
-                        "ilvl": 620
-                    },
-                    {
-                        "name": "Jaina",
-                        "realm": "",
-                        "spec": "",
-                        "ilvl": 0
-                    }
-                ]
+                }
             }
-        ]
+        ],
+        "resilience": {
+            "level": null,
+            "min_level": 12,
+            "max_level": 25,
+            "dungeons": [
+                {
+                    "dungeon_id": 501,
+                    "name": "Faille",
+                    "best_timed_level": 12
+                },
+                {
+                    "dungeon_id": 502,
+                    "name": "Prieuré",
+                    "best_timed_level": null
+                }
+            ],
+            "targets": [
+                {
+                    "level": 12,
+                    "remaining": [
+                        502
+                    ]
+                },
+                {
+                    "level": 13,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 14,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 15,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 16,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 17,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 18,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 19,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 20,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 21,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 22,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 23,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 24,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                },
+                {
+                    "level": 25,
+                    "remaining": [
+                        501,
+                        502
+                    ]
+                }
+            ]
+        }
     },
     "completedQuestIds": [
         100,
