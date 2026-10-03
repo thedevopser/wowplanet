@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Services\UserCharacterService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\Responses\MythicDungeon;
 use App\Models\WowAchievement;
 use App\Models\WowDecor;
 use App\Models\WowMount;
@@ -119,6 +120,43 @@ test('full character profile flow', function (): void {
         ->and($classicCollections['quests']['completed'])->toBe(1)
         ->and($classicCollections['achievements']['total'])->toBe(1)
         ->and($classicCollections['achievements']['completed'])->toBe(1);
+});
+
+test('the character endpoint serves the resilience with the mythic plus data', function (): void {
+    $this->mock(UserCharacterService::class)
+        ->shouldReceive('getClassIcons')
+        ->andReturn([])
+        ->shouldReceive('isAuthenticated')
+        ->andReturn(false);
+
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    $mock->shouldReceive('get')->andReturnUsing(fn (string $endpoint): array => str_contains($endpoint, 'mythic-keystone-profile/season/18')
+        ? [
+            'season' => ['id' => 18],
+            'mythic_rating' => ['rating' => 3100.0],
+            'best_runs' => [
+                ['dungeon' => ['id' => 249, 'name' => 'Repos des rois'], 'keystone_level' => 13, 'is_completed_within_time' => true],
+                ['dungeon' => ['id' => 250, 'name' => 'Temple de Sephraliss'], 'keystone_level' => 12, 'is_completed_within_time' => true],
+            ],
+        ]
+        : ['name' => 'Thrall', 'realm' => ['name' => 'Hyjal'], 'character_class' => ['id' => 7, 'name' => 'Chaman']]);
+    $mock->shouldReceive('getCurrentMythicSeasonId')->andReturn(18);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([
+        new MythicDungeon(249, 'Repos des rois'),
+        new MythicDungeon(250, 'Temple de Sephraliss'),
+    ]);
+    $mock->shouldReceive('getAsync')->andReturnUsing(fn (string $endpoint): FulfilledPromise => new FulfilledPromise(new Response(200, [], json_encode(
+        str_contains($endpoint, '/mythic-keystone-profile') ? ['current_period' => ['period' => ['id' => 1083]]] : [],
+        JSON_THROW_ON_ERROR,
+    ))));
+
+    $testResponse = $this->getJson('/api/character/hyjal/thrall');
+
+    $testResponse->assertOk()
+        ->assertJsonPath('mythicKeystone.resilience.level', 12)
+        ->assertJsonPath('mythicKeystone.resilience.dungeons.0', ['dungeon_id' => 249, 'name' => 'Repos des rois', 'best_timed_level' => 13])
+        ->assertJsonPath('mythicKeystone.resilience.targets.0', ['level' => 12, 'remaining' => []])
+        ->assertJsonPath('mythicKeystone.resilience.targets.1', ['level' => 13, 'remaining' => [250]]);
 });
 
 test('character not found returns 404', function (): void {

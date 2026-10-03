@@ -6,6 +6,7 @@ use App\Application\Services\CharacterProfileService;
 use App\Application\Services\UserCharacterService;
 use App\Domain\ValueObjects\ScoreWeights;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\Responses\MythicDungeon;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
 use App\Models\WowMount;
@@ -819,12 +820,70 @@ function seedFullProfileCatalog(): void
 
 test('get profile renders the full profile unchanged', function (): void {
     seedFullProfileCatalog();
-    configureFullProfileClient($this->partialMock(BlizzardApiClient::class));
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([new MythicDungeon(501, 'Faille'), new MythicDungeon(502, 'Prieuré')]);
     $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([7 => 'https://render.com/class-icon.jpg']);
 
     $characterProfileDTO = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall');
 
     expect(json_encode($characterProfileDTO, PROFILE_SNAPSHOT_FLAGS))->toMatchSnapshot();
+});
+
+test('the profile carries the resilience over every dungeon of the season, played or not', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([
+        new MythicDungeon(501, 'Faille'),
+        new MythicDungeon(502, 'Prieuré'),
+        new MythicDungeon(503, 'Colonie'),
+    ]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $resilience = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone['resilience'] ?? null;
+
+    expect($resilience)->not->toBeNull()
+        ->and($resilience['level'])->toBeNull()
+        ->and($resilience['min_level'])->toBe(12)
+        ->and($resilience['max_level'])->toBe(25)
+        ->and($resilience['dungeons'])->toBe([
+            ['dungeon_id' => 501, 'name' => 'Faille', 'best_timed_level' => 12],
+            ['dungeon_id' => 502, 'name' => 'Prieuré', 'best_timed_level' => null],
+            ['dungeon_id' => 503, 'name' => 'Colonie', 'best_timed_level' => null],
+        ])
+        ->and($resilience['targets'][0])->toBe(['level' => 12, 'remaining' => [502, 503]])
+        ->and($resilience['targets'][1])->toBe(['level' => 13, 'remaining' => [501, 502, 503]]);
+});
+
+test('the profile carries no resilience when the dungeons of the season are unknown', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $mythicKeystone = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone;
+
+    expect($mythicKeystone)->not->toBeNull()
+        ->and($mythicKeystone['resilience'])->toBeNull()
+        ->and($mythicKeystone['best_runs'])->toHaveCount(2);
+});
+
+test('the dungeons of the season are not asked for a character without mythic plus data', function (): void {
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    $mock->shouldReceive('get')->andReturn([
+        'name' => 'Thrall',
+        'realm' => ['name' => 'Hyjal'],
+        'character_class' => ['id' => 7, 'name' => 'Chaman'],
+    ]);
+    $mock->shouldReceive('getCurrentMythicSeasonId')->andReturn(0);
+    $mock->shouldReceive('getRegion')->andReturn('eu');
+    $mock->shouldReceive('getAsync')->andReturnUsing(fn (): FulfilledPromise => asyncResponse([]));
+    $mock->shouldNotReceive('getCurrentMythicDungeons');
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    expect(resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone)->toBeNull();
 });
 
 test('get profile falls back to empty values when every endpoint is empty', function (): void {

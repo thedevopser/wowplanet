@@ -12,6 +12,7 @@ use App\Application\Services\Progress\ProfessionProgressAggregator;
 use App\Application\Services\Progress\QuestProgressAggregator;
 use App\Application\Services\Progress\RaidProgressAggregator;
 use App\Application\Services\Progress\ReputationProgressAggregator;
+use App\Domain\Services\ResilientKeystone;
 use App\Domain\Services\ScoreCalculator;
 use App\Domain\ValueObjects\ExpansionId;
 use App\Domain\ValueObjects\ScoreInput;
@@ -46,6 +47,7 @@ use Illuminate\Support\Facades\Log;
  * @phpstan-import-type ExpansionCollection from CharacterProfileDTO
  * @phpstan-import-type MythicKeystoneArray from CharacterProfileDTO
  * @phpstan-import-type MythicRunArray from CharacterProfileDTO
+ * @phpstan-import-type ResilienceArray from ResilientKeystone
  */
 class CharacterProfileService
 {
@@ -64,6 +66,7 @@ class CharacterProfileService
         private readonly EquipmentAggregator $equipmentAggregator,
         private readonly UserCharacterService $userCharacterService,
         private readonly ScoreCalculator $scoreCalculator,
+        private readonly ResilientKeystone $resilientKeystone,
     ) {}
 
     public function getProfile(string $realm, string $name): CharacterProfileDTO
@@ -316,7 +319,30 @@ class CharacterProfileService
             'rating_color' => $mythicKeystoneSeasonResponse->ratingColor?->toArray(),
             'season_id' => $mythicKeystoneSeasonResponse->seasonId ?? 0,
             'best_runs' => $runs,
+            'resilience' => $this->buildResilience($runs),
         ];
+    }
+
+    /**
+     * @param  list<MythicRunArray>  $runs
+     * @return ResilienceArray|null
+     */
+    private function buildResilience(array $runs): ?array
+    {
+        $dungeonNames = [];
+        foreach ($this->blizzardApiClient->getCurrentMythicDungeons() as $mythicDungeon) {
+            $dungeonNames[$mythicDungeon->id] = $mythicDungeon->name;
+        }
+
+        if ($dungeonNames === []) {
+            return null;
+        }
+
+        return $this->resilientKeystone->assess($dungeonNames, array_map(static fn (array $run): array => [
+            'dungeon_id' => $run['dungeon_id'],
+            'level' => $run['level'],
+            'is_timed' => $run['is_timed'],
+        ], $runs));
     }
 
     /**
