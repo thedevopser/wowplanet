@@ -57,7 +57,6 @@
                             <p class="text-xs text-subtle">{{ formatDate(card.lead.completed_at) }}</p>
                         </div>
                     </div>
-                    <RunGroup :members="card.lead.members" class="border-t border-default px-4" />
 
                     <div v-if="card.other" data-other class="mt-auto border-t border-default bg-surface-raised px-4 py-3">
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -67,7 +66,6 @@
                             <span class="tabular-nums text-subtle">{{ formatRunDuration(card.other.duration_ms) }}</span>
                             <span class="text-xs text-subtle">{{ formatDate(card.other.completed_at) }}</span>
                         </div>
-                        <RunGroup :members="card.other.members" />
                     </div>
                 </Card>
             </ul>
@@ -85,7 +83,6 @@ import { readableVariants, rgbToHex } from '../utils/wowColors';
 import Card from './ui/Card.vue';
 import EmptyState from './ui/EmptyState.vue';
 import ResilienceGoal from './sheet/ResilienceGoal.vue';
-import RunGroup from './sheet/RunGroup.vue';
 import RunTiming from './sheet/RunTiming.vue';
 
 const store = useCharacterStore();

@@ -34,7 +34,6 @@ use App\Infrastructure\Blizzard\Responses\Profile\CompletedQuestsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\JournalInstanceResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\MythicKeystoneSeasonResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\MythicRun;
-use App\Infrastructure\Blizzard\Responses\Profile\MythicRunMember;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -361,12 +360,6 @@ class CharacterProfileService
             'score_color' => $mythicRun->ratingColor?->toArray(),
             'map_score' => round($mythicRun->mapRating ?? 0.0, 1),
             'map_score_color' => $mythicRun->mapRatingColor?->toArray(),
-            'members' => array_map(static fn (MythicRunMember $mythicRunMember): array => [
-                'name' => $mythicRunMember->name ?? '',
-                'realm' => $mythicRunMember->realmName ?? '',
-                'spec' => $mythicRunMember->specializationName ?? '',
-                'ilvl' => $mythicRunMember->equippedItemLevel ?? 0,
-            ], $mythicRun->members),
         ];
     }
 

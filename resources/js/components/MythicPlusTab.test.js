@@ -13,8 +13,6 @@ import { readableVariants } from '../utils/wowColors';
 import MythicPlusTab from './MythicPlusTab.vue';
 import { mountWithPlugins } from '../tests/helpers';
 
-const baseMember = { name: 'Player1', realm: 'Dalaran', spec: 'Fury', ilvl: 480 };
-
 function makeRun(overrides = {}) {
     return {
         dungeon_id: 1,
@@ -25,7 +23,6 @@ function makeRun(overrides = {}) {
         map_score_color: { r: 163, g: 53, b: 238 },
         duration_ms: 1920000,
         completed_at: 1709251200000,
-        members: [baseMember],
         ...overrides,
     };
 }
@@ -36,7 +33,7 @@ const mythicData = {
     rating_color: { r: 255, g: 128, b: 0 },
     best_runs: [
         makeRun(),
-        makeRun({ dungeon_id: 1, level: 14, is_timed: false, map_score: 200, members: [{ ...baseMember, name: 'Player2' }] }),
+        makeRun({ dungeon_id: 1, level: 14, is_timed: false, map_score: 200 }),
         makeRun({ dungeon_id: 2, dungeon_name: 'Stonevault', level: 11, is_timed: false, map_score: 150 }),
     ],
 };
@@ -168,14 +165,10 @@ describe('MythicPlusTab', () => {
         expect(cards(wrapper)[1].find('[data-other]').exists()).toBe(false);
     });
 
-    it('keeps the group of each run behind a disclosure', async () => {
+    it('does not show the group of a run', async () => {
         const wrapper = await mountTab(mythicData);
-        const groups = cards(wrapper)[0].findAll('details');
 
-        expect(groups).toHaveLength(2);
-        expect(groups[0].find('summary').text()).toBe('Composition du groupe');
-        expect(groups[0].text()).toContain('Player1');
-        expect(groups[0].text()).toContain('Fury');
-        expect(groups[1].text()).toContain('Player2');
+        expect(wrapper.find('details').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('Composition du groupe');
     });
 });

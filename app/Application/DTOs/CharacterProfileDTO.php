@@ -20,8 +20,7 @@ use App\Domain\ValueObjects\CompletionScore;
  *
  * @phpstan-type ExpansionCollection array{quests: QuestProgress, achievements: AchievementProgress, reputations: ReputationProgress}
  * @phpstan-type RatingColorArray array{r: int, g: int, b: int, a: float}
- * @phpstan-type MythicRunMemberArray array{name: string, realm: string, spec: string, ilvl: int}
- * @phpstan-type MythicRunArray array{dungeon_name: string, dungeon_id: int, level: int, duration_ms: int, completed_at: int, is_timed: bool, score: float, score_color: RatingColorArray|null, map_score: float, map_score_color: RatingColorArray|null, members: list<MythicRunMemberArray>}
+ * @phpstan-type MythicRunArray array{dungeon_name: string, dungeon_id: int, level: int, duration_ms: int, completed_at: int, is_timed: bool, score: float, score_color: RatingColorArray|null, map_score: float, map_score_color: RatingColorArray|null}
  * @phpstan-type MythicKeystoneArray array{rating: float|null, rating_color: RatingColorArray|null, season_id: int, best_runs: list<MythicRunArray>, resilience: ResilienceArray|null}
  */
 readonly class CharacterProfileDTO

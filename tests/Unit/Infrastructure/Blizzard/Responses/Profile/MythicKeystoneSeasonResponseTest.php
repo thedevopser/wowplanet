@@ -16,7 +16,7 @@ function mythicSeason(array $decoded): MythicKeystoneSeasonResponse
     );
 }
 
-test('a complete season carries the rating and the best runs with their group', function (): void {
+test('a complete season carries the rating and the best runs', function (): void {
     $mythicKeystoneSeasonResponse = mythicSeason([
         'season' => ['id' => 15],
         'mythic_rating' => ['rating' => 2456.789, 'color' => ['r' => 255, 'g' => 128, 'b' => 0, 'a' => 1.0]],
@@ -28,16 +28,10 @@ test('a complete season carries the rating and the best runs with their group', 
             'is_completed_within_time' => true,
             'mythic_rating' => ['rating' => 250.45, 'color' => ['r' => 1, 'g' => 2, 'b' => 3, 'a' => 1]],
             'map_rating' => ['rating' => 300],
-            'members' => [[
-                'character' => ['name' => 'Thrall', 'realm' => ['name' => 'Hyjal']],
-                'specialization' => ['name' => 'Amélioration'],
-                'equipped_item_level' => 620,
-            ]],
         ]],
     ]);
 
     $run = $mythicKeystoneSeasonResponse->bestRuns[0];
-    $member = $run->members[0];
 
     expect($mythicKeystoneSeasonResponse->seasonId)->toBe(15)
         ->and($mythicKeystoneSeasonResponse->rating)->toBe(2456.789)
@@ -51,11 +45,7 @@ test('a complete season carries the rating and the best runs with their group', 
         ->and($run->rating)->toBe(250.45)
         ->and($run->ratingColor?->toArray())->toBe(['r' => 1, 'g' => 2, 'b' => 3, 'a' => 1.0])
         ->and($run->mapRating)->toBe(300.0)
-        ->and($run->mapRatingColor)->toBeNull()
-        ->and($member->name)->toBe('Thrall')
-        ->and($member->realmName)->toBe('Hyjal')
-        ->and($member->specializationName)->toBe('Amélioration')
-        ->and($member->equippedItemLevel)->toBe(620);
+        ->and($run->mapRatingColor)->toBeNull();
 });
 
 test('a season without runs nor rating is a normal case', function (): void {
@@ -67,14 +57,13 @@ test('a season without runs nor rating is a normal case', function (): void {
 });
 
 test('a run with partial data leaves the missing fields null', function (): void {
-    $run = mythicSeason(['best_runs' => [['members' => [['character' => ['name' => 'Jaina']]]]]])->bestRuns[0];
+    $run = mythicSeason(['best_runs' => [['dungeon' => ['id' => 501]]]])->bestRuns[0];
 
     expect($run->dungeonName)->toBeNull()
         ->and($run->keystoneLevel)->toBeNull()
         ->and($run->completedWithinTime)->toBeNull()
         ->and($run->rating)->toBeNull()
-        ->and($run->members[0]->realmName)->toBeNull()
-        ->and($run->members[0]->equippedItemLevel)->toBeNull();
+        ->and($run->dungeonId)->toBe(501);
 });
 
 test('a rating color missing a channel breaks the contract', function (): void {

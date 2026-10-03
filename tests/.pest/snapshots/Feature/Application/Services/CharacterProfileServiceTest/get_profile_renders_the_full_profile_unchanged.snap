@@ -438,8 +438,7 @@
                 "score": 280,
                 "score_color": null,
                 "map_score": 311,
-                "map_score_color": null,
-                "members": []
+                "map_score_color": null
             },
             {
                 "dungeon_name": "Faille",
@@ -461,21 +460,7 @@
                     "g": 5,
                     "b": 6,
                     "a": 1
-                },
-                "members": [
-                    {
-                        "name": "Thrall",
-                        "realm": "Hyjal",
-                        "spec": "Amélioration",
-                        "ilvl": 620
-                    },
-                    {
-                        "name": "Jaina",
-                        "realm": "",
-                        "spec": "",
-                        "ilvl": 0
-                    }
-                ]
+                }
             }
         ],
         "resilience": {

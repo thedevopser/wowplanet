@@ -741,10 +741,6 @@ function fullMythicSeason(): array
                 'is_completed_within_time' => true,
                 'mythic_rating' => ['rating' => 250.45, 'color' => ['r' => 1, 'g' => 2, 'b' => 3, 'a' => 1.0]],
                 'map_rating' => ['rating' => 300.04, 'color' => ['r' => 4, 'g' => 5, 'b' => 6, 'a' => 1.0]],
-                'members' => [
-                    ['character' => ['name' => 'Thrall', 'realm' => ['name' => 'Hyjal']], 'specialization' => ['name' => 'Amélioration'], 'equipped_item_level' => 620],
-                    ['character' => ['name' => 'Jaina']],
-                ],
             ],
             [
                 'dungeon' => ['id' => 502, 'name' => 'Prieuré'],
@@ -754,7 +750,6 @@ function fullMythicSeason(): array
                 'is_completed_within_time' => false,
                 'mythic_rating' => ['rating' => 280],
                 'map_rating' => ['rating' => 310.96],
-                'members' => [],
             ],
         ],
     ];
@@ -854,6 +849,20 @@ test('the profile carries the resilience over every dungeon of the season, playe
         ])
         ->and($resilience['targets'][0])->toBe(['level' => 12, 'remaining' => [502, 503]])
         ->and($resilience['targets'][1])->toBe(['level' => 13, 'remaining' => [501, 502, 503]]);
+});
+
+test('a mythic plus run of the profile does not carry its group', function (): void {
+    seedFullProfileCatalog();
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $bestRuns = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->mythicKeystone['best_runs'] ?? [];
+
+    expect($bestRuns)->toHaveCount(2)
+        ->and($bestRuns[0])->not->toHaveKey('members')
+        ->and($bestRuns[0])->toHaveKeys(['dungeon_name', 'dungeon_id', 'level', 'duration_ms', 'completed_at', 'is_timed', 'score', 'map_score']);
 });
 
 test('the profile carries no resilience when the dungeons of the season are unknown', function (): void {

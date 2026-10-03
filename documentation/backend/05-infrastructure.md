@@ -341,8 +341,7 @@ Un objet par endpoint que la fiche personnage consomme, construit sur `ResponseP
 | `RaidEncounterProgress` | un boss vaincu | `id`, `name`, `lastKillTimestamp` |
 | `JournalInstanceResponse` | `data/wow/journal-instance/{id}` | `name`, `encounterNames` (identifiant → nom français) |
 | `MythicKeystoneSeasonResponse` | `…/mythic-keystone-profile/season/{id}` | `seasonId`, `rating`, `ratingColor`, `bestRuns` |
-| `MythicRun` | une entrée de `best_runs` | donjon, niveau, durée, horodatage, dans les temps, cote et cote de donjon avec leurs couleurs, `members` |
-| `MythicRunMember` | un membre de `members` | `name`, `realmName`, `specializationName`, `equippedItemLevel` |
+| `MythicRun` | une entrée de `best_runs` | donjon, niveau, durée, horodatage, dans les temps, cote et cote de donjon avec leurs couleurs. Les membres du groupe ne sont pas lus. |
 | `RatingColor` | la `color` d'une cote | `r`, `g`, `b`, `a`, et `toArray()` pour la prop transmise au front |
 
 Un personnage supprimé, renommé ou jamais joué rend des réponses lacunaires, et un endpoint en 404 rend une réponse vide : presque tout y est donc optionnel, et les valeurs de repli (`''`, `0`) sont posées par le service. Seules les références qui structurent une entrée sont obligatoires — la `mount` d'une monture collectée, les quatre canaux d'une couleur, le `profession` d'un métier et l'identifiant d'une recette connue. Un champ présent mais du mauvais type lève `UnexpectedFieldTypeException`, sauf l'identifiant d'une apparence, lu par `lenientInt()` qui accepte aussi une chaîne numérique comme le faisait le code d'origine.
