@@ -125,6 +125,16 @@ Pour les brackets par spécialisation (`shuffle-priest-shadow`, `blitz-…`), il
 
 Il est partagé par l'onglet JcJ du profil (`PvpProgressAggregator`, `PvpProfileService`) et par la page des classements (`PvpLeaderboardService`), qui doivent nommer les mêmes modes de la même façon.
 
+### `ResilientKeystone`
+
+Porte la règle des clés résilientes du Mythique+ : un personnage est en « rési N » quand tous les donjons de la saison ont été terminés dans les temps au niveau N ou au-dessus, à partir de +12 (`MIN_LEVEL`). Le niveau rendu est plafonné à +25 (`MAX_LEVEL`).
+
+`assess()` reçoit les donjons de la saison (nom par identifiant) et les clés du personnage (donjon, niveau, dans les temps ou non). Elle rend le niveau atteint, ou `null`, la meilleure clé dans les temps de chaque donjon de la saison, et pour chaque niveau cible de 12 à 25 les donjons qu'il reste à timer, dans l'ordre de la saison.
+
+Une clé dans les temps vaut pour tous les niveaux inférieurs ou égaux au sien. Une clé hors temps ne compte jamais, quel que soit son niveau, et une clé d'un donjon hors saison est ignorée. Le niveau atteint est donc la plus basse des meilleures clés dans les temps, dès lors qu'aucun donjon n'est sous +12.
+
+Une saison sans donjon ou une clé de niveau négatif lèvent `InvalidKeystoneDataException`.
+
 ---
 
 ## Exceptions (`app/Domain/Exceptions/`)
@@ -132,3 +142,7 @@ Il est partagé par l'onglet JcJ du profil (`PvpProgressAggregator`, `PvpProfile
 ### `FavoriteLimitReachedException`
 
 Levée par `CharacterFavoriteService` quand un utilisateur ajoute un favori alors qu'il a déjà atteint le maximum (`MAX_FAVORITES`, trois). `CharacterFavoriteController` la traduit en 422, avec le maximum dans la réponse.
+
+### `InvalidKeystoneDataException`
+
+Levée par `ResilientKeystone` quand ses entrées ne décrivent pas une saison : aucun donjon, ou une clé de niveau négatif. `CharacterProfileService` n'appelle la règle que si Blizzard a rendu la rotation de la saison.

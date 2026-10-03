@@ -12,6 +12,9 @@ app/Domain/Services/ScoreCalculator.php
 app/Domain/Services/PvpBracketClassifier.php
 app/Domain/ValueObjects/ExpansionId.php
 
+# Resilient keystones: which level is reached, and which dungeons are left for a target level.
+app/Domain/Services/ResilientKeystone.php
+
 # Account-wide rules: which character's progress wins when several know the same thing.
 app/Application/DTOs/AccountScoreProgress.php
 app/Application/DTOs/CrossCharacterProgress.php
