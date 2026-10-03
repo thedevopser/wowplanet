@@ -154,6 +154,8 @@ Paliers de réputation tels que la fiche les montre. `effectiveStanding(faction,
 
 Meilleures courses Mythique+ d'un personnage. Le profil Blizzard peut rendre plusieurs courses du même donjon : `bestRunsByTiming(runs)` ne garde que le niveau le plus haut de chaque donjon, séparément pour les courses dans les temps et hors temps, triées du plus haut niveau au plus bas. `uniqueDungeonCount()` compte les donjons joués, `formatRunDuration(ms)` écrit une durée en `minutes:secondes`. `dungeonCards(runs)` fait une carte par donjon, menée par sa meilleure course dans les temps (à défaut, hors temps) et accompagnée de la meilleure course de l'autre type, pour qu'une clé plus haute ratée ne se perde pas ; `seasonStats(runs)` donne le nombre de donjons, la plus haute clé dans les temps et le nombre de donjons faits dans les temps.
 
+Pour les clés résilientes, la règle est calculée par le serveur (`mythicKeystone.resilience`) et n'est pas refaite ici. `defaultResilienceTarget(resilience)` donne le niveau visé à l'ouverture : le niveau juste au-dessus de la rési atteinte, plafonné à `max_level`, ou `min_level` sans rési. `remainingDungeons(resilience, level)` lit les identifiants restants de ce niveau dans `targets` et les résout en donjons, avec leur meilleure clé dans les temps.
+
 ---
 
 ## `collections.js`

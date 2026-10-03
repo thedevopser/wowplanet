@@ -112,6 +112,21 @@ describe('MythicPlusTab', () => {
         expect(withNull.find('[data-resilience]').exists()).toBe(false);
     });
 
+    it('puts the resilience goal between the header and the dungeon cards', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: makeResilience() });
+        const goal = wrapper.find('[data-resilience-goal]');
+
+        expect(goal.exists()).toBe(true);
+        expect(goal.text()).toContain('1 donjon restant sur 2');
+        expect(goal.element.compareDocumentPosition(wrapper.find('[data-dungeon]').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('has no resilience goal when the dungeons of the season are unknown', async () => {
+        const wrapper = await mountTab({ ...mythicData, resilience: null });
+
+        expect(wrapper.find('[data-resilience-goal]').exists()).toBe(false);
+    });
+
     it('sums up the season: dungeons played, highest key in time, dungeons done in time', async () => {
         const wrapper = await mountTab(mythicData);
         const stats = Object.fromEntries(wrapper.findAll('[data-season-stats] div').map((entry) => [entry.find('dt').text(), entry.find('dd').text()]));

@@ -29,6 +29,8 @@
                 </dl>
             </Card>
 
+            <ResilienceGoal v-if="mythic.resilience" :resilience="mythic.resilience" />
+
             <EmptyState v-if="!cards.length" :icon="Timer" title="Aucune course" message="Aucune course enregistrée cette saison." />
 
             <ul v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -82,6 +84,7 @@ import { dungeonCards, formatRunDuration, seasonStats } from '../utils/mythicRun
 import { readableVariants, rgbToHex } from '../utils/wowColors';
 import Card from './ui/Card.vue';
 import EmptyState from './ui/EmptyState.vue';
+import ResilienceGoal from './sheet/ResilienceGoal.vue';
 import RunGroup from './sheet/RunGroup.vue';
 import RunTiming from './sheet/RunTiming.vue';
 
