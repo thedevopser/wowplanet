@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import axios from 'axios';
 import { useTaskStore } from './tasks';
@@ -159,115 +159,106 @@ describe('tasks store', () => {
 
     // ─── Reset logic ────────────────────────────────────
 
-    it('applyResets resets daily tasks completed before today 5am', () => {
-        const store = useTaskStore();
+    describe('applyResets', () => {
+        const completedTask = (resetType, completedAt) => ({
+            id: 1,
+            reset_type: resetType,
+            is_completed: true,
+            completed_at: completedAt.toISOString(),
+        });
 
-        // Completed yesterday at 10pm — should be reset
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        yesterday.setHours(22, 0, 0, 0);
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
 
-        store.tasks = [
-            {
-                id: 1,
-                reset_type: 'daily',
-                is_completed: true,
-                completed_at: yesterday.toISOString(),
-            },
-        ];
+        afterEach(() => {
+            vi.useRealTimers();
+        });
 
-        // Mock the PUT call for the reset
-        axios.put.mockResolvedValue({ data: { id: 1, is_completed: false, completed_at: null } });
+        it('resets a daily task completed before the 5am reset of the day', () => {
+            vi.setSystemTime(new Date(2026, 9, 5, 10, 0));
+            const store = useTaskStore();
+            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 22, 0))];
 
-        store.applyResets();
+            store.applyResets();
 
-        expect(store.tasks[0].is_completed).toBe(false);
-        expect(store.tasks[0].completed_at).toBeNull();
-    });
+            expect(store.tasks[0].is_completed).toBe(false);
+            expect(store.tasks[0].completed_at).toBeNull();
+            expect(axios.put).toHaveBeenCalledWith('/api/character-tasks/1');
+        });
 
-    it('applyResets does not reset daily tasks completed after today 5am', () => {
-        const store = useTaskStore();
+        it('keeps a daily task completed since the 5am reset of the day', () => {
+            vi.setSystemTime(new Date(2026, 9, 5, 12, 0));
+            const store = useTaskStore();
+            store.tasks = [completedTask('daily', new Date(2026, 9, 5, 10, 0))];
 
-        // Completed today at 10am — should NOT be reset (assuming we're after 5am)
-        const today = new Date();
-        today.setHours(10, 0, 0, 0);
+            store.applyResets();
 
-        store.tasks = [
-            {
-                id: 1,
-                reset_type: 'daily',
-                is_completed: true,
-                completed_at: today.toISOString(),
-            },
-        ];
+            expect(store.tasks[0].is_completed).toBe(true);
+            expect(axios.put).not.toHaveBeenCalled();
+        });
 
-        store.applyResets();
+        it('keeps a daily task completed the evening before while the 5am reset has not come', () => {
+            vi.setSystemTime(new Date(2026, 9, 5, 4, 45));
+            const store = useTaskStore();
+            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 22, 0))];
 
-        expect(store.tasks[0].is_completed).toBe(true);
-    });
+            store.applyResets();
 
-    it('applyResets does not reset incomplete tasks', () => {
-        const store = useTaskStore();
-        store.tasks = [
-            {
-                id: 1,
-                reset_type: 'daily',
-                is_completed: false,
-                completed_at: null,
-            },
-        ];
+            expect(store.tasks[0].is_completed).toBe(true);
+        });
 
-        store.applyResets();
+        it('resets a daily task older than the previous 5am reset when read before 5am', () => {
+            vi.setSystemTime(new Date(2026, 9, 5, 4, 45));
+            const store = useTaskStore();
+            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 4, 0))];
 
-        expect(store.tasks[0].is_completed).toBe(false);
-    });
+            store.applyResets();
 
-    it('applyResets resets monthly tasks completed before 1st of current month 5am', () => {
-        const store = useTaskStore();
+            expect(store.tasks[0].is_completed).toBe(false);
+        });
 
-        // Completed on the 15th of last month — should be reset
-        const lastMonth = new Date();
-        lastMonth.setMonth(lastMonth.getMonth() - 1);
-        lastMonth.setDate(15);
-        lastMonth.setHours(10, 0, 0, 0);
+        it('leaves an incomplete task untouched', () => {
+            vi.setSystemTime(new Date(2026, 9, 5, 10, 0));
+            const store = useTaskStore();
+            store.tasks = [{ id: 1, reset_type: 'daily', is_completed: false, completed_at: null }];
 
-        store.tasks = [
-            {
-                id: 1,
-                reset_type: 'monthly',
-                is_completed: true,
-                completed_at: lastMonth.toISOString(),
-            },
-        ];
+            store.applyResets();
 
-        axios.put.mockResolvedValue({ data: { id: 1, is_completed: false, completed_at: null } });
+            expect(store.tasks[0].is_completed).toBe(false);
+            expect(axios.put).not.toHaveBeenCalled();
+        });
 
-        store.applyResets();
+        it('resets a monthly task completed before the 5am reset of the 1st', () => {
+            vi.setSystemTime(new Date(2026, 9, 20, 10, 0));
+            const store = useTaskStore();
+            store.tasks = [completedTask('monthly', new Date(2026, 8, 15, 10, 0))];
 
-        expect(store.tasks[0].is_completed).toBe(false);
-        expect(store.tasks[0].completed_at).toBeNull();
-    });
+            store.applyResets();
 
-    it('applyResets does not reset monthly tasks completed after 1st of current month 5am', () => {
-        const store = useTaskStore();
+            expect(store.tasks[0].is_completed).toBe(false);
+            expect(store.tasks[0].completed_at).toBeNull();
+        });
 
-        // Completed on the 2nd of this month at 10am — should NOT be reset
-        const thisMonth = new Date();
-        thisMonth.setDate(2);
-        thisMonth.setHours(10, 0, 0, 0);
+        it('keeps a monthly task completed since the 5am reset of the 1st', () => {
+            vi.setSystemTime(new Date(2026, 9, 20, 10, 0));
+            const store = useTaskStore();
+            store.tasks = [completedTask('monthly', new Date(2026, 9, 2, 10, 0))];
 
-        store.tasks = [
-            {
-                id: 1,
-                reset_type: 'monthly',
-                is_completed: true,
-                completed_at: thisMonth.toISOString(),
-            },
-        ];
+            store.applyResets();
 
-        store.applyResets();
+            expect(store.tasks[0].is_completed).toBe(true);
+        });
 
-        expect(store.tasks[0].is_completed).toBe(true);
+        it('keeps a monthly task of the previous month while the 5am reset of the 1st has not come', () => {
+            vi.setSystemTime(new Date(2026, 9, 1, 4, 45));
+            const store = useTaskStore();
+            store.tasks = [completedTask('monthly', new Date(2026, 8, 15, 10, 0))];
+
+            store.applyResets();
+
+            expect(store.tasks[0].is_completed).toBe(true);
+        });
     });
 
     // ─── Sidebar persistence ─────────────────────────────
