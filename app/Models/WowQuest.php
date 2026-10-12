@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $zone_name
  * @property string|null $faction
  * @property bool $is_active
+ * @property Carbon|null $mirror_unresolved_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
@@ -44,6 +46,7 @@ class WowQuest extends Model
         return [
             'expansion_id' => 'integer',
             'is_active' => 'boolean',
+            'mirror_unresolved_at' => 'datetime',
         ];
     }
 }

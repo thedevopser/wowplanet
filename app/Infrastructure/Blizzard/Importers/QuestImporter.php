@@ -9,8 +9,12 @@ use App\Infrastructure\Blizzard\BlizzardInternalName;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Models\WowQuest;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * @phpstan-type MirrorPair array{id_a: int, id_b: int, name: string, zone: string, group: non-empty-list<int>}
+ */
 final readonly class QuestImporter
 {
     use ImportsFromBlizzardApi;
@@ -254,12 +258,16 @@ final readonly class QuestImporter
     }
 
     /**
+     * Une paire dont les deux détails ont répondu sans réputation exploitable est retenue
+     * en base, et n'est plus redemandée : sans cela chaque import repayait deux appels par
+     * paire pour un résultat déjà connu. Un import forcé les réexamine toutes.
+     *
      * @param  array<int, string>  $reputationFactionMap
      */
-    public function tagMirrorFactions(array $reputationFactionMap): void
+    public function tagMirrorFactions(array $reputationFactionMap, bool $force): void
     {
         $this->info('Tagging mirror quest pairs via API reputation rewards...');
-        $pairs = $this->findMirrorPairs();
+        $pairs = $this->findMirrorPairs($force);
         $this->info(sprintf('  Found %d mirror pairs to process.', count($pairs)));
 
         if ($pairs === []) {
@@ -273,7 +281,7 @@ final readonly class QuestImporter
     }
 
     /**
-     * @param  list<array{id_a: int, id_b: int, name: string, zone: string}>  $pairs
+     * @param  list<MirrorPair>  $pairs
      * @return array<int|string, ResponsePayload|null>
      */
     private function fetchQuestDetailsConcurrently(array $pairs): array
@@ -290,7 +298,7 @@ final readonly class QuestImporter
     }
 
     /**
-     * @param  list<array{id_a: int, id_b: int, name: string, zone: string}>  $pairs
+     * @param  list<MirrorPair>  $pairs
      * @param  array<int|string, ResponsePayload|null>  $questDetails
      * @param  array<int, string>  $reputationFactionMap
      */
@@ -315,6 +323,11 @@ final readonly class QuestImporter
             $resolvedFaction = $factionFromA ?? $factionFromB;
 
             if ($resolvedFaction === null) {
+                // Un détail manquant peut tenir à un échec passager : ce n'est pas un verdict.
+                if ($detailA !== null && $detailB !== null) {
+                    $this->rememberUnresolved($pair['group']);
+                }
+
                 $skipped++;
 
                 continue;
@@ -325,12 +338,24 @@ final readonly class QuestImporter
             $factionB = $factionFromB ?? $mirrorFaction;
 
             $this->info(sprintf('  [TAG] %s → %d=%s, %d=%s', $pair['name'], $pair['id_a'], $factionA, $pair['id_b'], $factionB));
-            WowQuest::query()->where('id', $pair['id_a'])->update(['faction' => $factionA]);
-            WowQuest::query()->where('id', $pair['id_b'])->update(['faction' => $factionB]);
+            WowQuest::query()->where('id', $pair['id_a'])->update(['faction' => $factionA, 'mirror_unresolved_at' => null]);
+            WowQuest::query()->where('id', $pair['id_b'])->update(['faction' => $factionB, 'mirror_unresolved_at' => null]);
             $tagged++;
         }
 
         $this->info(sprintf('Mirror tagging complete: %d tagged, %d no reputation data, %d not found in API.', $tagged, $skipped, $notFound));
+    }
+
+    /**
+     * Le verdict porte sur tout le groupe, pas sur les deux seules quêtes interrogées :
+     * un groupe de trois ne serait sinon jamais entièrement jugé, et ressortirait à
+     * chaque passe.
+     *
+     * @param  non-empty-list<int>  $questIds
+     */
+    private function rememberUnresolved(array $questIds): void
+    {
+        WowQuest::query()->whereIn('id', $questIds)->update(['mirror_unresolved_at' => now()]);
     }
 
     /**
@@ -349,21 +374,32 @@ final readonly class QuestImporter
     }
 
     /**
-     * @return list<array{id_a: int, id_b: int, name: string, zone: string}>
+     * Le verdict se lit après le regroupement, jamais dans la requête : une quête neuve
+     * qui rejoint un groupe déjà jugé doit le faire réexaminer, et le filtrer en SQL la
+     * laisserait seule dans son groupe.
+     *
+     * @return list<MirrorPair>
      */
-    private function findMirrorPairs(): array
+    private function findMirrorPairs(bool $force): array
     {
-        /** @var array<string, list<int>> $groups */
+        /** @var array<string, non-empty-list<int>> $groups */
         $groups = [];
+        /** @var array<string, bool> $judged */
+        $judged = [];
 
         foreach (WowQuest::query()->where('is_active', true)->whereNull('faction')->lazy() as $lazyCollection) {
             $key = $lazyCollection->name_fr.'|||'.$lazyCollection->zone_name;
             $groups[$key][] = $lazyCollection->id;
+            $judged[$key] = ($judged[$key] ?? true) && $lazyCollection->mirror_unresolved_at instanceof Carbon;
         }
 
         $pairs = [];
         foreach ($groups as $key => $ids) {
             if (count($ids) < 2) {
+                continue;
+            }
+
+            if (! $force && $judged[$key]) {
                 continue;
             }
 
@@ -374,6 +410,7 @@ final readonly class QuestImporter
                 'id_b' => $ids[1],
                 'name' => $name,
                 'zone' => $zone,
+                'group' => $ids,
             ];
         }
 

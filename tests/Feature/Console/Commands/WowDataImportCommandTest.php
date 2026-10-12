@@ -59,6 +59,16 @@ test('command imports all types by default', function (): void {
     $this->artisan('app:wow-data-import')->assertSuccessful();
 });
 
+test('--force has the mirrored quests already judged examined again, a plain run does not', function (array $options, bool $force): void {
+    $this->importerMock->shouldReceive('importQuests')->once();
+    $this->importerMock->shouldReceive('tagMirrorQuestFactions')->once()->with(Mockery::any(), $force);
+
+    $this->artisan('app:wow-data-import', ['--type' => 'quests', ...$options])->assertSuccessful();
+})->with([
+    'forced' => [['--force' => true], true],
+    'plain' => [[], false],
+]);
+
 test('command imports only quests when --type=quests', function (): void {
     $this->importerMock->shouldReceive('importQuests')->once();
     $this->importerMock->shouldReceive('tagMirrorQuestFactions')->once();

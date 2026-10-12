@@ -66,7 +66,7 @@ Façade qui délègue chaque type d'import à l'importeur spécialisé correspon
 | `importDecor()` | Lance l'import des décorations. |
 | `importProfessions(array $recipeFactionMap)` | Lance l'import des professions et recettes. |
 | `importAppearanceChunk(bool $full, int $offset, int $timeBoxSeconds, ?int $limit, ?Closure $stopRequested)` | Une tranche bornée dans le temps du balayage de la garde-robe, qui rend un `AppearanceImportProgress` pour que l'appelant reprenne où elle s'est arrêtée. |
-| `tagMirrorQuestFactions(array $reputationFactionMap)` | Identifie et tague les quêtes miroirs Alliance/Horde. |
+| `tagMirrorQuestFactions(array $reputationFactionMap, bool $force)` | Identifie et tague les quêtes miroirs Alliance/Horde. Les paires déjà jugées sans réputation ne sont redemandées que si `$force` est vrai, voir [Quêtes miroir](11-import.md#quêtes-miroir). |
 | `tagMirrorRecipeFactions()` | Identifie et tague les recettes miroirs Alliance/Horde. |
 
 ---
@@ -418,7 +418,7 @@ Chaque importeur lit les données sources, les transforme et les sauvegarde via 
 | `MountImporter` | `mount/index` + balayage `search/mount` + taxonomie curée + socle pour le sort et l'icône | `WowMount` |
 | `PetImporter` | `pet/index` + détail de chaque mascotte + taxonomie curée | `WowPet` |
 | `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée | `WowDecor` |
-| `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps, sans les quêtes au nom interne, supprimées si déjà en base | `WowQuest` |
+| `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps, sans les quêtes au nom interne, supprimées si déjà en base ; détail des quêtes miroir pas encore jugées | `WowQuest` |
 | `ProfessionImporter` | `skill_line_ability.csv` + API Blizzard | `WowProfession`, `WowRecipe` |
 
 Pour les trois collections, le partage d'autorité est explicite : **l'API tranche l'existence**, la **taxonomie curée tranche le rangement**. Une entrée que l'API ignore n'entre pas au catalogue ; une entrée que la taxonomie ne range pas entre avec le type de source de l'API en valeur d'attente, et figure au rapport d'entrées à arbitrer. Voir [Taxonomie des collections](#taxonomie-des-collections-appinfrastructuretaxonomy).

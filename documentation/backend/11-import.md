@@ -42,7 +42,7 @@ Aucun appel à l'API Blizzard : comparer au build courant demanderait une requê
 ### `ImportPipeline`
 
 - `begin(string $jobId, array $stages, bool $force, string $trigger)` — ouvre le suivi, une étape par entité demandée, marque ignorées celles que `StageFreshness` tient déjà pour l'amont de leur famille, et ouvre l'entrée d'historique au nom du déclencheur.
-- `advance(ImportRun $run, bool $full, ?int $limit)` — exécute **une passe** de la première étape non aboutie, retient l'étape au build si elle a abouti, puis republie l'import.
+- `advance(ImportRun $run, bool $full, bool $force, ?int $limit)` — exécute **une passe** de la première étape non aboutie, retient l'étape au build si elle a abouti, puis republie l'import. `$force` descend jusqu'à l'étape des quêtes, seule à s'en servir : voir [Quêtes miroir](#quêtes-miroir).
 - `isDone(ImportRun $run)` — plus aucune étape à faire.
 
 Une passe et une seule par appel : c'est ce qui permet au job de rendre la main entre deux étapes sans que le déroulé diffère de celui de la commande.
@@ -150,6 +150,24 @@ En test, l'index est 14 et la suite le vide avant chaque test — un journal qui
 ## Reprendre la main sur un import
 
 Un import en cours se met en pause, se reprend et s'annule depuis `/admin/imports`. Le principe tient en une phrase : **le contrôleur pose un ordre, le job le lit et décide**. Ni `kill` de processus, ni exception jetée dans un travail en train d'écrire — c'est ce qui garantit qu'une interruption tombe entre deux écritures et jamais au milieu de l'une d'elles.
+
+### Quêtes miroir
+
+Une quête que ni le socle ni sa zone ne rattachent à une faction peut avoir une jumelle : même nom, même zone, une pour l'Alliance et une pour la Horde. Après l'import des quêtes, `QuestImporter::tagMirrorFactions()` regroupe les quêtes actives sans faction par nom et zone, demande à Blizzard le détail des deux premières de chaque groupe (`data/wow/quest/{id}`) et déduit la faction de leurs récompenses de réputation.
+
+La plupart de ces paires n'ont aucune récompense de réputation et ne se résoudront jamais : au relevé du 12 octobre 2026, 1 272 paires sur 1 272, soit 2 544 appels par import pour un résultat déjà connu. Ce verdict est donc retenu en base, dans `wow_quests.mirror_unresolved_at`, et un groupe dont toutes les quêtes le portent n'est plus interrogé.
+
+| Issue d'une paire | Ce qui est écrit | Au passage suivant |
+|---|---|---|
+| Une réputation connue du socle | La faction des deux quêtes, verdict remis à nul | Ne ressort plus : elle a une faction |
+| Les deux détails reçus, sans réputation exploitable | `mirror_unresolved_at` sur toutes les quêtes du groupe | N'est plus interrogée |
+| Un seul détail reçu, ou aucun | Rien | Redemandée : un échec de l'API n'est pas un verdict |
+
+Le verdict porte sur le groupe entier et non sur les deux seules quêtes interrogées, sans quoi un groupe de trois ne serait jamais entièrement jugé. Une quête neuve qui rejoint un groupe jugé n'a pas de verdict : le groupe est réexaminé.
+
+**Un import forcé ignore le verdict**, réexamine toutes les paires et le réécrit. C'est la porte de sortie si Blizzard enrichit un jour ces quêtes ; il n'y a pas d'expiration automatique, qui ramènerait le coût périodiquement sans rien signaler.
+
+L'import des quêtes lui-même ne lit ni n'écrit cette colonne : elle est hors de son `upsert` et de sa comparaison de lignes. Écrire un verdict touche `updated_at`, donc compte la quête comme mise à jour dans le rapport de l'étape. Le premier import qui suit la migration en affiche ainsi environ 3 000 d'un coup, de même qu'un import forcé ; un import incrémental sans changement amont en affiche zéro.
 
 ### `ImportControl`, `ImportSignal` et `ImportRequest`
 

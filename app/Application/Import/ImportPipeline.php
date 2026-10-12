@@ -169,7 +169,7 @@ final readonly class ImportPipeline
     /**
      * Exécute une passe de la première étape qui n'a pas abouti, et republie l'import.
      */
-    public function advance(ImportRun $importRun, bool $full, ?int $limit): ImportRun
+    public function advance(ImportRun $importRun, bool $full, bool $force, ?int $limit): ImportRun
     {
         $importStep = $this->nextStep($importRun);
 
@@ -190,7 +190,7 @@ final readonly class ImportPipeline
         $this->note($importRun->jobId, $importStep->stage->label().' — démarrage.');
 
         try {
-            $importStageResult = $this->importStageRunner->run($importRun->jobId, $importStep, $full, $limit);
+            $importStageResult = $this->importStageRunner->run($importRun->jobId, $importStep, $full, $force, $limit);
         } finally {
             $this->importWaitReporter->release();
         }

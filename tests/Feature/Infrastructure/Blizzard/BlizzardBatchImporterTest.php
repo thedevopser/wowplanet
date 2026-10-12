@@ -373,7 +373,7 @@ test('tagMirrorQuestFactions tags mirror quest pairs via API reputation', functi
     $reputationFactionMap = [2103 => 'Horde'];
 
     $blizzardBatchImporter = resolve(BlizzardBatchImporter::class);
-    $blizzardBatchImporter->tagMirrorQuestFactions($reputationFactionMap);
+    $blizzardBatchImporter->tagMirrorQuestFactions($reputationFactionMap, force: false);
 
     expect(WowQuest::query()->find(100)->faction)->toBe('Horde');
     expect(WowQuest::query()->find(101)->faction)->toBe('Alliance');
