@@ -20,6 +20,7 @@ Application Laravel 13 + Vue 3 de suivi de progression World of Warcraft. Archit
 | [backend/08-jobs.md](backend/08-jobs.md) | Jobs de queue |
 | [backend/09-commands.md](backend/09-commands.md) | Commandes Artisan |
 | [backend/10-qualite-ci.md](backend/10-qualite-ci.md) | Qualité, pipeline de CI, seuils de couverture, hook pre-commit |
+| [backend/11-import.md](backend/11-import.md) | Orchestration de l'import : chaîne d'étapes, suivi, reprise, historique |
 
 ### Frontend JavaScript
 
@@ -29,6 +30,7 @@ Application Laravel 13 + Vue 3 de suivi de progression World of Warcraft. Archit
 | [frontend/02-composables.md](frontend/02-composables.md) | Composables Vue |
 | [frontend/03-utils.md](frontend/03-utils.md) | Utilitaires JS |
 | [frontend/04-pages-composants.md](frontend/04-pages-composants.md) | Pages et composants Vue |
+| [frontend/05-design-system.md](frontend/05-design-system.md) | Design system : tokens, thèmes, primitives d'interface |
 
 ---
 
@@ -46,12 +48,15 @@ Requête HTTP
 
 ```
 Import de données (admin)
-  └─> AdminController → RunImportJob (queue: imports)
-        └─> WowDataImportCommand
-              ├─> ReferenceMaps + FactionReference (socle wow_ref_*)
-              └─> BlizzardBatchImporter
-                    └─> Importers spécialisés (Achievement/Quest/Mount/Pet/Decor/Profession)
+  └─> AdminController → AdminService → RunImportJob (queue: imports)
+        └─> ImportPipeline (une passe d'étape par invocation, puis re-dispatch)
+              └─> ImportStageRunner
+                    ├─> ReferenceMaps + FactionReference (socle wow_ref_*)
+                    └─> BlizzardBatchImporter
+                          └─> Importers spécialisés (Achievement/Quest/Mount/Pet/Decor/Profession/Appearance)
 ```
+
+La commande `app:wow-data-import` déroule le même `ImportPipeline`, sans passer par la queue.
 
 ```
 Cross-character (compte)
