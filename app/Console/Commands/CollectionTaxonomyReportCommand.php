@@ -6,6 +6,8 @@ namespace App\Console\Commands;
 
 use App\Application\Taxonomy\PendingTaxonomyEntries;
 use App\Infrastructure\Taxonomy\CollectionEntity;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
@@ -17,14 +19,12 @@ use InvalidArgumentException;
  * nulle part **en connaissance de cause** porte, elle, une ligne de taxonomie aux deux
  * libellés nuls : elle est curée, donc hors de ce rapport.
  */
+#[Description('Liste les entrées de collection à arbitrer dans la taxonomie')]
+#[Signature('app:collection-taxonomy-report
+        {--entity= : Ne rapporter qu\'une seule collection}
+        {--limit=20 : Nombre d\'entrées détaillées par collection}')]
 class CollectionTaxonomyReportCommand extends Command
 {
-    protected $signature = 'app:collection-taxonomy-report
-        {--entity= : Ne rapporter qu\'une seule collection}
-        {--limit=20 : Nombre d\'entrées détaillées par collection}';
-
-    protected $description = 'Liste les entrées de collection à arbitrer dans la taxonomie';
-
     public function __construct(private readonly PendingTaxonomyEntries $pendingTaxonomyEntries)
     {
         parent::__construct();

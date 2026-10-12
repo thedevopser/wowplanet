@@ -12,6 +12,8 @@ use App\Infrastructure\Taxonomy\SimpleArmoryClient;
 use App\Infrastructure\Taxonomy\SimpleArmoryTaxonomyReader;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -33,14 +35,12 @@ use InvalidArgumentException;
  * Les collections demandées sont chargées dans une seule transaction : une source manquante
  * laisse la taxonomie exactement dans l'état où elle était, plutôt qu'à moitié chargée.
  */
+#[Description('Charge la taxonomie curée des montures, mascottes et décorations')]
+#[Signature('app:collection-taxonomy-sync
+        {--entity= : Synchroniser une seule collection}
+        {--upstream : Tirer la curation fraîche de SimpleArmory au lieu de lire l\'instantané}')]
 class CollectionTaxonomySyncCommand extends Command
 {
-    protected $signature = 'app:collection-taxonomy-sync
-        {--entity= : Synchroniser une seule collection}
-        {--upstream : Tirer la curation fraîche de SimpleArmory au lieu de lire l\'instantané}';
-
-    protected $description = 'Charge la taxonomie curée des montures, mascottes et décorations';
-
     public function handle(
         CollectionTaxonomyLoader $collectionTaxonomyLoader,
         SimpleArmoryClient $simpleArmoryClient,

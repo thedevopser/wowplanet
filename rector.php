@@ -18,7 +18,7 @@ return RectorConfig::configure()
         __DIR__.'/bootstrap/cache',
     ])
     ->withComposerBased(laravel: true)
-    ->withPhpSets(php85: true)
+    ->withPhpSets()
     ->withPreparedSets(
         deadCode: true,
         codeQuality: true,
@@ -26,8 +26,6 @@ return RectorConfig::configure()
         typeDeclarations: true,
         privatization: true,
         naming: true,
-        instanceOf: true,
-        earlyReturn: true,
     )
     ->withSets([
         LaravelSetList::LARAVEL_CODE_QUALITY,

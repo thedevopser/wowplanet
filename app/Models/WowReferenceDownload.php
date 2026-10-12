@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\WowReferenceDownloadFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -25,29 +29,21 @@ use Illuminate\Support\Carbon;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'filename',
+    'source_table',
+    'build',
+    'bytes',
+    'row_count',
+    'downloaded_at',
+])]
+#[Table(name: 'wow_reference_downloads', key: 'filename', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class WowReferenceDownload extends Model
 {
     /** @use HasFactory<WowReferenceDownloadFactory> */
     use HasFactory;
-
-    protected $table = 'wow_reference_downloads';
-
-    protected $primaryKey = 'filename';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'filename',
-        'source_table',
-        'build',
-        'bytes',
-        'row_count',
-        'downloaded_at',
-    ];
 
     /**
      * @return array<string, string>

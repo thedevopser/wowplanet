@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Database\Factories\CharacterTaskFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,21 +23,20 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'bnet_user_id',
+    'realm_slug',
+    'character_name',
+    'name',
+    'reset_type',
+    'is_completed',
+    'completed_at',
+    'sort_order',
+])]
 class CharacterTask extends Model
 {
     /** @use HasFactory<CharacterTaskFactory> */
     use HasFactory;
-
-    protected $fillable = [
-        'bnet_user_id',
-        'realm_slug',
-        'character_name',
-        'name',
-        'reset_type',
-        'is_completed',
-        'completed_at',
-        'sort_order',
-    ];
 
     protected function casts(): array
     {

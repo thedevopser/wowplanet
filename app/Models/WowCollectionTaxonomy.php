@@ -6,6 +6,10 @@ namespace App\Models;
 
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use Database\Factories\WowCollectionTaxonomyFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,24 +35,20 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'entity',
+    'entry_id',
+    'category',
+    'source',
+    'obtainable',
+])]
+#[Table(name: 'wow_collection_taxonomy')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class WowCollectionTaxonomy extends Model
 {
     /** @use HasFactory<WowCollectionTaxonomyFactory> */
     use HasFactory;
-
-    protected $table = 'wow_collection_taxonomy';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'entity',
-        'entry_id',
-        'category',
-        'source',
-        'obtainable',
-    ];
 
     /**
      * @return array<string, string>

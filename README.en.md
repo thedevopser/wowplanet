@@ -5,7 +5,7 @@
 Web application for tracking **World of Warcraft** progress: character profiles, collections
 (mounts, pets, transmog…), Mythic+, raids, account-wide score.
 
-**Stack**: Laravel 12 + Vue 3 through Inertia · FrankenPHP · PostgreSQL 18 · Redis 8 · data from the **Blizzard API**.
+**Stack**: Laravel 13 + Vue 3 through Inertia · FrankenPHP · PostgreSQL 18 · Redis 8 · data from the **Blizzard API**.
 
 > The application runs in Docker, the tooling runs on your machine: tests, linting, static
 > analysis and asset builds all use the local PHP and Node.
@@ -158,7 +158,7 @@ different reason — it relies on pcov, which only exists in the container.
 ## 6. Architecture at a glance
 
 - **Backend** — Clean Architecture (`Domain` → `Application` → `Infrastructure` / `Http`),
-  Laravel 12, served by FrankenPHP.
+  Laravel 13, served by FrankenPHP.
 - **Frontend** — Vue 3 with Inertia and Pinia, optional server-side rendering through the
   `inertia-ssr` sidecar. Controllers render the pages under `resources/js/pages/`, and the
   `api.php` routes serve XHR calls.

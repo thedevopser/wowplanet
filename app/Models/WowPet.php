@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\WowPetFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,26 +23,21 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
  */
+#[Fillable([
+    'id',
+    'name_fr',
+    'category',
+    'source',
+    'creature_id',
+    'icon_url',
+    'is_active',
+])]
+#[Table(name: 'wow_pets', key: 'id')]
+#[WithoutIncrementing]
 class WowPet extends Model
 {
     /** @use HasFactory<WowPetFactory> */
     use HasFactory;
-
-    protected $table = 'wow_pets';
-
-    protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
-    protected $fillable = [
-        'id',
-        'name_fr',
-        'category',
-        'source',
-        'creature_id',
-        'icon_url',
-        'is_active',
-    ];
 
     protected function casts(): array
     {

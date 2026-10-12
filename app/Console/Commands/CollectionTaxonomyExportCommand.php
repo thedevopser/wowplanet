@@ -8,6 +8,8 @@ use App\Application\Taxonomy\TaxonomySnapshotExporter;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Models\WowCollectionTaxonomy;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 /**
@@ -21,13 +23,11 @@ use Illuminate\Console\Command;
  * Elle refuse d'écrire un instantané vide : une table vide au moment de l'export écraserait
  * silencieusement le fichier curé du dépôt, ce qui est exactement le geste qu'on ne veut pas.
  */
+#[Description('Exporte la taxonomie des collections vers son instantané versionné')]
+#[Signature('app:collection-taxonomy-export
+        {--path= : Écrire ailleurs que dans l\'instantané du dépôt}')]
 class CollectionTaxonomyExportCommand extends Command
 {
-    protected $signature = 'app:collection-taxonomy-export
-        {--path= : Écrire ailleurs que dans l\'instantané du dépôt}';
-
-    protected $description = 'Exporte la taxonomie des collections vers son instantané versionné';
-
     public function handle(CollectionTaxonomySnapshot $collectionTaxonomySnapshot): int
     {
         /** @var string|null $requestedPath */

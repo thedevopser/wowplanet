@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\WowProfessionFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,24 +22,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
  */
+#[Fillable([
+    'id',
+    'name_fr',
+    'type',
+    'max_skill_levels',
+    'is_active',
+])]
+#[Table(name: 'wow_professions', key: 'id')]
+#[WithoutIncrementing]
 class WowProfession extends Model
 {
     /** @use HasFactory<WowProfessionFactory> */
     use HasFactory;
-
-    protected $table = 'wow_professions';
-
-    protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
-    protected $fillable = [
-        'id',
-        'name_fr',
-        'type',
-        'max_skill_levels',
-        'is_active',
-    ];
 
     /**
      * @return array<string, string>

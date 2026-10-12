@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
+#[Description('Generate all favicon formats from public/images/logo.png')]
+#[Signature('app:generate-favicons')]
 class GenerateFaviconsCommand extends Command
 {
-    protected $signature = 'app:generate-favicons';
-
-    protected $description = 'Generate all favicon formats from public/images/logo.png';
-
     private const array SIZES = [
         'favicon-16x16.png' => 16,
         'favicon-32x32.png' => 32,

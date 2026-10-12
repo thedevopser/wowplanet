@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\ApplicationErrorFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -26,22 +29,19 @@ use Illuminate\Support\Carbon;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'level',
+    'message',
+    'exception_class',
+    'location',
+    'occurred_at',
+])]
+#[Table(name: 'application_errors')]
+#[WithoutTimestamps]
 class ApplicationError extends Model
 {
     /** @use HasFactory<ApplicationErrorFactory> */
     use HasFactory;
-
-    protected $table = 'application_errors';
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'level',
-        'message',
-        'exception_class',
-        'location',
-        'occurred_at',
-    ];
 
     /**
      * @return array<string, string>

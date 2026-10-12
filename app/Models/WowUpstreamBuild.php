@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\WowUpstreamBuildFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -27,27 +31,19 @@ use Illuminate\Support\Carbon;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'source',
+    'build',
+    'checked_at',
+    'outcome',
+])]
+#[Table(name: 'wow_upstream_builds', key: 'source', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class WowUpstreamBuild extends Model
 {
     /** @use HasFactory<WowUpstreamBuildFactory> */
     use HasFactory;
-
-    protected $table = 'wow_upstream_builds';
-
-    protected $primaryKey = 'source';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'source',
-        'build',
-        'checked_at',
-        'outcome',
-    ];
 
     /**
      * @return array<string, string>

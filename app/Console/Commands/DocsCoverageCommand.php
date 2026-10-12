@@ -7,17 +7,17 @@ namespace App\Console\Commands;
 use App\Infrastructure\Documentation\CoverageReport;
 use App\Infrastructure\Documentation\DocumentationCoverage;
 use FilesystemIterator;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
+#[Description('Report the share of the code named in the documentation pages')]
+#[Signature('docs:coverage')]
 class DocsCoverageCommand extends Command
 {
-    protected $signature = 'docs:coverage';
-
-    protected $description = 'Report the share of the code named in the documentation pages';
-
     public function handle(): int
     {
         /** @var list<string> $sourcePaths */

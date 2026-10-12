@@ -1,6 +1,6 @@
 # Documentation WowPlanet
 
-Application Laravel 12 + Vue 3 de suivi de progression World of Warcraft. Architecture en couches : Domain → Application → Infrastructure, exposée via Http.
+Application Laravel 13 + Vue 3 de suivi de progression World of Warcraft. Architecture en couches : Domain → Application → Infrastructure, exposée via Http.
 
 ---
 

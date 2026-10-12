@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,27 +26,19 @@ use Illuminate\Support\Carbon;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'bnet_user_id',
+    'data',
+    'character_count',
+    'fetched_at',
+])]
+#[Table(name: 'cross_character_data', key: 'bnet_user_id', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class CrossCharacterData extends Model
 {
     /** @use HasFactory<Factory<static>> */
     use HasFactory;
-
-    protected $table = 'cross_character_data';
-
-    protected $primaryKey = 'bnet_user_id';
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'bnet_user_id',
-        'data',
-        'character_count',
-        'fetched_at',
-    ];
 
     /**
      * @return array<string, string>

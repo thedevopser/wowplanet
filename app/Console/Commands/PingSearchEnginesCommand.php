@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
+#[Description('Notify search engines about the sitemap')]
+#[Signature('app:ping-search-engines')]
 class PingSearchEnginesCommand extends Command
 {
-    protected $signature = 'app:ping-search-engines';
-
-    protected $description = 'Notify search engines about the sitemap';
-
     public function handle(): int
     {
         /** @var string $configUrl */
