@@ -52,9 +52,9 @@ class RunImportJob implements DescribedJob, ShouldQueue
      * coûtent rien et qu'une reprise qui se voit à l'écran vaut mieux qu'une reprise
      * exacte.
      */
-    private const PAUSE_HEARTBEAT_S = 5;
+    private const int PAUSE_HEARTBEAT_S = 5;
 
-    private const ORCHESTRATED_COMMAND = 'app:wow-data-import';
+    private const string ORCHESTRATED_COMMAND = 'app:wow-data-import';
 
     /** Le nom qu'on donne à un administrateur sans identifiant Battle.net en session. */
     public const string PANEL_TRIGGER = 'administrateur';

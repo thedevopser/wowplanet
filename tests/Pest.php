@@ -3,6 +3,8 @@
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Reference\ReferenceCatalog;
 use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
+use App\Infrastructure\Taxonomy\TaxonomyEntry;
+use App\Jobs\RunImportJob;
 use App\Models\WowReferenceDownload;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
@@ -13,7 +15,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Str;
 use Monolog\Handler\TestHandler;
+use Monolog\LogRecord;
 use Tests\TestCase;
 
 // PostgreSQL is transactional, so each test rolls back instead of re-migrating,
@@ -107,7 +111,7 @@ function referenceLoadedOn(string $build, ?string $downloadedAt = null): void
 /**
  * Écrit l'instantané de taxonomie de test, celui que la suite substitue au fichier du dépôt.
  *
- * @param  array<string, array<int, App\Infrastructure\Taxonomy\TaxonomyEntry>>  $entries
+ * @param  array<string, array<int, TaxonomyEntry>>  $entries
  */
 function writeTestTaxonomySnapshot(array $entries): void
 {
@@ -120,7 +124,7 @@ function writeTestTaxonomySnapshot(array $entries): void
  */
 function seedCollectionTaxonomy(): void
 {
-    $entry = new App\Infrastructure\Taxonomy\TaxonomyEntry('Test', 'Test');
+    $entry = new TaxonomyEntry('Test', 'Test');
 
     writeTestTaxonomySnapshot(['mount' => [999_001 => $entry], 'pet' => [999_002 => $entry], 'decor' => [999_003 => $entry]]);
 }
@@ -189,9 +193,9 @@ function clearTestRedis(string $connection): void
 /**
  * Inscrit un job échoué comme le ferait le worker, et rend son uuid.
  */
-function recordFailedJob(string $displayName = \App\Jobs\RunImportJob::class, string $message = 'boom'): string
+function recordFailedJob(string $displayName = RunImportJob::class, string $message = 'boom'): string
 {
-    $uuid = (string) Illuminate\Support\Str::uuid();
+    $uuid = (string) Str::uuid();
 
     resolve('queue.failer')->log('redis', 'imports', (string) json_encode([
         'uuid' => $uuid,
@@ -214,7 +218,7 @@ function auditTrail(): array
     throw_unless($handler instanceof TestHandler, RuntimeException::class, 'The audit channel is not the in-memory one.');
 
     return array_map(
-        static fn (Monolog\LogRecord $logRecord): array => ['message' => $logRecord->message, 'context' => $logRecord->context],
+        static fn (LogRecord $logRecord): array => ['message' => $logRecord->message, 'context' => $logRecord->context],
         $handler->getRecords(),
     );
 }

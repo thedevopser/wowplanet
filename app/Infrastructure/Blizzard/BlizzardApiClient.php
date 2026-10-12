@@ -22,14 +22,14 @@ use Throwable;
 
 class BlizzardApiClient
 {
-    private const NOT_MODIFIED = 304;
+    private const int NOT_MODIFIED = 304;
 
     /** Le plus petit index statique du catalogue : treize entrées pour lire un en-tête. */
-    private const BUILD_PROBE_ENDPOINT = 'data/wow/playable-class/index';
+    private const string BUILD_PROBE_ENDPOINT = 'data/wow/playable-class/index';
 
-    private const MYTHIC_DUNGEONS_CACHE_KEY = 'blizzard_current_m_plus_dungeons';
+    private const string MYTHIC_DUNGEONS_CACHE_KEY = 'blizzard_current_m_plus_dungeons';
 
-    private const MYTHIC_DUNGEONS_CACHE_SECONDS = 86400;
+    private const int MYTHIC_DUNGEONS_CACHE_SECONDS = 86400;
 
     private readonly string $clientId;
 

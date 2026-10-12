@@ -8,6 +8,7 @@ use App\Models\WowAppearance;
 use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowPet;
+use Illuminate\Support\Collection;
 
 /**
  * @phpstan-type CollectibleProgress array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}
@@ -26,7 +27,7 @@ class CollectionProgressAggregator
      *
      * @pest-mutate-ignore
      */
-    private const SLOT_CATEGORIES = [
+    private const array SLOT_CATEGORIES = [
         'HEAD' => 'Armure',
         'SHOULDER' => 'Armure',
         'SHIRT' => 'Armure',
@@ -126,7 +127,7 @@ class CollectionProgressAggregator
      */
     public function aggregateAppearances(array $characterAppearanceIds): array
     {
-        /** @var \Illuminate\Support\Collection<int, object{slot: string, total: int}> $totals */
+        /** @var Collection<int, object{slot: string, total: int}> $totals */
         $totals = WowAppearance::query()->where('is_active', true)
             ->whereNotNull('slot')
             ->selectRaw('slot, COUNT(*) as total')
@@ -137,7 +138,7 @@ class CollectionProgressAggregator
         /** @var array<string, int> $completedBySlot */
         $completedBySlot = [];
         if ($characterAppearanceIds !== []) {
-            /** @var \Illuminate\Support\Collection<int, object{slot: string, completed: int}> $completedRows */
+            /** @var Collection<int, object{slot: string, completed: int}> $completedRows */
             $completedRows = WowAppearance::query()->where('is_active', true)
                 ->whereNotNull('slot')
                 ->whereIn('id', $characterAppearanceIds)

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Services\Progress;
 
 use App\Models\WowQuest;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,7 +33,7 @@ class QuestProgressAggregator
     {
         return WowQuest::query() // @phpstan-ignore return.type
             ->where('is_active', true)
-            ->where(fn (\Illuminate\Contracts\Database\Query\Builder $builder) => $builder->whereNull('faction')->orWhere('faction', $faction))
+            ->where(fn (Builder $builder) => $builder->whereNull('faction')->orWhere('faction', $faction))
             ->get()
             ->groupBy('expansion_id');
     }

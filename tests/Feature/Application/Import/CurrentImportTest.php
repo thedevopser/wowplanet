@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Import\CurrentImport;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 beforeEach(function (): void {
     $this->currentImport = new CurrentImport;
@@ -45,7 +46,7 @@ test('the pointer survives a cache flush, which the panel can trigger mid-run', 
 test('the pointer expires on its own, so a worker killed mid-import does not block the panel forever', function (): void {
     $this->currentImport->mark('job-1', now()->getTimestamp());
 
-    $ttl = Illuminate\Support\Facades\Redis::connection('imports')->ttl('import_current');
+    $ttl = Redis::connection('imports')->ttl('import_current');
 
     expect($ttl)->toBeGreaterThan(0)
         ->and($ttl)->toBeLessThanOrEqual(CurrentImport::TTL_S);
@@ -64,7 +65,7 @@ test('nothing has been running since any time when nothing runs', function (): v
 });
 
 test('a pointer left unreadable is read as nothing running, rather than crashing the panel', function (): void {
-    Illuminate\Support\Facades\Redis::connection('imports')->set('import_current', 'ni json ni rien');
+    Redis::connection('imports')->set('import_current', 'ni json ni rien');
 
     expect($this->currentImport->jobId())->toBeNull()
         ->and($this->currentImport->startedAt())->toBeNull();

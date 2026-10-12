@@ -30,7 +30,7 @@ class RaidProgressAggregator
     private const int UNKNOWN_DIFFICULTY_ORDER = 99;
 
     // @pest-mutate-ignore
-    private const DIFFICULTY_ORDER = [
+    private const array DIFFICULTY_ORDER = [
         'LFR' => 0,
         'NORMAL' => 1,
         'HEROIC' => 2,
@@ -38,7 +38,7 @@ class RaidProgressAggregator
     ];
 
     // @pest-mutate-ignore
-    private const DIFFICULTY_LABELS = [
+    private const array DIFFICULTY_LABELS = [
         'LFR' => 'LFR',
         'NORMAL' => 'Normal',
         'HEROIC' => 'Héroïque',

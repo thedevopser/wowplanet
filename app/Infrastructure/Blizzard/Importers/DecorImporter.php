@@ -9,6 +9,7 @@ use App\Infrastructure\Blizzard\CollectionSearchSweep;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\MediaSearchSweep;
 use App\Infrastructure\Blizzard\MediaSearchTag;
+use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\SearchIdWindow;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomyReader;
@@ -35,12 +36,12 @@ final readonly class DecorImporter
 {
     use ImportsFromBlizzardApi;
 
-    private const INDEX_ENDPOINT = 'data/wow/decor/index';
+    private const string INDEX_ENDPOINT = 'data/wow/decor/index';
 
     /** Les fenêtres de media pèsent environ 1,2 Mo : elles se traitent par petits lots. */
-    private const MEDIA_WINDOW_BATCH = 10;
+    private const int MEDIA_WINDOW_BATCH = 10;
 
-    private const SAVE_CHUNK = 500;
+    private const int SAVE_CHUNK = 500;
 
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
@@ -81,7 +82,7 @@ final readonly class DecorImporter
         $this->info('Fetching decor index from Blizzard API...');
 
         $index = $this->fetchWithRetry(self::INDEX_ENDPOINT);
-        if (! $index instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $index instanceof ResponsePayload) {
             $this->info('  ERROR: decor index unavailable, aborting import (catalog left untouched).');
 
             return [];

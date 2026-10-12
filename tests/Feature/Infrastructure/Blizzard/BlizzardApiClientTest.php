@@ -86,7 +86,7 @@ test('get uses custom namespace when provided', function (): void {
         new Response(200, [], json_encode(['data' => true])),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -136,7 +136,7 @@ test('getWithUserToken uses provided user token', function (): void {
         new Response(200, [], json_encode(['characters' => []])),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -184,7 +184,7 @@ test('getAsync sends request with bearer token and default namespace', function 
         new Response(200, [], json_encode(['async' => true])),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -205,7 +205,7 @@ test('getAsync uses custom namespace when provided', function (): void {
         new Response(200, [], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -223,7 +223,7 @@ test('getAsync preserves query parameters embedded in the endpoint', function ()
         new Response(200, [], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -246,7 +246,7 @@ test('get preserves query parameters embedded in the endpoint', function (): voi
         new Response(200, [], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -492,7 +492,7 @@ test('currentBuild probes a lightweight index when nothing has been fetched yet'
         new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -509,7 +509,7 @@ test('currentBuild reuses the build already seen rather than spending a request'
         new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -530,7 +530,7 @@ test('a conditional request sends If-Modified-Since when a date is known', funct
         new Response(200, ['Last-Modified' => 'Wed, 10 Sep 2026 08:00:00 GMT'], '{"id":1}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -548,7 +548,7 @@ test('a conditional request without a known date sends no If-Modified-Since', fu
     $history = [];
     $mockHandler = new MockHandler([new Response(200, [], '{"id":1}')]);
     $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(\GuzzleHttp\Middleware::history($history));
+    $handlerStack->push(Middleware::history($history));
 
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
@@ -582,11 +582,11 @@ test('a 304 means unchanged, not an error', function (): void {
 test('a mythic season read back from the cache is still an integer', function (): void {
     Cache::put('blizzard_current_m_plus_season', '14', 3600);
 
-    expect((new BlizzardApiClient(new Client))->getCurrentMythicSeasonId())->toBe(14);
+    expect(new BlizzardApiClient(new Client)->getCurrentMythicSeasonId())->toBe(14);
 });
 
 test('a pvp season read back from the cache is still an integer', function (): void {
     Cache::put('blizzard_current_pvp_season', '40', 3600);
 
-    expect((new BlizzardApiClient(new Client))->getCurrentPvpSeasonId())->toBe(40);
+    expect(new BlizzardApiClient(new Client)->getCurrentPvpSeasonId())->toBe(40);
 });

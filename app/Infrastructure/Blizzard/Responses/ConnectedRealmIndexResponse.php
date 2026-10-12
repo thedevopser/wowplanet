@@ -10,7 +10,7 @@ namespace App\Infrastructure\Blizzard\Responses;
  */
 final readonly class ConnectedRealmIndexResponse
 {
-    private const CONNECTED_REALM_LINK = '~/connected-realm/(\d+)~';
+    private const string CONNECTED_REALM_LINK = '~/connected-realm/(\d+)~';
 
     public function __construct(public ?int $firstConnectedRealmId) {}
 

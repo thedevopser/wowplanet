@@ -2,17 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Application\DTOs\AppearanceImportProgress;
 use App\Application\Import\CurrentImport;
 use App\Application\Import\ImportControl;
 use App\Application\Import\ImportLog;
 use App\Application\Import\ImportPipeline;
 use App\Application\Import\ImportProgressStore;
 use App\Application\Import\ImportRequest;
+use App\Application\Import\ImportRun;
 use App\Application\Import\ImportRunState;
 use App\Application\Import\ImportSignal;
 use App\Application\Import\ImportStage;
 use App\Application\Import\ImportStepStatus;
+use App\Application\Import\ImportWait;
 use App\Application\Import\ImportWaitReason;
+use App\Application\Import\ImportWaitReporter;
 use App\Application\Services\DatabaseQueryService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\BlizzardBatchImporter;
@@ -23,6 +27,7 @@ use App\Models\WowImportState;
 use App\Models\WowPet;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     seedCollectionTaxonomy();
@@ -428,7 +433,7 @@ test('a cancelled import closes its history entry as cancelled', function (): vo
 
 test('an import with nothing left to do at its start is still closed in the history, with its volumes', function (): void {
     WowImportState::query()->create(['entity' => 'pets', 'build' => '12.1.0_68914', 'imported_at' => now()]);
-    App\Models\WowPet::factory()->count(2)->create();
+    WowPet::factory()->count(2)->create();
 
     pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console');
 
@@ -471,7 +476,7 @@ test('an abandoned pause says after how long the lock was released', function ()
 
 test('a wardrobe pass that hands back before its end says how far it got and what it waits for', function (int $offset, string $percent): void {
     $this->importerMock->shouldReceive('importAppearanceChunk')->once()
-        ->andReturn(new App\Application\DTOs\AppearanceImportProgress(done: false, offset: $offset, total: 3, secondsUntilBudget: 90));
+        ->andReturn(new AppearanceImportProgress(done: false, offset: $offset, total: 3, secondsUntilBudget: 90));
 
     $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Appearances], force: true, trigger: 'console'), false, null);
 
@@ -486,19 +491,19 @@ test('a wardrobe pass that hands back before its end says how far it got and wha
 test('the waits the API client reports reach the tracking during a pass, and only during it', function (): void {
     $seenDuringPass = null;
     $this->importerMock->shouldReceive('importPets')->once()->andReturnUsing(function () use (&$seenDuringPass): void {
-        resolve(App\Application\Import\ImportWaitReporter::class)->waiting(App\Application\Import\ImportWait::batch(5));
+        resolve(ImportWaitReporter::class)->waiting(ImportWait::batch(5));
         $seenDuringPass = (new ImportProgressStore)->find('job-1')?->wait;
     });
 
     pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: true, trigger: 'console'), false, null);
-    resolve(App\Application\Import\ImportWaitReporter::class)->waiting(App\Application\Import\ImportWait::batch(7));
+    resolve(ImportWaitReporter::class)->waiting(ImportWait::batch(7));
 
     expect($seenDuringPass?->count)->toBe(5)
         ->and((new ImportProgressStore)->find('job-1')?->wait)->toBeNull();
 });
 
 test('a cancelled import is done even with stages left', function (): void {
-    $importRun = App\Application\Import\ImportRun::start('job-1', [ImportStage::Pets], 1_000)->cancelled(at: 1_100);
+    $importRun = ImportRun::start('job-1', [ImportStage::Pets], 1_000)->cancelled(at: 1_100);
 
     expect(pipeline()->isDone($importRun))->toBeTrue();
 });
@@ -512,7 +517,7 @@ function sidebarPets(): int
     return resolve(DatabaseQueryService::class)->cachedCounts()['pets'];
 }
 
-function importPetsWritesOne(\Mockery\MockInterface $mock): void
+function importPetsWritesOne(MockInterface $mock): void
 {
     $mock->shouldReceive('importPets')->once()->andReturnUsing(function (): void {
         WowPet::factory()->create(['is_active' => true]);

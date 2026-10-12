@@ -20,9 +20,9 @@ use Monolog\LogRecord;
 final class DatabaseErrorHandler extends AbstractProcessingHandler
 {
     /** Au-delà, un diagnostic n'a plus besoin de l'entrée : c'est la cause récente qui compte. */
-    public const RETAINED_ENTRIES = 200;
+    public const int RETAINED_ENTRIES = 200;
 
-    public const MESSAGE_LENGTH = 2000;
+    public const int MESSAGE_LENGTH = 2000;
 
     private const string TABLE = 'application_errors';
 

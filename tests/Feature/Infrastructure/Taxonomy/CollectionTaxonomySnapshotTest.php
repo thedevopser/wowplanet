@@ -42,7 +42,7 @@ test('it reads entries grouped by entity and indexed by entry id', function (): 
         decor,2113,Logis,Artisanat,false
         CSV);
 
-    $entries = (new CollectionTaxonomySnapshot($this->snapshotPath))->read();
+    $entries = new CollectionTaxonomySnapshot($this->snapshotPath)->read();
 
     expect(array_keys($entries))->toBe(['mount', 'pet', 'decor'])
         ->and(array_keys($entries['mount']))->toBe([6, 74])
@@ -58,7 +58,7 @@ test('an empty field reads as a deliberately unplaced entry', function (): void 
         pet,1234,,,true
         CSV);
 
-    $entry = (new CollectionTaxonomySnapshot($this->snapshotPath))->read()['pet'][1234];
+    $entry = new CollectionTaxonomySnapshot($this->snapshotPath)->read()['pet'][1234];
 
     expect($entry->category)->toBeNull()
         ->and($entry->source)->toBeNull();
@@ -89,14 +89,14 @@ test('entriesFor returns the slice of a single entity', function (): void {
 });
 
 test('a missing snapshot is reported rather than read as empty', function (): void {
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySourceUnavailableException::class);
 });
 
 test('a snapshot holding nothing but its header is reported too', function (): void {
     snapshotWrite($this->snapshotPath, "entity,entry_id,category,source,obtainable\n");
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySourceUnavailableException::class);
 });
 
@@ -106,7 +106,7 @@ test('an unexpected header is refused', function (): void {
         mount,6,Classic,Vendeur
         CSV);
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySnapshotMalformedException::class, 'En-tête');
 });
 
@@ -116,7 +116,7 @@ test('an unknown entity is refused', function (): void {
         toy,6,Classic,Vendeur,true
         CSV);
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySnapshotMalformedException::class, 'toy');
 });
 
@@ -126,7 +126,7 @@ test('a non-integer entry id is refused', function (): void {
         mount,six,Classic,Vendeur,true
         CSV);
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySnapshotMalformedException::class, 'six');
 });
 
@@ -136,7 +136,7 @@ test('an obtainable flag that is neither true nor false is refused', function ()
         mount,6,Classic,Vendeur,peut-être
         CSV);
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySnapshotMalformedException::class, 'peut-être');
 });
 
@@ -146,12 +146,12 @@ test('a row with a wrong column count is refused', function (): void {
         mount,6,Classic,Vendeur
         CSV);
 
-    expect(fn (): array => (new CollectionTaxonomySnapshot($this->snapshotPath))->read())
+    expect(fn (): array => new CollectionTaxonomySnapshot($this->snapshotPath)->read())
         ->toThrow(TaxonomySnapshotMalformedException::class);
 });
 
 test('it writes the header, one line per entry, and reports the count', function (): void {
-    $written = (new CollectionTaxonomySnapshot($this->snapshotPath))->write([
+    $written = new CollectionTaxonomySnapshot($this->snapshotPath)->write([
         'mount' => [6 => new TaxonomyEntry('Classic', 'Vendeur', true)],
         'pet' => [39 => new TaxonomyEntry(null, null, true)],
         'decor' => [2113 => new TaxonomyEntry('Logis', 'Artisanat', false)],
@@ -168,7 +168,7 @@ test('it writes the header, one line per entry, and reports the count', function
 });
 
 test('writing orders entities by their declaration and entries by identifier', function (): void {
-    (new CollectionTaxonomySnapshot($this->snapshotPath))->write([
+    new CollectionTaxonomySnapshot($this->snapshotPath)->write([
         'decor' => [90 => new TaxonomyEntry('Logis', null, true), 12 => new TaxonomyEntry('Logis', null, true)],
         'mount' => [200 => new TaxonomyEntry('Classic', null, true), 7 => new TaxonomyEntry('Classic', null, true)],
     ]);
@@ -184,7 +184,7 @@ test('writing orders entities by their declaration and entries by identifier', f
 });
 
 test('writing creates the directory when it does not exist yet', function (): void {
-    (new CollectionTaxonomySnapshot($this->snapshotPath))->write([
+    new CollectionTaxonomySnapshot($this->snapshotPath)->write([
         'mount' => [6 => new TaxonomyEntry('Classic', 'Vendeur', true)],
     ]);
 
@@ -192,7 +192,7 @@ test('writing creates the directory when it does not exist yet', function (): vo
 });
 
 test('writing an unknown entity key is refused', function (): void {
-    expect(fn (): int => (new CollectionTaxonomySnapshot($this->snapshotPath))->write([
+    expect(fn (): int => new CollectionTaxonomySnapshot($this->snapshotPath)->write([
         'toy' => [6 => new TaxonomyEntry('Classic', 'Vendeur', true)],
     ]))->toThrow(TaxonomySnapshotMalformedException::class, 'toy');
 });
@@ -200,5 +200,5 @@ test('writing an unknown entity key is refused', function (): void {
 test('a blank line between two entries is passed over rather than refused', function (): void {
     snapshotWrite($this->snapshotPath, "entity,entry_id,category,source,obtainable\nmount,6,Classic,Vendeur,true\n\nmount,7,Classic,Vendeur,true\n");
 
-    expect(array_keys((new CollectionTaxonomySnapshot($this->snapshotPath))->read()['mount']))->toBe([6, 7]);
+    expect(array_keys(new CollectionTaxonomySnapshot($this->snapshotPath)->read()['mount']))->toBe([6, 7]);
 });

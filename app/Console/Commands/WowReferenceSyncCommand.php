@@ -14,6 +14,8 @@ use App\Infrastructure\Reference\ReferenceStore;
 use App\Infrastructure\Reference\ReferenceTable;
 use App\Infrastructure\Reference\WagoClient;
 use App\Models\WowReferenceDownload;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,16 +29,14 @@ use Illuminate\Support\Facades\DB;
  * route laisse le socle précédent intact, un socle à moitié chargé étant pire qu'un
  * socle périmé.
  */
+#[Description('Charge les tables de référence DB2 depuis wago.tools')]
+#[Signature('app:wow-reference-sync {--table= : Synchroniser une seule table DB2}')]
 class WowReferenceSyncCommand extends Command
 {
-    protected $signature = 'app:wow-reference-sync {--table= : Synchroniser une seule table DB2}';
-
-    protected $description = 'Charge les tables de référence DB2 depuis wago.tools';
-
     /**
      * En deçà de cette part du dernier chargement, une source est tenue pour tronquée.
      */
-    private const MIN_RETAINED_RATIO = 0.5;
+    private const float MIN_RETAINED_RATIO = 0.5;
 
     public function handle(
         WagoClient $wagoClient,

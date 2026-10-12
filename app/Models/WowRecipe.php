@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowRecipeFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,27 +25,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
  */
+#[Fillable([
+    'id',
+    'name_fr',
+    'profession_id',
+    'expansion_id',
+    'category_name',
+    'faction',
+    'wowhead_spell_id',
+    'is_active',
+])]
+#[Table(name: 'wow_recipes', key: 'id')]
+#[WithoutIncrementing]
 class WowRecipe extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowRecipeFactory> */
+    /** @use HasFactory<WowRecipeFactory> */
     use HasFactory;
-
-    protected $table = 'wow_recipes';
-
-    protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
-    protected $fillable = [
-        'id',
-        'name_fr',
-        'profession_id',
-        'expansion_id',
-        'category_name',
-        'faction',
-        'wowhead_spell_id',
-        'is_active',
-    ];
 
     /**
      * @return array<string, string>

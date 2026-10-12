@@ -7,6 +7,7 @@ use App\Application\Services\CharacterProfileService;
 use App\Application\Services\PvpLeaderboardService;
 use App\Application\Services\UserCharacterService;
 use App\Models\WowMount;
+use Mockery\Expectation;
 
 // Freezes what search engines see on every indexed page type. A phase of the UX overhaul
 // that changes one of these values must say why in its story, then update this file.
@@ -21,12 +22,12 @@ function stubSeoDependencies(): void
     WowMount::factory()->count(3)->create(['category' => 'Volantes', 'is_active' => true]);
 
     $auth = test()->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $profiles = test()->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(new CharacterProfileDTO(
         name: 'Thrall',
@@ -45,10 +46,10 @@ function stubSeoDependencies(): void
     ));
 
     $leaderboard = test()->mock(PvpLeaderboardService::class);
-    /** @var \Mockery\Expectation $bracketsExp */
+    /** @var Expectation $bracketsExp */
     $bracketsExp = $leaderboard->shouldReceive('availableBrackets');
     $bracketsExp->andReturn([]);
-    /** @var \Mockery\Expectation $boardExp */
+    /** @var Expectation $boardExp */
     $boardExp = $leaderboard->shouldReceive('leaderboard');
     $boardExp->andReturn([
         'bracket' => '3v3',
@@ -153,3 +154,77 @@ test('database sitemap keeps its urls', function (): void {
         seoBaseUrl().'/base-de-donnees/montures/volantes',
     ]);
 });
+
+const SITEMAP_FROZEN_AT = '2026-10-12T08:00:00+00:00';
+
+const SITEMAP_URLSET_OPENING = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">';
+
+// Indentation is the only thing a crawler does not read: everything else is compared.
+function sitemapDocument(string $path): string
+{
+    return trim((string) preg_replace('/>\s+</', '><', (string) test()->get($path)->getContent()));
+}
+
+function sitemapUrl(string $path, string $changeFrequency, string $priority): string
+{
+    return sprintf(
+        '<url><loc>%s</loc><lastmod>%s</lastmod><changefreq>%s</changefreq><priority>%s</priority></url>',
+        seoBaseUrl().$path,
+        SITEMAP_FROZEN_AT,
+        $changeFrequency,
+        $priority,
+    );
+}
+
+function sitemapIndexEntry(string $path): string
+{
+    return sprintf('<sitemap><loc>%s</loc><lastmod>%s</lastmod></sitemap>', seoBaseUrl().$path, SITEMAP_FROZEN_AT);
+}
+
+test('sitemap index keeps its whole document', function (): void {
+    $this->travelTo(SITEMAP_FROZEN_AT);
+
+    expect(sitemapDocument('/sitemap.xml'))->toBe(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        .'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        .sitemapIndexEntry('/sitemap-pages.xml')
+        .sitemapIndexEntry('/sitemap-database.xml')
+        .'</sitemapindex>'
+    );
+});
+
+test('pages sitemap keeps its whole document', function (): void {
+    $this->travelTo(SITEMAP_FROZEN_AT);
+
+    expect(sitemapDocument('/sitemap-pages.xml'))->toBe(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        .SITEMAP_URLSET_OPENING
+        .sitemapUrl('', 'weekly', '1.0')
+        .sitemapUrl('/privacy', 'yearly', '0.3')
+        .sitemapUrl('/cgu', 'yearly', '0.3')
+        .sitemapUrl('/faq', 'yearly', '0.3')
+        .sitemapUrl('/addons', 'yearly', '0.3')
+        .sitemapUrl('/classements-pvp', 'daily', '0.6')
+        .'</urlset>'
+    );
+});
+
+test('database sitemap keeps its whole document', function (): void {
+    $this->travelTo(SITEMAP_FROZEN_AT);
+    WowMount::factory()->count(3)->create(['category' => 'Volantes', 'is_active' => true]);
+
+    $paths = ['', '/montures', '/hauts-faits', '/quetes', '/mascottes', '/decorations', '/garde-robe', '/professions', '/montures/volantes'];
+
+    expect(sitemapDocument('/sitemap-database.xml'))->toBe(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        .SITEMAP_URLSET_OPENING
+        .implode('', array_map(static fn (string $path): string => sitemapUrl('/base-de-donnees'.$path, 'weekly', '0.7'), $paths))
+        .'</urlset>'
+    );
+});
+
+test('sitemaps keep their status and content type', function (string $path): void {
+    $this->get($path)
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/xml; charset=UTF-8');
+})->with(['/sitemap.xml', '/sitemap-pages.xml', '/sitemap-database.xml']);

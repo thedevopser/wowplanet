@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\CharacterFavoriteFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,15 +18,14 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'bnet_user_id',
+    'realm_slug',
+    'character_name',
+    'sort_order',
+])]
 class CharacterFavorite extends Model
 {
-    /** @use HasFactory<\Database\Factories\CharacterFavoriteFactory> */
+    /** @use HasFactory<CharacterFavoriteFactory> */
     use HasFactory;
-
-    protected $fillable = [
-        'bnet_user_id',
-        'realm_slug',
-        'character_name',
-        'sort_order',
-    ];
 }

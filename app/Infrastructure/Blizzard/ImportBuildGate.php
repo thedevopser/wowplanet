@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Blizzard;
 
 use App\Models\WowImportState;
+use Illuminate\Support\Facades\Date;
 
 /**
  * Décide s'il y a lieu de réimporter une entité, en comparant le build servi par
@@ -26,7 +27,7 @@ final class ImportBuildGate
 
     public function remember(string $entity, string $build, ?string $lastModified = null): void
     {
-        WowImportState::query()->updateOrCreate(['entity' => $entity], ['build' => $build, 'last_modified' => $lastModified, 'imported_at' => \Illuminate\Support\Facades\Date::now()]);
+        WowImportState::query()->updateOrCreate(['entity' => $entity], ['build' => $build, 'last_modified' => $lastModified, 'imported_at' => Date::now()]);
     }
 
     public function lastModifiedFor(string $entity): ?string

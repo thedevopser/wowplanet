@@ -16,6 +16,7 @@ use App\Models\WowPet;
 use App\Models\WowProfession;
 use App\Models\WowQuest;
 use App\Models\WowRecipe;
+use Carbon\Carbon;
 
 // ─── WowMount ────────────────────────────────────────────────
 
@@ -117,5 +118,5 @@ test('CharacterVisit factory creates valid instance', function (): void {
         ->and($visit->display_realm)->toBeString()
         ->and($visit->class_name)->toBeString()
         ->and($visit->level)->toBe(80)
-        ->and($visit->last_visited_at)->toBeInstanceOf(\Carbon\Carbon::class);
+        ->and($visit->last_visited_at)->toBeInstanceOf(Carbon::class);
 });

@@ -7,6 +7,7 @@ use App\Application\Services\CharacterProfileService;
 use App\Application\Services\CrossCharacterService;
 use App\Application\Services\UserCharacterService;
 use Inertia\Testing\AssertableInertia as Assert;
+use Mockery\Expectation;
 
 function characterPageDTO(): CharacterProfileDTO
 {
@@ -45,7 +46,7 @@ test('show returns character profile', function (): void {
     );
 
     $mock = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getProfile');
     $exp->once()->with('hyjal', 'thrall')->andReturn($characterProfileDTO);
 
@@ -62,7 +63,7 @@ test('show returns character profile', function (): void {
 
 test('show returns 404 when character not found', function (): void {
     $mock = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getProfile');
     $exp->once()->with('hyjal', 'unknown')->andThrow(new Exception('Character not found'));
 
@@ -79,12 +80,12 @@ test('page redirects to lowercase url', function (): void {
 
 test('page renders Inertia component with character and meta', function (): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->once()->with('hyjal', 'thrall')->andReturn(characterPageDTO());
 
@@ -102,12 +103,12 @@ test('page renders Inertia component with character and meta', function (): void
 
 test('page returns 404 when profile cannot be fetched', function (): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->once()->andThrow(new Exception('Blizzard API error'));
 
@@ -122,18 +123,18 @@ test('page returns 404 when profile cannot be fetched', function (): void {
 
 test('page tells whether the character belongs to the signed-in user', function (bool $owned): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnTrue();
 
     $cross = $this->mock(CrossCharacterService::class);
     $cross->shouldIgnoreMissing();
-    /** @var \Mockery\Expectation $ownsExp */
+    /** @var Expectation $ownsExp */
     $ownsExp = $auth->shouldReceive('ownsCharacter');
     $ownsExp->once()->with('hyjal', 'thrall')->andReturn($owned);
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(characterPageDTO());
 
@@ -144,14 +145,14 @@ test('page tells whether the character belongs to the signed-in user', function 
 
 test('page never marks a character as owned for a visitor', function (): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $auth->shouldNotReceive('ownsCharacter');
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(characterPageDTO());
 
@@ -161,20 +162,20 @@ test('page never marks a character as owned for a visitor', function (): void {
 
 test('page merges only an owned character into the account cross-character data', function (bool $owned): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnTrue();
-    /** @var \Mockery\Expectation $ownsExp */
+    /** @var Expectation $ownsExp */
     $ownsExp = $auth->shouldReceive('ownsCharacter');
     $ownsExp->andReturn($owned);
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(characterPageDTO());
 
     $cross = $this->mock(CrossCharacterService::class);
-    /** @var \Mockery\Expectation $mergeExp */
+    /** @var Expectation $mergeExp */
     $mergeExp = $cross->shouldReceive('mergeCurrentCharacter');
     $mergeExp->times($owned ? 1 : 0);
 
@@ -183,20 +184,20 @@ test('page merges only an owned character into the account cross-character data'
 
 test('show merges only an owned character into the account cross-character data', function (bool $owned): void {
     $auth = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnTrue();
-    /** @var \Mockery\Expectation $ownsExp */
+    /** @var Expectation $ownsExp */
     $ownsExp = $auth->shouldReceive('ownsCharacter');
     $ownsExp->with('hyjal', 'thrall')->andReturn($owned);
 
     $profiles = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(characterPageDTO());
 
     $cross = $this->mock(CrossCharacterService::class);
-    /** @var \Mockery\Expectation $mergeExp */
+    /** @var Expectation $mergeExp */
     $mergeExp = $cross->shouldReceive('mergeCurrentCharacter');
     $mergeExp->times($owned ? 1 : 0);
 
@@ -206,12 +207,12 @@ test('show merges only an owned character into the account cross-character data'
 function stubVisitorSheet(): void
 {
     $auth = test()->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $profiles = test()->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(characterPageDTO());
 }

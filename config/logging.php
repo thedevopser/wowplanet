@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Infrastructure\Logging\DatabaseErrorHandler;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;

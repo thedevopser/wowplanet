@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Domain\Services\ScoreCalculator;
 use App\Infrastructure\Coverage\CrapReport;
 use App\Infrastructure\Coverage\MethodRisk;
 
 function methodRisk(string $methodName, float $crap): MethodRisk
 {
-    return new MethodRisk(\App\Domain\Services\ScoreCalculator::class, $methodName, 10, 0.0, $crap);
+    return new MethodRisk(ScoreCalculator::class, $methodName, 10, 0.0, $crap);
 }
 
 test('only the methods above the threshold are reported, worst first', function (): void {

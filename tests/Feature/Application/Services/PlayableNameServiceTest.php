@@ -5,19 +5,21 @@ declare(strict_types=1);
 use App\Application\Services\PlayableNameService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use Illuminate\Support\Facades\Cache;
+use Mockery\Expectation;
+use Mockery\MockInterface;
 
 /**
  * @param  array<string, array<string, mixed>>  $responses  "endpoint|locale" => corps
  */
-function mockPlayableIndexes(array $responses, array &$calls = []): \Mockery\MockInterface
+function mockPlayableIndexes(array $responses, array &$calls = []): MockInterface
 {
     $mock = test()->mock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $regionExp */
+    /** @var Expectation $regionExp */
     $regionExp = $mock->shouldReceive('getRegion');
     $regionExp->andReturn('eu');
 
-    /** @var \Mockery\Expectation $getExp */
+    /** @var Expectation $getExp */
     $getExp = $mock->shouldReceive('get');
     $getExp->andReturnUsing(function (string $endpoint, array $query = []) use ($responses, &$calls): array {
         $locale = is_string($query['locale'] ?? null) ? $query['locale'] : 'fr_FR';

@@ -7,14 +7,17 @@ namespace App\Infrastructure\Blizzard\Concerns;
 use App\Application\Import\ImportWait;
 use App\Application\Import\ImportWaitReporter;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\PromiseSettler;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Promise\EachPromise;
+use GuzzleHttp\Exception\ResponseException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @phpstan-import-type SettledRequest from PromiseSettler
+ */
 trait ImportsFromBlizzardApi
 {
     private const RATE_LIMIT_WAIT_S = 10;
@@ -103,7 +106,6 @@ trait ImportsFromBlizzardApi
 
             $failed = [];
 
-            /** @var array<string|int, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
             $settled = $this->inFlight(count($pending), fn (): array => $this->settlePool($pending, $namespace, $currentConcurrency));
 
             foreach ($settled as $key => $result) {
@@ -207,12 +209,10 @@ trait ImportsFromBlizzardApi
      *
      * @param  array<string|int, string>  $endpoints
      * @param  positive-int  $concurrency
-     * @return array<string|int, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}>
+     * @return array<string|int, SettledRequest>
      */
     private function settlePool(array $endpoints, string $namespace, int $concurrency): array
     {
-        $settled = [];
-
         $promises = function () use ($endpoints, $namespace): \Generator {
             foreach ($endpoints as $key => $endpoint) {
                 yield $key => $this->blizzardApiClient->getAsync($endpoint, [
@@ -221,20 +221,7 @@ trait ImportsFromBlizzardApi
             }
         };
 
-        $eachPromise = new EachPromise($promises(), [
-            'concurrency' => $concurrency,
-            'fulfilled' => function (ResponseInterface $response, string|int $key) use (&$settled): void {
-                $settled[$key] = ['state' => 'fulfilled', 'value' => $response];
-            },
-            // A Guzzle rejection reason is untyped: it is narrowed to a Throwable right here.
-            'rejected' => function (mixed $reason, string|int $key) use (&$settled): void {
-                $settled[$key] = ['state' => 'rejected', 'reason' => $reason instanceof \Throwable ? $reason : new \RuntimeException('unknown rejection')];
-            },
-        ]);
-
-        $eachPromise->promise()->wait();
-
-        return $settled;
+        return PromiseSettler::settle($promises(), $concurrency);
     }
 
     /**
@@ -263,7 +250,7 @@ trait ImportsFromBlizzardApi
      */
     private function extractStatusCode(?\Throwable $throwable): int
     {
-        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof \Psr\Http\Message\ResponseInterface) {
+        if ($throwable instanceof ResponseException) {
             return $throwable->getResponse()->getStatusCode();
         }
 
@@ -284,7 +271,7 @@ trait ImportsFromBlizzardApi
 
     private function isNotFoundError(?\Throwable $throwable): bool
     {
-        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof \Psr\Http\Message\ResponseInterface) {
+        if ($throwable instanceof ResponseException) {
             return $throwable->getResponse()->getStatusCode() === 404;
         }
 

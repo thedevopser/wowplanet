@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Infrastructure\Logging\AdminAudit;
+use App\Models\ApplicationError;
 
 test('an administrator action is written to the audit trail with who did it', function (): void {
     resolve(AdminAudit::class)->record('Import steered from the admin panel', 'admin-1', ['jobId' => 'job-1']);
@@ -28,7 +29,7 @@ test('an audit trail that cannot be written never undoes the action, and the fai
     expect(fn () => resolve(AdminAudit::class)->record('Import steered from the admin panel', 'admin-1', ['jobId' => 'job-1']))
         ->not->toThrow(Throwable::class);
 
-    expect(App\Models\ApplicationError::query()->sole()->message)->toBe('Admin audit trail could not be written');
+    expect(ApplicationError::query()->sole()->message)->toBe('Admin audit trail could not be written');
 
     rmdir($unwritable);
 });

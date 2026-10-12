@@ -5,10 +5,11 @@ declare(strict_types=1);
 use App\Application\Services\CharacterSeoService;
 use App\Models\WowMount;
 use Inertia\Testing\AssertableInertia as Assert;
+use Mockery\Expectation;
 
 test('home renders HomePage via inertia with meta', function (): void {
     $mock = $this->mock(CharacterSeoService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getHomeMeta');
     $exp->once()->andReturn([
         'title' => 'WowPlanet',
@@ -42,7 +43,7 @@ test('unknown url renders NotFoundPage with 404 status', function (): void {
 
 test('sitemap returns xml', function (): void {
     $mock = $this->mock(CharacterSeoService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('generateSitemapIndex');
     $exp->once()->andReturn('<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>');
 

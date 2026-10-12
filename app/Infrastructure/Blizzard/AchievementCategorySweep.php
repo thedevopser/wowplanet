@@ -6,6 +6,7 @@ namespace App\Infrastructure\Blizzard;
 
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\AchievementCategoryDocument;
+use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 
 /**
  * Récupération de la hiérarchie complète des catégories de hauts faits.
@@ -22,9 +23,9 @@ final readonly class AchievementCategorySweep
 {
     use ImportsFromBlizzardApi;
 
-    private const INDEX_ENDPOINT = 'data/wow/achievement-category/index';
+    private const string INDEX_ENDPOINT = 'data/wow/achievement-category/index';
 
-    private const CATEGORY_ENDPOINT = 'data/wow/achievement-category/';
+    private const string CATEGORY_ENDPOINT = 'data/wow/achievement-category/';
 
     public function __construct(BlizzardApiClient $blizzardApiClient)
     {
@@ -76,7 +77,7 @@ final readonly class AchievementCategorySweep
         $this->info('Fetching achievement category hierarchy from Blizzard API...');
 
         $decoded = $this->fetchWithRetry(self::INDEX_ENDPOINT);
-        if (! $decoded instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $decoded instanceof ResponsePayload) {
             $this->info('  ERROR: category index unavailable, aborting import (catalog left untouched).');
 
             return [];

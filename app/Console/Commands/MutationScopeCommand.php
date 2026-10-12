@@ -8,12 +8,17 @@ use App\Infrastructure\Mutation\Exceptions\GitCommandFailedException;
 use App\Infrastructure\Mutation\MutationPerimeter;
 use App\Infrastructure\Mutation\MutationScope;
 use FilesystemIterator;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Process;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
 
+#[Description('Plan the mutation run, one class per line followed by its dedicated tests: the whole perimeter, or the part a branch touches')]
+#[Signature('mutation:scope
+        {--base= : Git reference the branch is compared to; without it, the whole perimeter is listed}')]
 class MutationScopeCommand extends Command
 {
     private const string PERIMETER_FILE = 'mutation-perimeter.txt';
@@ -22,11 +27,6 @@ class MutationScopeCommand extends Command
 
     // GitHub sends the null object id as the previous commit of a branch's first push.
     private const string NULL_COMMIT = '0000000000000000000000000000000000000000';
-
-    protected $signature = 'mutation:scope
-        {--base= : Git reference the branch is compared to; without it, the whole perimeter is listed}';
-
-    protected $description = 'Plan the mutation run, one class per line followed by its dedicated tests: the whole perimeter, or the part a branch touches';
 
     public function handle(): int
     {

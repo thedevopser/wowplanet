@@ -6,18 +6,19 @@ use App\Infrastructure\Blizzard\BlizzardApiClient;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Cache;
+use Mockery\Expectation;
 
 test('show returns talent data for character', function (): void {
     // Pre-cache the spell icon so the controller does not attempt getAsync
-    \Illuminate\Support\Facades\Cache::put('spell_icon:100', 'https://render.worldofwarcraft.com/eu/icons/56/charge.jpg', 60);
+    Cache::put('spell_icon:100', 'https://render.worldofwarcraft.com/eu/icons/56/charge.jpg', 60);
     // Ensure clean talent tree cache
-    \Illuminate\Support\Facades\Cache::forget('talent_tree:v2:786:72');
-    \Illuminate\Support\Facades\Cache::forget('playable_spec:72');
+    Cache::forget('talent_tree:v2:786:72');
+    Cache::forget('playable_spec:72');
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
     // Specializations endpoint
-    /** @var \Mockery\Expectation $specExp */
+    /** @var Expectation $specExp */
     $specExp = $mock->shouldReceive('get');
     $specExp->once()
         ->with('profile/wow/character/hyjal/thrall/specializations', [])
@@ -40,11 +41,11 @@ test('show returns talent data for character', function (): void {
         ]);
 
     // Playable specialization (for talentTreeId resolution)
-    /** @var \Mockery\Expectation $regionExp */
+    /** @var Expectation $regionExp */
     $regionExp = $mock->shouldReceive('getRegion');
     $regionExp->andReturn('eu');
 
-    /** @var \Mockery\Expectation $playableExp */
+    /** @var Expectation $playableExp */
     $playableExp = $mock->shouldReceive('get');
     $playableExp->once()
         ->with('data/wow/playable-specialization/72', ['namespace' => 'static-eu'])
@@ -53,7 +54,7 @@ test('show returns talent data for character', function (): void {
         ]);
 
     // Talent tree structure
-    /** @var \Mockery\Expectation $treeExp */
+    /** @var Expectation $treeExp */
     $treeExp = $mock->shouldReceive('get');
     $treeExp->once()
         ->with('data/wow/talent-tree/786/playable-specialization/72', ['namespace' => 'static-eu'])
@@ -93,7 +94,7 @@ test('show returns talent data for character', function (): void {
 test('show returns 404 when no active specialization', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $specExp */
+    /** @var Expectation $specExp */
     $specExp = $mock->shouldReceive('get');
     $specExp->once()
         ->with('profile/wow/character/hyjal/unknown/specializations', [])
@@ -109,7 +110,7 @@ test('show returns 404 when no active specialization', function (): void {
 test('show returns 500 on API error', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $specExp */
+    /** @var Expectation $specExp */
     $specExp = $mock->shouldReceive('get');
     $specExp->once()
         ->with('profile/wow/character/hyjal/thrall/specializations', [])

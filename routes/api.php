@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CharacterController;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Services\CrossCharacterService;
 use App\Application\Services\UserCharacterService;
+use Mockery\Expectation;
 
 test('the auth state is no longer served by a dedicated endpoint', function (): void {
     $this->getJson('/api/auth/status')->assertNotFound();
@@ -11,7 +12,7 @@ test('the auth state is no longer served by a dedicated endpoint', function (): 
 
 test('logout clears session', function (): void {
     $mock = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('logout');
     $exp->once();
 
@@ -20,7 +21,7 @@ test('logout clears session', function (): void {
 
 test('index returns 401 when not authenticated', function (): void {
     $mock = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('isAuthenticated');
     $exp->once()->andReturn(false);
 
@@ -29,7 +30,7 @@ test('index returns 401 when not authenticated', function (): void {
 
 test('class icons returns json structure', function (): void {
     $mock = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getClassIcons');
     $exp->once()->andReturn([
         1 => 'https://example.com/warrior.jpg',
@@ -57,7 +58,7 @@ test('index returns characters when authenticated', function (): void {
 test('index returns 500 when service throws exception', function (): void {
     $mock = $this->mock(UserCharacterService::class);
     $mock->shouldReceive('isAuthenticated')->once()->andReturn(true);
-    $mock->shouldReceive('getUserCharacters')->once()->andThrow(new \Exception('API timeout'));
+    $mock->shouldReceive('getUserCharacters')->once()->andThrow(new Exception('API timeout'));
 
     $this->getJson('/api/user/characters')
         ->assertStatus(500)
@@ -66,7 +67,7 @@ test('index returns 500 when service throws exception', function (): void {
 
 test('class icons returns 500 when service throws exception', function (): void {
     $mock = $this->mock(UserCharacterService::class);
-    $mock->shouldReceive('getClassIcons')->once()->andThrow(new \Exception('Cache error'));
+    $mock->shouldReceive('getClassIcons')->once()->andThrow(new Exception('Cache error'));
 
     $this->getJson('/api/class-icons')
         ->assertStatus(500);

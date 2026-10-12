@@ -12,6 +12,7 @@ use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Blizzard\ItemSearchSweep;
 use App\Infrastructure\Blizzard\Responses\ItemSearchDocument;
 use App\Infrastructure\Blizzard\Responses\MediaSearchDocument;
+use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Models\WowAppearance;
 use Illuminate\Support\Sleep;
 
@@ -37,22 +38,22 @@ final readonly class AppearanceImporter
     use ImportsFromBlizzardApi;
 
     /** Slots transmoggables exposés par l'Item Appearance API. */
-    private const API_SLOTS = [
+    private const array API_SLOTS = [
         'HEAD', 'SHOULDER', 'BODY', 'CHEST', 'WAIST', 'LEGS', 'FEET', 'WRIST', 'HAND',
         'CLOAK', 'TABARD', 'WEAPON', 'SHIELD', 'RANGED', 'TWOHWEAPON', 'WEAPONMAINHAND',
         'WEAPONOFFHAND', 'HOLDABLE',
     ];
 
     /** Alias API → vocabulaire de slots historique de la base (préserve les filtres du front). */
-    private const SLOT_ALIASES = [
+    private const array SLOT_ALIASES = [
         'BODY' => 'SHIRT',
         'WEAPONMAINHAND' => 'WEAPON',
     ];
 
     /** Fenêtres balayées ensemble : c'est la manette du pic mémoire (~1,2 Mo par fenêtre). */
-    private const DEFAULT_WINDOW_BATCH = 5;
+    private const int DEFAULT_WINDOW_BATCH = 5;
 
-    private const WRITE_CHUNK = 500;
+    private const int WRITE_CHUNK = 500;
 
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
@@ -152,7 +153,7 @@ final readonly class AppearanceImporter
                 }
 
                 $isMediaPass
-                    ? $this->resolveIcons($windows, $mediaTargets ?? [])
+                    ? $this->resolveIcons($windows, $mediaTargets)
                     : $this->sweepItemWindows($windows, $slotByAppearance);
             }
 
@@ -208,7 +209,7 @@ final readonly class AppearanceImporter
 
         foreach (self::API_SLOTS as $apiSlot) {
             $index = $this->fetchWithRetry('data/wow/item-appearance/slot/'.$apiSlot);
-            if (! $index instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+            if (! $index instanceof ResponsePayload) {
                 $failedSlots[] = $apiSlot;
 
                 continue;

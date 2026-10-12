@@ -6,6 +6,7 @@ use App\Application\Build\UpstreamBuildProbe;
 use App\Application\Build\UpstreamSource;
 use App\Models\WowUpstreamBuild;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function (): void {
@@ -55,7 +56,7 @@ test('a build already read is served from the cache without touching the upstrea
 });
 
 test('it writes down what it read, so a cache:clear does not erase what is known', function (): void {
-    \Illuminate\Support\Facades\Date::setTestNow('2026-09-21 09:12:04');
+    Date::setTestNow('2026-09-21 09:12:04');
     stubWagoBuild('12.1.0.69875');
 
     probe()->current(UpstreamSource::Wago);
@@ -67,7 +68,7 @@ test('it writes down what it read, so a cache:clear does not erase what is known
         ->and($known->outcome)->toBe('ok')
         ->and($known->checked_at->toDateTimeString())->toBe('2026-09-21 09:12:04');
 
-    \Illuminate\Support\Facades\Date::setTestNow();
+    Date::setTestNow();
 });
 
 test('an unreachable upstream yields the last known build with the date it was read', function (): void {

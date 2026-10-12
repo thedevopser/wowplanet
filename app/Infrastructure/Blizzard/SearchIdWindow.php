@@ -19,7 +19,7 @@ use InvalidArgumentException;
  */
 final class SearchIdWindow
 {
-    public const SIZE = 1000;
+    public const int SIZE = 1000;
 
     /**
      * Nombre de fenêtres couvrant les identifiants jusqu'à `$highestId` inclus.

@@ -10,6 +10,8 @@ use App\Application\Import\ImportRun;
 use App\Application\Import\ImportRunState;
 use App\Application\Import\ImportStage;
 use App\Application\Import\ImportWaitReason;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
@@ -20,12 +22,10 @@ use Illuminate\Support\Str;
  * Même chaîne et même suivi que l'import lancé depuis le panneau d'administration :
  * seule la façon d'attendre diffère, la commande dormant là où le job relâche le worker.
  */
+#[Description('Import WoW data from the Blizzard API and the reference tables')]
+#[Signature('app:wow-data-import {--type=all} {--force : Reimport even when the WoW build has not changed} {--full : Re-fetch every appearance icon instead of only the missing ones} {--limit= : Cap the number of id windows swept per pass (smoke-test)}')]
 class WowDataImportCommand extends Command
 {
-    protected $signature = 'app:wow-data-import {--type=all} {--force : Reimport even when the WoW build has not changed} {--full : Re-fetch every appearance icon instead of only the missing ones} {--limit= : Cap the number of id windows swept per pass (smoke-test)}';
-
-    protected $description = 'Import WoW data from the Blizzard API and the reference tables';
-
     public function handle(ImportPipeline $importPipeline): int
     {
         /** @var string $type */

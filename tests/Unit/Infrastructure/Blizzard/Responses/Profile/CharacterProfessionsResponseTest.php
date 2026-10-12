@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Infrastructure\Blizzard\Responses\Exceptions\MissingFieldException;
+use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfession;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfessionsResponse;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 
@@ -20,7 +21,7 @@ test('primary professions come first, then secondary ones', function (): void {
         'primaries' => [['profession' => ['id' => 171, 'name' => 'Alchemy']], ['profession' => ['id' => 202]]],
     ])->professions;
 
-    expect(array_map(fn (\App\Infrastructure\Blizzard\Responses\Profile\CharacterProfession $characterProfession): int => $characterProfession->professionId, $professions))->toBe([171, 202, 356])
+    expect(array_map(fn (CharacterProfession $characterProfession): int => $characterProfession->professionId, $professions))->toBe([171, 202, 356])
         ->and($professions[1]->professionName)->toBeNull();
 });
 

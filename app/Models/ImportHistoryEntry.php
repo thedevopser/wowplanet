@@ -4,9 +4,16 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ImportHistoryEntryFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Un import de la chaîne, tel que l'historique le garde : qui l'a lancé, comment, et
@@ -20,37 +27,29 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $trigger
  * @property string $mode
  * @property string $status
- * @property \Illuminate\Support\Carbon $started_at
- * @property \Illuminate\Support\Carbon|null $finished_at
+ * @property Carbon $started_at
+ * @property Carbon|null $finished_at
  * @property int $budget_used
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ImportHistoryStep> $steps
+ * @property-read Collection<int, ImportHistoryStep> $steps
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'job_id',
+    'trigger',
+    'mode',
+    'status',
+    'started_at',
+    'finished_at',
+    'budget_used',
+])]
+#[Table(name: 'import_history', key: 'job_id', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class ImportHistoryEntry extends Model
 {
-    /** @use HasFactory<\Database\Factories\ImportHistoryEntryFactory> */
+    /** @use HasFactory<ImportHistoryEntryFactory> */
     use HasFactory;
-
-    protected $table = 'import_history';
-
-    protected $primaryKey = 'job_id';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'job_id',
-        'trigger',
-        'mode',
-        'status',
-        'started_at',
-        'finished_at',
-        'budget_used',
-    ];
 
     /**
      * @return HasMany<ImportHistoryStep, $this>

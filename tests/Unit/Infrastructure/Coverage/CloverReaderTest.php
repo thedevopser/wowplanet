@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domain\Services\ScoreCalculator;
 use App\Infrastructure\Coverage\CloverReader;
 use App\Infrastructure\Coverage\Exceptions\UnreadableCloverException;
 use App\Infrastructure\Coverage\MethodRisk;
@@ -34,7 +35,7 @@ XML);
     $methods = CloverReader::methods($xml);
 
     expect($methods)->toHaveCount(2)
-        ->and($methods[0])->toEqual(new MethodRisk(\App\Domain\Services\ScoreCalculator::class, 'compute', 5, 100.0, 5.0))
+        ->and($methods[0])->toEqual(new MethodRisk(ScoreCalculator::class, 'compute', 5, 100.0, 5.0))
         ->and($methods[1]->methodName)->toBe('weigh')
         ->and($methods[1]->complexity)->toBe(12)
         ->and($methods[1]->crap)->toBe(42.75);

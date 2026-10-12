@@ -10,7 +10,10 @@ use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomyUpstreamUnreachableException;
 use App\Infrastructure\Taxonomy\SimpleArmoryClient;
 use App\Infrastructure\Taxonomy\SimpleArmoryTaxonomyReader;
+use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -32,14 +35,12 @@ use InvalidArgumentException;
  * Les collections demandées sont chargées dans une seule transaction : une source manquante
  * laisse la taxonomie exactement dans l'état où elle était, plutôt qu'à moitié chargée.
  */
+#[Description('Charge la taxonomie curée des montures, mascottes et décorations')]
+#[Signature('app:collection-taxonomy-sync
+        {--entity= : Synchroniser une seule collection}
+        {--upstream : Tirer la curation fraîche de SimpleArmory au lieu de lire l\'instantané}')]
 class CollectionTaxonomySyncCommand extends Command
 {
-    protected $signature = 'app:collection-taxonomy-sync
-        {--entity= : Synchroniser une seule collection}
-        {--upstream : Tirer la curation fraîche de SimpleArmory au lieu de lire l\'instantané}';
-
-    protected $description = 'Charge la taxonomie curée des montures, mascottes et décorations';
-
     public function handle(
         CollectionTaxonomyLoader $collectionTaxonomyLoader,
         SimpleArmoryClient $simpleArmoryClient,
@@ -94,7 +95,7 @@ class CollectionTaxonomySyncCommand extends Command
     }
 
     /**
-     * @return array<int, \App\Infrastructure\Taxonomy\TaxonomyEntry>
+     * @return array<int, TaxonomyEntry>
      */
     private function pullUpstream(
         SimpleArmoryClient $simpleArmoryClient,
@@ -123,7 +124,7 @@ class CollectionTaxonomySyncCommand extends Command
 
     /**
      * @param  list<CollectionEntity>  $entities
-     * @param  (callable(CollectionEntity): array<int, \App\Infrastructure\Taxonomy\TaxonomyEntry>)|null  $upstream
+     * @param  (callable(CollectionEntity): array<int, TaxonomyEntry>)|null  $upstream
      * @return list<array{entity: CollectionEntity, read: int, inserted: int, skipped: int}>
      */
     private function loadAll(CollectionTaxonomyLoader $collectionTaxonomyLoader, array $entities, ?callable $upstream): array

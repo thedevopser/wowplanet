@@ -10,12 +10,14 @@ use App\Application\Import\ImportWaitReporter;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -26,11 +28,11 @@ beforeEach(function (): void {
  */
 function makeApiConsumer(BlizzardApiClient $client): object
 {
-    return new class($client)
+    return new readonly class($client)
     {
         use ImportsFromBlizzardApi;
 
-        public function __construct(private readonly BlizzardApiClient $blizzardApiClient) {}
+        public function __construct(private BlizzardApiClient $blizzardApiClient) {}
 
         public function fetch(string $endpoint): ?ResponsePayload
         {
@@ -51,22 +53,22 @@ function makeApiConsumer(BlizzardApiClient $client): object
 // ─── fetchWithRetry ─────────────────────────────────────────
 
 test('fetchWithRetry returns null on 404', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
-    $client->shouldReceive('get')->andThrow(new \Exception('Client error: 404 Not Found'));
+    $client->shouldReceive('get')->andThrow(new Exception('Client error: 404 Not Found'));
 
     expect(makeApiConsumer($client)->fetch('data/wow/quest/999'))->toBeNull();
 });
 
 test('fetchWithRetry retries retryable errors then succeeds', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('get')
         ->twice()
         ->andReturnUsing(function (): array {
             static $calls = 0;
             $calls++;
-            throw_if($calls === 1, \Exception::class, 'Server error: 429 Too Many Requests');
+            throw_if($calls === 1, Exception::class, 'Server error: 429 Too Many Requests');
 
             return ['ok' => true];
         });
@@ -75,9 +77,9 @@ test('fetchWithRetry retries retryable errors then succeeds', function (): void 
 });
 
 test('fetchWithRetry gives up on non-retryable errors', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
-    $client->shouldReceive('get')->once()->andThrow(new \Exception('Unexpected parsing failure'));
+    $client->shouldReceive('get')->once()->andThrow(new Exception('Unexpected parsing failure'));
 
     expect(makeApiConsumer($client)->fetch('data/wow/mount/index'))->toBeNull();
 });
@@ -85,10 +87,10 @@ test('fetchWithRetry gives up on non-retryable errors', function (): void {
 // ─── fetchBatchAsync ────────────────────────────────────────
 
 test('fetchBatchAsync decodes fulfilled responses', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode(['id' => 1]))));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode(['id' => 1]))));
 
     $results = makeApiConsumer($client)->fetchBatch([1 => 'data/wow/x/1']);
 
@@ -96,11 +98,11 @@ test('fetchBatchAsync decodes fulfilled responses', function (): void {
 });
 
 test('fetchBatchAsync retries 429 responses then succeeds', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
         ->twice()
-        ->andReturnUsing(function (): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function (): PromiseInterface {
             static $calls = 0;
             $calls++;
             if ($calls === 1) {
@@ -116,10 +118,10 @@ test('fetchBatchAsync retries 429 responses then succeeds', function (): void {
 });
 
 test('fetchBatchAsync abandons server errors after limited retries', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(500, [], 'boom')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(500, [], 'boom')));
 
     $results = makeApiConsumer($client)->fetchBatch([3 => 'data/wow/x/3']);
 
@@ -127,12 +129,12 @@ test('fetchBatchAsync abandons server errors after limited retries', function ()
 });
 
 test('fetchBatchAsync marks rejected 404 promises as not found', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $request = new Request('GET', 'data/wow/x/4');
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::rejectionFor(
-            new RequestException('Not Found', $request, new Response(404)),
+        ->andReturnUsing(fn (): PromiseInterface => Create::rejectionFor(
+            new ClientException('Not Found', $request, new Response(404)),
         ));
 
     $results = makeApiConsumer($client)->fetchBatch([4 => 'data/wow/x/4']);
@@ -141,16 +143,16 @@ test('fetchBatchAsync marks rejected 404 promises as not found', function (): vo
 });
 
 test('fetchBatchAsync retries rejected 429 promises then succeeds', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $request = new Request('GET', 'data/wow/x/5');
     $client->shouldReceive('getAsync')
         ->twice()
-        ->andReturnUsing(function () use ($request): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function () use ($request): PromiseInterface {
             static $calls = 0;
             $calls++;
             if ($calls === 1) {
-                return Create::rejectionFor(new RequestException('Too Many Requests', $request, new Response(429)));
+                return Create::rejectionFor(new ClientException('Too Many Requests', $request, new Response(429)));
             }
 
             return Create::promiseFor(new Response(200, [], (string) json_encode(['id' => 5])));
@@ -162,10 +164,10 @@ test('fetchBatchAsync retries rejected 429 promises then succeeds', function ():
 });
 
 test('fetchBatchAsync abandons invalid JSON after limited retries', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], 'not-json{')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], 'not-json{')));
 
     $results = makeApiConsumer($client)->fetchBatch([6 => 'data/wow/x/6']);
 
@@ -173,10 +175,10 @@ test('fetchBatchAsync abandons invalid JSON after limited retries', function ():
 });
 
 test('fetchBatchAsync abandons rejected connection errors after limited retries', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::rejectionFor(new \RuntimeException('cURL error 28: timed out')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::rejectionFor(new RuntimeException('cURL error 28: timed out')));
 
     $results = makeApiConsumer($client)->fetchBatch([8 => 'data/wow/x/8']);
 
@@ -184,11 +186,11 @@ test('fetchBatchAsync abandons rejected connection errors after limited retries'
 });
 
 test('fetchBatchAsync treats a 304 as unchanged instead of decoding an empty body', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
         ->once()
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(304, [], '')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(304, [], '')));
 
     $results = makeApiConsumer($client)->fetchBatch([7 => 'data/wow/mount/index']);
 
@@ -196,10 +198,10 @@ test('fetchBatchAsync treats a 304 as unchanged instead of decoding an empty bod
 });
 
 test('a successful batch never pauses between requests', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], '{"ok":true}')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], '{"ok":true}')));
 
     $endpoints = [];
     for ($id = 1; $id <= 60; $id++) {
@@ -215,13 +217,13 @@ test('a successful batch never pauses between requests', function (): void {
 test('the concurrency comes from configuration rather than a buried constant', function (): void {
     config(['services.blizzard.import_concurrency' => 3]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $inFlight = 0;
     $peak = 0;
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(function () use (&$inFlight, &$peak): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function () use (&$inFlight, &$peak): PromiseInterface {
             $inFlight++;
             $peak = max($peak, $inFlight);
 
@@ -247,10 +249,10 @@ test('it steps the concurrency down after rate limiting and says so', function (
     config(['services.blizzard.import_concurrency' => 20]);
     Log::spy();
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(function (): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function (): PromiseInterface {
             static $calls = 0;
             $calls++;
 
@@ -276,10 +278,10 @@ test('a batch in flight is published, so waiting is not mistaken for blocking', 
 
     $duringBatch = null;
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(function () use ($store, &$duringBatch): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function () use ($store, &$duringBatch): PromiseInterface {
             $duringBatch ??= $store->find('job-1')?->wait;
 
             return Create::promiseFor(new Response(200, [], '{"ok":true}'));
@@ -303,10 +305,10 @@ test('a recoil after a 429 is published with the delay it waits', function (): v
         $onRetry ??= $store->find('job-1')?->wait;
     });
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
-        ->andReturnUsing(function (): \GuzzleHttp\Promise\PromiseInterface {
+        ->andReturnUsing(function (): PromiseInterface {
             static $calls = 0;
             $calls++;
 
@@ -323,7 +325,7 @@ test('an import nobody follows publishes no wait at all', function (): void {
     $store = new ImportProgressStore;
     $store->save(ImportRun::start('job-1', [ImportStage::Mounts], now()->getTimestamp()));
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('getAsync')
         ->andReturn(Create::promiseFor(new Response(200, [], '{"ok":true}')));

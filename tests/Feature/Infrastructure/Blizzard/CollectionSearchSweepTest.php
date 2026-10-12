@@ -8,6 +8,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -18,7 +19,7 @@ beforeEach(function (): void {
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function mockCollectionWindow(\Mockery\MockInterface $mock, string $endpoint, int $window, array $documents): void
+function mockCollectionWindow(MockInterface $mock, string $endpoint, int $window, array $documents): void
 {
     $range = sprintf('id=[%d,%d]', $window * 1000, $window * 1000 + 999);
 
@@ -30,7 +31,7 @@ function mockCollectionWindow(\Mockery\MockInterface $mock, string $endpoint, in
 }
 
 test('sweeping mounts indexes their identity by mount id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCollectionWindow($client, 'data/wow/search/mount', 0, [
@@ -47,7 +48,7 @@ test('sweeping mounts indexes their identity by mount id', function (): void {
 });
 
 test('sweeping decors indexes their identity and their bound item by decor id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCollectionWindow($client, 'data/wow/search/decor', 0, [
@@ -62,7 +63,7 @@ test('sweeping decors indexes their identity and their bound item by decor id', 
 });
 
 test('sweeping several windows gathers them into one index', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCollectionWindow($client, 'data/wow/search/mount', 0, [['id' => 14, 'name' => ['fr_FR' => 'Loup']]]);
@@ -72,7 +73,7 @@ test('sweeping several windows gathers them into one index', function (): void {
 });
 
 test('sweeping nothing asks the API for nothing', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldNotReceive('getAsync');
 
@@ -80,7 +81,7 @@ test('sweeping nothing asks the API for nothing', function (): void {
 });
 
 test('a window the API fails to serve leaves the others readable', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCollectionWindow($client, 'data/wow/search/mount', 0, [['id' => 14, 'name' => ['fr_FR' => 'Loup']]]);

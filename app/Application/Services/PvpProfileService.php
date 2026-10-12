@@ -31,10 +31,10 @@ class PvpProfileService
     use FetchesProfileEndpoints;
 
     /** Ratings volatils : TTL bien plus court que les collections. */
-    private const PROFILE_TTL_S = 900;
+    private const int PROFILE_TTL_S = 900;
 
     /** Les paliers d'une saison ne bougent pas. */
-    private const TIER_TTL_S = 2592000;
+    private const int TIER_TTL_S = 2592000;
 
     public function __construct(
         private readonly BlizzardApiClient $blizzardApiClient,

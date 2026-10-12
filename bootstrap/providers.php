@@ -1,6 +1,9 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\BlizzardServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\BlizzardServiceProvider::class,
+    AppServiceProvider::class,
+    BlizzardServiceProvider::class,
 ];

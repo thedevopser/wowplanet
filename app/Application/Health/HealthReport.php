@@ -17,7 +17,7 @@ use App\Infrastructure\Blizzard\HourlyBudgetGuard;
  */
 final readonly class HealthReport
 {
-    public const RECENT_ERRORS = 50;
+    public const int RECENT_ERRORS = 50;
 
     public function __construct(
         private ServiceProbes $serviceProbes,

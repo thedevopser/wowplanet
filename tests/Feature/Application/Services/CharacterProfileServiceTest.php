@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Application\Services\CharacterProfileService;
 use App\Application\Services\UserCharacterService;
+use App\Domain\ValueObjects\ExpansionId;
 use App\Domain\ValueObjects\ScoreWeights;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Responses\MythicDungeon;
+use App\Models\WowAchievement;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
 use App\Models\WowMount;
@@ -14,6 +16,8 @@ use App\Models\WowPet;
 use App\Models\WowQuest;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Response;
+use Mockery\Expectation;
+use Mockery\MockInterface;
 
 function asyncResponse(array $data): FulfilledPromise
 {
@@ -23,11 +27,11 @@ function asyncResponse(array $data): FulfilledPromise
 /**
  * @param  array<string, array<string, mixed>>  $endpointResponses
  */
-function mockAsyncEndpoints(\Mockery\MockInterface $mock, array $endpointResponses): void
+function mockAsyncEndpoints(MockInterface $mock, array $endpointResponses): void
 {
-    /** @var \Mockery\Expectation $exp */
-    $exp = $mock->shouldReceive('getAsync');
-    $exp->andReturnUsing(function (string $endpoint) use ($endpointResponses): FulfilledPromise {
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('getAsync');
+    $expectation->andReturnUsing(function (string $endpoint) use ($endpointResponses): FulfilledPromise {
         foreach ($endpointResponses as $pattern => $data) {
             if (str_contains($endpoint, $pattern)) {
                 return asyncResponse($data);
@@ -69,7 +73,7 @@ test('get profile returns correct dto', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
 
     // Summary is fetched synchronously
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mock->shouldReceive('get');
     $profileExp->with('profile/wow/character/hyjal/thrall', [])
         ->andReturn([
@@ -82,14 +86,14 @@ test('get profile returns correct dto', function (): void {
             'faction' => ['name' => 'Horde'],
         ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
 
     $mock->shouldReceive('getRegion')->andReturn('eu');
 
     $userCharMock = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $classIconsExp */
+    /** @var Expectation $classIconsExp */
     $classIconsExp = $userCharMock->shouldReceive('getClassIcons');
     $classIconsExp->andReturn([7 => 'https://render.com/class-icon.jpg']);
 
@@ -151,7 +155,7 @@ test('get profile aggregates unlocked transmog appearances by slot', function ()
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mock->shouldReceive('get');
     $profileExp->andReturn([
         'name' => 'Thrall',
@@ -163,7 +167,7 @@ test('get profile aggregates unlocked transmog appearances by slot', function ()
         'faction' => ['name' => 'Horde'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
     $mock->shouldReceive('getRegion')->andReturn('eu');
@@ -208,9 +212,9 @@ test('get profile aggregates unlocked transmog appearances by slot', function ()
 });
 
 test('aggregate progress groups by expansion and zone', function (): void {
-    \App\Models\WowAchievement::factory()->create([
+    WowAchievement::factory()->create([
         'id' => 1685,
-        'expansion_id' => \App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED,
+        'expansion_id' => ExpansionId::UNCLASSIFIED,
         'category_name' => 'Évènements mondiaux',
         'is_active' => true,
     ]);
@@ -238,7 +242,7 @@ test('aggregate progress groups by expansion and zone', function (): void {
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('get');
     $exp->andReturn([
         'name' => 'Test',
@@ -250,7 +254,7 @@ test('aggregate progress groups by expansion and zone', function (): void {
         'faction' => ['name' => 'Alliance'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
 
@@ -283,9 +287,9 @@ test('aggregate progress groups by expansion and zone', function (): void {
         ->and($twwData['quests']['completed'])->toBe(0);
 
     /** @var array{achievements: array{total: int}} $unclassifiedData */
-    $unclassifiedData = $characterProfileDTO->collections[\App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED];
+    $unclassifiedData = $characterProfileDTO->collections[ExpansionId::UNCLASSIFIED];
     expect($unclassifiedData['achievements']['total'])->toBe(1)
-        ->and(array_keys($characterProfileDTO->collections))->toBe([...range(0, 11), \App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED]);
+        ->and(array_keys($characterProfileDTO->collections))->toBe([...range(0, 11), ExpansionId::UNCLASSIFIED]);
 });
 
 test('aggregate progress filters quests by character faction', function (): void {
@@ -316,7 +320,7 @@ test('aggregate progress filters quests by character faction', function (): void
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('get');
     $exp->andReturn([
         'name' => 'Thrall',
@@ -328,7 +332,7 @@ test('aggregate progress filters quests by character faction', function (): void
         'faction' => ['name' => 'Horde'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
 
@@ -371,7 +375,7 @@ test('get profile exposes current season raid progression', function (): void {
     ];
 
     // journal-instance résout les noms FR ; le profil renvoie le résumé.
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mock->shouldReceive('get');
     $profileExp->andReturnUsing(function (string $endpoint) use ($summary): array {
         if (str_contains($endpoint, 'journal-instance/1307')) {
@@ -384,7 +388,7 @@ test('get profile exposes current season raid progression', function (): void {
         return $summary;
     });
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
     $mock->shouldReceive('getRegion')->andReturn('eu');
@@ -461,15 +465,15 @@ test('get profile falls back to raw raid names when journal-instance lookup fail
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mock->shouldReceive('get');
     $profileExp->andReturnUsing(function (string $endpoint) use ($summary): array {
-        throw_if(str_contains($endpoint, 'journal-instance'), \RuntimeException::class, 'static data unavailable');
+        throw_if(str_contains($endpoint, 'journal-instance'), RuntimeException::class, 'static data unavailable');
 
         return $summary;
     });
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
     $mock->shouldReceive('getRegion')->andReturn('eu');
@@ -520,7 +524,7 @@ test('get profile falls back to raw raid names when journal-instance lookup fail
 test('get profile has null raids when no current season progression', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mock->shouldReceive('get');
     $profileExp->andReturn([
         'name' => 'Thrall',
@@ -532,7 +536,7 @@ test('get profile has null raids when no current season progression', function (
         'faction' => ['name' => 'Horde'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
     $mock->shouldReceive('getRegion')->andReturn('eu');
@@ -566,7 +570,7 @@ test('get profile handles decor api 404 gracefully', function (): void {
 
     $mock = $this->partialMock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('get');
     $exp->andReturn([
         'name' => 'Test',
@@ -578,7 +582,7 @@ test('get profile handles decor api 404 gracefully', function (): void {
         'faction' => ['name' => 'Alliance'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
 
@@ -587,13 +591,13 @@ test('get profile handles decor api 404 gracefully', function (): void {
     $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
 
     // Mock async - decor returns 404 (empty), others return normally
-    /** @var \Mockery\Expectation $asyncExp */
+    /** @var Expectation $asyncExp */
     $asyncExp = $mock->shouldReceive('getAsync');
     $asyncExp->andReturnUsing(function (string $endpoint): FulfilledPromise {
         if (str_contains($endpoint, 'collections/decor')) {
             // Simulate 404 → async resolves with empty body (handled as empty in fetchAsync)
             return new FulfilledPromise(
-                new \GuzzleHttp\Psr7\Response(404, [], json_encode([], JSON_THROW_ON_ERROR)),
+                new Response(404, [], json_encode([], JSON_THROW_ON_ERROR)),
             );
         }
 
@@ -755,12 +759,12 @@ function fullMythicSeason(): array
     ];
 }
 
-function configureFullProfileClient(\Mockery\MockInterface $mock): void
+function configureFullProfileClient(MockInterface $mock): void
 {
 
-    /** @var \Mockery\Expectation $getExp */
-    $getExp = $mock->shouldReceive('get');
-    $getExp->andReturnUsing(function (string $endpoint): array {
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->andReturnUsing(function (string $endpoint): array {
         if (str_contains($endpoint, 'journal-instance/1307')) {
             return [
                 'name' => 'La Flèche du Vide',
@@ -788,7 +792,7 @@ function configureFullProfileClient(\Mockery\MockInterface $mock): void
     $mock->shouldReceive('getRegion')->andReturn('eu');
 
     $endpoints = fullProfileEndpoints();
-    /** @var \Mockery\Expectation $asyncExp */
+    /** @var Expectation $asyncExp */
     $asyncExp = $mock->shouldReceive('getAsync');
     $asyncExp->andReturnUsing(function (string $endpoint) use ($endpoints): FulfilledPromise {
         foreach ($endpoints as $pattern => $data) {

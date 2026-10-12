@@ -43,7 +43,7 @@ test('it finds no expansion for an unknown slug', function (): void {
 });
 
 test('it rejects invalid values', function (int $value): void {
-    expect(fn (): \App\Domain\ValueObjects\ExpansionId => new ExpansionId($value))->toThrow(
+    expect(fn (): ExpansionId => new ExpansionId($value))->toThrow(
         InvalidArgumentException::class,
         'Invalid Expansion ID: '.$value,
     );
@@ -61,16 +61,16 @@ test('it uses correct constants', function (): void {
 });
 
 test('it exposes a French ordinal label for every expansion', function (): void {
-    expect((new ExpansionId(ExpansionId::CLASSIC))->toOrdinal())->toBe('le jeu original')
-        ->and((new ExpansionId(ExpansionId::BURNING_CRUSADE))->toOrdinal())->toBe('la 1re extension')
-        ->and((new ExpansionId(ExpansionId::WRATH_OF_THE_LICH_KING))->toOrdinal())->toBe('la 2e extension')
-        ->and((new ExpansionId(ExpansionId::CATACLYSM))->toOrdinal())->toBe('la 3e extension')
-        ->and((new ExpansionId(ExpansionId::MISTS_OF_PANDARIA))->toOrdinal())->toBe('la 4e extension')
-        ->and((new ExpansionId(ExpansionId::WARLORDS_OF_DRAENOR))->toOrdinal())->toBe('la 5e extension')
-        ->and((new ExpansionId(ExpansionId::LEGION))->toOrdinal())->toBe('la 6e extension')
-        ->and((new ExpansionId(ExpansionId::BATTLE_FOR_AZEROTH))->toOrdinal())->toBe('la 7e extension')
-        ->and((new ExpansionId(ExpansionId::SHADOWLANDS))->toOrdinal())->toBe('la 8e extension')
-        ->and((new ExpansionId(ExpansionId::DRAGONFLIGHT))->toOrdinal())->toBe('la 9e extension')
-        ->and((new ExpansionId(ExpansionId::THE_WAR_WITHIN))->toOrdinal())->toBe('la 10e extension')
-        ->and((new ExpansionId(ExpansionId::MIDNIGHT))->toOrdinal())->toBe('la 11e extension');
+    expect(new ExpansionId(ExpansionId::CLASSIC)->toOrdinal())->toBe('le jeu original')
+        ->and(new ExpansionId(ExpansionId::BURNING_CRUSADE)->toOrdinal())->toBe('la 1re extension')
+        ->and(new ExpansionId(ExpansionId::WRATH_OF_THE_LICH_KING)->toOrdinal())->toBe('la 2e extension')
+        ->and(new ExpansionId(ExpansionId::CATACLYSM)->toOrdinal())->toBe('la 3e extension')
+        ->and(new ExpansionId(ExpansionId::MISTS_OF_PANDARIA)->toOrdinal())->toBe('la 4e extension')
+        ->and(new ExpansionId(ExpansionId::WARLORDS_OF_DRAENOR)->toOrdinal())->toBe('la 5e extension')
+        ->and(new ExpansionId(ExpansionId::LEGION)->toOrdinal())->toBe('la 6e extension')
+        ->and(new ExpansionId(ExpansionId::BATTLE_FOR_AZEROTH)->toOrdinal())->toBe('la 7e extension')
+        ->and(new ExpansionId(ExpansionId::SHADOWLANDS)->toOrdinal())->toBe('la 8e extension')
+        ->and(new ExpansionId(ExpansionId::DRAGONFLIGHT)->toOrdinal())->toBe('la 9e extension')
+        ->and(new ExpansionId(ExpansionId::THE_WAR_WITHIN)->toOrdinal())->toBe('la 10e extension')
+        ->and(new ExpansionId(ExpansionId::MIDNIGHT)->toOrdinal())->toBe('la 11e extension');
 });

@@ -10,9 +10,9 @@ use Psr\Http\Message\RequestInterface;
 
 class RateLimitingMiddleware
 {
-    private const MAX_REQUESTS = 80;
+    private const int MAX_REQUESTS = 80;
 
-    private const BACKOFF_US = 50_000; // 50ms
+    private const int BACKOFF_US = 50_000; // 50ms
 
     /** @var list<float> */
     private array $timestamps = [];

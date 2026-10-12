@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Http\Middleware\SecurityHeaders;
 
 beforeEach(function (): void {
     $this->cloverPath = testTempPath('coverage-crap').'.xml';
@@ -45,8 +46,8 @@ XML);
         ->expectsTable(
             ['CRAP', 'Complexity', 'Coverage', 'Method'],
             [
-                ['210', '14', '0 %', \App\Http\Middleware\SecurityHeaders::class.'::policy'],
-                ['56', '12', '0 %', \App\Http\Middleware\SecurityHeaders::class.'::handle'],
+                ['210', '14', '0 %', SecurityHeaders::class.'::policy'],
+                ['56', '12', '0 %', SecurityHeaders::class.'::handle'],
             ],
         )
         ->expectsOutputToContain('2 methods above a CRAP of 30 among 2 measured.')

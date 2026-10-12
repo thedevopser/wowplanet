@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Infrastructure\Blizzard\RenderedIconProbe;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 function probeIcons(array $urls): array
@@ -38,7 +39,7 @@ test('it drops an icon the CDN refuses, which would show as a broken image', fun
 });
 
 test('it drops an icon the CDN does not answer for at all', function (): void {
-    Http::fake(fn (): never => throw new \Illuminate\Http\Client\ConnectionException('timeout'));
+    Http::fake(fn (): never => throw new ConnectionException('timeout'));
 
     expect(probeIcons(['https://render.worldofwarcraft.com/eu/icons/56/1.jpg']))->toBe([]);
 });

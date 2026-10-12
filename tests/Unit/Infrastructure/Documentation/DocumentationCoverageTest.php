@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Application\Import\ImportStage;
+use App\Domain\Services\ScoreCalculator;
+use App\Domain\ValueObjects\ScoreWeights;
+use App\Http\Controllers\PvpController;
 use App\Infrastructure\Documentation\DocumentationCoverage;
+use App\Providers\AppServiceProvider;
 
 test('a class named between backticks counts as documented', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Domain\Services\ScoreCalculator::class],
+        [ScoreCalculator::class],
         'La formule vit dans `ScoreCalculator`, et nulle part ailleurs.',
         [],
     );
@@ -18,38 +23,38 @@ test('a class named between backticks counts as documented', function (): void {
 
 test('a class absent from the pages is reported missing', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Domain\Services\ScoreCalculator::class],
+        [ScoreCalculator::class],
         'Cette page ne parle de rien.',
         [],
     );
 
-    expect($report->missing)->toBe([\App\Domain\Services\ScoreCalculator::class])
+    expect($report->missing)->toBe([ScoreCalculator::class])
         ->and($report->documented)->toBe(0);
 });
 
 test('a longer class name does not satisfy a shorter one', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Application\Import\ImportStage::class],
+        [ImportStage::class],
         'Le lanceur `ImportStageRunner` exécute une passe par étape.',
         [],
     );
 
-    expect($report->missing)->toBe([\App\Application\Import\ImportStage::class]);
+    expect($report->missing)->toBe([ImportStage::class]);
 });
 
 test('a class name outside backticks does not count', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Domain\Services\ScoreCalculator::class],
+        [ScoreCalculator::class],
         'Le ScoreCalculator applique une moyenne pondérée.',
         [],
     );
 
-    expect($report->missing)->toBe([\App\Domain\Services\ScoreCalculator::class]);
+    expect($report->missing)->toBe([ScoreCalculator::class]);
 });
 
 test('a backticked call on the class counts as documented', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Domain\Services\ScoreCalculator::class],
+        [ScoreCalculator::class],
         'On appelle `ScoreCalculator::calculate()` une fois par profil.',
         [],
     );
@@ -59,12 +64,12 @@ test('a backticked call on the class counts as documented', function (): void {
 
 test('an excluded class leaves the perimeter entirely', function (): void {
     $report = DocumentationCoverage::report(
-        [\App\Providers\AppServiceProvider::class, \App\Domain\Services\ScoreCalculator::class],
+        [AppServiceProvider::class, ScoreCalculator::class],
         'Rien ici.',
-        [\App\Providers\AppServiceProvider::class],
+        [AppServiceProvider::class],
     );
 
-    expect($report->missing)->toBe([\App\Domain\Services\ScoreCalculator::class])
+    expect($report->missing)->toBe([ScoreCalculator::class])
         ->and($report->total)->toBe(1)
         ->and($report->excluded)->toBe(1);
 });
@@ -72,17 +77,17 @@ test('an excluded class leaves the perimeter entirely', function (): void {
 test('missing classes are grouped by layer', function (): void {
     $report = DocumentationCoverage::report(
         [
-            \App\Domain\Services\ScoreCalculator::class,
-            \App\Http\Controllers\PvpController::class,
-            \App\Domain\ValueObjects\ScoreWeights::class,
+            ScoreCalculator::class,
+            PvpController::class,
+            ScoreWeights::class,
         ],
         'Rien ici.',
         [],
     );
 
     expect($report->missingByLayer())->toBe([
-        'Domain' => [\App\Domain\Services\ScoreCalculator::class, \App\Domain\ValueObjects\ScoreWeights::class],
-        'Http' => [\App\Http\Controllers\PvpController::class],
+        'Domain' => [ScoreCalculator::class, ScoreWeights::class],
+        'Http' => [PvpController::class],
     ]);
 });
 

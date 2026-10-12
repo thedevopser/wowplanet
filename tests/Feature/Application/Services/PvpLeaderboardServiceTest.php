@@ -7,6 +7,8 @@ use App\Application\Services\PvpLeaderboardService;
 use App\Domain\Services\PvpBracketClassifier;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use Illuminate\Support\Facades\Cache;
+use Mockery\Expectation;
+use Mockery\MockInterface;
 
 /**
  * Index de classes et de spécialisations FR/EN, tels que les sert l'API statique.
@@ -60,19 +62,19 @@ function leaderboardService(): PvpLeaderboardService
  *
  * @param  array<string, array<string, mixed>>  $responses
  */
-function mockLeaderboardClient(array $responses, int $seasonId = 40): \Mockery\MockInterface
+function mockLeaderboardClient(array $responses, int $seasonId = 40): MockInterface
 {
     $mock = test()->mock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentPvpSeasonId');
     $seasonExp->andReturn($seasonId);
 
-    /** @var \Mockery\Expectation $regionExp */
+    /** @var Expectation $regionExp */
     $regionExp = $mock->shouldReceive('getRegion');
     $regionExp->andReturn('eu');
 
-    /** @var \Mockery\Expectation $getExp */
+    /** @var Expectation $getExp */
     $getExp = $mock->shouldReceive('get');
     $getExp->andReturnUsing(function (string $endpoint, array $query = []) use ($responses): array {
         $locale = is_string($query['locale'] ?? null) ? $query['locale'] : 'fr_FR';

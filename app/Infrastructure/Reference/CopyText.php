@@ -13,7 +13,7 @@ namespace App\Infrastructure\Reference;
  */
 final class CopyText
 {
-    public const NULL_MARKER = '\N';
+    public const string NULL_MARKER = '\N';
 
     /**
      * Le même marqueur, tel qu'il doit être passé à `copyFromArray()`.
@@ -22,9 +22,9 @@ final class CopyText
      * barre oblique inverse simple y est consommée par l'analyseur SQL, et PostgreSQL
      * finit par chercher un nul écrit `N`.
      */
-    public const NULL_MARKER_SQL = '\\\\N';
+    public const string NULL_MARKER_SQL = '\\\\N';
 
-    public const SEPARATOR = "\t";
+    public const string SEPARATOR = "\t";
 
     /**
      * @param  list<string|null>  $values

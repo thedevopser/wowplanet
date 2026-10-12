@@ -21,7 +21,7 @@ final readonly class MediaSearchSweep
     use ImportsFromBlizzardApi;
     use SweepsIdWindows;
 
-    private const ENDPOINT = 'data/wow/search/media';
+    private const string ENDPOINT = 'data/wow/search/media';
 
     public function __construct(BlizzardApiClient $blizzardApiClient)
     {

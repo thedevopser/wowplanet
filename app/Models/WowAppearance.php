@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowAppearanceFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,30 +27,25 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
  */
+#[Fillable([
+    'id',
+    'name_fr',
+    'slot',
+    'category',
+    'quality',
+    'item_id',
+    'icon_file_data_id',
+    'icon_url',
+    'expansion_id',
+    'source',
+    'is_active',
+])]
+#[Table(name: 'wow_appearances', key: 'id')]
+#[WithoutIncrementing]
 class WowAppearance extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowAppearanceFactory> */
+    /** @use HasFactory<WowAppearanceFactory> */
     use HasFactory;
-
-    protected $table = 'wow_appearances';
-
-    protected $primaryKey = 'id';
-
-    public $incrementing = false;
-
-    protected $fillable = [
-        'id',
-        'name_fr',
-        'slot',
-        'category',
-        'quality',
-        'item_id',
-        'icon_file_data_id',
-        'icon_url',
-        'expansion_id',
-        'source',
-        'is_active',
-    ];
 
     protected function casts(): array
     {

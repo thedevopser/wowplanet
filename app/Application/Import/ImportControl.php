@@ -22,16 +22,16 @@ use Illuminate\Support\Facades\Redis;
 final readonly class ImportControl
 {
     /** Un ordre ne survit pas à l'import qu'il vise : même durée de vie que son pointeur. */
-    public const TTL_S = CurrentImport::TTL_S;
+    public const int TTL_S = CurrentImport::TTL_S;
 
-    private const KEY_PREFIX = 'import_control:';
+    private const string KEY_PREFIX = 'import_control:';
 
     public function request(string $jobId, ImportSignal $importSignal, string $actor, int $requestedAt): void
     {
         $this->connection()->setex(
             self::KEY_PREFIX.$jobId,
             self::TTL_S,
-            (string) json_encode((new ImportRequest($importSignal, $actor, $requestedAt))->toArray()),
+            (string) json_encode(new ImportRequest($importSignal, $actor, $requestedAt)->toArray()),
         );
     }
 

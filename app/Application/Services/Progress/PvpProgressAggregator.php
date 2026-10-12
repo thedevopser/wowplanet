@@ -32,7 +32,7 @@ class PvpProgressAggregator
      *
      * @pest-mutate-ignore
      */
-    private const RATING_SORTED_GROUPS = ['shuffle', 'blitz'];
+    private const array RATING_SORTED_GROUPS = ['shuffle', 'blitz'];
 
     public function __construct(
         private readonly PvpBracketClassifier $pvpBracketClassifier = new PvpBracketClassifier,

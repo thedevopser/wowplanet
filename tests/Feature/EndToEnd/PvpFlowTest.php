@@ -7,6 +7,7 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
+use Mockery\Expectation;
 
 /**
  * Parcours PvP complet, de l'API Blizzard à la page rendue : aucune table,
@@ -20,11 +21,11 @@ function fakeBlizzard(array $responses): void
 {
     $mock = test()->mock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $regionExp */
+    /** @var Expectation $regionExp */
     $regionExp = $mock->shouldReceive('getRegion');
     $regionExp->andReturn('eu');
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentPvpSeasonId');
     $seasonExp->andReturn(40);
 
@@ -38,11 +39,11 @@ function fakeBlizzard(array $responses): void
         return [];
     };
 
-    /** @var \Mockery\Expectation $getExp */
+    /** @var Expectation $getExp */
     $getExp = $mock->shouldReceive('get');
     $getExp->andReturnUsing($resolve);
 
-    /** @var \Mockery\Expectation $asyncExp */
+    /** @var Expectation $asyncExp */
     $asyncExp = $mock->shouldReceive('getAsync');
     $asyncExp->andReturnUsing(fn (string $endpoint): FulfilledPromise => new FulfilledPromise(
         new Response(200, [], json_encode($resolve($endpoint), JSON_THROW_ON_ERROR)),

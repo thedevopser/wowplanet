@@ -12,7 +12,7 @@ namespace App\Infrastructure\Blizzard\Responses;
  */
 final readonly class MediaSearchDocument
 {
-    private const ICON_ASSET = 'icon';
+    private const string ICON_ASSET = 'icon';
 
     public function __construct(
         public int $id,

@@ -13,10 +13,10 @@ namespace App\Domain\ValueObjects;
 final readonly class ScoreWeights
 {
     /** Incrémenter à tout changement de pondération : invalide le cache du score de compte. */
-    public const VERSION = 2;
+    public const int VERSION = 2;
 
     /** @var array<string, float> */
-    public const WEIGHTS = [
+    public const array WEIGHTS = [
         'quests' => 0.13,
         'achievements' => 0.20,
         'reputations' => 0.12,
@@ -29,7 +29,7 @@ final readonly class ScoreWeights
     ];
 
     /** @var array<string, string> */
-    public const LABELS = [
+    public const array LABELS = [
         'quests' => 'Quêtes',
         'achievements' => 'Hauts-faits',
         'reputations' => 'Réputations',

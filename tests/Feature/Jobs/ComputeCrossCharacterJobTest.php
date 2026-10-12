@@ -50,14 +50,14 @@ function crossCharacterJob(): ComputeCrossCharacterJob
  * Le service fusionne un seul personnage, avec une quête, un haut-fait, une réputation et
  * une recette : de quoi relire chaque famille de clés entières après le passage en jsonb.
  */
-function stubCrossCharacterMerge(?\Closure $observe = null): void
+function stubCrossCharacterMerge(?Closure $observe = null): void
 {
     test()->mock(CrossCharacterService::class)
         ->shouldReceive('fetchAndMergeCharacters')
         ->once()
         ->withArgs(fn (array $characters, CrossCharacterProgress $crossCharacterProgress, ?string $token): bool => $characters === crossCharacterJobCharacters() && $token === 'app-token')
         ->andReturnUsing(function (array $characters, CrossCharacterProgress $crossCharacterProgress) use ($observe): void {
-            if ($observe instanceof \Closure) {
+            if ($observe instanceof Closure) {
                 $observe();
             }
 
@@ -90,7 +90,7 @@ function failCrossCharacterMerge(): void
 {
     test()->mock(CrossCharacterService::class)
         ->shouldReceive('fetchAndMergeCharacters')
-        ->andThrow(new \RuntimeException('Blizzard is down'));
+        ->andThrow(new RuntimeException('Blizzard is down'));
 }
 
 test('it runs on the imports queue with a ten minute timeout', function (): void {
@@ -189,7 +189,7 @@ test('a failing computation lands in the failed jobs after a single attempt', fu
 });
 
 test('a computation killed without an exception still tells the hub it failed', function (): void {
-    crossCharacterJob()->failed(new \RuntimeException('Timed out'));
+    crossCharacterJob()->failed(new RuntimeException('Timed out'));
 
     expect(Cache::get('cross_character:job-1'))->toBe(['status' => 'failed']);
 });
@@ -235,7 +235,7 @@ test('a computation retried after its token expired fails again and says why', f
 test('the final status stays readable for an hour so the page can poll it', function (bool $fails, string $status): void {
     $this->freezeSecond();
     $merge = test()->mock(CrossCharacterService::class)->shouldReceive('fetchAndMergeCharacters');
-    $fails ? $merge->andThrow(new \RuntimeException('Blizzard is down')) : $merge->andReturnNull();
+    $fails ? $merge->andThrow(new RuntimeException('Blizzard is down')) : $merge->andReturnNull();
 
     runCrossCharacterJobOnWorker();
 

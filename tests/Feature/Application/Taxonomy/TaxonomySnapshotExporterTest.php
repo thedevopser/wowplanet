@@ -39,7 +39,7 @@ test('it writes what the database holds into the snapshot', function (): void {
     expect(exporter($this->snapshotPath)->export())
         ->toBe(['written' => 2, 'path' => $this->snapshotPath]);
 
-    expect((new CollectionTaxonomySnapshot($this->snapshotPath))->entriesFor(CollectionEntity::Mount))
+    expect(new CollectionTaxonomySnapshot($this->snapshotPath)->entriesFor(CollectionEntity::Mount))
         ->toHaveKey(6);
 });
 
@@ -48,7 +48,7 @@ test('an entry filed nowhere survives the round trip as filed nowhere', function
 
     exporter($this->snapshotPath)->export();
 
-    $entry = (new CollectionTaxonomySnapshot($this->snapshotPath))->entriesFor(CollectionEntity::Mount)[6];
+    $entry = new CollectionTaxonomySnapshot($this->snapshotPath)->entriesFor(CollectionEntity::Mount)[6];
 
     expect($entry->category)->toBeNull()
         ->and($entry->source)->toBeNull();
@@ -73,7 +73,7 @@ test('a refused export leaves the file it was about to overwrite alone', functio
     } catch (RuntimeException) {
     }
 
-    expect((new CollectionTaxonomySnapshot($this->snapshotPath))->entriesFor(CollectionEntity::Mount))->toHaveKey(6);
+    expect(new CollectionTaxonomySnapshot($this->snapshotPath)->entriesFor(CollectionEntity::Mount))->toHaveKey(6);
 });
 
 test('the snapshot is in step with the database right after an export', function (): void {
@@ -130,7 +130,7 @@ test('an empty database and a missing snapshot are in step, there is nothing to 
 });
 
 test('the drift says which side lacks what, and what both sides hold differently', function (): void {
-    (new CollectionTaxonomySnapshot($this->snapshotPath))->write([
+    new CollectionTaxonomySnapshot($this->snapshotPath)->write([
         'mount' => [6 => new TaxonomyEntry('Racial', 'Human'), 7 => new TaxonomyEntry('Racial', 'Orc'), 8 => new TaxonomyEntry('PVP', 'Arena')],
         'pet' => [9 => new TaxonomyEntry('Wild', 'Battle')],
     ]);

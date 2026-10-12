@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ImportHistoryStepFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,27 +31,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'job_id',
+    'stage',
+    'status',
+    'created',
+    'updated',
+    'deleted',
+    'api_calls',
+    'duration_ms',
+    'rows_after',
+    'error',
+])]
+#[Table(name: 'import_history_steps')]
+#[WithoutTimestamps]
 class ImportHistoryStep extends Model
 {
-    /** @use HasFactory<\Database\Factories\ImportHistoryStepFactory> */
+    /** @use HasFactory<ImportHistoryStepFactory> */
     use HasFactory;
-
-    protected $table = 'import_history_steps';
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'job_id',
-        'stage',
-        'status',
-        'created',
-        'updated',
-        'deleted',
-        'api_calls',
-        'duration_ms',
-        'rows_after',
-        'error',
-    ];
 
     /**
      * @return BelongsTo<ImportHistoryEntry, $this>

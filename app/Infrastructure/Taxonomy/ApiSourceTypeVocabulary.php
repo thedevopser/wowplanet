@@ -25,7 +25,7 @@ final class ApiSourceTypeVocabulary
     /**
      * @var array<string, string>
      */
-    private const PENDING_SOURCES = [
+    private const array PENDING_SOURCES = [
         'VENDOR' => 'Vendor',
         'DROP' => 'Drop',
         'ACHIEVEMENT' => 'Achievement',

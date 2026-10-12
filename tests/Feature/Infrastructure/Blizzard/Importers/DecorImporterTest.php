@@ -11,6 +11,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -21,10 +22,10 @@ beforeEach(function (): void {
  *
  * @param  list<array{id: int, name: string}>  $decors
  */
-function mockDecorIndex(\Mockery\MockInterface $mock, array $decors): void
+function mockDecorIndex(MockInterface $mock, array $decors): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/decor/index', \Mockery::any())
+        ->with('data/wow/decor/index', Mockery::any())
         ->andReturn(['decor_items' => $decors]);
 }
 
@@ -33,7 +34,7 @@ function mockDecorIndex(\Mockery\MockInterface $mock, array $decors): void
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function mockDecorSearch(\Mockery\MockInterface $mock, array $documents): void
+function mockDecorSearch(MockInterface $mock, array $documents): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, 'data/wow/search/decor'))
@@ -47,7 +48,7 @@ function mockDecorSearch(\Mockery\MockInterface $mock, array $documents): void
  *
  * @param  array<int, string>  $icons  [item_id => icon_url]
  */
-function mockDecorItemMedia(\Mockery\MockInterface $mock, array $icons): void
+function mockDecorItemMedia(MockInterface $mock, array $icons): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, 'data/wow/search/media')
@@ -75,7 +76,7 @@ function curateDecor(int $entryId, ?string $category, ?string $source, bool $obt
 test('it takes the identity from the API and the ranking from the taxonomy', function (): void {
     curateDecor(80, 'Quartiers', 'Vendor');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
     mockDecorSearch($client, [['id' => 80, 'name' => ['fr_FR' => 'Foyer orné en pierre'], 'item' => ['id' => 235994]]]);
@@ -96,7 +97,7 @@ test('it takes the identity from the API and the ranking from the taxonomy', fun
 test('it deactivates a decor the curation marks as no longer obtainable', function (): void {
     curateDecor(80, 'Quartiers', 'Promotion', obtainable: false);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
     mockDecorSearch($client, []);
@@ -108,7 +109,7 @@ test('it deactivates a decor the curation marks as no longer obtainable', functi
 });
 
 test('it holds a decor obtainable when no curation says otherwise', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 999, 'name' => 'Décoration à arbitrer']]);
     mockDecorSearch($client, []);
@@ -123,7 +124,7 @@ test('it holds a decor obtainable when no curation says otherwise', function ():
 test('it reports how many decors are waiting to be arbitrated', function (): void {
     curateDecor(80, 'Quartiers', 'Vendor');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [
         ['id' => 80, 'name' => 'Rangée'],
@@ -149,7 +150,7 @@ test('a failed search window leaves the decor the item and icon it had', functio
         'is_active' => true,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
     $client->shouldReceive('getAsync')
@@ -168,7 +169,7 @@ test('a failed search window leaves the decor the item and icon it had', functio
 test('it leaves a row the API has not changed untouched', function (): void {
     curateDecor(80, 'Quartiers', 'Vendor');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
     mockDecorSearch($client, [['id' => 80, 'name' => ['fr_FR' => 'Foyer orné en pierre'], 'item' => ['id' => 235994]]]);
@@ -186,7 +187,7 @@ test('it leaves a row the API has not changed untouched', function (): void {
 test('it deletes decors that dropped out of the API catalog', function (): void {
     WowDecor::query()->create(['id' => 5000, 'name_fr' => 'Décoration retirée', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
     mockDecorSearch($client, []);
@@ -201,7 +202,7 @@ test('it deletes decors that dropped out of the API catalog', function (): void 
 test('it aborts without touching the catalog when the API index is empty', function (): void {
     WowDecor::query()->create(['id' => 200, 'name_fr' => 'Décoration existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockDecorIndex($client, []);
 
@@ -214,11 +215,11 @@ test('it aborts without touching the catalog when the API index is empty', funct
 test('it aborts without deleting anything when the decor index call fails', function (): void {
     WowDecor::query()->create(['id' => 300, 'name_fr' => 'Décoration existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('get')
-        ->with('data/wow/decor/index', \Mockery::any())
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->with('data/wow/decor/index', Mockery::any())
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     resolve(DecorImporter::class)->import();
 

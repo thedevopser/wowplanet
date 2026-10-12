@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowImportStateFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Build WoW du dernier import réussi, par entité importée.
@@ -17,31 +23,23 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $entity
  * @property string $build
  * @property string|null $last_modified
- * @property \Illuminate\Support\Carbon $imported_at
+ * @property Carbon $imported_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
+#[Fillable([
+    'entity',
+    'build',
+    'last_modified',
+    'imported_at',
+])]
+#[Table(name: 'wow_import_states', key: 'entity', keyType: 'string')]
+#[WithoutIncrementing]
+#[WithoutTimestamps]
 class WowImportState extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowImportStateFactory> */
+    /** @use HasFactory<WowImportStateFactory> */
     use HasFactory;
-
-    protected $table = 'wow_import_states';
-
-    protected $primaryKey = 'entity';
-
-    protected $keyType = 'string';
-
-    public $incrementing = false;
-
-    public $timestamps = false;
-
-    protected $fillable = [
-        'entity',
-        'build',
-        'last_modified',
-        'imported_at',
-    ];
 
     /**
      * @return array<string, string>

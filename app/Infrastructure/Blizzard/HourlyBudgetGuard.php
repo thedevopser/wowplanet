@@ -15,26 +15,26 @@ use Illuminate\Support\Facades\Redis;
 final class HourlyBudgetGuard
 {
     /** Le quota horaire que Blizzard accorde au client, et qu'il ne faut jamais toucher. */
-    public const PUBLISHED_HOURLY_QUOTA = 36000;
+    public const int PUBLISHED_HOURLY_QUOTA = 36000;
 
     /** Marge de sécurité sous le quota réel. */
-    public const HOURLY_LIMIT = 34000;
+    public const int HOURLY_LIMIT = 34000;
 
-    private const KEY_PREFIX = 'blizzard_budget:';
+    private const string KEY_PREFIX = 'blizzard_budget:';
 
     /**
      * Total monotone, jamais expiré : les appels d'une étape d'import se mesurent par
      * différence entre son début et sa fin, ce que la fenêtre glissante ne permet pas
      * dès qu'une minute en sort pendant l'étape.
      */
-    private const TOTAL_KEY = self::KEY_PREFIX.'total';
+    private const string TOTAL_KEY = self::KEY_PREFIX.'total';
 
-    private const WINDOW_S = 3600;
+    private const int WINDOW_S = 3600;
 
     /** Une minute de battement au-delà de la fenêtre, pour ne pas perdre le bucket en cours de lecture. */
     private const TTL_S = self::WINDOW_S + 60;
 
-    private const WINDOW_MINUTES = 60;
+    private const int WINDOW_MINUTES = 60;
 
     /**
      * L'expiration n'est posée qu'à la création de la clé — reconnaissable au total

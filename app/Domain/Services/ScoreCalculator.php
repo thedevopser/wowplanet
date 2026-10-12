@@ -26,7 +26,7 @@ class ScoreCalculator
      *
      * @pest-mutate-ignore
      */
-    private const RAID_DIFFICULTY_VALUES = [
+    private const array RAID_DIFFICULTY_VALUES = [
         'LFR' => 0.25,
         'NORMAL' => 0.50,
         'HEROIC' => 0.75,

@@ -7,33 +7,35 @@ use App\Infrastructure\Blizzard\Importers\QuestImporter;
 use App\Models\WowQuest;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
 });
 
 test('it imports quests from API', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [
             ['id' => 10, 'name' => 'Durotar'],
             ['id' => 20, 'name' => 'Nagrand'],
         ]]);
 
     $client->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/10', \Mockery::any())
+        ->with('data/wow/quest/area/10', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Durotar'],
             'quests' => [['id' => 100, 'name' => 'Quete de Durotar']],
         ]))));
 
     $client->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/20', \Mockery::any())
+        ->with('data/wow/quest/area/20', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Nagrand'],
             'quests' => [
@@ -57,12 +59,12 @@ test('it imports quests from API', function (): void {
 });
 
 test('it returns early when API fails', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->with('data/wow/quest/area/index', Mockery::any())
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     $questImporter = resolve(QuestImporter::class);
     $questImporter->import([]);
@@ -88,12 +90,12 @@ test('it tags mirror quest factions', function (): void {
         'is_active' => true,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     // Quest 100 returns a Horde reputation
     $client->shouldReceive('getAsync')
-        ->with('data/wow/quest/100', \Mockery::any())
+        ->with('data/wow/quest/100', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'rewards' => [
                 'reputations' => [
@@ -104,7 +106,7 @@ test('it tags mirror quest factions', function (): void {
 
     // Quest 101 returns no faction reputation
     $client->shouldReceive('getAsync')
-        ->with('data/wow/quest/101', \Mockery::any())
+        ->with('data/wow/quest/101', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'rewards' => [],
         ]))));
@@ -125,16 +127,16 @@ test('it tags mirror quest factions', function (): void {
  */
 function questApiReturning(array $quests): void
 {
-    /** @var BlizzardApiClient&\Mockery\MockInterface $mock */
-    $mock = \Mockery::mock(BlizzardApiClient::class);
+    /** @var BlizzardApiClient&MockInterface $mock */
+    $mock = Mockery::mock(BlizzardApiClient::class);
     app()->instance(BlizzardApiClient::class, $mock);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [['id' => 10, 'name' => 'Durotar']]]);
 
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/10', \Mockery::any())
+        ->with('data/wow/quest/area/10', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Durotar'],
             'quests' => $quests,
@@ -150,7 +152,7 @@ function questWritesDuring(callable $callback): int
 {
     $writes = 0;
 
-    DB::listen(function (Illuminate\Database\Events\QueryExecuted $queryExecuted) use (&$writes): void {
+    DB::listen(function (QueryExecuted $queryExecuted) use (&$writes): void {
         if (str_contains($queryExecuted->sql, 'wow_quests') && ! str_starts_with($queryExecuted->sql, 'select')) {
             $writes++;
         }

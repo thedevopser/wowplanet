@@ -18,13 +18,13 @@ use Illuminate\Support\Facades\Session;
 class AccountScoreService
 {
     // @pest-mutate-ignore
-    private const BATCH_SIZE = 1;
+    private const int BATCH_SIZE = 1;
 
     // @pest-mutate-ignore
-    private const CACHE_TTL = 86400;
+    private const int CACHE_TTL = 86400;
 
     // @pest-mutate-ignore
-    private const PROGRESS_TTL = 3600;
+    private const int PROGRESS_TTL = 3600;
 
     public function __construct(
         private readonly CharacterProfileService $characterProfileService,

@@ -6,15 +6,16 @@ namespace App\Http\Controllers;
 
 use App\Application\Services\Progress\TalentAggregator;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\PromiseSettler;
 use App\Infrastructure\Blizzard\Responses\MediaIconResponse;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\Responses\Talent\CharacterSpecializationsResponse;
 use App\Infrastructure\Blizzard\Responses\Talent\PlayableSpecializationResponse;
 use App\Infrastructure\Blizzard\Responses\Talent\TalentTreeResponse;
-use GuzzleHttp\Promise\Utils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\ResponseInterface;
 
 class TalentController extends Controller
 {
@@ -139,15 +140,11 @@ class TalentController extends Controller
                 continue;
             }
 
-            /** @var array<int, array{state: string, value?: \Psr\Http\Message\ResponseInterface}> $settled */
-            $settled = Utils::settle($promises)->wait();
+            $settled = PromiseSettler::settle($promises);
+            ksort($settled);
 
             foreach ($settled as $spellId => $result) {
                 if ($result['state'] !== 'fulfilled') {
-                    continue;
-                }
-
-                if (! isset($result['value'])) {
                     continue;
                 }
 
@@ -169,7 +166,7 @@ class TalentController extends Controller
         return $iconMap;
     }
 
-    private function readSpellIcon(int $spellId, \Psr\Http\Message\ResponseInterface $response): ?string
+    private function readSpellIcon(int $spellId, ResponseInterface $response): ?string
     {
         $decoded = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
         $response->getBody()->close();

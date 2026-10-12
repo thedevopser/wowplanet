@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /** @var list<string> */
-    private const TABLES = [
+    private const array TABLES = [
         'wow_mounts',
         'wow_pets',
         'wow_decors',

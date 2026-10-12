@@ -7,28 +7,30 @@ use App\Application\Services\Progress\PvpProgressAggregator;
 use App\Application\Services\PvpProfileService;
 use App\Domain\Services\PvpBracketClassifier;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Cache;
+use Mockery\Expectation;
+use Mockery\MockInterface;
 
 /**
  * @param  array<string, array<string, mixed>>  $endpointResponses  Motif d'endpoint => corps de réponse
  * @param  list<string>  $requested  Collecteur des endpoints réellement appelés
  */
-function mockPvpAsync(\Mockery\MockInterface $mock, array $endpointResponses, array &$requested = []): void
+function mockPvpAsync(MockInterface $mock, array $endpointResponses, array &$requested = []): void
 {
-    /** @var \Mockery\Expectation $exp */
-    $exp = $mock->shouldReceive('getAsync');
-    $exp->andReturnUsing(function (string $endpoint) use ($endpointResponses, &$requested): \GuzzleHttp\Promise\RejectedPromise|\GuzzleHttp\Promise\FulfilledPromise {
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('getAsync');
+    $expectation->andReturnUsing(function (string $endpoint) use ($endpointResponses, &$requested): RejectedPromise|FulfilledPromise {
         $requested[] = $endpoint;
 
         foreach ($endpointResponses as $pattern => $data) {
             if (str_contains($endpoint, $pattern)) {
                 if ($data === ['__reject__']) {
-                    return new RejectedPromise(new RequestException(
+                    return new RejectedPromise(new ClientException(
                         'Not found',
                         new Request('GET', $endpoint),
                         new Response(404),
@@ -68,15 +70,15 @@ function pvpBracketResponse(int $rating, int $tierId = 0): array
     ];
 }
 
-function mockPvpClient(array $endpointResponses, array &$requested = [], int $seasonId = 40): \Mockery\MockInterface
+function mockPvpClient(array $endpointResponses, array &$requested = [], int $seasonId = 40): MockInterface
 {
     $mock = test()->mock(BlizzardApiClient::class);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentPvpSeasonId');
     $seasonExp->andReturn($seasonId);
 
-    /** @var \Mockery\Expectation $regionExp */
+    /** @var Expectation $regionExp */
     $regionExp = $mock->shouldReceive('getRegion');
     $regionExp->andReturn('eu');
 
@@ -108,9 +110,9 @@ test('it fetches only the brackets listed in the summary', function (): void {
         'pvp-bracket/shuffle-priest-shadow' => pvpBracketResponse(1600),
     ], $requested);
 
-    /** @var \Mockery\Expectation $summaryExp */
-    $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->with('profile/wow/character/hyjal/thrall/pvp-summary')
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->with('profile/wow/character/hyjal/thrall/pvp-summary')
         ->andReturn(pvpSummaryResponse(['3v3', 'shuffle-priest-shadow']));
 
     $result = pvpService()->getForCharacter('Hyjal', 'Thrall');
@@ -127,9 +129,9 @@ test('it fetches only the brackets listed in the summary', function (): void {
 
 test('it returns null when the character has no pvp summary', function (): void {
     $mock = $this->mock(BlizzardApiClient::class);
-    /** @var \Mockery\Expectation $summaryExp */
+    /** @var Expectation $summaryExp */
     $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->andThrow(new RequestException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
+    $summaryExp->andThrow(new ClientException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
 
     expect(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull();
 });
@@ -140,9 +142,9 @@ test('a failing bracket does not invalidate the others', function (): void {
         'pvp-bracket/3v3' => pvpBracketResponse(1842),
     ]);
 
-    /** @var \Mockery\Expectation $summaryExp */
-    $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->andReturn(pvpSummaryResponse(['2v2', '3v3']));
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->andReturn(pvpSummaryResponse(['2v2', '3v3']));
 
     $result = pvpService()->getForCharacter('hyjal', 'thrall');
 
@@ -157,9 +159,9 @@ test('it resolves tier names and icons, then serves them from cache', function (
         'data/wow/pvp-tier/12' => ['id' => 12, 'name' => 'Duelliste'],
     ], $requested);
 
-    /** @var \Mockery\Expectation $summaryExp */
-    $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->andReturn(pvpSummaryResponse(['3v3']));
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->andReturn(pvpSummaryResponse(['3v3']));
 
     $bracket = pvpService()->getForCharacter('hyjal', 'thrall')['groups'][0]['brackets'][0];
 
@@ -178,9 +180,9 @@ test('it resolves tier names and icons, then serves them from cache', function (
 test('it caches the normalised payload per character', function (): void {
     $mock = mockPvpClient(['pvp-bracket/3v3' => pvpBracketResponse(1842)]);
 
-    /** @var \Mockery\Expectation $summaryExp */
-    $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->once()->andReturn(pvpSummaryResponse(['3v3']));
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->once()->andReturn(pvpSummaryResponse(['3v3']));
 
     $first = pvpService()->getForCharacter('Hyjal', 'Thrall');
     $second = pvpService()->getForCharacter('hyjal', 'thrall');
@@ -191,9 +193,9 @@ test('it caches the normalised payload per character', function (): void {
 
 test('it caches the absence of pvp data to avoid refetching', function (): void {
     $mock = $this->mock(BlizzardApiClient::class);
-    /** @var \Mockery\Expectation $summaryExp */
+    /** @var Expectation $summaryExp */
     $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->once()->andThrow(new RequestException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
+    $summaryExp->once()->andThrow(new ClientException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
 
     expect(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull()
         ->and(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull();
@@ -203,9 +205,9 @@ test('it degrades to an unfiltered payload when the season index is unavailable'
     $requested = [];
     $mock = mockPvpClient(['pvp-bracket/3v3' => pvpBracketResponse(1842)], $requested, 0);
 
-    /** @var \Mockery\Expectation $summaryExp */
-    $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->andReturn(pvpSummaryResponse(['3v3']));
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->andReturn(pvpSummaryResponse(['3v3']));
 
     $result = pvpService()->getForCharacter('hyjal', 'thrall');
 

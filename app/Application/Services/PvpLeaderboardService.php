@@ -28,11 +28,11 @@ class PvpLeaderboardService
 {
     public const DEFAULT_BRACKET = '3v3';
 
-    private const PER_PAGE = 50;
+    private const int PER_PAGE = 50;
 
-    private const INDEX_TTL_S = 86400;
+    private const int INDEX_TTL_S = 86400;
 
-    private const LEADERBOARD_TTL_S = 3600;
+    private const int LEADERBOARD_TTL_S = 3600;
 
     public function __construct(
         private readonly BlizzardApiClient $blizzardApiClient,

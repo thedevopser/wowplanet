@@ -6,6 +6,7 @@ use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Support\Facades\Artisan;
+use Symfony\Component\Console\Command\Command;
 
 beforeEach(function (): void {
     $this->exportPath = testTempPath('taxonomy-export-command').'/collection_taxonomy.csv';
@@ -64,7 +65,7 @@ test('it names the file it wrote', function (): void {
 test('it refuses to write an empty snapshot over a curated one', function (): void {
     $exitCode = Artisan::call('app:collection-taxonomy-export', ['--path' => $this->exportPath]);
 
-    expect($exitCode)->toBe(Symfony\Component\Console\Command\Command::FAILURE)
+    expect($exitCode)->toBe(Command::FAILURE)
         ->and(file_exists($this->exportPath))->toBeFalse()
         ->and(Artisan::output())->toContain('vide');
 });

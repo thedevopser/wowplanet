@@ -8,6 +8,7 @@ use App\Application\Services\DatabaseQueryService;
 use App\Application\Services\DatabaseSeoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -151,7 +152,7 @@ class DatabaseController extends Controller
         ]);
     }
 
-    public function sitemap(): \Illuminate\Http\Response
+    public function sitemap(): Response
     {
         $xml = $this->databaseSeoService->generateSitemap();
 

@@ -8,20 +8,20 @@ use App\Infrastructure\Coverage\CloverReader;
 use App\Infrastructure\Coverage\CrapReport;
 use App\Infrastructure\Coverage\Exceptions\UnreadableCloverException;
 use App\Infrastructure\Coverage\MethodRisk;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
+#[Description('List the methods whose CRAP exceeds a threshold, read from a PHPUnit clover report')]
+#[Signature('coverage:crap
+        {--clover= : Clover report to read, coverage/clover.xml by default}
+        {--threshold=30 : CRAP above which a method is reported}')]
 class CoverageCrapCommand extends Command
 {
     private const string DEFAULT_CLOVER = 'coverage/clover.xml';
 
     private const int DEFAULT_THRESHOLD = 30;
-
-    protected $signature = 'coverage:crap
-        {--clover= : Clover report to read, coverage/clover.xml by default}
-        {--threshold=30 : CRAP above which a method is reported}';
-
-    protected $description = 'List the methods whose CRAP exceeds a threshold, read from a PHPUnit clover report';
 
     public function handle(): int
     {

@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Artisan;
 final readonly class FailedJobs
 {
     /** Au-delà, la liste ne diagnostique plus rien : c'est la cause commune qu'il faut chercher. */
-    public const LISTED = 50;
+    public const int LISTED = 50;
 
     private const string UNREADABLE_JOB = 'Job illisible';
 

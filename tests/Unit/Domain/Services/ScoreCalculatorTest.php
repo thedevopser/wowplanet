@@ -289,7 +289,7 @@ describe('raids', function (): void {
     });
 
     it('sort les raids du calcul quand le tier courant est inconnu', function (): void {
-        $scoreDimension = scoreDimension($this->calculator->compute(new ScoreInput(raids: null)), 'raids');
+        $scoreDimension = scoreDimension($this->calculator->compute(new ScoreInput), 'raids');
 
         expect($scoreDimension->completed)->toBe(0.0)
             ->and($scoreDimension->total)->toBe(0)
