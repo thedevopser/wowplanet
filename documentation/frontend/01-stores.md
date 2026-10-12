@@ -57,27 +57,34 @@ Store principal de l'application. Gère l'authentification, les données de pers
 
 ---
 
-## `useDatabaseSidebarStore` (`stores/databaseSidebar.js`)
+## `useFavoriteStore` (`stores/favorites.js`)
 
-Gère l'état de la sidebar de navigation de la base de données (sections ouvertes/fermées, sous-catégories chargées).
+Personnages mis en favori par le compte connecté, trois au plus (`MAX_FAVORITES`). Royaume et nom sont comparés sans tenir compte de la casse.
 
 ### État
 
 | Propriété | Type | Description |
 |---|---|---|
-| `counts` | `object` | Nombre total par section (`mounts`, `pets`, etc.) |
-| `expanded` | `object` | `{sectionKey: bool}` — sections dépliées |
-| `subCategories` | `object` | `{sectionKey: array}` — sous-catégories chargées |
-| `loading` | `object` | `{sectionKey: bool}` — chargement en cours |
+| `favorites` | `array` | Favoris du compte : `{ id, realm_slug, character_name, sort_order }` |
+| `loading` | `bool` | Chargement de la liste en cours |
+
+### Getters
+
+| Getter | Description |
+|---|---|
+| `favoriteCount` | Nombre de favoris. |
+| `isFull` | La limite de trois est atteinte. |
+| `favoriteKeys` | `Set<string>` des clés `royaume\|nom` en minuscules. |
+| `isFavorite(realmSlug, characterName)` | Le personnage est en favori. |
 
 ### Actions
 
 | Action | Description |
 |---|---|
-| `fetchCounts()` | Charge les compteurs depuis `GET /api/database/counts` (une seule fois). |
-| `fetchSubCategories(sectionKey)` | Charge les sous-catégories d'une section si non chargées. |
-| `toggleSection(sectionKey)` | Ouvre/ferme une section. Déclenche `fetchSubCategories` si ouverture. |
-| `expandActiveSection(routePath)` | Replie tout et déplie la section correspondant au chemin de route courant. |
+| `fetchFavorites()` | Charge les favoris depuis `GET /api/character-favorites`. |
+| `addFavorite(realmSlug, characterName)` | Ajoute le favori à l'écran tout de suite, puis l'enregistre ; un refus du serveur le retire et relève l'erreur. Sans effet si la limite est atteinte ou si le personnage est déjà en favori. |
+| `removeFavorite(realmSlug, characterName)` | Retire le favori à l'écran tout de suite, puis le supprime ; un refus du serveur le remet et relève l'erreur. |
+| `toggleFavorite(realmSlug, characterName)` | Ajoute ou retire selon l'état courant. |
 
 ---
 

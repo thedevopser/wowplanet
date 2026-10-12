@@ -116,7 +116,7 @@ class RunImportJob implements DescribedJob, ShouldQueue
             $importRun = $importPipeline->resume($importRun);
         }
 
-        $importRun = $importPipeline->advance($importRun, $this->flag('--full'), $this->limit());
+        $importRun = $importPipeline->advance($importRun, $this->flag('--full'), $this->flag('--force'), $this->limit());
 
         if ($importPipeline->isDone($importRun)) {
             return;

@@ -36,9 +36,9 @@ beforeEach(function (): void {
     seedCollectionTaxonomy();
 });
 
-function runStage(ImportStage $importStage, bool $full = false, ?int $limit = null): ImportStep
+function runStage(ImportStage $importStage, bool $full = false, ?int $limit = null, bool $force = false): ImportStep
 {
-    return resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending($importStage), $full, $limit)->step;
+    return resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending($importStage), $full, $force, $limit)->step;
 }
 
 test('a stage runs its importer and comes back complete', function (): void {
@@ -86,9 +86,16 @@ test('the quest stage tags the mirrored quests with the reputation map from the 
     $this->importerMock->shouldReceive('importQuests')->once();
     $this->importerMock->shouldReceive('tagMirrorQuestFactions')
         ->once()
-        ->with([1000 => 'Alliance', 1001 => 'Horde']);
+        ->with([1000 => 'Alliance', 1001 => 'Horde'], false);
 
     expect(runStage(ImportStage::Quests)->status)->toBe(ImportStepStatus::Completed);
+});
+
+test('a forced quest stage has the mirrored quests already judged examined again', function (): void {
+    $this->importerMock->shouldReceive('importQuests')->once();
+    $this->importerMock->shouldReceive('tagMirrorQuestFactions')->once()->with([], true);
+
+    expect(runStage(ImportStage::Quests, force: true)->status)->toBe(ImportStepStatus::Completed);
 });
 
 test('the profession stage tags the mirrored recipes', function (): void {
@@ -149,7 +156,7 @@ test('a wardrobe pass stopped by the hourly ceiling says so and for how long', f
         ->once()
         ->andReturn(new AppearanceImportProgress(done: false, offset: 143, total: 572, secondsUntilBudget: 240));
 
-    $importStageResult = resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, null);
+    $importStageResult = resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, false, null);
 
     expect($importStageResult->wait?->reason)->toBe(ImportWaitReason::HourlyBudget)
         ->and($importStageResult->wait->seconds)->toBe(240);
@@ -158,7 +165,7 @@ test('a wardrobe pass stopped by the hourly ceiling says so and for how long', f
 test('a stage that runs to its end waits on nothing', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    expect(resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Pets), false, null)->wait)->toBeNull();
+    expect(resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Pets), false, false, null)->wait)->toBeNull();
 });
 
 test('the wardrobe pass resumes from the offset of the step it is given', function (): void {
@@ -170,7 +177,7 @@ test('the wardrobe pass resumes from the offset of the step it is given', functi
     $importStep = ImportStep::pending(ImportStage::Appearances)
         ->advanced(RowTally::none(), 0, 0, offset: 143, total: 572);
 
-    resolve(ImportStageRunner::class)->run('job-1', $importStep, full: true, limit: null);
+    resolve(ImportStageRunner::class)->run('job-1', $importStep, full: true, force: false, limit: null);
 });
 
 test('the wardrobe pass is given a way to stop, which says yes once the panel asked', function (): void {
@@ -181,7 +188,7 @@ test('the wardrobe pass is given a way to stop, which says yes once the panel as
         ->withArgs(fn (bool $full, int $offset, int $timeBox, ?int $limit, Closure $stopRequested): bool => $stopRequested())
         ->andReturn(new AppearanceImportProgress(done: false, offset: 0, total: 572, secondsUntilBudget: 0));
 
-    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, null);
+    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, false, null);
 });
 
 test('an import nobody has touched sweeps on, its stop saying no', function (): void {
@@ -190,7 +197,7 @@ test('an import nobody has touched sweeps on, its stop saying no', function (): 
         ->withArgs(fn (bool $full, int $offset, int $timeBox, ?int $limit, Closure $stopRequested): bool => ! $stopRequested())
         ->andReturn(new AppearanceImportProgress(done: true, offset: 572, total: 572, secondsUntilBudget: 0));
 
-    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, null);
+    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, false, null);
 });
 
 test('an order aimed at another import does not stop this one', function (): void {
@@ -201,7 +208,7 @@ test('an order aimed at another import does not stop this one', function (): voi
         ->withArgs(fn (bool $full, int $offset, int $timeBox, ?int $limit, Closure $stopRequested): bool => ! $stopRequested())
         ->andReturn(new AppearanceImportProgress(done: true, offset: 572, total: 572, secondsUntilBudget: 0));
 
-    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, null);
+    resolve(ImportStageRunner::class)->run('job-1', ImportStep::pending(ImportStage::Appearances), false, false, null);
 });
 
 test('a collection stage merges the versioned snapshot into the base before importing', function (): void {

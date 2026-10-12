@@ -41,7 +41,7 @@ final readonly class ImportStageRunner
         private ImportLog $importLog,
     ) {}
 
-    public function run(string $jobId, ImportStep $importStep, bool $full, ?int $limit): ImportStageResult
+    public function run(string $jobId, ImportStep $importStep, bool $full, bool $force, ?int $limit): ImportStageResult
     {
         $tables = $importStep->stage->tables();
         $startedAt = now();
@@ -50,7 +50,7 @@ final readonly class ImportStageRunner
         $startedMs = (int) (microtime(true) * 1000);
 
         try {
-            $progress = $this->execute($jobId, $importStep, $full, $limit);
+            $progress = $this->execute($jobId, $importStep, $full, $force, $limit);
         } catch (\Throwable $throwable) {
             return new ImportStageResult(
                 $importStep->failed($throwable->getMessage(), $this->elapsedMs($startedMs)),
@@ -75,12 +75,12 @@ final readonly class ImportStageRunner
     /**
      * Rend l'avancement de la passe pour une étape reprenable, `null` pour les autres.
      */
-    private function execute(string $jobId, ImportStep $importStep, bool $full, ?int $limit): ?AppearanceImportProgress
+    private function execute(string $jobId, ImportStep $importStep, bool $full, bool $force, ?int $limit): ?AppearanceImportProgress
     {
         return match ($importStep->stage) {
             ImportStage::Reference => $this->syncReference(),
             ImportStage::Achievements => $this->nothingToResume($this->blizzardBatchImporter->importAchievements(...)),
-            ImportStage::Quests => $this->importQuests(),
+            ImportStage::Quests => $this->importQuests($force),
             ImportStage::Professions => $this->importProfessions(),
             ImportStage::Mounts => $this->importCollection($jobId, ImportStage::Mounts, CollectionEntity::Mount, $this->blizzardBatchImporter->importMounts(...)),
             ImportStage::Pets => $this->importCollection($jobId, ImportStage::Pets, CollectionEntity::Pet, $this->blizzardBatchImporter->importPets(...)),
@@ -135,7 +135,7 @@ final readonly class ImportStageRunner
         return null;
     }
 
-    private function importQuests(): null
+    private function importQuests(bool $force): null
     {
         $this->blizzardBatchImporter->importQuests(
             FrozenAreaExpansionMap::load(),
@@ -144,7 +144,7 @@ final readonly class ImportStageRunner
             $this->referenceMaps->zoneFactions(),
         );
 
-        $this->blizzardBatchImporter->tagMirrorQuestFactions($this->factionReference->factions());
+        $this->blizzardBatchImporter->tagMirrorQuestFactions($this->factionReference->factions(), $force);
 
         return null;
     }

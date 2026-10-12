@@ -73,9 +73,9 @@ class BlizzardBatchImporter
     /**
      * @param  array<int, string>  $reputationFactionMap
      */
-    public function tagMirrorQuestFactions(array $reputationFactionMap): void
+    public function tagMirrorQuestFactions(array $reputationFactionMap, bool $force): void
     {
-        $this->questImporter->tagMirrorFactions($reputationFactionMap);
+        $this->questImporter->tagMirrorFactions($reputationFactionMap, $force);
     }
 
     public function tagMirrorRecipeFactions(): void

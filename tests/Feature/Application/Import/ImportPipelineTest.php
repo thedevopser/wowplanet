@@ -84,6 +84,7 @@ test('advancing runs the first stage left and publishes what it did', function (
     $importRun = pipeline()->advance(
         pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'),
         full: false,
+        force: false,
         limit: null,
     );
 
@@ -94,7 +95,7 @@ test('advancing runs the first stage left and publishes what it did', function (
 test('a completed stage is remembered for this build, so a restart does not redo it', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(WowImportState::query()->where('entity', 'pets')->where('build', '12.1.0_68914')->exists())->toBeTrue();
 });
@@ -102,7 +103,7 @@ test('a completed stage is remembered for this build, so a restart does not redo
 test('a failed stage is not remembered, so the next run tries it again', function (): void {
     $this->importerMock->shouldReceive('importPets')->once()->andThrow(new RuntimeException('pet index unavailable'));
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(WowImportState::query()->where('entity', 'pets')->exists())->toBeFalse();
 });
@@ -112,8 +113,8 @@ test('a failed stage does not stop the ones after it', function (): void {
     $this->importerMock->shouldReceive('importDecor')->once();
 
     $run = pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console');
-    $run = pipeline()->advance($run, false, null);
-    $run = pipeline()->advance($run, false, null);
+    $run = pipeline()->advance($run, false, false, null);
+    $run = pipeline()->advance($run, false, false, null);
 
     expect($run->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Failed)
         ->and($run->step(ImportStage::Decor)->status)->toBe(ImportStepStatus::Completed)
@@ -123,8 +124,8 @@ test('a failed stage does not stop the ones after it', function (): void {
 test('advancing a finished import runs nothing more', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
-    $again = pipeline()->advance($importRun, false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
+    $again = pipeline()->advance($importRun, false, false, null);
 
     expect($again)->toEqual($importRun);
 });
@@ -134,7 +135,7 @@ test('each pass publishes the hourly budget consumed', function (): void {
         resolve(HourlyBudgetGuard::class)->consume(1_200);
     });
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->budgetUsed)->toBe(1_200);
 });
@@ -144,7 +145,7 @@ test('an import running under an unknown build is not skipped by the gate', func
     WowImportState::query()->create(['entity' => 'pets', 'build' => '12.1.0_68914', 'imported_at' => now()]);
     $this->importerMock->shouldReceive('importPets')->once();
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Completed);
 });
@@ -155,7 +156,7 @@ test('the stage being run is named in the tracking while it runs', function (): 
         $seen = (new ImportProgressStore)->find('job-1')?->currentStage();
     });
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($seen)->toBe(ImportStage::Pets);
 });
@@ -165,7 +166,7 @@ test('a stage does not start while the reserved hourly ceiling is spent', functi
 
     $this->importerMock->shouldNotReceive('importPets');
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->wait?->reason)->toBe(ImportWaitReason::HourlyBudget)
         ->and($importRun->wait->seconds)->toBeGreaterThan(0)
@@ -178,7 +179,7 @@ test('the reference socle runs even with the Blizzard quota spent, spending none
     Artisan::shouldReceive('call')->once()->andReturn(0);
     Artisan::shouldReceive('output')->andReturn('');
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: false, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->step(ImportStage::Reference)->status)->toBe(ImportStepStatus::Completed);
 });
@@ -203,7 +204,7 @@ test('the journal says which stages the build gate spared', function (): void {
 test('the journal records a stage from its start to its report', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toContain('Mascottes — démarrage.')
         ->toContain('Mascottes — terminée');
@@ -212,7 +213,7 @@ test('the journal records a stage from its start to its report', function (): vo
 test('the journal says why an import waits instead of going silent', function (): void {
     resolve(HourlyBudgetGuard::class)->consume(30_000);
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toContain('En attente : plafond horaire atteint, reprise dans');
 });
@@ -220,7 +221,7 @@ test('the journal says why an import waits instead of going silent', function ()
 test('the journal carries the reason a stage failed', function (): void {
     $this->importerMock->shouldReceive('importPets')->once()->andThrow(new RuntimeException('API injoignable'));
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toContain('Mascottes — échec : API injoignable');
 });
@@ -228,7 +229,7 @@ test('the journal carries the reason a stage failed', function (): void {
 test('an import that reaches its end stops being the current one', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(resolve(CurrentImport::class)->jobId())->toBeNull();
 });
@@ -236,7 +237,7 @@ test('an import that reaches its end stops being the current one', function (): 
 test('an import with stages left keeps being the current one', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'), false, false, null);
 
     expect(resolve(CurrentImport::class)->jobId())->toBe('job-1');
 });
@@ -252,7 +253,7 @@ test('an import that has nothing left to do at its start stops being the current
 test('the journal closes on the final report of the import', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toContain('Import terminé');
 });
@@ -260,7 +261,7 @@ test('the journal closes on the final report of the import', function (): void {
 test('the final report enters the journal line by line, not as one block', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(resolve(ImportLog::class)->since('job-1', 0)->lines)
         ->each(fn ($line) => $line->not->toContain(PHP_EOL));
@@ -269,7 +270,7 @@ test('the final report enters the journal line by line, not as one block', funct
 test('the final report brings no blank line into the journal', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     $blank = array_filter(
         resolve(ImportLog::class)->since('job-1', 0)->lines,
@@ -368,6 +369,7 @@ test('an import cancelled mid-stage keeps the stages already done in its report'
     $importRun = pipeline()->advance(
         pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'),
         false,
+        false,
         null,
     );
 
@@ -415,7 +417,7 @@ test('an import that begins opens its history entry with who launched it', funct
 test('an import that runs to its end closes its history entry with the report', function (): void {
     $this->importerMock->shouldReceive('importPets')->once();
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(ImportHistoryEntry::query()->sole()->status)->toBe('completed')
         ->and(ImportHistoryEntry::query()->sole()->finished_at)->not->toBeNull()
@@ -452,7 +454,7 @@ test('the journal announces several stages in the plural, in the order requested
 test('the journal line of a wait on the ceiling is a full sentence', function (): void {
     resolve(HourlyBudgetGuard::class)->consume(30_000);
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toMatch('/\] En attente : plafond horaire atteint, reprise dans \d+ s\.$/m');
 });
@@ -461,7 +463,7 @@ test('a stage still starts with room for one more call under the ceiling', funct
     resolve(HourlyBudgetGuard::class)->consume(29_999);
     $this->importerMock->shouldReceive('importPets')->once();
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Completed);
 });
@@ -478,7 +480,7 @@ test('a wardrobe pass that hands back before its end says how far it got and wha
     $this->importerMock->shouldReceive('importAppearanceChunk')->once()
         ->andReturn(new AppearanceImportProgress(done: false, offset: $offset, total: 3, secondsUntilBudget: 90));
 
-    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Appearances], force: true, trigger: 'console'), false, null);
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Appearances], force: true, trigger: 'console'), false, false, null);
 
     expect(journal('job-1'))->toContain('Garde-robe — '.$percent.' % · reprise à la passe suivante.')
         ->toContain('En attente : plafond horaire atteint, reprise dans 90 s.')
@@ -495,7 +497,7 @@ test('the waits the API client reports reach the tracking during a pass, and onl
         $seenDuringPass = (new ImportProgressStore)->find('job-1')?->wait;
     });
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: true, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: true, trigger: 'console'), false, false, null);
     resolve(ImportWaitReporter::class)->waiting(ImportWait::batch(7));
 
     expect($seenDuringPass?->count)->toBe(5)
@@ -528,7 +530,7 @@ test('an import that reaches its end refreshes the database sidebar', function (
     expect(sidebarPets())->toBe(0);
     importPetsWritesOne($this->importerMock);
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect(sidebarPets())->toBe(1);
 });
@@ -537,7 +539,7 @@ test('an import with stages left keeps the database sidebar until it ends', func
     expect(sidebarPets())->toBe(0);
     importPetsWritesOne($this->importerMock);
 
-    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'), false, null);
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console'), false, false, null);
 
     expect(sidebarPets())->toBe(0);
 });
@@ -561,3 +563,15 @@ test('a paused import keeps the database sidebar, since it has not ended', funct
 
     expect(sidebarPets())->toBe(0);
 });
+
+test('a forced import tells its stages so, a plain one does not', function (bool $force): void {
+    $this->importerMock->shouldReceive('importQuests')->once();
+    $this->importerMock->shouldReceive('tagMirrorQuestFactions')->once()->with(Mockery::any(), $force);
+
+    pipeline()->advance(
+        pipeline()->begin('job-1', [ImportStage::Quests], force: true, trigger: 'console'),
+        full: false,
+        force: $force,
+        limit: null,
+    );
+})->with([true, false]);

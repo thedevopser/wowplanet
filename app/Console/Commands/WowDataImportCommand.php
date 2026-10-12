@@ -42,7 +42,7 @@ class WowDataImportCommand extends Command
         $importRun = $importPipeline->begin((string) Str::uuid(), $stages, (bool) $this->option('force'), ImportHistory::CONSOLE_TRIGGER);
 
         while (! $importPipeline->isDone($importRun)) {
-            $importRun = $importPipeline->advance($importRun, (bool) $this->option('full'), $this->limit());
+            $importRun = $importPipeline->advance($importRun, (bool) $this->option('full'), (bool) $this->option('force'), $this->limit());
             $this->pauseIfNeeded($importRun);
         }
 

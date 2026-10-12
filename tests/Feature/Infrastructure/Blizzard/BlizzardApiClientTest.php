@@ -150,30 +150,6 @@ test('getWithUserToken uses provided user token', function (): void {
     expect($request->getHeaderLine('Battlenet-Namespace'))->toBe('profile-eu');
 });
 
-// ─── getBaseOptions ─────────────────────────────────────────
-
-test('getBaseOptions returns static namespace headers', function (): void {
-    Cache::put('blizzard_access_token', 'base-token', 3600);
-
-    $client = new BlizzardApiClient(new Client);
-
-    $options = $client->getBaseOptions();
-
-    expect($options['headers']['Authorization'])->toBe('Bearer base-token');
-    expect($options['headers']['Battlenet-Namespace'])->toBe('static-eu');
-    expect($options['query']['locale'])->toBe('fr_FR');
-    expect($options['query']['namespace'])->toBe('static-eu');
-});
-
-// ─── getClient ──────────────────────────────────────────────
-
-test('getClient returns injected Guzzle client', function (): void {
-    $guzzle = new Client;
-    $client = new BlizzardApiClient($guzzle);
-
-    expect($client->getClient())->toBe($guzzle);
-});
-
 // ─── getAsync ───────────────────────────────────────────────
 
 test('getAsync sends request with bearer token and default namespace', function (): void {

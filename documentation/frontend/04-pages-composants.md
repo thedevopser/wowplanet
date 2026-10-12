@@ -2,35 +2,40 @@
 
 ---
 
-## Configuration (`app.js`, `router.js`, `bootstrap.js`)
+## Points d'entrée (`inertia.js`, `ssr.js`, `bootstrap.js`)
 
-**`app.js`** — Point d'entrée Vue. Configure `window.whTooltips` pour les infobulles Wowhead (locale `fr`), crée l'application avec Pinia et Vue Router, monte sur `#app`.
+L'application est entièrement Inertia : il n'y a pas de routeur côté client. Les routes sont déclarées dans `routes/web.php`, chaque contrôleur nomme la page qu'il rend, et la navigation passe par le `router` d'Inertia.
+
+**`inertia.js`** — Point d'entrée du navigateur. Configure `window.whTooltips` pour les infobulles Wowhead (locale `fr`), crée l'application avec Inertia et Pinia, pose la garde de session expirée (`useAuthGuard`) et monte l'application. Une page est résolue par son nom dans `resources/js/pages/`. Après chaque navigation Inertia, les liens Wowhead sont rafraîchis.
+
+**`ssr.js`** — Point d'entrée du rendu serveur, servi par le sidecar `inertia-ssr`. Même résolution des pages, une instance de Pinia par requête, sans garde de session : un rendu serveur n'a pas de session à expirer.
 
 **`bootstrap.js`** — Configure Axios avec l'en-tête `X-Requested-With: XMLHttpRequest` (requis par Laravel pour détecter les requêtes AJAX).
-
-**`router.js`** — Vue Router en mode history. Après chaque navigation : met à jour le `document.title` et rafraîchit les liens Wowhead.
 
 ---
 
 ## Pages (`resources/js/pages/`)
 
-Chaque page correspond à une route Vue Router. Elles consomment les stores et appellent les API via Axios.
+Chaque page est rendue par un contrôleur, sous le nom de son fichier, pour une route de `routes/web.php`. Elles reçoivent leurs données en props, consomment les stores et appellent les API via Axios.
 
 | Page | Route | Description |
 |---|---|---|
-| `HomePage.vue` | `/` | Page d'accueil avec barre de recherche de personnage. |
-| `AccountPage.vue` | `/mon-compte/:vue?` | Hub « Mon compte » : `h1`, puis trois vues en `Tabs` pilotées par l'URL (`router.push`, sans requête) : Personnages (`account/CharactersView`), Score du compte (`account/ScoreView`) et Classes (`account/ClassesView`). Non indexé. |
-| `CharacterPage.vue` | `/character/:realm/:name/:section?/:sub?` | Fiche d'un personnage en quatre sections (Aperçu, Progression, Endgame, Collections), chacune avec ses sous-onglets, choisies par les props `section` et `sub`. Changer d'onglet écrit l'URL et l'historique par `router.push`, sans requête : le retour navigateur revient à l'onglet précédent. |
+| `HomePage.vue` | `/` | Page d'accueil : présentation du site, connexion Battle.net et entrées vers la base de données. |
+| `AccountPage.vue` | `/mon-compte/{view?}` | Hub « Mon compte » : `h1`, puis trois vues en `Tabs` pilotées par l'URL (`router.push`, sans requête) : Personnages (`account/CharactersView`), Score du compte (`account/ScoreView`) et Classes (`account/ClassesView`). Non indexé. |
+| `CharacterPage.vue` | `/character/{realm}/{name}/{section?}/{sub?}` | Fiche d'un personnage en quatre sections (Aperçu, Progression, Endgame, Collections), chacune avec ses sous-onglets, choisies par les props `section` et `sub`. Changer d'onglet écrit l'URL et l'historique par `router.push`, sans requête : le retour navigateur revient à l'onglet précédent. |
 | `DatabaseIndexPage.vue` | `/base-de-donnees` | Page d'accueil de la base de données WoW. |
-| `DatabaseMountsPage.vue` | `/base-de-donnees/montures/:category?` | Liste des montures avec filtre par catégorie. |
-| `DatabaseAchievementsPage.vue` | `/base-de-donnees/hauts-faits/:expansion?` | Hauts-faits filtrés par extension. |
-| `DatabaseQuestsPage.vue` | `/base-de-donnees/quetes/:expansion?` | Quêtes filtrées par extension. |
-| `DatabasePetsPage.vue` | `/base-de-donnees/mascottes/:category?` | Mascottes filtrées par catégorie. |
-| `DatabaseDecorsPage.vue` | `/base-de-donnees/decorations/:category?` | Décorations filtrées par catégorie. |
-| `DatabaseProfessionsPage.vue` | `/base-de-donnees/professions/:profession?` | Professions et recettes. |
+| `DatabaseMountsPage.vue` | `/base-de-donnees/montures/{category?}` | Liste des montures avec filtre par catégorie. |
+| `DatabaseAchievementsPage.vue` | `/base-de-donnees/hauts-faits/{expansion?}` | Hauts-faits filtrés par extension. |
+| `DatabaseQuestsPage.vue` | `/base-de-donnees/quetes/{expansion?}` | Quêtes filtrées par extension. |
+| `DatabasePetsPage.vue` | `/base-de-donnees/mascottes/{category?}` | Mascottes filtrées par catégorie. |
+| `DatabaseDecorsPage.vue` | `/base-de-donnees/decorations/{category?}` | Décorations filtrées par catégorie. |
+| `DatabaseTransmogPage.vue` | `/base-de-donnees/garde-robe/{slot?}` | Apparences de la garde-robe filtrées par emplacement. |
+| `DatabaseProfessionsPage.vue` | `/base-de-donnees/professions/{profession?}` | Professions et recettes. |
+| `PvpLeaderboardPage.vue` | `/classements-pvp/{bracket?}` | Classements PvP par bracket. |
 | `FaqPage.vue` | `/faq` | Questions fréquentes. |
 | `PrivacyPage.vue` | `/privacy` | Politique de confidentialité. |
 | `CguPage.vue` | `/cgu` | Conditions générales d'utilisation. |
+| `AddonsPage.vue` | `/addons` | Présentation des add-ons. |
 | `AdminDashboardPage.vue` | `/admin` | Tableau de bord de l'administration. Ouvre sur le bandeau de détection de patch, chargé par `<Deferred>` : la page se rend d'abord, la comparaison des builds arrive ensuite. |
 | `AdminImportsPage.vue` | `/admin/imports` | Lancement et suivi des imports de données Blizzard. |
 | `AdminHistoryPage.vue` | `/admin/history` | Historique chronologique des imports, paginé. Cocher deux imports ouvre leur comparaison. |
@@ -40,7 +45,7 @@ Chaque page correspond à une route Vue Router. Elles consomment les stores et a
 | `AdminTaxonomyPage.vue` | `/admin/taxonomy` | Entrées de collection à arbitrer, et leur rangement par lot ou une par une. Une bascule « À arbitrer / Déjà rangées », tenue dans l'URL (`?mode=curated`), ouvre les entrées déjà rangées : recherche, filtre sur la catégorie actuelle (« Sans catégorie » compris) et réaffectation par le même panneau. Un seul item coché préremplit la catégorie et la source avec son rangement actuel ; plusieurs laissent les champs vides. Changer de collection, de mode ou de filtre vide la sélection ; un refus du serveur la garde et affiche son motif. |
 | `AdminHealthPage.vue` | `/admin/health` | Diagnostic : services, quota Blizzard, queue et jobs échoués, volumétries, erreurs récentes. Rassemble en tête les anomalies nommées par le serveur, et dit explicitement qu'il n'y en a aucune plutôt que de ne rien afficher. Relancer ou supprimer un job échoué demande une confirmation. La section Queue liste les jobs en cours et en attente, et se remesure seule par `useQueuePolling` ; seul un résumé du nombre de jobs est annoncé (`aria-live="polite"`), pas les durées qui avancent chaque seconde. |
 | `AdminToolsPage.vue` | `/admin/tools` | Caches applicatifs, mode maintenance et annonces Discord. |
-| `NotFoundPage.vue` | `/:pathMatch(.*)` | Page 404. |
+| `NotFoundPage.vue` | `/{any}` | Page 404, rendue par la route attrape-tout déclarée en dernier, qui exclut `api/` et `docs/`. |
 | `UiShowcasePage.vue` | `/ui` | Démonstration des primitives d'interface, dans les deux thèmes. Route déclarée seulement en local, comme `/docs` : en production l'adresse tombe dans la 404. Non indexable. |
 
 ---
@@ -54,8 +59,8 @@ Chaque page correspond à une route Vue Router. Elles consomment les stores et a
 | `layouts/AppLayout.vue` | Cadre de toutes les pages publiques : lien d'évitement, header, contenu, footer, panneau des tâches et pile de toasts. Reprend l'état de connexion des props partagées à chaque visite, lance le suivi du thème et l'affichage des messages flash au montage. Le document défile, pas une région interne ; le contenu tient dans le même conteneur que le header (`max-w-7xl`, gouttière de 16 px puis 24 px dès 768 px). |
 | `AppHeaderInertia.vue` | En-tête collant. Visiteur : Base de données, Classements PvP, « Se connecter avec Battle.net » et bouton de thème. Connecté : les deux mêmes entrées plus « Mon compte », et un menu utilisateur ouvert par le BattleTag (thème, Discord, Administration, déconnexion) ; « Mon compte » mène au hub et reste actif sur toutes ses vues. Liens Inertia dans un `nav` nommé, entrée active en `aria-current`. Sous 1 024 px, la navigation passe dans un `Drawer`. Le logo n'est plus un `h1`. |
 | `AppFooterInertia.vue` | Pied de page : mention de site fan, colonne « Explorer » (Base de données, Classements PvP, Mon compte, vers le hub) et colonne « Informations » (FAQ, Addons, Confidentialité, CGU, Discord), chacune dans un `nav` nommé par son intitulé. N'ajoute aucun titre au plan de la page. |
-| `DatabaseLayout.vue` | Layout avec sidebar pour les pages de base de données (`/base-de-donnees/*`). La sidebar reste collée sous le header et défile seule. |
-| `AdminLayout.vue` | Layout du panneau d'administration : barre d'onglets vers les sept sous-pages, nommée « Administration », onglet actif déduit de l'URL, souligné en accent et marqué `aria-current`. Onglets de 44 px de haut, qui défilent horizontalement sur petit écran. |
+| `layouts/DatabaseLayout.vue` | Layout avec sidebar pour les pages de base de données (`/base-de-donnees/*`). La sidebar reste collée sous le header et défile seule. |
+| `layouts/AdminLayout.vue` | Layout du panneau d'administration : barre d'onglets vers les sept sous-pages, nommée « Administration », onglet actif déduit de l'URL, souligné en accent et marqué `aria-current`. Onglets de 44 px de haut, qui défilent horizontalement sur petit écran. |
 | `admin/AdminPageHeader.vue` | En-tête commun des pages du panneau : le seul `h1` de la page, une description facultative et un emplacement `actions` pour les boutons de la page. |
 | `admin/DiscordComposer.vue` | Compositeur d'annonce Discord : canal (`Select`), couleur (pastilles nommées, état pressé annoncé), titre, description en Markdown, champs, footer et aperçu. L'aperçu garde les couleurs d'un embed Discord (`brand-discord-*`) quel que soit le thème du panneau. |
 | `admin/ImportEntityTable.vue` | Tableau des entités importables : sélection, volumétrie en base, date et build du dernier import, ordre de grandeur du coût d'un import forcé. |
@@ -77,9 +82,8 @@ Chaque page correspond à une route Vue Router. Elles consomment les stores et a
 | `admin/FailedJobList.vue` | Jobs échoués avec leur classe, leur motif et leur date, et les boutons de relance et de suppression. La confirmation est portée par la page. |
 | `admin/ApplicationErrorList.vue` | Dernières erreurs applicatives, horodatées, avec l'endroit où l'exception a été levée. |
 | `admin/ReferenceFileList.vue` | Inventaire des fichiers du magasin de référence : taille, état (`live`, `obsolete`, `taxonomy`, `orphan`), chargement d'origine, sélection et suppression. Seuls un fichier obsolète et un orphelin s'attrapent par une case ; un fichier en service et un instantané de taxonomie ne se suppriment qu'un par un, par leur bouton. Signale à part les chargements dont le fichier a disparu du disque. |
-| `DatabasePageHeader.vue` | En-tête commun aux pages de base de données (titre + fil d'Ariane). |
+| `DatabasePageHeader.vue` | En-tête commun aux pages de base de données : titre en `h1`, sous-titre facultatif et nombre d'éléments, sur un liseré à la couleur de la dimension. |
 | `DatabasePagination.vue` | Composant de pagination réutilisable pour les listes de la base de données. |
-| `BreadcrumbNav.vue` | Fil d'Ariane générique. |
 
 ### Onglets de la page personnage
 

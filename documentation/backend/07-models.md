@@ -136,6 +136,7 @@ Quête WoW notable (hauts-faits ou longue chaîne). ID Blizzard comme clé prima
 | `zone_name` | `string` | Zone où se trouve la quête |
 | `faction` | `string?` | `Alliance`, `Horde`, ou `null` |
 | `is_active` | `bool` | Toujours disponible |
+| `mirror_unresolved_at` | `datetime?` | Date à laquelle Blizzard a répondu sans réputation exploitable pour la paire miroir de cette quête. Écrite par le seul marquage des quêtes miroir |
 
 ---
 

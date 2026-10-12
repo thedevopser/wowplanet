@@ -16,9 +16,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Ce que pèse chaque table, lu à la demande.
  *
- * Un `COUNT` direct, sans cache ni statistiques tenues à part : la plus grosse table
- * dépasse à peine 20 000 lignes, et un diagnostic doit lire l'état réel, pas celui
- * d'il y a une heure.
+ * Un `COUNT` direct, sans cache ni statistiques tenues à part : un diagnostic doit
+ * lire l'état réel, pas celui d'il y a une heure.
  */
 final readonly class CatalogueVolumetry
 {

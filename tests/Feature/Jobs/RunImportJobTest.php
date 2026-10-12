@@ -145,6 +145,17 @@ test('forcing the import redoes a stage the build gate holds', function (): void
     expect((new ImportProgressStore)->find('job-1')?->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Completed);
 });
 
+test('a forced import has the mirrored quests already judged examined again, a plain one does not', function (array $parameters, bool $force): void {
+    $importer = $this->mock(BlizzardBatchImporter::class);
+    $importer->shouldReceive('importQuests')->once();
+    $importer->shouldReceive('tagMirrorQuestFactions')->once()->with(Mockery::any(), $force);
+
+    handleImportJob('job-1', parameters: ['--type' => 'quests', ...$parameters]);
+})->with([
+    'forced' => [['--force' => true], true],
+    'plain' => [[], false],
+]);
+
 test('a plain command still runs through Artisan and publishes its output', function (): void {
     handleImportJob('job-3', 'app:collection-taxonomy-report');
 

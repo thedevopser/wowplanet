@@ -84,7 +84,7 @@ const textColor = readable(color); // onDark ou onLight selon le thème
 
 ## `useWowheadTooltips` (`composables/useWowheadTooltips.js`)
 
-Active les infobulles Wowhead sur les liens détectés dans le DOM. L'intégration utilise `window.$WowheadPower` injecté par le script externe Wowhead (`whTooltips` configuré dans `app.js`).
+Active les infobulles Wowhead sur les liens détectés dans le DOM. L'intégration utilise `window.$WowheadPower` injecté par le script externe Wowhead (`whTooltips` configuré dans `inertia.js`).
 
 **Utilisation**
 

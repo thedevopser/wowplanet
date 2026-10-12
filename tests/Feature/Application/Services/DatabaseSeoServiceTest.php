@@ -186,7 +186,7 @@ test('it builds valid JSON-LD', function (): void {
  */
 function sitemapUrls(): array
 {
-    return array_column(resolve(DatabaseSeoService::class)->getSitemapUrls(), 'url');
+    return resolve(DatabaseSeoService::class)->getSitemapUrls();
 }
 
 test('the sitemap always lists the eight section pages, even on an empty catalogue', function (): void {
