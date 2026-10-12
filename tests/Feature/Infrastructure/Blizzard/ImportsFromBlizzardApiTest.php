@@ -10,7 +10,7 @@ use App\Application\Import\ImportWaitReporter;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Request;
@@ -134,7 +134,7 @@ test('fetchBatchAsync marks rejected 404 promises as not found', function (): vo
     $request = new Request('GET', 'data/wow/x/4');
     $client->shouldReceive('getAsync')
         ->andReturnUsing(fn (): PromiseInterface => Create::rejectionFor(
-            new RequestException('Not Found', $request, new Response(404)),
+            new ClientException('Not Found', $request, new Response(404)),
         ));
 
     $results = makeApiConsumer($client)->fetchBatch([4 => 'data/wow/x/4']);
@@ -152,7 +152,7 @@ test('fetchBatchAsync retries rejected 429 promises then succeeds', function ():
             static $calls = 0;
             $calls++;
             if ($calls === 1) {
-                return Create::rejectionFor(new RequestException('Too Many Requests', $request, new Response(429)));
+                return Create::rejectionFor(new ClientException('Too Many Requests', $request, new Response(429)));
             }
 
             return Create::promiseFor(new Response(200, [], (string) json_encode(['id' => 5])));

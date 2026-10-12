@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Blizzard\Concerns;
 
+use App\Infrastructure\Blizzard\PromiseSettler;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Promise\Utils;
+use GuzzleHttp\Exception\ResponseException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Interrogation parallèle d'endpoints de profil Blizzard, avec retries.
@@ -45,14 +44,14 @@ trait FetchesProfileEndpoints
                 $promises[$key] = $this->blizzardApiClient->getAsync($config['endpoint'], $config['query']);
             }
 
-            /** @var array<string, array{state: string, value?: ResponseInterface, reason?: \Throwable|object|string}> $settled */
-            $settled = Utils::settle($promises)->wait();
+            $settled = PromiseSettler::settle($promises);
+            ksort($settled);
 
             $failed = [];
             foreach ($settled as $key => $result) {
                 $endpoint = $pending[$key]['endpoint'];
 
-                if ($result['state'] === 'fulfilled' && isset($result['value'])) {
+                if ($result['state'] === 'fulfilled') {
                     $decoded = json_decode($result['value']->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
                     $result['value']->getBody()->close();
                     unset($settled[$key]);
@@ -61,13 +60,10 @@ trait FetchesProfileEndpoints
                     continue;
                 }
 
-                $rejection = $result['reason'] ?? null;
-                $reason = $rejection instanceof \Throwable ? $rejection : null;
+                $reason = $result['reason'];
 
                 // 404 = not found (e.g. decor not unlocked), treat as empty
-                if ($reason instanceof RequestException
-                    && $reason->getResponse() instanceof ResponseInterface
-                    && $reason->getResponse()->getStatusCode() === 404) {
+                if ($reason instanceof ResponseException && $reason->getResponse()->getStatusCode() === 404) {
                     $results[$key] = ResponsePayload::forEndpoint($endpoint, []);
 
                     continue;
@@ -76,13 +72,13 @@ trait FetchesProfileEndpoints
                 // Retryable: timeout, 500, 504, rate limit
                 if ($this->isRetryableError($reason)) {
                     $failed[$key] = $pending[$key];
-                    Log::debug(sprintf('Profile API async error [%s]: %s', $endpoint, $reason?->getMessage() ?? 'unknown'));
+                    Log::debug(sprintf('Profile API async error [%s]: %s', $endpoint, $reason->getMessage()));
 
                     continue;
                 }
 
                 // Non-retryable error, treat as empty
-                Log::warning(sprintf('Profile API non-retryable error [%s]: %s', $endpoint, $reason?->getMessage() ?? 'unknown'));
+                Log::warning(sprintf('Profile API non-retryable error [%s]: %s', $endpoint, $reason->getMessage()));
                 $results[$key] = ResponsePayload::forEndpoint($endpoint, []);
             }
 
@@ -102,12 +98,8 @@ trait FetchesProfileEndpoints
         return $results;
     }
 
-    private function isRetryableError(?\Throwable $throwable): bool
+    private function isRetryableError(\Throwable $throwable): bool
     {
-        if (! $throwable instanceof \Throwable) {
-            return false;
-        }
-
         $message = $throwable->getMessage();
 
         return str_contains($message, '429')

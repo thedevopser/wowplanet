@@ -7,7 +7,7 @@ use App\Application\Services\Progress\PvpProgressAggregator;
 use App\Application\Services\PvpProfileService;
 use App\Domain\Services\PvpBracketClassifier;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\Psr7\Request;
@@ -30,7 +30,7 @@ function mockPvpAsync(MockInterface $mock, array $endpointResponses, array &$req
         foreach ($endpointResponses as $pattern => $data) {
             if (str_contains($endpoint, $pattern)) {
                 if ($data === ['__reject__']) {
-                    return new RejectedPromise(new RequestException(
+                    return new RejectedPromise(new ClientException(
                         'Not found',
                         new Request('GET', $endpoint),
                         new Response(404),
@@ -131,7 +131,7 @@ test('it returns null when the character has no pvp summary', function (): void 
     $mock = $this->mock(BlizzardApiClient::class);
     /** @var Expectation $summaryExp */
     $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->andThrow(new RequestException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
+    $summaryExp->andThrow(new ClientException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
 
     expect(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull();
 });
@@ -195,7 +195,7 @@ test('it caches the absence of pvp data to avoid refetching', function (): void 
     $mock = $this->mock(BlizzardApiClient::class);
     /** @var Expectation $summaryExp */
     $summaryExp = $mock->shouldReceive('get');
-    $summaryExp->once()->andThrow(new RequestException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
+    $summaryExp->once()->andThrow(new ClientException('Not found', new Request('GET', 'pvp-summary'), new Response(404)));
 
     expect(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull()
         ->and(pvpService()->getForCharacter('hyjal', 'thrall'))->toBeNull();

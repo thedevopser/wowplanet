@@ -124,6 +124,22 @@ Le budget ne bloque rien de lui-même : c'est un compteur qu'on interroge. Les i
 
 ---
 
+### `PromiseSettler`
+
+Attend un lot de requêtes asynchrones Guzzle et rend le sort de chacune, sans qu'un échec n'interrompe les autres. C'est le seul endroit où le résultat d'une promesse est lu : Guzzle ne type ni la valeur ni le motif de rejet, ils sont donc rétrécis ici, et le reste du code ne manipule que des formes connues.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `settle($promises, $concurrency)` | `array<clé, SettledRequest>` | Résout les promesses et rend, sous la clé de chacune, `{state: 'fulfilled', value: ResponseInterface}` ou `{state: 'rejected', reason: Throwable}`. |
+
+Sans concurrence, toutes les requêtes partent d'un coup : c'est l'usage des profils de personnage et des icônes de talents, quelques dizaines d'appels au plus. Avec une concurrence, les promesses d'un générateur ne sont créées qu'à mesure que les précédentes se terminent : c'est l'usage de `fetchBatchAsync()` pour les imports.
+
+Un rejet sans exception devient une `RuntimeException`, une valeur qui n'est pas une réponse devient un rejet. Les résultats sont rendus dans l'ordre où les requêtes se terminent ; un appelant qui a besoin d'un ordre stable trie par clé.
+
+La lecture du code de statut d'un échec passe par `GuzzleHttp\Exception\ResponseException`, seule famille d'exceptions de Guzzle 8 à porter une réponse : une `RequestException` nue n'en a pas.
+
+---
+
 ### `RateLimitingMiddleware`
 
 Middleware Guzzle qui limite les requêtes à 80/seconde en insérant des pauses (`BACKOFF_US = 50 000 µs`). C'est le point de passage unique de tous les appels Blizzard, site et imports confondus, et c'est là que chaque requête est comptée au budget horaire.
