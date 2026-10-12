@@ -278,11 +278,6 @@ class BlizzardApiClient
         return $decoded;
     }
 
-    public function getClient(): Client
-    {
-        return $this->client;
-    }
-
     public function getRegion(): string
     {
         return $this->region;
@@ -387,22 +382,5 @@ class BlizzardApiClient
         ]));
 
         return $seasonIndexResponse->currentSeasonId ?? 0;
-    }
-
-    /**
-     * @return array{headers: array{Authorization: string, Battlenet-Namespace: string}, query: array{locale: string, namespace: string}}
-     */
-    public function getBaseOptions(): array
-    {
-        return [
-            'headers' => [
-                'Authorization' => 'Bearer '.$this->getAccessToken(),
-                'Battlenet-Namespace' => 'static-'.$this->region,
-            ],
-            'query' => [
-                'locale' => 'fr_FR',
-                'namespace' => 'static-'.$this->region,
-            ],
-        ];
     }
 }

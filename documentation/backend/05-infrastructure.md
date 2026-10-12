@@ -25,7 +25,6 @@ Client HTTP vers l'API Blizzard (OAuth2 client credentials). Gère automatiqueme
 | `getRegion()` | — | `string` | Région configurée (ex. : `eu`). |
 | `getCurrentMythicSeasonId()`, `getCurrentPvpSeasonId()` | — | `int` | Saison Mythique+ ou JcJ courante. `0` hors saison, valeur d'absence attendue par les appelants. |
 | `getCurrentMythicDungeons()` | — | `list<MythicDungeon>` | Donjons de la rotation Mythique+ de la saison, en cache 24 h. Liste vide si l'appel échoue ou si l'index est vide, et dans ce cas rien n'est mis en cache. |
-| `getClient()`, `getBaseOptions()` | — | `Client`, `array{headers, query}` | Le client Guzzle sous-jacent, et les en-têtes et paramètres de base d'une requête statique. Plus aucun appelant dans l'application : seuls leurs tests les exercent. |
 
 ---
 
