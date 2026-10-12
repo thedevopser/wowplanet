@@ -163,7 +163,7 @@ Calcule les métadonnées SEO pour chaque section de la base de données.
 | `getDecorsMeta` | `?string $categorySlug` | `?array<string, string\|null>` |
 | `getAppearancesMeta` | `?string $slotSlug` | `?array<string, string\|null>` |
 | `getProfessionsMeta` | `?string $professionSlug` | `?array<string, string\|null>` |
-| `getSitemapUrls` | — | `array<array{url, label, lastmod}>` |
+| `getSitemapUrls` | — | `list<string>` |
 | `generateSitemap` | — | `string` (XML) |
 
 ---

@@ -446,21 +446,21 @@ class DatabaseSeoService
     }
 
     /**
-     * @return array<array{url: string, label: string, lastmod: string|null}>
+     * @return list<string>
      */
     public function getSitemapUrls(): array
     {
         $appUrl = $this->appUrl();
         $urls = [];
 
-        $urls[] = ['url' => $appUrl.'/base-de-donnees', 'label' => 'index', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/montures', 'label' => 'mounts', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/hauts-faits', 'label' => 'achievements', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/quetes', 'label' => 'quests', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/mascottes', 'label' => 'pets', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/decorations', 'label' => 'decors', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/garde-robe', 'label' => 'appearances', 'lastmod' => null];
-        $urls[] = ['url' => $appUrl.'/base-de-donnees/professions', 'label' => 'professions', 'lastmod' => null];
+        $urls[] = $appUrl.'/base-de-donnees';
+        $urls[] = $appUrl.'/base-de-donnees/montures';
+        $urls[] = $appUrl.'/base-de-donnees/hauts-faits';
+        $urls[] = $appUrl.'/base-de-donnees/quetes';
+        $urls[] = $appUrl.'/base-de-donnees/mascottes';
+        $urls[] = $appUrl.'/base-de-donnees/decorations';
+        $urls[] = $appUrl.'/base-de-donnees/garde-robe';
+        $urls[] = $appUrl.'/base-de-donnees/professions';
 
         /** @var list<string> $mountCategories */
         $mountCategories = WowMount::query()->where('is_active', true)
@@ -470,11 +470,7 @@ class DatabaseSeoService
             ->all();
 
         foreach ($mountCategories as $mountCategory) {
-            $urls[] = [
-                'url' => $appUrl.'/base-de-donnees/montures/'.$this->slugify($mountCategory),
-                'label' => 'mount-'.$mountCategory,
-                'lastmod' => null,
-            ];
+            $urls[] = $appUrl.'/base-de-donnees/montures/'.$this->slugify($mountCategory);
         }
 
         /** @var list<string> $petCategories */
@@ -485,11 +481,7 @@ class DatabaseSeoService
             ->all();
 
         foreach ($petCategories as $petCategory) {
-            $urls[] = [
-                'url' => $appUrl.'/base-de-donnees/mascottes/'.$this->slugify($petCategory),
-                'label' => 'pet-'.$petCategory,
-                'lastmod' => null,
-            ];
+            $urls[] = $appUrl.'/base-de-donnees/mascottes/'.$this->slugify($petCategory);
         }
 
         /** @var list<string> $decorCategories */
@@ -500,11 +492,7 @@ class DatabaseSeoService
             ->all();
 
         foreach ($decorCategories as $decorCategory) {
-            $urls[] = [
-                'url' => $appUrl.'/base-de-donnees/decorations/'.$this->slugify($decorCategory),
-                'label' => 'decor-'.$decorCategory,
-                'lastmod' => null,
-            ];
+            $urls[] = $appUrl.'/base-de-donnees/decorations/'.$this->slugify($decorCategory);
         }
 
         /** @var list<string> $appearanceSlots */
@@ -515,11 +503,7 @@ class DatabaseSeoService
             ->all();
 
         foreach ($appearanceSlots as $appearanceSlot) {
-            $urls[] = [
-                'url' => $appUrl.'/base-de-donnees/garde-robe/'.$this->slugify($appearanceSlot),
-                'label' => 'appearance-'.$appearanceSlot,
-                'lastmod' => null,
-            ];
+            $urls[] = $appUrl.'/base-de-donnees/garde-robe/'.$this->slugify($appearanceSlot);
         }
 
         /** @var list<string> $professionNames */
@@ -528,30 +512,18 @@ class DatabaseSeoService
             ->all();
 
         foreach ($professionNames as $professionName) {
-            $urls[] = [
-                'url' => $appUrl.'/base-de-donnees/professions/'.$this->slugify($professionName),
-                'label' => 'profession-'.$professionName,
-                'lastmod' => null,
-            ];
+            $urls[] = $appUrl.'/base-de-donnees/professions/'.$this->slugify($professionName);
         }
 
         foreach (ExpansionId::allSlugs() as $id => $slug) {
             $achievementCount = WowAchievement::query()->where('is_active', true)->where('expansion_id', $id)->count();
             if ($achievementCount > 0) {
-                $urls[] = [
-                    'url' => $appUrl.'/base-de-donnees/hauts-faits/'.$slug,
-                    'label' => 'achievement-'.$slug,
-                    'lastmod' => null,
-                ];
+                $urls[] = $appUrl.'/base-de-donnees/hauts-faits/'.$slug;
             }
 
             $questCount = WowQuest::query()->where('is_active', true)->where('expansion_id', $id)->count();
             if ($questCount > 0) {
-                $urls[] = [
-                    'url' => $appUrl.'/base-de-donnees/quetes/'.$slug,
-                    'label' => 'quest-'.$slug,
-                    'lastmod' => null,
-                ];
+                $urls[] = $appUrl.'/base-de-donnees/quetes/'.$slug;
             }
         }
 
@@ -565,9 +537,9 @@ class DatabaseSeoService
             $sitemap = Sitemap::create();
             $now = now();
 
-            foreach ($this->getSitemapUrls() as $entry) {
+            foreach ($this->getSitemapUrls() as $url) {
                 $sitemap->add(
-                    Url::create($entry['url'])
+                    Url::create($url)
                         ->setLastModificationDate($now)
                         ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
                         ->setPriority(0.7),
