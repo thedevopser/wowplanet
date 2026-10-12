@@ -10,6 +10,7 @@ use App\Infrastructure\Blizzard\ExpansionTierMatcher;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Models\WowProfession;
 use App\Models\WowRecipe;
+use Illuminate\Support\Collection;
 
 /**
  * Importe métiers et recettes depuis l'API officielle Blizzard (Profession API).
@@ -37,7 +38,7 @@ final readonly class ProfessionImporter
         $this->info(sprintf('  Recipe faction map: %d entries', count($recipeFactionMap)));
 
         $index = $this->fetchWithRetry('data/wow/profession/index');
-        if (! $index instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $index instanceof ResponsePayload) {
             $this->info('ERROR: Could not fetch profession index.');
 
             return;
@@ -185,7 +186,7 @@ final readonly class ProfessionImporter
      */
     private function saveProfessions(array $professions): void
     {
-        /** @var \Illuminate\Support\Collection<int, WowProfession> $stored */
+        /** @var Collection<int, WowProfession> $stored */
         $stored = WowProfession::query()
             ->whereIn('id', array_column($professions, 'id'))
             ->get()
@@ -236,7 +237,7 @@ final readonly class ProfessionImporter
         $written = 0;
 
         foreach (array_chunk($recipes, 500) as $chunk) {
-            /** @var \Illuminate\Support\Collection<int, WowRecipe> $stored */
+            /** @var Collection<int, WowRecipe> $stored */
             $stored = WowRecipe::query()
                 ->whereIn('id', array_column($chunk, 'id'))
                 ->get()

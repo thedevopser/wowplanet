@@ -63,7 +63,7 @@ readonly class ExpansionId
     }
 
     // @pest-mutate-ignore
-    private const SLUG_MAP = [
+    private const array SLUG_MAP = [
         self::CLASSIC => 'classic',
         self::BURNING_CRUSADE => 'burning-crusade',
         self::WRATH_OF_THE_LICH_KING => 'wrath',

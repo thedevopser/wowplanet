@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * La colonne `data` est décodée par le cast : c'est une frontière, servie telle quelle au front et
@@ -15,14 +18,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $bnet_user_id
  * @property StoredCrossCharacterData $data
  * @property int $character_count
- * @property \Illuminate\Support\Carbon|null $fetched_at
+ * @property Carbon|null $fetched_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class CrossCharacterData extends Model
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<static>> */
-    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    /** @use HasFactory<Factory<static>> */
+    use HasFactory;
 
     protected $table = 'cross_character_data';
 

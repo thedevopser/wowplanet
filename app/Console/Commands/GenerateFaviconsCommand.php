@@ -12,7 +12,7 @@ class GenerateFaviconsCommand extends Command
 
     protected $description = 'Generate all favicon formats from public/images/logo.png';
 
-    private const SIZES = [
+    private const array SIZES = [
         'favicon-16x16.png' => 16,
         'favicon-32x32.png' => 32,
         'apple-touch-icon.png' => 180,
@@ -21,7 +21,7 @@ class GenerateFaviconsCommand extends Command
         'android-chrome-512x512.png' => 512,
     ];
 
-    private const ICO_SIZES = [16, 32, 48];
+    private const array ICO_SIZES = [16, 32, 48];
 
     public function handle(): int
     {

@@ -14,6 +14,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -36,10 +37,10 @@ function fakeIconCdn(int $status): void
  *
  * @param  list<array{id: int, name: string}>  $mounts
  */
-function mockMountIndex(\Mockery\MockInterface $mock, array $mounts): void
+function mockMountIndex(MockInterface $mock, array $mounts): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/mount/index', \Mockery::any())
+        ->with('data/wow/mount/index', Mockery::any())
         ->andReturn(['mounts' => $mounts]);
 }
 
@@ -48,7 +49,7 @@ function mockMountIndex(\Mockery\MockInterface $mock, array $mounts): void
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function mockMountSearch(\Mockery\MockInterface $mock, array $documents): void
+function mockMountSearch(MockInterface $mock, array $documents): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, 'data/wow/search/mount'))
@@ -86,7 +87,7 @@ test('it takes the identity from the API and the ranking from the taxonomy', fun
     seedMountReference(100, 1234, 132261);
     fakeIconCdn(200);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test'], ['id' => 101, 'name' => 'Destrier squelette']]);
     mockMountSearch($client, [['id' => 100, 'name' => ['fr_FR' => 'Monture Test'], 'source' => ['type' => 'VENDOR']]]);
@@ -108,7 +109,7 @@ test('it takes the identity from the API and the ranking from the taxonomy', fun
 test('it never reads the curated files, so a missing SimpleArmory dump stops nothing', function (): void {
     curateMount(100, 'Classic', 'Reputation');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);
@@ -119,7 +120,7 @@ test('it never reads the curated files, so a missing SimpleArmory dump stops not
 });
 
 test('it falls back to the API source type for a mount nobody has ranked yet', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 999, 'name' => 'Monture à arbitrer']]);
     mockMountSearch($client, [['id' => 999, 'name' => ['fr_FR' => 'Monture à arbitrer'], 'source' => ['type' => 'TRADINGPOST']]]);
@@ -136,7 +137,7 @@ test('it falls back to the API source type for a mount nobody has ranked yet', f
 test('it leaves a mount ranked nowhere when the taxonomy curates it as ranked nowhere', function (): void {
     curateMount(100, null, null);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, [['id' => 100, 'name' => ['fr_FR' => 'Monture Test'], 'source' => ['type' => 'VENDOR']]]);
@@ -150,7 +151,7 @@ test('it leaves a mount ranked nowhere when the taxonomy curates it as ranked no
 test('it reports how many mounts are waiting to be arbitrated', function (): void {
     curateMount(100, 'Classic', 'Drop');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [
         ['id' => 100, 'name' => 'Rangée'],
@@ -174,7 +175,7 @@ test('it keeps the icon a mount already had when the reference socle carries non
         'is_active' => true,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);
@@ -190,7 +191,7 @@ test('it leaves a row the API has not changed untouched', function (): void {
     seedMountReference(100, 1234, 132261);
     fakeIconCdn(200);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);
@@ -207,7 +208,7 @@ test('it leaves a row the API has not changed untouched', function (): void {
 test('it deletes mounts that dropped out of the API catalog', function (): void {
     WowMount::query()->create(['id' => 3021, 'name_fr' => 'Monture retirée', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);
@@ -221,7 +222,7 @@ test('it deletes mounts that dropped out of the API catalog', function (): void 
 test('it aborts without touching the catalog when the API index is empty', function (): void {
     WowMount::query()->create(['id' => 200, 'name_fr' => 'Monture existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, []);
 
@@ -234,11 +235,11 @@ test('it aborts without touching the catalog when the API index is empty', funct
 test('it aborts without deleting anything when the mount index call fails', function (): void {
     WowMount::query()->create(['id' => 300, 'name_fr' => 'Monture existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('get')
-        ->with('data/wow/mount/index', \Mockery::any())
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->with('data/wow/mount/index', Mockery::any())
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     resolve(MountImporter::class)->import();
 
@@ -247,7 +248,7 @@ test('it aborts without deleting anything when the mount index call fails', func
 });
 
 test('a failed search window costs the source type, never the mount itself', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     $client->shouldReceive('getAsync')
@@ -264,7 +265,7 @@ test('it drops an icon the render CDN refuses rather than writing a broken image
     seedMountReference(100, 1234, 132233);
     fakeIconCdn(403);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Faucon de guerre rapide']]);
     mockMountSearch($client, []);
@@ -278,7 +279,7 @@ test('it checks only the icons whose URL changes, so a second pass asks the CDN 
     seedMountReference(100, 1234, 132261);
     fakeIconCdn(200);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);
@@ -296,7 +297,7 @@ test('an import run after a reassignment from the panel keeps the new ranking', 
     curateMount(100, 'Other', 'Drop');
     fakeIconCdn(200);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockMountIndex($client, [['id' => 100, 'name' => 'Monture Test']]);
     mockMountSearch($client, []);

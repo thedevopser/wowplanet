@@ -12,6 +12,7 @@ use App\Models\WowPet;
 use App\Models\WowQuest;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Psr7\Response;
+use Mockery\Expectation;
 
 test('full character profile flow', function (): void {
     WowQuest::factory()->create([
@@ -49,7 +50,7 @@ test('full character profile flow', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
 
     // Summary is fetched synchronously
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('get');
     $exp->andReturn([
         'name' => 'Thrall',
@@ -61,12 +62,12 @@ test('full character profile flow', function (): void {
         'faction' => ['name' => 'Horde'],
     ]);
 
-    /** @var \Mockery\Expectation $seasonExp */
+    /** @var Expectation $seasonExp */
     $seasonExp = $mock->shouldReceive('getCurrentMythicSeasonId');
     $seasonExp->andReturn(0);
 
     // All other endpoints are fetched async
-    /** @var \Mockery\Expectation $asyncExp */
+    /** @var Expectation $asyncExp */
     $asyncExp = $mock->shouldReceive('getAsync');
     $asyncExp->andReturnUsing(function (string $endpoint): FulfilledPromise {
         $responses = [
@@ -161,7 +162,7 @@ test('the character endpoint serves the resilience with the mythic plus data', f
 
 test('character not found returns 404', function (): void {
     $mock = $this->partialMock(BlizzardApiClient::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('get');
     $exp->andThrow(new Exception('Character not found'));
 

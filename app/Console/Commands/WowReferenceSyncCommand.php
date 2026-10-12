@@ -36,7 +36,7 @@ class WowReferenceSyncCommand extends Command
     /**
      * En deçà de cette part du dernier chargement, une source est tenue pour tronquée.
      */
-    private const MIN_RETAINED_RATIO = 0.5;
+    private const float MIN_RETAINED_RATIO = 0.5;
 
     public function handle(
         WagoClient $wagoClient,

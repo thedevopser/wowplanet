@@ -16,7 +16,7 @@ use RuntimeException;
  */
 final readonly class ReferenceLoader
 {
-    private const CHUNK_SIZE = 5000;
+    private const int CHUNK_SIZE = 5000;
 
     public function __construct(private Connection $connection) {}
 

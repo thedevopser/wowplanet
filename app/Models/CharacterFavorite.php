@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\CharacterFavoriteFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class CharacterFavorite extends Model
 {
-    /** @use HasFactory<\Database\Factories\CharacterFavoriteFactory> */
+    /** @use HasFactory<CharacterFavoriteFactory> */
     use HasFactory;
 
     protected $fillable = [

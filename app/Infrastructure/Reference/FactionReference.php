@@ -20,7 +20,7 @@ class FactionReference
     /**
      * Factions parentes servant d'en-tête d'extension dans la hiérarchie.
      */
-    private const EXPANSION_HEADERS = [
+    private const array EXPANSION_HEADERS = [
         1118 => 0,  // Classique
         980 => 1,   // The Burning Crusade
         1097 => 2,  // Wrath of the Lich King
@@ -36,13 +36,13 @@ class FactionReference
     ];
 
     /** Extension à partir de laquelle toute réputation vaut pour le compte entier. */
-    private const ACCOUNT_WIDE_FROM_EXPANSION = 9;
+    private const int ACCOUNT_WIDE_FROM_EXPANSION = 9;
 
     /** Profondeur maximale de remontée dans la hiérarchie des factions parentes. */
-    private const MAX_PARENT_DEPTH = 10;
+    private const int MAX_PARENT_DEPTH = 10;
 
     /** Hurlevent, dont le masque de race sert de référence Alliance. */
-    private const STORMWIND_FACTION_ID = 72;
+    private const int STORMWIND_FACTION_ID = 72;
 
     /**
      * @var list<array{id: int, name: string, reputation_index: int, parent_faction_id: int, renown_currency_id: int, friendship_rep_id: int, reputation_max_0: int, reputation_max_1: int, race_mask_low: int|null, race_mask_high: int|null}>|null

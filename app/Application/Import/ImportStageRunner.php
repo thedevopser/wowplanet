@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Artisan;
  */
 final readonly class ImportStageRunner
 {
-    private const REFERENCE_SYNC_COMMAND = 'app:wow-reference-sync';
+    private const string REFERENCE_SYNC_COMMAND = 'app:wow-reference-sync';
 
     public function __construct(
         private BlizzardBatchImporter $blizzardBatchImporter,

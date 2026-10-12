@@ -7,6 +7,7 @@ use App\Application\Import\ImportHistoryReader;
 use App\Application\Import\ImportLog;
 use App\Models\ImportHistoryEntry;
 use App\Models\ImportHistoryStep;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 function historyReader(): ImportHistoryReader
 {
@@ -130,7 +131,7 @@ test('the detail carries the journal while it lives, and says when it has expire
 
 test('an unknown import has no detail', function (): void {
     historyReader()->entry('nobody');
-})->throws(Illuminate\Database\Eloquent\ModelNotFoundException::class);
+})->throws(ModelNotFoundException::class);
 
 test('two imports compare stage by stage on what they share, from the older to the newer', function (): void {
     archivedImport('before', '2026-09-01 10:00:00', ['mounts' => 1_000, 'quests' => 200]);

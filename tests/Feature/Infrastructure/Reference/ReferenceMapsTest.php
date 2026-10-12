@@ -79,7 +79,7 @@ test('it leaves out a quest whose content tuning is unknown', function (): void 
 });
 
 test('it leaves out a quest carrying no content tuning at all', function (): void {
-    seedReferenceQuest(42, contentTuningId: null);
+    seedReferenceQuest(42);
 
     expect(referenceMaps()->questExpansions())->toBe([]);
 });

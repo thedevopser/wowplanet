@@ -16,7 +16,7 @@ class BlizzardServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(
-            function (): \App\Infrastructure\Blizzard\BlizzardApiClient {
+            function (): BlizzardApiClient {
                 $handlerStack = HandlerStack::create();
                 $handlerStack->push(new RateLimitingMiddleware(new HourlyBudgetGuard), 'rate_limiter');
 

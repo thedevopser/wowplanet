@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 use App\Application\DTOs\AppearanceImportProgress;
 use App\Application\Import\ImportControl;
+use App\Application\Import\ImportLog;
 use App\Application\Import\ImportSignal;
 use App\Application\Import\ImportStage;
 use App\Application\Import\ImportStageRunner;
 use App\Application\Import\ImportStep;
 use App\Application\Import\ImportStepStatus;
 use App\Application\Import\ImportWaitReason;
+use App\Application\Import\RowTally;
 use App\Infrastructure\Blizzard\BlizzardBatchImporter;
 use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Reference\FactionReference;
 use App\Infrastructure\Reference\ReferenceMaps;
+use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use App\Models\WowMount;
@@ -165,7 +168,7 @@ test('the wardrobe pass resumes from the offset of the step it is given', functi
         ->andReturn(new AppearanceImportProgress(done: true, offset: 572, total: 572, secondsUntilBudget: 0));
 
     $importStep = ImportStep::pending(ImportStage::Appearances)
-        ->advanced(App\Application\Import\RowTally::none(), 0, 0, offset: 143, total: 572);
+        ->advanced(RowTally::none(), 0, 0, offset: 143, total: 572);
 
     resolve(ImportStageRunner::class)->run('job-1', $importStep, full: true, limit: null);
 });
@@ -221,7 +224,7 @@ test('the merge never rewrites what the base already holds', function (): void {
 });
 
 test('a collection stage refuses to import against an empty taxonomy, rather than stripping the catalogue', function (): void {
-    unlink(resolve(App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot::class)->path());
+    unlink(resolve(CollectionTaxonomySnapshot::class)->path());
     $this->importerMock->shouldNotReceive('importDecor');
 
     $importStep = runStage(ImportStage::Decor);
@@ -231,7 +234,7 @@ test('a collection stage refuses to import against an empty taxonomy, rather tha
 });
 
 test('a missing snapshot does not stop a collection whose taxonomy is already in the base', function (): void {
-    unlink(resolve(App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot::class)->path());
+    unlink(resolve(CollectionTaxonomySnapshot::class)->path());
     WowCollectionTaxonomy::query()->create(['entity' => 'mount', 'entry_id' => 7, 'category' => 'Racial', 'source' => 'Human', 'obtainable' => true]);
     $this->importerMock->shouldReceive('importMounts')->once();
 
@@ -251,7 +254,7 @@ test('the journal says how many curated entries the merge brought in', function 
 
     runStage(ImportStage::Mounts);
 
-    expect(implode(PHP_EOL, resolve(App\Application\Import\ImportLog::class)->since('job-1', 0)->lines))
+    expect(implode(PHP_EOL, resolve(ImportLog::class)->since('job-1', 0)->lines))
         ->toContain('Montures — 2 entrées de taxonomie chargées depuis l\'instantané versionné.');
 });
 
@@ -259,8 +262,8 @@ test('a merge that brings nothing new stays out of the journal', function (): vo
     $this->importerMock->shouldReceive('importPets')->twice();
 
     runStage(ImportStage::Pets);
-    $lines = resolve(App\Application\Import\ImportLog::class)->since('job-1', 0)->lines;
+    $lines = resolve(ImportLog::class)->since('job-1', 0)->lines;
     runStage(ImportStage::Pets);
 
-    expect(resolve(App\Application\Import\ImportLog::class)->since('job-1', 0)->lines)->toBe($lines);
+    expect(resolve(ImportLog::class)->since('job-1', 0)->lines)->toBe($lines);
 });

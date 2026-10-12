@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowAppearanceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WowAppearance extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowAppearanceFactory> */
+    /** @use HasFactory<WowAppearanceFactory> */
     use HasFactory;
 
     protected $table = 'wow_appearances';

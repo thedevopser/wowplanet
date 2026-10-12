@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Infrastructure\Taxonomy\CollectionEntity;
+use Database\Factories\WowCollectionTaxonomyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,7 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WowCollectionTaxonomy extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowCollectionTaxonomyFactory> */
+    /** @use HasFactory<WowCollectionTaxonomyFactory> */
     use HasFactory;
 
     protected $table = 'wow_collection_taxonomy';

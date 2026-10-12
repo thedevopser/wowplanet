@@ -11,6 +11,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -21,10 +22,10 @@ beforeEach(function (): void {
  *
  * @param  list<array{id: int, name: string}>  $pets
  */
-function mockPetIndex(\Mockery\MockInterface $mock, array $pets): void
+function mockPetIndex(MockInterface $mock, array $pets): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/pet/index', \Mockery::any())
+        ->with('data/wow/pet/index', Mockery::any())
         ->andReturn(['pets' => $pets]);
 }
 
@@ -33,14 +34,14 @@ function mockPetIndex(\Mockery\MockInterface $mock, array $pets): void
  *
  * @param  array<string, mixed>  $detail
  */
-function mockPetDetail(\Mockery\MockInterface $mock, int $id, array $detail): void
+function mockPetDetail(MockInterface $mock, int $id, array $detail): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => $requested === 'data/wow/pet/'.$id)
         ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode($detail))));
 }
 
-function mockPetDetailFailure(\Mockery\MockInterface $mock, int $id): void
+function mockPetDetailFailure(MockInterface $mock, int $id): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => $requested === 'data/wow/pet/'.$id)
@@ -60,7 +61,7 @@ function curatePet(int $entryId, ?string $category, ?string $source): void
 test('it takes the identity from the API detail and the ranking from the taxonomy', function (): void {
     curatePet(39, 'Classic', 'Profession');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
     mockPetDetail($client, 39, [
@@ -84,7 +85,7 @@ test('it takes the identity from the API detail and the ranking from the taxonom
 });
 
 test('it falls back to the API source type for a pet nobody has ranked yet', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [['id' => 3317, 'name' => 'Mascotte sauvage']]);
     mockPetDetail($client, 3317, ['id' => 3317, 'name' => 'Mascotte sauvage', 'source' => ['type' => 'WILDPET']]);
@@ -98,7 +99,7 @@ test('it falls back to the API source type for a pet nobody has ranked yet', fun
 test('it reports how many pets are waiting to be arbitrated', function (): void {
     curatePet(39, 'Classic', 'Profession');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [
         ['id' => 39, 'name' => 'Rangée'],
@@ -125,7 +126,7 @@ test('a failed detail leaves the pet its icon and its creature rather than blank
         'is_active' => true,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
     mockPetDetailFailure($client, 39);
@@ -141,7 +142,7 @@ test('a failed detail leaves the pet its icon and its creature rather than blank
 test('it leaves a row the API has not changed untouched', function (): void {
     curatePet(39, 'Classic', 'Profession');
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
     mockPetDetail($client, 39, ['id' => 39, 'name' => 'Écureuil mécanique', 'creature' => ['id' => 2671]]);
@@ -158,7 +159,7 @@ test('it leaves a row the API has not changed untouched', function (): void {
 test('it deletes pets that dropped out of the API catalog', function (): void {
     WowPet::query()->create(['id' => 5000, 'name_fr' => 'Mascotte retirée', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
     mockPetDetail($client, 39, ['id' => 39, 'name' => 'Écureuil mécanique']);
@@ -172,7 +173,7 @@ test('it deletes pets that dropped out of the API catalog', function (): void {
 test('it aborts without touching the catalog when the API index is empty', function (): void {
     WowPet::query()->create(['id' => 200, 'name_fr' => 'Mascotte existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockPetIndex($client, []);
 
@@ -185,11 +186,11 @@ test('it aborts without touching the catalog when the API index is empty', funct
 test('it aborts without deleting anything when the pet index call fails', function (): void {
     WowPet::query()->create(['id' => 300, 'name_fr' => 'Mascotte existante', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldReceive('get')
-        ->with('data/wow/pet/index', \Mockery::any())
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->with('data/wow/pet/index', Mockery::any())
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     resolve(PetImporter::class)->import();
 

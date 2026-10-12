@@ -28,9 +28,9 @@ use Illuminate\Support\Facades\Http;
 final readonly class RenderedIconProbe
 {
     /** Au-delà, on ouvre plus de connexions que le gain de parallélisme n'en rapporte. */
-    private const POOL_SIZE = 50;
+    private const int POOL_SIZE = 50;
 
-    private const TIMEOUT_S = 10;
+    private const int TIMEOUT_S = 10;
 
     /**
      * @param  list<string>  $urls

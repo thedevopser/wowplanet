@@ -32,17 +32,17 @@ final readonly class AchievementImporter
 {
     use ImportsFromBlizzardApi;
 
-    private const DETAIL_ENDPOINT = 'data/wow/achievement/';
+    private const string DETAIL_ENDPOINT = 'data/wow/achievement/';
 
     /** Les détails sont petits, mais huit mille corps décodés gardés ensemble ne le sont pas. */
-    private const DETAIL_BATCH = 1000;
+    private const int DETAIL_BATCH = 1000;
 
-    private const MEDIA_WINDOW_BATCH = 10;
+    private const int MEDIA_WINDOW_BATCH = 10;
 
-    private const SAVE_CHUNK = 500;
+    private const int SAVE_CHUNK = 500;
 
     /** Au-delà, le rapport devient illisible : le compte total dit le reste. */
-    private const REPORTED_CATEGORIES = 15;
+    private const int REPORTED_CATEGORIES = 15;
 
     public function __construct(
         BlizzardApiClient $blizzardApiClient,

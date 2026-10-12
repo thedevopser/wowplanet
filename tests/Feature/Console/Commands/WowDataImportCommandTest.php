@@ -138,7 +138,7 @@ test('the command waits out the hourly ceiling and says so', function (): void {
         ->expectsOutputToContain('plafond horaire')
         ->assertSuccessful();
 
-    Sleep::assertSlept(fn (\DateInterval $dateInterval): bool => $dateInterval->s === 240);
+    Sleep::assertSlept(fn (DateInterval $dateInterval): bool => $dateInterval->s === 240);
 });
 
 // ─── rapport de fin ─────────────────────────────────────────

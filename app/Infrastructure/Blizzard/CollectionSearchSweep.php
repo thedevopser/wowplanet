@@ -26,9 +26,9 @@ final readonly class CollectionSearchSweep
     use ImportsFromBlizzardApi;
     use SweepsIdWindows;
 
-    private const MOUNT_ENDPOINT = 'data/wow/search/mount';
+    private const string MOUNT_ENDPOINT = 'data/wow/search/mount';
 
-    private const DECOR_ENDPOINT = 'data/wow/search/decor';
+    private const string DECOR_ENDPOINT = 'data/wow/search/decor';
 
     public function __construct(BlizzardApiClient $blizzardApiClient)
     {

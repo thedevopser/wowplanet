@@ -36,7 +36,7 @@ class CollectionTaxonomyExportCommand extends Command
         $snapshot = $requestedPath === null ? $collectionTaxonomySnapshot : new CollectionTaxonomySnapshot($requestedPath);
 
         try {
-            $report = (new TaxonomySnapshotExporter($snapshot))->export();
+            $report = new TaxonomySnapshotExporter($snapshot)->export();
         } catch (\RuntimeException $runtimeException) {
             $this->error($runtimeException->getMessage());
 

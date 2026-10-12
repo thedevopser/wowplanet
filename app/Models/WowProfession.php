@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowProfessionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class WowProfession extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowProfessionFactory> */
+    /** @use HasFactory<WowProfessionFactory> */
     use HasFactory;
 
     protected $table = 'wow_professions';

@@ -14,10 +14,12 @@ use App\Models\WowProfession;
 use App\Models\WowQuest;
 use App\Models\WowRecipe;
 use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -30,7 +32,7 @@ test('importQuests creates quests with expansion and zone maps', function (): vo
 
     // Area index with 2 areas
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [
             ['id' => 10, 'name' => 'Durotar'],
             ['id' => 20, 'name' => 'Nagrand'],
@@ -38,7 +40,7 @@ test('importQuests creates quests with expansion and zone maps', function (): vo
 
     // Area 10: Durotar with 1 quest
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/10', \Mockery::any())
+        ->with('data/wow/quest/area/10', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Durotar'],
             'quests' => [['id' => 100, 'name' => 'Quête de Durotar']],
@@ -46,7 +48,7 @@ test('importQuests creates quests with expansion and zone maps', function (): vo
 
     // Area 20: Nagrand with 2 quests
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/20', \Mockery::any())
+        ->with('data/wow/quest/area/20', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Nagrand'],
             'quests' => [
@@ -73,11 +75,11 @@ test('importQuests uses ContentTuning expansion over area expansion', function (
     $mock = $this->mock(BlizzardApiClient::class);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [['id' => 10, 'name' => 'Zone']]]);
 
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/10', \Mockery::any())
+        ->with('data/wow/quest/area/10', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Durotar'],
             'quests' => [
@@ -100,11 +102,11 @@ test('importQuests assigns faction from quest and zone faction maps', function (
     $mock = $this->mock(BlizzardApiClient::class);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [['id' => 10, 'name' => 'Zone']]]);
 
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/10', \Mockery::any())
+        ->with('data/wow/quest/area/10', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Hurlevent'],
             'quests' => [
@@ -127,7 +129,7 @@ test('importQuests handles empty area index', function (): void {
     $mock = $this->mock(BlizzardApiClient::class);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => []]);
 
     $blizzardBatchImporter = resolve(BlizzardBatchImporter::class);
@@ -140,11 +142,11 @@ test('importQuests defaults unmapped areas to expansion 0', function (): void {
     $mock = $this->mock(BlizzardApiClient::class);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/quest/area/index', \Mockery::any())
+        ->with('data/wow/quest/area/index', Mockery::any())
         ->andReturn(['areas' => [['id' => 99, 'name' => 'Unknown']]]);
 
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/area/99', \Mockery::any())
+        ->with('data/wow/quest/area/99', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'area' => ['name' => 'Unknown Zone'],
             'quests' => [['id' => 100, 'name' => 'Quête orpheline']],
@@ -162,7 +164,7 @@ test('importAchievements builds the catalog from the category hierarchy', functi
     $mock = $this->mock(BlizzardApiClient::class);
 
     $mock->shouldReceive('get')
-        ->with('data/wow/achievement-category/index', \Mockery::any())
+        ->with('data/wow/achievement-category/index', Mockery::any())
         ->andReturn(['categories' => [['id' => 96, 'name' => 'Quêtes'], ['id' => 15547, 'name' => 'Midnight']]]);
     bbiMockAsync($mock, 'data/wow/achievement-category/96', ['id' => 96, 'name' => 'Quêtes']);
     bbiMockAsync($mock, 'data/wow/achievement-category/15547', [
@@ -188,7 +190,7 @@ test('importAchievements leaves the catalog untouched when the hierarchy is unre
     WowAchievement::query()->create(['id' => 10, 'name_fr' => 'Achievement existant', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 10, 'is_active' => true]);
 
     $mock = $this->mock(BlizzardApiClient::class);
-    $mock->shouldReceive('get')->andThrow(new \Exception('API error: 500 Internal Server Error'));
+    $mock->shouldReceive('get')->andThrow(new Exception('API error: 500 Internal Server Error'));
     $mock->shouldNotReceive('getAsync');
 
     resolve(BlizzardBatchImporter::class)->importAchievements();
@@ -352,7 +354,7 @@ test('tagMirrorQuestFactions tags mirror quest pairs via API reputation', functi
 
     // Quest 100 returns a Horde reputation
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/100', \Mockery::any())
+        ->with('data/wow/quest/100', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'rewards' => [
                 'reputations' => [
@@ -363,7 +365,7 @@ test('tagMirrorQuestFactions tags mirror quest pairs via API reputation', functi
 
     // Quest 101 returns no faction reputation
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/quest/101', \Mockery::any())
+        ->with('data/wow/quest/101', Mockery::any())
         ->andReturn(Create::promiseFor(new Response(200, [], json_encode([
             'rewards' => [],
         ]))));
@@ -427,11 +429,11 @@ function bbiCurate(CollectionEntity $collectionEntity, array $rankings): void
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function bbiMockSearchSweep(\Mockery\MockInterface $mock, string $endpoint, array $documents): void
+function bbiMockSearchSweep(MockInterface $mock, string $endpoint, array $documents): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'results' => array_map(static fn (array $document): array => ['data' => $document], $documents),
         ]))));
 }
@@ -441,12 +443,12 @@ function bbiMockSearchSweep(\Mockery\MockInterface $mock, string $endpoint, arra
  *
  * @param  array<int, string>  $icons  [item_id => icon_url]
  */
-function bbiMockItemMedia(\Mockery\MockInterface $mock, array $icons): void
+function bbiMockItemMedia(MockInterface $mock, array $icons): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, 'data/wow/search/media')
             && str_contains($requested, 'tags=item'))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'results' => array_map(
                 static fn (string $url, int $id): array => ['data' => ['id' => $id, 'assets' => [['key' => 'icon', 'value' => $url]]]],
                 $icons,
@@ -460,11 +462,11 @@ function bbiMockItemMedia(\Mockery\MockInterface $mock, array $icons): void
  *
  * @param  array<string, mixed>  $detail
  */
-function bbiMockPetDetail(\Mockery\MockInterface $mock, int $id, array $detail): void
+function bbiMockPetDetail(MockInterface $mock, int $id, array $detail): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => $requested === 'data/wow/pet/'.$id)
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode($detail))));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode($detail))));
 }
 
 /**
@@ -477,14 +479,14 @@ function bbiMockPetDetail(\Mockery\MockInterface $mock, int $id, array $detail):
  *
  * @param  array<string, mixed>  $payload
  */
-function bbiMockAsync(\Mockery\MockInterface $mock, string $endpoint, array $payload): void
+function bbiMockAsync(MockInterface $mock, string $endpoint, array $payload): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode($payload))));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode($payload))));
 }
 
-function bbiMockNameIndex(\Mockery\MockInterface $mock, string $endpoint, string $listKey, array $names): void
+function bbiMockNameIndex(MockInterface $mock, string $endpoint, string $listKey, array $names): void
 {
     $entries = [];
     foreach ($names as $id => $name) {
@@ -492,7 +494,7 @@ function bbiMockNameIndex(\Mockery\MockInterface $mock, string $endpoint, string
     }
 
     $mock->shouldReceive('get')
-        ->with('data/wow/'.$endpoint, \Mockery::any())
+        ->with('data/wow/'.$endpoint, Mockery::any())
         ->andReturn([$listKey => $entries]);
 }
 
@@ -501,15 +503,15 @@ function bbiMockNameIndex(\Mockery\MockInterface $mock, string $endpoint, string
  *
  * @param  list<array{name: string, recipes: list<array{id: int, name: string}>}>  $categories
  */
-function bbiMockProfessionApi(\Mockery\MockInterface $mock, int $professionId, string $name, string $type, int $tierId, string $tierName, array $categories): void
+function bbiMockProfessionApi(MockInterface $mock, int $professionId, string $name, string $type, int $tierId, string $tierName, array $categories): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/profession/index', \Mockery::any())
+        ->with('data/wow/profession/index', Mockery::any())
         ->andReturn(['professions' => [['id' => $professionId, 'name' => $name]]]);
 
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/profession/'.$professionId, \Mockery::any())
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->with('data/wow/profession/'.$professionId, Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'id' => $professionId,
             'name' => $name,
             'type' => ['type' => $type, 'name' => 'x'],
@@ -517,8 +519,8 @@ function bbiMockProfessionApi(\Mockery\MockInterface $mock, int $professionId, s
         ]))));
 
     $mock->shouldReceive('getAsync')
-        ->with(sprintf('data/wow/profession/%d/skill-tier/%d', $professionId, $tierId), \Mockery::any())
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->with(sprintf('data/wow/profession/%d/skill-tier/%d', $professionId, $tierId), Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'id' => $tierId,
             'categories' => $categories,
         ]))));

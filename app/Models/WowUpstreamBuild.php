@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowUpstreamBuildFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Dernier build connu de chaque amont, avec la date à laquelle il a été lu.
@@ -20,14 +22,14 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property string $source
  * @property string|null $build
- * @property \Illuminate\Support\Carbon|null $checked_at
+ * @property Carbon|null $checked_at
  * @property string $outcome
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class WowUpstreamBuild extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowUpstreamBuildFactory> */
+    /** @use HasFactory<WowUpstreamBuildFactory> */
     use HasFactory;
 
     protected $table = 'wow_upstream_builds';

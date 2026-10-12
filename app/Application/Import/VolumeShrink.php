@@ -22,7 +22,7 @@ final class VolumeShrink
      *
      * @pest-mutate-ignore
      */
-    public const ALERT_RATIO = 0.9;
+    public const float ALERT_RATIO = 0.9;
 
     public static function between(int $previous, int $current): bool
     {

@@ -14,6 +14,7 @@ use App\Models\WowProfession;
 use App\Models\WowQuest;
 use App\Models\WowRecipe;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -31,7 +32,7 @@ class DatabaseQueryService
      *
      * @var array<string, string>
      */
-    private const SLOT_LABELS = [
+    private const array SLOT_LABELS = [
         'HEAD' => 'Tête',
         'SHOULDER' => 'Épaules',
         'SHIRT' => 'Chemise',
@@ -51,26 +52,26 @@ class DatabaseQueryService
         'HOLDABLE' => 'Tenu en main gauche',
     ];
 
-    private const DEFAULT_PER_PAGE = 50;
+    private const int DEFAULT_PER_PAGE = 50;
 
-    private const MAX_PER_PAGE = 100;
+    private const int MAX_PER_PAGE = 100;
 
-    private const COUNTS_CACHE_KEY = 'database_sidebar_counts';
+    private const string COUNTS_CACHE_KEY = 'database_sidebar_counts';
 
-    private const SUBCATEGORIES_CACHE_KEY = 'database_sidebar_subcategories';
+    private const string SUBCATEGORIES_CACHE_KEY = 'database_sidebar_subcategories';
 
     /**
      * Sections dont la sidebar affiche les sous-catégories (accordéon).
      *
      * @var list<string>
      */
-    private const SIDEBAR_SECTIONS = ['mounts', 'achievements', 'quests', 'pets', 'decors', 'appearances', 'professions'];
+    private const array SIDEBAR_SECTIONS = ['mounts', 'achievements', 'quests', 'pets', 'decors', 'appearances', 'professions'];
 
     // The catalogue only changes on an admin import: an hour saves some fifteen aggregate queries per page.
-    private const COUNTS_CACHE_SECONDS = 3600;
+    private const int COUNTS_CACHE_SECONDS = 3600;
 
     /**
-     * @return array{items: \Illuminate\Database\Eloquent\Collection<int, WowMount>, categories: list<CategoryEntry>, total: int}
+     * @return array{items: Collection<int, WowMount>, categories: list<CategoryEntry>, total: int}
      */
     public function mounts(?string $category = null): array
     {
@@ -138,7 +139,7 @@ class DatabaseQueryService
     }
 
     /**
-     * @return array{items: \Illuminate\Database\Eloquent\Collection<int, WowPet>, categories: list<CategoryEntry>, total: int}
+     * @return array{items: Collection<int, WowPet>, categories: list<CategoryEntry>, total: int}
      */
     public function pets(?string $category = null): array
     {
@@ -158,7 +159,7 @@ class DatabaseQueryService
     }
 
     /**
-     * @return array{items: \Illuminate\Database\Eloquent\Collection<int, WowDecor>, categories: list<CategoryEntry>, total: int}
+     * @return array{items: Collection<int, WowDecor>, categories: list<CategoryEntry>, total: int}
      */
     public function decors(?string $category = null): array
     {
@@ -447,7 +448,7 @@ class DatabaseQueryService
             if ($count > 0) {
                 $expansions[] = [
                     'id' => $id,
-                    'name' => (new ExpansionId($id))->toString(),
+                    'name' => new ExpansionId($id)->toString(),
                     'slug' => $slug,
                     'count' => $count,
                 ];

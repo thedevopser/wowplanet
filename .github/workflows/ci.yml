@@ -26,7 +26,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v7
 
-      # 8.4 is the FrankenPHP version, not the ^8.2 of composer.json.
+      # 8.4 is the FrankenPHP version, the one composer.json requires.
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:

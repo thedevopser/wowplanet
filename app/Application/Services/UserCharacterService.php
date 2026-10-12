@@ -6,6 +6,8 @@ namespace App\Application\Services;
 
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
@@ -112,8 +114,8 @@ class UserCharacterService
             $baseUrl = sprintf('https://%s.api.blizzard.com', $this->region);
             $namespace = 'static-'.$this->region;
 
-            /** @var array<string, \Illuminate\Http\Client\Response> $responses */
-            $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($classIds, $baseUrl, $namespace, $token): void {
+            /** @var array<string, Response> $responses */
+            $responses = Http::pool(function (Pool $pool) use ($classIds, $baseUrl, $namespace, $token): void {
                 foreach ($classIds as $classId) {
                     $pool->as((string) $classId)
                         ->withToken($token)
@@ -189,8 +191,8 @@ class UserCharacterService
         $baseUrl = sprintf('https://%s.api.blizzard.com', $this->region);
         $namespace = 'profile-'.$this->region;
 
-        /** @var array<string, \Illuminate\Http\Client\Response> $responses */
-        $responses = Http::pool(function (\Illuminate\Http\Client\Pool $pool) use ($characters, $baseUrl, $namespace, $token): void {
+        /** @var array<int, Response> $responses */
+        $responses = Http::pool(function (Pool $pool) use ($characters, $baseUrl, $namespace, $token): void {
             foreach ($characters as $i => $char) {
                 $realm = mb_strtolower($char['realmSlug']);
                 $name = mb_strtolower($char['name']);
@@ -205,18 +207,17 @@ class UserCharacterService
         });
 
         foreach ($characters as $i => &$char) {
-            $key = (string) $i;
-            if (! isset($responses[$key])) {
+            if (! isset($responses[$i])) {
                 continue;
             }
 
-            $response = $responses[$key];
+            $response = $responses[$i];
             if ($response->ok()) {
                 $decoded = $response->json();
                 $media = ResponsePayload::forEndpoint('character-media', is_array($decoded) ? $decoded : []);
-                foreach ($media->objectList('assets') as $asset) {
-                    if ($asset->optionalString('key') === 'avatar') {
-                        $char['avatarUrl'] = $asset->optionalString('value') ?? '';
+                foreach ($media->objectList('assets') as $responsePayload) {
+                    if ($responsePayload->optionalString('key') === 'avatar') {
+                        $char['avatarUrl'] = $responsePayload->optionalString('value') ?? '';
                         break;
                     }
                 }

@@ -18,7 +18,7 @@ final readonly class ImportRequest
      * un aller-retour distrait confisquerait le panneau jusqu'à l'expiration du pointeur,
      * soit une journée entière.
      */
-    public const ABANDON_AFTER_S = 3600;
+    public const int ABANDON_AFTER_S = 3600;
 
     public function __construct(
         public ImportSignal $signal,

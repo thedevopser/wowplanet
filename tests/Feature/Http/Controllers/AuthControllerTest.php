@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
 
 test('redirect sends to blizzard oauth', function (): void {
     $testResponse = $this->get('/auth/blizzard/redirect');
@@ -35,7 +39,7 @@ test('callback exchanges code for token', function (): void {
         ->assertRedirect('/mon-compte');
 });
 
-function completeBlizzardLogin(Tests\TestCase $testCase, callable|array|null $userInfo): Illuminate\Testing\TestResponse
+function completeBlizzardLogin(TestCase $testCase, callable|array|null $userInfo): TestResponse
 {
     Http::fake([
         '*.battle.net/oauth/token' => Http::response(['access_token' => 'user-token']),
@@ -96,7 +100,7 @@ test('a failed user info request keeps the user logged in without identity', fun
 
 test('an unreachable user info endpoint keeps the user logged in without identity', function (): void {
     completeBlizzardLogin($this, function (): never {
-        throw new Illuminate\Http\Client\ConnectionException('Connection timed out');
+        throw new ConnectionException('Connection timed out');
     })
         ->assertRedirect('/mon-compte')
         ->assertSessionMissing('error')
@@ -109,15 +113,15 @@ test('an interrupted login tells the user to start it again', function (): void 
         ->assertSessionHas('error', 'La connexion Battle.net a été interrompue. Relancez-la depuis le bouton « Se connecter ».');
 });
 
-test('a login refused by battle.net tells the user to retry', function (GuzzleHttp\Promise\PromiseInterface $promise): void {
+test('a login refused by battle.net tells the user to retry', function (PromiseInterface $promise): void {
     Http::fake(['*.battle.net/oauth/token' => $promise]);
 
     $this->withSession(['blizzard_oauth_state' => 'state-1'])
         ->get('/auth/blizzard/callback?code=valid-code&state=state-1')
         ->assertSessionHas('error', 'Battle.net n’a pas validé la connexion. Réessayez dans un instant.');
 })->with([
-    'token exchange failure' => fn (): GuzzleHttp\Promise\PromiseInterface => Http::response([], 500),
-    'token without access token' => fn (): GuzzleHttp\Promise\PromiseInterface => Http::response(['token_type' => 'bearer']),
+    'token exchange failure' => fn (): PromiseInterface => Http::response([], 500),
+    'token without access token' => fn (): PromiseInterface => Http::response(['token_type' => 'bearer']),
 ]);
 
 test('an unexpected login error tells the user to retry', function (): void {

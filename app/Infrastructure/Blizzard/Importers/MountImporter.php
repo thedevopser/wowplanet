@@ -8,6 +8,7 @@ use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\CollectionSearchSweep;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\RenderedIconProbe;
+use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\SearchIdWindow;
 use App\Infrastructure\Reference\ReferenceMaps;
 use App\Infrastructure\Taxonomy\ApiSourceTypeVocabulary;
@@ -41,9 +42,9 @@ final readonly class MountImporter
 {
     use ImportsFromBlizzardApi;
 
-    private const INDEX_ENDPOINT = 'data/wow/mount/index';
+    private const string INDEX_ENDPOINT = 'data/wow/mount/index';
 
-    private const SAVE_CHUNK = 500;
+    private const int SAVE_CHUNK = 500;
 
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
@@ -85,7 +86,7 @@ final readonly class MountImporter
         $this->info('Fetching mount index from Blizzard API...');
 
         $index = $this->fetchWithRetry(self::INDEX_ENDPOINT);
-        if (! $index instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $index instanceof ResponsePayload) {
             $this->info('  ERROR: mount index unavailable, aborting import (catalog left untouched).');
 
             return [];

@@ -20,13 +20,13 @@ use App\Models\WowImportState;
  */
 final readonly class BuildStatus
 {
-    private const STATE_CURRENT = 'current';
+    private const string STATE_CURRENT = 'current';
 
-    private const STATE_STALE = 'stale';
+    private const string STATE_STALE = 'stale';
 
-    private const STATE_NEVER = 'never';
+    private const string STATE_NEVER = 'never';
 
-    private const STATE_UNKNOWN = 'unknown';
+    private const string STATE_UNKNOWN = 'unknown';
 
     public function __construct(
         private UpstreamBuildProbe $upstreamBuildProbe,

@@ -16,7 +16,7 @@ namespace App\Infrastructure\Blizzard\Responses;
 final readonly class ItemSearchDocument
 {
     /** Qualités de l'API → OverallQualityID numérique historique de la base. */
-    private const QUALITY_RANKS = [
+    private const array QUALITY_RANKS = [
         'POOR' => 0,
         'COMMON' => 1,
         'UNCOMMON' => 2,
@@ -27,7 +27,7 @@ final readonly class ItemSearchDocument
         'HEIRLOOM' => 7,
     ];
 
-    private const DEFAULT_QUALITY = 1;
+    private const int DEFAULT_QUALITY = 1;
 
     /**
      * @param  list<int>  $appearanceIds

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
 test('it pings search engines', function (): void {
@@ -12,7 +13,7 @@ test('it pings search engines', function (): void {
     $this->artisan('app:ping-search-engines')
         ->assertExitCode(0);
 
-    Http::assertSent(fn (\Illuminate\Http\Client\Request $request): bool => str_contains($request->url(), 'www.bing.com/ping'));
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'www.bing.com/ping'));
 });
 
 test('it handles failures gracefully', function (): void {

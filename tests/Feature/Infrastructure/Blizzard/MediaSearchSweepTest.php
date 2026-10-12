@@ -9,6 +9,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -19,7 +20,7 @@ beforeEach(function (): void {
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function mockMediaWindow(\Mockery\MockInterface $mock, MediaSearchTag $mediaSearchTag, int $window, array $documents): void
+function mockMediaWindow(MockInterface $mock, MediaSearchTag $mediaSearchTag, int $window, array $documents): void
 {
     $range = sprintf('id=[%d,%d]', $window * 1000, $window * 1000 + 999);
 
@@ -33,7 +34,7 @@ function mockMediaWindow(\Mockery\MockInterface $mock, MediaSearchTag $mediaSear
 }
 
 test('sweeping media indexes the icons of the requested tag by media id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockMediaWindow($client, MediaSearchTag::Achievement, 41, [
@@ -50,7 +51,7 @@ test('sweeping media indexes the icons of the requested tag by media id', functi
 });
 
 test('sweeping media keeps the tags apart', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockMediaWindow($client, MediaSearchTag::Item, 0, [['id' => 10, 'assets' => []]]);
@@ -61,7 +62,7 @@ test('sweeping media keeps the tags apart', function (): void {
 });
 
 test('sweeping media skips a window the API did not answer', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockMediaWindow($client, MediaSearchTag::Achievement, 0, [['id' => 10, 'assets' => []]]);
@@ -73,7 +74,7 @@ test('sweeping media skips a window the API did not answer', function (): void {
 });
 
 test('sweeping no window at all calls nothing', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldNotReceive('getAsync');
 

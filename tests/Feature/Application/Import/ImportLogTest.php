@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Application\Import\ImportLog;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 
 beforeEach(function (): void {
@@ -101,7 +102,7 @@ test('it forgets a journal on demand', function (): void {
 test('the journal survives a cache flush, which the import panel can trigger mid-run', function (): void {
     $this->importLog->append('job-1', 'première');
 
-    Illuminate\Support\Facades\Cache::flush();
+    Cache::flush();
 
     expect($this->importLog->since('job-1', 0)->lines)->toBe(['première']);
 });

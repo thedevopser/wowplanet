@@ -70,9 +70,9 @@ class AuthController extends Controller
     {
         try {
             /** @var string $code */
-            $code = $request->get('code', '');
+            $code = $request->input('code', '');
             /** @var string $state */
-            $state = $request->get('state', '');
+            $state = $request->input('state', '');
             /** @var string $expectedState */
             $expectedState = Session::pull('blizzard_oauth_state', '');
 

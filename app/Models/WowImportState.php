@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowImportStateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Build WoW du dernier import réussi, par entité importée.
@@ -17,13 +19,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $entity
  * @property string $build
  * @property string|null $last_modified
- * @property \Illuminate\Support\Carbon $imported_at
+ * @property Carbon $imported_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class WowImportState extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowImportStateFactory> */
+    /** @use HasFactory<WowImportStateFactory> */
     use HasFactory;
 
     protected $table = 'wow_import_states';

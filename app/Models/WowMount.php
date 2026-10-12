@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowMountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WowMount extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowMountFactory> */
+    /** @use HasFactory<WowMountFactory> */
     use HasFactory;
 
     protected $table = 'wow_mounts';

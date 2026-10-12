@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ImportHistoryStepFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ImportHistoryStep extends Model
 {
-    /** @use HasFactory<\Database\Factories\ImportHistoryStepFactory> */
+    /** @use HasFactory<ImportHistoryStepFactory> */
     use HasFactory;
 
     protected $table = 'import_history_steps';

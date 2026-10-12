@@ -2,17 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Application\DTOs\AccountScoreProgress;
+use App\Application\DTOs\CharacterProfileDTO;
 use App\Application\Services\AccountScoreService;
 use App\Application\Services\CharacterProfileService;
 use App\Application\Services\UserCharacterService;
+use App\Domain\ValueObjects\CompletionScore;
 use App\Domain\ValueObjects\ScoreWeights;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Mockery\Expectation;
 
 test('it returns unauthenticated when no session', function (): void {
     $mockUserCharService = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mockUserCharService->shouldReceive('isAuthenticated');
     $exp->once()->andReturn(false);
 
@@ -26,7 +30,7 @@ test('it returns unauthenticated when no session', function (): void {
 
 test('it returns cached result when available', function (): void {
     $mockUserCharService = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mockUserCharService->shouldReceive('isAuthenticated');
     $exp->once()->andReturn(true);
 
@@ -60,11 +64,11 @@ test('it returns cached result when available', function (): void {
 
 test('it starts computing when no cache', function (): void {
     $mockUserCharService = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $mockUserCharService->shouldReceive('isAuthenticated');
     $authExp->once()->andReturn(true);
 
-    /** @var \Mockery\Expectation $charsExp */
+    /** @var Expectation $charsExp */
     $charsExp = $mockUserCharService->shouldReceive('getUserCharacters');
     $charsExp->once()->andReturn([
         ['realmSlug' => 'hyjal', 'name' => 'Thrall'],
@@ -72,9 +76,9 @@ test('it starts computing when no cache', function (): void {
     ]);
 
     $mockProfileService = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mockProfileService->shouldReceive('getProfile');
-    $profileExp->once()->andReturn(new App\Application\DTOs\CharacterProfileDTO(
+    $profileExp->once()->andReturn(new CharacterProfileDTO(
         name: 'Thrall',
         realm: 'Hyjal',
         race: 'Orc',
@@ -119,18 +123,18 @@ test('it invalidates cache', function (): void {
 
 test('it attaches the computed score to the finalized payload', function (): void {
     $mockUserCharService = $this->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $mockUserCharService->shouldReceive('isAuthenticated');
     $authExp->once()->andReturn(true);
 
-    /** @var \Mockery\Expectation $charsExp */
+    /** @var Expectation $charsExp */
     $charsExp = $mockUserCharService->shouldReceive('getUserCharacters');
     $charsExp->once()->andReturn([['realmSlug' => 'hyjal', 'name' => 'Thrall']]);
 
     $mockProfileService = $this->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $mockProfileService->shouldReceive('getProfile');
-    $profileExp->once()->andReturn(new App\Application\DTOs\CharacterProfileDTO(
+    $profileExp->once()->andReturn(new CharacterProfileDTO(
         name: 'Thrall',
         realm: 'Hyjal',
         race: 'Orc',
@@ -155,7 +159,7 @@ test('it attaches the computed score to the finalized payload', function (): voi
 
     $result = resolve(AccountScoreService::class)->getOrCompute();
 
-    /** @var \App\Domain\ValueObjects\CompletionScore $score */
+    /** @var CompletionScore $score */
     $score = $result['data']['score'];
 
     // Seules montures (50 %) et garde-robe (25 %) sont applicables.
@@ -171,9 +175,9 @@ test('it attaches the computed score to the finalized payload', function (): voi
         ->and($score->dimensions)->toHaveCount(count($weights));
 });
 
-function accountScoreProfile(string $name, int $mountsDone = 0): App\Application\DTOs\CharacterProfileDTO
+function accountScoreProfile(string $name, int $mountsDone = 0): CharacterProfileDTO
 {
-    return new App\Application\DTOs\CharacterProfileDTO(
+    return new CharacterProfileDTO(
         name: $name, realm: 'Hyjal', race: 'Orc', class: 'Chaman', classId: 7, level: 80, ilvl: 600,
         faction: 'Horde', avatarUrl: '', classIconUrl: '', collections: [], mountsCount: 0, petsCount: 0,
         mounts: [['id' => 1, 'name' => 'Loup', 'is_completed' => $mountsDone > 0]],
@@ -182,7 +186,7 @@ function accountScoreProfile(string $name, int $mountsDone = 0): App\Application
 
 /**
  * @param  list<array{realmSlug: string, name: string}>  $characters
- * @param  array<string, App\Application\DTOs\CharacterProfileDTO|Throwable>  $profilesByName
+ * @param  array<string, CharacterProfileDTO|Throwable>  $profilesByName
  */
 function accountScoreServiceFor(array $characters, array $profilesByName): AccountScoreService
 {
@@ -193,7 +197,7 @@ function accountScoreServiceFor(array $characters, array $profilesByName): Accou
 
     $profileService = Mockery::mock(CharacterProfileService::class);
     app()->instance(CharacterProfileService::class, $profileService);
-    $profileService->allows('getProfile')->andReturnUsing(function (string $realm, string $name) use ($profilesByName): App\Application\DTOs\CharacterProfileDTO {
+    $profileService->allows('getProfile')->andReturnUsing(function (string $realm, string $name) use ($profilesByName): CharacterProfileDTO {
         $profile = $profilesByName[$name];
         throw_if($profile instanceof Throwable, $profile);
 
@@ -290,7 +294,7 @@ test('a last character that fails still finishes the account, with the error lis
 });
 
 test('a progress found in cache is resumed without asking the character list again', function (): void {
-    $progress = new App\Application\DTOs\AccountScoreProgress([
+    $progress = new AccountScoreProgress([
         ['realmSlug' => 'hyjal', 'name' => 'Thrall'],
         ['realmSlug' => 'hyjal', 'name' => 'Jaina'],
     ]);
@@ -306,7 +310,7 @@ test('a progress found in cache is resumed without asking the character list aga
 });
 
 test('a finished progress left in cache is finalized without loading anyone', function (): void {
-    $progress = new App\Application\DTOs\AccountScoreProgress([['realmSlug' => 'hyjal', 'name' => 'Thrall']]);
+    $progress = new AccountScoreProgress([['realmSlug' => 'hyjal', 'name' => 'Thrall']]);
     $progress->mergeProfile(accountScoreProfile('Thrall'));
 
     $accountScoreService = accountScoreServiceFor([], []);
@@ -320,7 +324,7 @@ test('a finished progress left in cache is finalized without loading anyone', fu
 });
 
 test('a resumed progress skips the characters already failed as well as those already loaded', function (): void {
-    $progress = new App\Application\DTOs\AccountScoreProgress([
+    $progress = new AccountScoreProgress([
         ['realmSlug' => 'hyjal', 'name' => 'Arthas'],
         ['realmSlug' => 'hyjal', 'name' => 'Thrall'],
         ['realmSlug' => 'hyjal', 'name' => 'Jaina'],

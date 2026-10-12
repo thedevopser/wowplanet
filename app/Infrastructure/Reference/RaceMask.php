@@ -18,21 +18,21 @@ namespace App\Infrastructure\Reference;
  */
 final class RaceMask
 {
-    private const ALLIANCE = 6130900294268439629;
+    private const int ALLIANCE = 6130900294268439629;
 
-    private const HORDE = -6184943489809468494;
+    private const int HORDE = -6184943489809468494;
 
     /**
      * Positions de bit des races de l'Alliance, décalées de un : humain = 1 donc bit 0.
      *
      * @var list<int>
      */
-    private const ALLIANCE_RACE_IDS = [1, 3, 4, 7, 11, 22, 25, 29, 30, 34, 36, 37];
+    private const array ALLIANCE_RACE_IDS = [1, 3, 4, 7, 11, 22, 25, 29, 30, 34, 36, 37];
 
     /**
      * @var list<int>
      */
-    private const HORDE_RACE_IDS = [2, 5, 6, 8, 9, 10, 26, 27, 28, 31, 33, 35];
+    private const array HORDE_RACE_IDS = [2, 5, 6, 8, 9, 10, 26, 27, 28, 31, 33, 35];
 
     public static function combine(?int $low, ?int $high): ?int
     {
@@ -80,12 +80,6 @@ final class RaceMask
      */
     private static function matchesAnyRace(int $mask, array $raceIds): bool
     {
-        foreach ($raceIds as $raceId) {
-            if (($mask & (1 << ($raceId - 1))) !== 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($raceIds, fn (int $raceId): bool => ($mask & (1 << ($raceId - 1))) !== 0);
     }
 }

@@ -10,6 +10,7 @@ use App\Application\Services\MissingBattleTagException;
 use App\Application\Services\UserCharacterService;
 use App\Jobs\ComputeCrossCharacterJob;
 use App\Models\CrossCharacterData;
+use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Log\Events\MessageLogged;
@@ -66,7 +67,7 @@ function crossCharacterPayloads(int $questId, int $achievementId, int $factionId
 
 /**
  * @param  array<string, array<string, list<array<string, mixed>>>>  $payloads
- * @return array<string, \GuzzleHttp\Promise\PromiseInterface>
+ * @return array<string, PromiseInterface>
  */
 function fakeCrossCharacter(string $realm, string $name, array $payloads): array
 {
@@ -79,7 +80,7 @@ function fakeCrossCharacter(string $realm, string $name, array $payloads): array
 }
 
 /**
- * @return array<string, \GuzzleHttp\Promise\PromiseInterface>
+ * @return array<string, PromiseInterface>
  */
 function fakeMissingCharacter(string $realm, string $name): array
 {

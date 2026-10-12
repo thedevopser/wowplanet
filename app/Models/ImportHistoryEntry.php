@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ImportHistoryEntryFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Un import de la chaîne, tel que l'historique le garde : qui l'a lancé, comment, et
@@ -20,16 +23,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $trigger
  * @property string $mode
  * @property string $status
- * @property \Illuminate\Support\Carbon $started_at
- * @property \Illuminate\Support\Carbon|null $finished_at
+ * @property Carbon $started_at
+ * @property Carbon|null $finished_at
  * @property int $budget_used
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ImportHistoryStep> $steps
+ * @property-read Collection<int, ImportHistoryStep> $steps
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class ImportHistoryEntry extends Model
 {
-    /** @use HasFactory<\Database\Factories\ImportHistoryEntryFactory> */
+    /** @use HasFactory<ImportHistoryEntryFactory> */
     use HasFactory;
 
     protected $table = 'import_history';

@@ -17,7 +17,7 @@ final readonly class BlizzardQuota
      * Au-delà de cette part du plafond des imports, un import lancé maintenant passerait
      * l'essentiel de son temps à attendre que la fenêtre se libère.
      */
-    public const NEAR_CEILING_RATIO = 0.9;
+    public const float NEAR_CEILING_RATIO = 0.9;
 
     public function __construct(
         public int $used,

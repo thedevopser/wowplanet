@@ -9,6 +9,7 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -18,10 +19,10 @@ beforeEach(function (): void {
  * @param  list<int>  $categoryIds
  * @param  list<int>  $guildCategoryIds
  */
-function mockCategoryIndex(\Mockery\MockInterface $mock, array $categoryIds, array $guildCategoryIds = []): void
+function mockCategoryIndex(MockInterface $mock, array $categoryIds, array $guildCategoryIds = []): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/achievement-category/index', \Mockery::any())
+        ->with('data/wow/achievement-category/index', Mockery::any())
         ->andReturn([
             'categories' => array_map(static fn (int $id): array => ['id' => $id, 'name' => 'Catégorie '.$id], $categoryIds),
             'guild_categories' => array_map(static fn (int $id): array => ['id' => $id, 'name' => 'Guilde '.$id], $guildCategoryIds),
@@ -31,7 +32,7 @@ function mockCategoryIndex(\Mockery\MockInterface $mock, array $categoryIds, arr
 /**
  * @param  array<int, string>  $achievements
  */
-function mockCategoryDetail(\Mockery\MockInterface $mock, int $id, string $name, ?int $parentId, array $achievements): void
+function mockCategoryDetail(MockInterface $mock, int $id, string $name, ?int $parentId, array $achievements): void
 {
     $payload = ['id' => $id, 'name' => $name, 'achievements' => []];
     foreach ($achievements as $achievementId => $achievementName) {
@@ -48,7 +49,7 @@ function mockCategoryDetail(\Mockery\MockInterface $mock, int $id, string $name,
 }
 
 test('the taxonomy is built from the index and the detail of every category', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCategoryIndex($client, [96, 15547]);
@@ -64,28 +65,28 @@ test('the taxonomy is built from the index and the detail of every category', fu
 });
 
 test('the guild categories listed apart are never fetched', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCategoryIndex($client, [96], guildCategoryIds: [15076]);
     mockCategoryDetail($client, 96, 'Quêtes', null, [504 => '100 quêtes achevées']);
-    $client->shouldNotReceive('getAsync')->with('data/wow/achievement-category/15076', \Mockery::any());
+    $client->shouldNotReceive('getAsync')->with('data/wow/achievement-category/15076', Mockery::any());
 
     expect(resolve(AchievementCategorySweep::class)->fetchTaxonomy()?->placements())->toHaveCount(1);
 });
 
 test('an unreachable category index carries no taxonomy at all', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
-    $client->shouldReceive('get')->andThrow(new \Exception('API error: 500 Internal Server Error'));
+    $client->shouldReceive('get')->andThrow(new Exception('API error: 500 Internal Server Error'));
     $client->shouldNotReceive('getAsync');
 
     expect(resolve(AchievementCategorySweep::class)->fetchTaxonomy())->toBeNull();
 });
 
 test('an index holding no category carries no taxonomy at all', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCategoryIndex($client, []);
@@ -95,7 +96,7 @@ test('an index holding no category carries no taxonomy at all', function (): voi
 });
 
 test('a single missing category detail abandons the whole taxonomy', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockCategoryIndex($client, [96, 15547]);

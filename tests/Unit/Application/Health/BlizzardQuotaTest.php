@@ -28,7 +28,7 @@ test('a quota at the enforced limit is critical', function (): void {
 });
 
 test('it exposes the consumed quota against the three ceilings', function (): void {
-    expect((new BlizzardQuota(used: 1_000, importCeiling: 30_000))->toArray())->toBe([
+    expect(new BlizzardQuota(used: 1_000, importCeiling: 30_000)->toArray())->toBe([
         'status' => 'ok',
         'issue' => null,
         'used' => 1_000,

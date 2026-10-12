@@ -43,7 +43,7 @@ function writeSyncSnapshot(string $path, array $entryCounts): void
         }
     }
 
-    (new CollectionTaxonomySnapshot($path))->write($entries);
+    new CollectionTaxonomySnapshot($path)->write($entries);
 }
 
 /**
@@ -200,7 +200,7 @@ test('the upstream pull re-exports the snapshot so the new curation reaches the 
     fakeUpstream(['mount' => [1, 2, 3], 'pet' => [1, 2], 'decor' => [1, 2]]);
     $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertSuccessful();
 
-    $entries = (new CollectionTaxonomySnapshot($this->syncSnapshotPath))->read();
+    $entries = new CollectionTaxonomySnapshot($this->syncSnapshotPath)->read();
 
     expect(array_keys($entries['mount']))->toBe([1, 2, 3])
         ->and($entries['mount'][3]->category)->toBe('Midnight');

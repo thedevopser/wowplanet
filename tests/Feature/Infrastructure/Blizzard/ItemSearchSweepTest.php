@@ -6,8 +6,10 @@ use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\ItemSearchSweep;
 use App\Infrastructure\Blizzard\Responses\ItemSearchDocument;
 use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -18,19 +20,19 @@ beforeEach(function (): void {
  *
  * @param  list<array<string, mixed>>  $documents
  */
-function mockSearchWindow(\Mockery\MockInterface $mock, string $endpoint, int $window, array $documents): void
+function mockSearchWindow(MockInterface $mock, string $endpoint, int $window, array $documents): void
 {
     $range = sprintf('id=[%d,%d]', $window * 1000, $window * 1000 + 999);
 
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint) && str_contains($requested, $range))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'results' => array_map(static fn (array $document): array => ['data' => $document], $documents),
         ]))));
 }
 
 test('the highest item id is read from a descending search', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')
@@ -41,16 +43,16 @@ test('the highest item id is read from a descending search', function (): void {
 });
 
 test('an unreadable descending search carries no highest item id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
-    $client->shouldReceive('get')->andThrow(new \Exception('API error: 500 Internal Server Error'));
+    $client->shouldReceive('get')->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     expect(resolve(ItemSearchSweep::class)->highestItemId())->toBeNull();
 });
 
 test('an empty descending search carries no highest item id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')->andReturn(['results' => []]);
@@ -66,7 +68,7 @@ test('the window count covers the whole catalog of item ids', function (): void 
 });
 
 test('sweeping items hands every document of every requested window to the caller', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSearchWindow($client, 'data/wow/search/item', 0, [
@@ -85,13 +87,13 @@ test('sweeping items hands every document of every requested window to the calle
 });
 
 test('sweeping items skips a window the API did not answer', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSearchWindow($client, 'data/wow/search/item', 0, [['id' => 10, 'name' => ['fr_FR' => 'Heaume']]]);
     $client->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_contains($requested, 'id=[1000,1999]'))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(500, [], '')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(500, [], '')));
 
     $swept = [];
     resolve(ItemSearchSweep::class)->sweepItems([0, 1], function (ItemSearchDocument $itemSearchDocument) use (&$swept): void {
@@ -102,7 +104,7 @@ test('sweeping items skips a window the API did not answer', function (): void {
 });
 
 test('sweeping item media indexes the icons by media id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSearchWindow($client, 'data/wow/search/media', 0, [
@@ -123,12 +125,12 @@ test('a negative highest item id is rejected', function (): void {
 })->throws(InvalidArgumentException::class, 'A highest id cannot be negative, got -1.');
 
 test('sweeping no window at all calls nothing', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     $client->shouldNotReceive('getAsync');
 
     resolve(ItemSearchSweep::class)->sweepItems([], function (ItemSearchDocument $itemSearchDocument): void {
-        throw new \LogicException('No document can be swept from no window.');
+        throw new LogicException('No document can be swept from no window.');
     });
 
     expect(resolve(ItemSearchSweep::class)->sweepItemMedia([]))->toBe([]);

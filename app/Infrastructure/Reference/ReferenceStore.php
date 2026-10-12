@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
  */
 final class ReferenceStore
 {
-    public const DISK = 'reference';
+    public const string DISK = 'reference';
 
     public function put(ReferenceTable $referenceTable, string $build, string $contents): int
     {

@@ -81,7 +81,7 @@ describe('apparences', function (): void {
     });
 
     it('renvoie une liste vide sans personnage', function (): void {
-        expect((new AccountScoreProgress([]))->buildResult()['appearances'])->toBe([]);
+        expect(new AccountScoreProgress([])->buildResult()['appearances'])->toBe([]);
     });
 });
 
@@ -218,7 +218,7 @@ describe('collections de compte', function (): void {
     });
 
     it('rend des collections vides sans personnage', function (): void {
-        expect((new AccountScoreProgress([]))->buildResult()['collections'])->toBe([]);
+        expect(new AccountScoreProgress([])->buildResult()['collections'])->toBe([]);
     });
 });
 

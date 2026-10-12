@@ -27,9 +27,9 @@ use Illuminate\Support\Facades\Cache;
  */
 final readonly class ImportProgressStore
 {
-    private const KEY_PREFIX = 'admin_import:';
+    private const string KEY_PREFIX = 'admin_import:';
 
-    private const TTL_S = 3600;
+    private const int TTL_S = 3600;
 
     public function save(ImportRun $importRun): void
     {

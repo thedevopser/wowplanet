@@ -7,6 +7,8 @@ use App\Application\Health\FailedJobNotRetryableException;
 use App\Application\Health\FailedJobs;
 use App\Application\Import\CurrentImport;
 use App\Application\Import\ImportAlreadyRunningException;
+use App\Jobs\ComputeCrossCharacterJob;
+use App\Jobs\RunImportJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 
@@ -15,7 +17,7 @@ beforeEach(function (): void {
 });
 
 test('it lists failed jobs with their class and the first line of their exception', function (): void {
-    $uuid = recordFailedJob(\App\Jobs\RunImportJob::class, 'the quota is exhausted');
+    $uuid = recordFailedJob(RunImportJob::class, 'the quota is exhausted');
 
     $failed = resolve(FailedJobs::class)->all();
 
@@ -23,7 +25,7 @@ test('it lists failed jobs with their class and the first line of their exceptio
         ->and($failed[0])->toMatchArray([
             'uuid' => $uuid,
             'queue' => 'imports',
-            'job' => \App\Jobs\RunImportJob::class,
+            'job' => RunImportJob::class,
         ])
         ->and($failed[0]['exception'])->toStartWith('RuntimeException: the quota is exhausted in ')
         ->and($failed[0]['exception'])->not->toContain("\n")
@@ -50,7 +52,7 @@ test('a failed job that describes itself is listed under its public label', func
     $uuid = recordFailedJob();
     DB::table('failed_jobs')->where('uuid', $uuid)->update(['payload' => json_encode([
         'uuid' => $uuid,
-        'displayName' => \App\Jobs\ComputeCrossCharacterJob::class,
+        'displayName' => ComputeCrossCharacterJob::class,
         'described' => ['label' => 'Données des autres personnages', 'account' => 'Thrall#1234'],
         'data' => ['command' => 'encrypted'],
     ])]);
@@ -62,11 +64,11 @@ test('a failed job with an unreadable label falls back on its class', function (
     $uuid = recordFailedJob();
     DB::table('failed_jobs')->where('uuid', $uuid)->update(['payload' => json_encode([
         'uuid' => $uuid,
-        'displayName' => \App\Jobs\ComputeCrossCharacterJob::class,
+        'displayName' => ComputeCrossCharacterJob::class,
         'described' => ['label' => 42],
     ])]);
 
-    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe(\App\Jobs\ComputeCrossCharacterJob::class);
+    expect(resolve(FailedJobs::class)->all()[0]['job'])->toBe(ComputeCrossCharacterJob::class);
 });
 
 test('retrying a failed job pushes it back onto its queue instead of running it', function (): void {

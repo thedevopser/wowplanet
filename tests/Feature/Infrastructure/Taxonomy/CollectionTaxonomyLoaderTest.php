@@ -25,7 +25,7 @@ afterEach(function (): void {
  */
 function writeTaxonomySnapshot(string $path, array $entries): void
 {
-    (new CollectionTaxonomySnapshot($path))->write($entries);
+    new CollectionTaxonomySnapshot($path)->write($entries);
 }
 
 function taxonomyLoader(string $path): CollectionTaxonomyLoader

@@ -13,6 +13,9 @@ use App\Models\WowPet;
 use App\Models\WowProfession;
 use App\Models\WowQuest;
 use App\Models\WowRecipe;
+use Illuminate\Support\Facades\Cache;
+use Spatie\Sitemap\Sitemap;
+use Spatie\Sitemap\Tags\Url;
 
 /**
  * @phpstan-type BreadcrumbJsonLd array{'@type': string, itemListElement: list<array{'@type': string, position: int, name: string, item: string}>}
@@ -124,7 +127,7 @@ class DatabaseSeoService
         if ($expansionSlug !== null) {
             $expansion = ExpansionId::fromSlug($expansionSlug);
 
-            if (! $expansion instanceof \App\Domain\ValueObjects\ExpansionId) {
+            if (! $expansion instanceof ExpansionId) {
                 return null;
             }
 
@@ -179,7 +182,7 @@ class DatabaseSeoService
         if ($expansionSlug !== null) {
             $expansion = ExpansionId::fromSlug($expansionSlug);
 
-            if (! $expansion instanceof \App\Domain\ValueObjects\ExpansionId) {
+            if (! $expansion instanceof ExpansionId) {
                 return null;
             }
 
@@ -558,15 +561,15 @@ class DatabaseSeoService
     public function generateSitemap(): string
     {
         /** @var string $xml */
-        $xml = \Illuminate\Support\Facades\Cache::remember('sitemap_database_xml', 86400, function (): string {
-            $sitemap = \Spatie\Sitemap\Sitemap::create();
+        $xml = Cache::remember('sitemap_database_xml', 86400, function (): string {
+            $sitemap = Sitemap::create();
             $now = now();
 
             foreach ($this->getSitemapUrls() as $entry) {
                 $sitemap->add(
-                    \Spatie\Sitemap\Tags\Url::create($entry['url'])
+                    Url::create($entry['url'])
                         ->setLastModificationDate($now)
-                        ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY)
+                        ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
                         ->setPriority(0.7),
                 );
             }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowQuestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WowQuest extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowQuestFactory> */
+    /** @use HasFactory<WowQuestFactory> */
     use HasFactory;
 
     protected $table = 'wow_quests';

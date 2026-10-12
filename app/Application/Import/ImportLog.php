@@ -26,9 +26,9 @@ final readonly class ImportLog
      * veille au soir. Au-delà, c'est l'historique en base qui porte la mémoire, et le
      * rapport plutôt que le détail ligne à ligne.
      */
-    public const TTL_S = 86400;
+    public const int TTL_S = 86400;
 
-    private const KEY_PREFIX = 'import_log:';
+    private const string KEY_PREFIX = 'import_log:';
 
     public function append(string $jobId, string $line): void
     {

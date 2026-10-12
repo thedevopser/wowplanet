@@ -29,13 +29,13 @@ use Illuminate\Support\Str;
 class CrossCharacterService
 {
     // @pest-mutate-ignore
-    private const CACHE_TTL_HOURS = 24;
+    private const int CACHE_TTL_HOURS = 24;
 
     // @pest-mutate-ignore
-    private const MAX_RETRIES = 3;
+    private const int MAX_RETRIES = 3;
 
     // @pest-mutate-ignore
-    private const RETRY_BASE_DELAY_S = 5;
+    private const int RETRY_BASE_DELAY_S = 5;
 
     public function __construct(
         private readonly BlizzardApiClient $blizzardApiClient,
@@ -148,7 +148,7 @@ class CrossCharacterService
 
         CrossCharacterData::query()->updateOrCreate(['bnet_user_id' => $bnetUserId], [
             'data' => $result,
-            'character_count' => $record !== null ? $record->character_count : 1,
+            'character_count' => $record->character_count ?? 1,
             'fetched_at' => $record?->fetched_at,
         ]);
     }

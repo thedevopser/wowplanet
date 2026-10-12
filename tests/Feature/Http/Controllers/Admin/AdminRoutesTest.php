@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Routing\Route as RoutingRoute;
+use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Route;
+use Tests\TestCase;
 
 dataset('admin pages', [
     'dashboard' => ['/admin'],
@@ -65,9 +67,9 @@ test('the panel is still throttled beyond its own ceiling', function (): void {
  * celles d'un navigateur. Sans cookie — et un appel JSON n'en envoie qu'avec
  * `withCredentials()` —, chacune ouvrirait une session neuve et échapperait au compte.
  */
-function browseAsAdministrator(Tests\TestCase $testCase): void
+function browseAsAdministrator(TestCase $testCase): void
 {
-    $session = resolve(\Illuminate\Session\SessionManager::class)->driver();
+    $session = resolve(SessionManager::class)->driver();
     $session->put('is_admin', true);
     $session->save();
 

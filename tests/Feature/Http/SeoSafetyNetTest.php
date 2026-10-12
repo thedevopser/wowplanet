@@ -7,6 +7,7 @@ use App\Application\Services\CharacterProfileService;
 use App\Application\Services\PvpLeaderboardService;
 use App\Application\Services\UserCharacterService;
 use App\Models\WowMount;
+use Mockery\Expectation;
 
 // Freezes what search engines see on every indexed page type. A phase of the UX overhaul
 // that changes one of these values must say why in its story, then update this file.
@@ -21,12 +22,12 @@ function stubSeoDependencies(): void
     WowMount::factory()->count(3)->create(['category' => 'Volantes', 'is_active' => true]);
 
     $auth = test()->mock(UserCharacterService::class);
-    /** @var \Mockery\Expectation $authExp */
+    /** @var Expectation $authExp */
     $authExp = $auth->shouldReceive('isAuthenticated');
     $authExp->andReturnFalse();
 
     $profiles = test()->mock(CharacterProfileService::class);
-    /** @var \Mockery\Expectation $profileExp */
+    /** @var Expectation $profileExp */
     $profileExp = $profiles->shouldReceive('getProfile');
     $profileExp->andReturn(new CharacterProfileDTO(
         name: 'Thrall',
@@ -45,10 +46,10 @@ function stubSeoDependencies(): void
     ));
 
     $leaderboard = test()->mock(PvpLeaderboardService::class);
-    /** @var \Mockery\Expectation $bracketsExp */
+    /** @var Expectation $bracketsExp */
     $bracketsExp = $leaderboard->shouldReceive('availableBrackets');
     $bracketsExp->andReturn([]);
-    /** @var \Mockery\Expectation $boardExp */
+    /** @var Expectation $boardExp */
     $boardExp = $leaderboard->shouldReceive('leaderboard');
     $boardExp->andReturn([
         'bracket' => '3v3',

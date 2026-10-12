@@ -18,7 +18,7 @@ final readonly class AchievementDocument
      *
      * @var array<string, string>
      */
-    private const FACTIONS = [
+    private const array FACTIONS = [
         'ALLIANCE' => 'Alliance',
         'HORDE' => 'Horde',
     ];

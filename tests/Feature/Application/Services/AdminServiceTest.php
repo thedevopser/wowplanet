@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Application\Import\CurrentImport;
 use App\Application\Services\AdminService;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 
@@ -93,21 +95,21 @@ test('a channel without a configured webhook is refused', function (): void {
 })->throws(RuntimeException::class);
 
 test('a queue that refuses the job releases the lock instead of blocking the panel', function (): void {
-    $this->mock(Illuminate\Contracts\Bus\Dispatcher::class)
+    $this->mock(Dispatcher::class)
         ->shouldReceive('dispatch')->andThrow(new RuntimeException('file injoignable'));
 
     expect(fn (): string => $this->adminService->startImport(true, [], false, 'console'))
         ->toThrow(RuntimeException::class);
 
-    expect(resolve(App\Application\Import\CurrentImport::class)->jobId())->toBeNull();
+    expect(resolve(CurrentImport::class)->jobId())->toBeNull();
 });
 
 test('a queue that refuses a socle sync releases the lock too', function (): void {
-    $this->mock(Illuminate\Contracts\Bus\Dispatcher::class)
+    $this->mock(Dispatcher::class)
         ->shouldReceive('dispatch')->andThrow(new RuntimeException('file injoignable'));
 
     expect(fn (): string => $this->adminService->startReferenceSync(null))
         ->toThrow(RuntimeException::class);
 
-    expect(resolve(App\Application\Import\CurrentImport::class)->jobId())->toBeNull();
+    expect(resolve(CurrentImport::class)->jobId())->toBeNull();
 });

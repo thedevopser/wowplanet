@@ -7,9 +7,12 @@ use App\Infrastructure\Blizzard\Importers\ProfessionImporter;
 use App\Models\WowProfession;
 use App\Models\WowRecipe;
 use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -20,10 +23,10 @@ beforeEach(function (): void {
  *
  * @param  list<array{id: int, name: string}>  $professions
  */
-function mockProfessionIndex(\Mockery\MockInterface $mock, array $professions): void
+function mockProfessionIndex(MockInterface $mock, array $professions): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/profession/index', \Mockery::any())
+        ->with('data/wow/profession/index', Mockery::any())
         ->andReturn([
             'professions' => array_map(fn (array $profession): array => ['id' => $profession['id'], 'name' => $profession['name']], $professions),
         ]);
@@ -34,11 +37,11 @@ function mockProfessionIndex(\Mockery\MockInterface $mock, array $professions): 
  *
  * @param  list<array{id: int, name: string}>  $tiers
  */
-function mockProfessionDetail(\Mockery\MockInterface $mock, int $id, string $name, string $type, array $tiers): void
+function mockProfessionDetail(MockInterface $mock, int $id, string $name, string $type, array $tiers): void
 {
     $mock->shouldReceive('getAsync')
-        ->with('data/wow/profession/'.$id, \Mockery::any())
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->with('data/wow/profession/'.$id, Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'id' => $id,
             'name' => $name,
             'type' => ['type' => $type, 'name' => 'x'],
@@ -51,11 +54,11 @@ function mockProfessionDetail(\Mockery\MockInterface $mock, int $id, string $nam
  *
  * @param  list<array{name: string, recipes: list<array{id: int, name: string}>}>  $categories
  */
-function mockSkillTierDetail(\Mockery\MockInterface $mock, int $professionId, int $tierId, array $categories): void
+function mockSkillTierDetail(MockInterface $mock, int $professionId, int $tierId, array $categories): void
 {
     $mock->shouldReceive('getAsync')
-        ->with(sprintf('data/wow/profession/%d/skill-tier/%d', $professionId, $tierId), \Mockery::any())
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+        ->with(sprintf('data/wow/profession/%d/skill-tier/%d', $professionId, $tierId), Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'id' => $tierId,
             'categories' => array_map(fn (array $category): array => [
                 'name' => $category['name'],
@@ -65,7 +68,7 @@ function mockSkillTierDetail(\Mockery\MockInterface $mock, int $professionId, in
 }
 
 test('it imports professions and recipes from the API', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockProfessionIndex($client, [
@@ -106,7 +109,7 @@ test('it preserves existing wowhead_spell_id values on re-import', function (): 
         'wowhead_spell_id' => 80001,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
@@ -123,7 +126,7 @@ test('it preserves existing wowhead_spell_id values on re-import', function (): 
 });
 
 test('it skips professions that are neither primary nor secondary', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockProfessionIndex($client, [
@@ -140,7 +143,7 @@ test('it skips professions that are neither primary nor secondary', function ():
 });
 
 test('it assigns recipe factions from faction map', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
@@ -155,7 +158,7 @@ test('it assigns recipe factions from faction map', function (): void {
 });
 
 test('it returns early when no primary or secondary profession is found', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockProfessionIndex($client, [['id' => 2777, 'name' => 'Chiffrage des âmes']]);
@@ -167,12 +170,12 @@ test('it returns early when no primary or secondary profession is found', functi
 });
 
 test('it returns early when the profession index fails', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')
-        ->with('data/wow/profession/index', \Mockery::any())
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->with('data/wow/profession/index', Mockery::any())
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     resolve(ProfessionImporter::class)->import();
 
@@ -198,7 +201,7 @@ test('it tags mirror recipe pairs', function (): void {
         'is_active' => true,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     resolve(ProfessionImporter::class)->tagMirrorRecipeFactions();
@@ -213,8 +216,8 @@ test('it tags mirror recipe pairs', function (): void {
  */
 function professionApiReturning(array $recipes, string $professionName = 'Forge'): void
 {
-    /** @var BlizzardApiClient&\Mockery\MockInterface $mock */
-    $mock = \Mockery::mock(BlizzardApiClient::class);
+    /** @var BlizzardApiClient&MockInterface $mock */
+    $mock = Mockery::mock(BlizzardApiClient::class);
     app()->instance(BlizzardApiClient::class, $mock);
 
     mockProfessionIndex($mock, [['id' => 164, 'name' => $professionName]]);
@@ -230,7 +233,7 @@ function writesOnTableDuring(string $table, callable $callback): int
 {
     $writes = 0;
 
-    DB::listen(function (Illuminate\Database\Events\QueryExecuted $queryExecuted) use ($table, &$writes): void {
+    DB::listen(function (QueryExecuted $queryExecuted) use ($table, &$writes): void {
         if (str_contains($queryExecuted->sql, $table) && ! str_starts_with($queryExecuted->sql, 'select')) {
             $writes++;
         }

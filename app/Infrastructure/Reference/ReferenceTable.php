@@ -6,7 +6,7 @@ namespace App\Infrastructure\Reference;
 
 final readonly class ReferenceTable
 {
-    private const TABLE_PREFIX = 'wow_ref_';
+    private const string TABLE_PREFIX = 'wow_ref_';
 
     /**
      * @param  string  $source  Nom de la table DB2 chez wago, sensible à la casse

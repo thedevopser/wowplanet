@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\WowAchievementFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WowAchievement extends Model
 {
-    /** @use HasFactory<\Database\Factories\WowAchievementFactory> */
+    /** @use HasFactory<WowAchievementFactory> */
     use HasFactory;
 
     protected $table = 'wow_achievements';

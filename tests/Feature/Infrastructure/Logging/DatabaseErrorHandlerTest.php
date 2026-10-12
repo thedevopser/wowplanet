@@ -75,6 +75,6 @@ test('an unreachable database never breaks the request that was logging', functi
     $mock = Mockery::mock(ConnectionResolverInterface::class);
     $mock->shouldReceive('connection')->andThrow(new RuntimeException('connection refused'));
 
-    expect(fn (): bool => (new DatabaseErrorHandler($mock))->handle(errorRecord('Failure while the database is down')))
+    expect(fn (): bool => new DatabaseErrorHandler($mock)->handle(errorRecord('Failure while the database is down')))
         ->not->toThrow(Throwable::class);
 });

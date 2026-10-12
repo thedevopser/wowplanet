@@ -24,7 +24,7 @@ use App\Models\ImportHistoryStep;
  */
 final readonly class ImportHistoryReader
 {
-    public const PER_PAGE = 25;
+    public const int PER_PAGE = 25;
 
     /**
      * Un import resté « en cours » alors que le panneau n'en suit plus aucun, ou en suit

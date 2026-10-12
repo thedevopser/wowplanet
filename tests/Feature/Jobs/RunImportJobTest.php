@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     seedCollectionTaxonomy();
@@ -37,7 +38,7 @@ beforeEach(function (): void {
  *
  * @param  array<string, list<int>>  $slots
  */
-function mockJobSlotIndexes(\Mockery\MockInterface $mock, array $slots): void
+function mockJobSlotIndexes(MockInterface $mock, array $slots): void
 {
     $allSlots = [
         'HEAD', 'SHOULDER', 'BODY', 'CHEST', 'WAIST', 'LEGS', 'FEET', 'WRIST', 'HAND',
@@ -48,7 +49,7 @@ function mockJobSlotIndexes(\Mockery\MockInterface $mock, array $slots): void
     foreach ($allSlots as $allSlot) {
         $ids = $slots[$allSlot] ?? [];
         $mock->shouldReceive('get')
-            ->with('data/wow/item-appearance/slot/'.$allSlot, \Mockery::any())
+            ->with('data/wow/item-appearance/slot/'.$allSlot, Mockery::any())
             ->andReturn(['appearances' => array_map(fn (int $id): array => ['id' => $id], $ids)]);
     }
 
@@ -62,7 +63,7 @@ function mockJobSlotIndexes(\Mockery\MockInterface $mock, array $slots): void
  */
 function handleImportJob(string $jobId, string $command = 'app:wow-data-import', array $parameters = [], string $trigger = 'administrateur'): void
 {
-    (new RunImportJob($jobId, $command, $parameters, $trigger))->handle(
+    new RunImportJob($jobId, $command, $parameters, $trigger)->handle(
         resolve(ImportPipeline::class),
         resolve(ImportProgressStore::class),
         resolve(ImportControl::class),
@@ -292,7 +293,7 @@ test('a job that hands over to its next pass keeps who launched it', function ()
 
     handleImportJob('job-1', parameters: ['--type' => 'pets'], trigger: '12345');
 
-    Bus::assertDispatched(fn (\App\Jobs\RunImportJob $runImportJob): bool => $runImportJob->trigger === '12345');
+    Bus::assertDispatched(fn (RunImportJob $runImportJob): bool => $runImportJob->trigger === '12345');
 });
 
 test('the catalogue import is shown under a readable label and belongs to no account', function (): void {

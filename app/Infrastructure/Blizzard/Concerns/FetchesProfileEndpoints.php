@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\Utils;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Interrogation parallèle d'endpoints de profil Blizzard, avec retries.
@@ -34,7 +35,7 @@ trait FetchesProfileEndpoints
         $pending = $endpoints;
 
         for ($attempt = 0; $attempt <= self::MAX_ASYNC_RETRIES; $attempt++) {
-            if ($attempt > 0 && $pending !== []) {
+            if ($attempt > 0) {
                 Log::info(sprintf('Profile API: retrying %d failed requests (attempt %d/%d)', count($pending), $attempt, self::MAX_ASYNC_RETRIES));
                 Sleep::usleep(self::RETRY_DELAY_S * 1_000_000);
             }
@@ -44,7 +45,7 @@ trait FetchesProfileEndpoints
                 $promises[$key] = $this->blizzardApiClient->getAsync($config['endpoint'], $config['query']);
             }
 
-            /** @var array<string, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable|object|string}> $settled */
+            /** @var array<string, array{state: string, value?: ResponseInterface, reason?: \Throwable|object|string}> $settled */
             $settled = Utils::settle($promises)->wait();
 
             $failed = [];
@@ -65,7 +66,7 @@ trait FetchesProfileEndpoints
 
                 // 404 = not found (e.g. decor not unlocked), treat as empty
                 if ($reason instanceof RequestException
-                    && $reason->getResponse() instanceof \Psr\Http\Message\ResponseInterface
+                    && $reason->getResponse() instanceof ResponseInterface
                     && $reason->getResponse()->getStatusCode() === 404) {
                     $results[$key] = ResponsePayload::forEndpoint($endpoint, []);
 

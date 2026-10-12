@@ -28,7 +28,7 @@ class PvpBracketClassifier
     ];
 
     // @pest-mutate-ignore
-    private const BRACKET_LABELS = [
+    private const array BRACKET_LABELS = [
         '2v2' => 'Arène 2c2',
         '3v3' => 'Arène 3c3',
         'rbg' => 'Champs de bataille cotés',

@@ -6,6 +6,7 @@ namespace App\Application\Import;
 
 use App\Models\ImportHistoryEntry;
 use App\Models\ImportHistoryStep;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 final readonly class ImportHistory
 {
     /** Un cycle complet de patchs : assez pour retrouver quand une anomalie est apparue. */
-    public const RETENTION_MONTHS = 12;
+    public const int RETENTION_MONTHS = 12;
 
     public const string CONSOLE_TRIGGER = 'console';
 
@@ -43,7 +44,7 @@ final readonly class ImportHistory
                 'trigger' => $trigger,
                 'mode' => $force ? self::FORCED : self::INCREMENTAL,
                 'status' => $importRun->status() === ImportRunState::Pending ? ImportRunState::Running->value : $importRun->status()->value,
-                'started_at' => \Illuminate\Support\Facades\Date::createFromTimestamp($importRun->startedAt),
+                'started_at' => Date::createFromTimestamp($importRun->startedAt),
             ]);
 
             foreach ($importRun->steps as $importStep) {
@@ -66,7 +67,7 @@ final readonly class ImportHistory
         DB::transaction(function () use ($importRun, $now): void {
             $updated = ImportHistoryEntry::query()->whereKey($importRun->jobId)->update([
                 'status' => $importRun->status()->value,
-                'finished_at' => \Illuminate\Support\Facades\Date::createFromTimestamp($now),
+                'finished_at' => Date::createFromTimestamp($now),
                 'budget_used' => $importRun->budgetUsed,
             ]);
 

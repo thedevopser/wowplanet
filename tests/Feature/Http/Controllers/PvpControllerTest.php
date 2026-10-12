@@ -5,16 +5,18 @@ declare(strict_types=1);
 use App\Application\Services\PvpLeaderboardService;
 use App\Application\Services\PvpProfileService;
 use Inertia\Testing\AssertableInertia as Assert;
+use Mockery\Expectation;
+use Mockery\MockInterface;
 
-function mockLeaderboard(array $overrides = [], array $groups = []): \Mockery\MockInterface
+function mockLeaderboard(array $overrides = [], array $groups = []): MockInterface
 {
     $mock = test()->mock(PvpLeaderboardService::class);
 
-    /** @var \Mockery\Expectation $bracketsExp */
+    /** @var Expectation $bracketsExp */
     $bracketsExp = $mock->shouldReceive('availableBrackets');
     $bracketsExp->andReturn($groups);
 
-    /** @var \Mockery\Expectation $boardExp */
+    /** @var Expectation $boardExp */
     $boardExp = $mock->shouldReceive('leaderboard');
     $boardExp->andReturn(array_merge([
         'bracket' => '3v3',
@@ -43,7 +45,7 @@ test('show returns the normalised pvp payload', function (): void {
     ];
 
     $mock = $this->mock(PvpProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getForCharacter');
     $exp->once()->with('hyjal', 'thrall')->andReturn($payload);
 
@@ -54,7 +56,7 @@ test('show returns the normalised pvp payload', function (): void {
 
 test('show returns a null payload for a character without pvp data', function (): void {
     $mock = $this->mock(PvpProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getForCharacter');
     $exp->once()->andReturn(null);
 
@@ -65,7 +67,7 @@ test('show returns a null payload for a character without pvp data', function ()
 
 test('show degrades to a null payload when the api fails', function (): void {
     $mock = $this->mock(PvpProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getForCharacter');
     $exp->once()->andThrow(new RuntimeException('Blizzard is down'));
 
@@ -76,7 +78,7 @@ test('show degrades to a null payload when the api fails', function (): void {
 
 test('show lowercases realm and name', function (): void {
     $mock = $this->mock(PvpProfileService::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getForCharacter');
     $exp->once()->with('hyjal', 'thrall')->andReturn(null);
 
@@ -118,11 +120,11 @@ test('leaderboard renders the page with entries and bracket groups', function ()
 
 test('leaderboard passes the requested bracket, page and search to the service', function (): void {
     $mock = $this->mock(PvpLeaderboardService::class);
-    /** @var \Mockery\Expectation $bracketsExp */
+    /** @var Expectation $bracketsExp */
     $bracketsExp = $mock->shouldReceive('availableBrackets');
     $bracketsExp->andReturn([]);
 
-    /** @var \Mockery\Expectation $boardExp */
+    /** @var Expectation $boardExp */
     $boardExp = $mock->shouldReceive('leaderboard');
     $boardExp->once()->with('2v2', 3, 'thrall')->andReturn([
         'bracket' => '2v2',

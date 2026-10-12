@@ -103,7 +103,7 @@ trait ImportsFromBlizzardApi
 
             $failed = [];
 
-            /** @var array<string|int, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}> $settled */
+            /** @var array<string|int, array{state: string, value?: ResponseInterface, reason?: \Throwable}> $settled */
             $settled = $this->inFlight(count($pending), fn (): array => $this->settlePool($pending, $namespace, $currentConcurrency));
 
             foreach ($settled as $key => $result) {
@@ -207,7 +207,7 @@ trait ImportsFromBlizzardApi
      *
      * @param  array<string|int, string>  $endpoints
      * @param  positive-int  $concurrency
-     * @return array<string|int, array{state: string, value?: \Psr\Http\Message\ResponseInterface, reason?: \Throwable}>
+     * @return array<string|int, array{state: string, value?: ResponseInterface, reason?: \Throwable}>
      */
     private function settlePool(array $endpoints, string $namespace, int $concurrency): array
     {
@@ -263,7 +263,7 @@ trait ImportsFromBlizzardApi
      */
     private function extractStatusCode(?\Throwable $throwable): int
     {
-        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof \Psr\Http\Message\ResponseInterface) {
+        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof ResponseInterface) {
             return $throwable->getResponse()->getStatusCode();
         }
 
@@ -284,7 +284,7 @@ trait ImportsFromBlizzardApi
 
     private function isNotFoundError(?\Throwable $throwable): bool
     {
-        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof \Psr\Http\Message\ResponseInterface) {
+        if ($throwable instanceof RequestException && $throwable->getResponse() instanceof ResponseInterface) {
             return $throwable->getResponse()->getStatusCode() === 404;
         }
 

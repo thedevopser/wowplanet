@@ -10,6 +10,7 @@ use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomyUpstreamUnreachableException;
 use App\Infrastructure\Taxonomy\SimpleArmoryClient;
 use App\Infrastructure\Taxonomy\SimpleArmoryTaxonomyReader;
+use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +95,7 @@ class CollectionTaxonomySyncCommand extends Command
     }
 
     /**
-     * @return array<int, \App\Infrastructure\Taxonomy\TaxonomyEntry>
+     * @return array<int, TaxonomyEntry>
      */
     private function pullUpstream(
         SimpleArmoryClient $simpleArmoryClient,
@@ -123,7 +124,7 @@ class CollectionTaxonomySyncCommand extends Command
 
     /**
      * @param  list<CollectionEntity>  $entities
-     * @param  (callable(CollectionEntity): array<int, \App\Infrastructure\Taxonomy\TaxonomyEntry>)|null  $upstream
+     * @param  (callable(CollectionEntity): array<int, TaxonomyEntry>)|null  $upstream
      * @return list<array{entity: CollectionEntity, read: int, inserted: int, skipped: int}>
      */
     private function loadAll(CollectionTaxonomyLoader $collectionTaxonomyLoader, array $entities, ?callable $upstream): array

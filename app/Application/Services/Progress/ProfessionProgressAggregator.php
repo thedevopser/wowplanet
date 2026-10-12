@@ -9,6 +9,7 @@ use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfession;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfessionsResponse;
 use App\Models\WowProfession;
 use App\Models\WowRecipe;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -20,7 +21,7 @@ use Illuminate\Support\Collection;
 class ProfessionProgressAggregator
 {
     // @pest-mutate-ignore
-    private const PROFESSION_NAMES_FR = [
+    private const array PROFESSION_NAMES_FR = [
         164 => 'Forge',
         165 => 'Travail du cuir',
         171 => 'Alchimie',
@@ -38,7 +39,7 @@ class ProfessionProgressAggregator
     ];
 
     // @pest-mutate-ignore
-    private const SECONDARY_PROFESSION_IDS = [185, 356, 794];
+    private const array SECONDARY_PROFESSION_IDS = [185, 356, 794];
 
     // @pest-mutate-ignore
     private const int ARCHAEOLOGY_ID = 794;
@@ -123,7 +124,7 @@ class ProfessionProgressAggregator
         return WowRecipe::query()
             ->where('profession_id', $professionId)
             ->where('is_active', true)
-            ->where(fn (\Illuminate\Contracts\Database\Query\Builder $builder) => $builder->whereNull('faction')->orWhere('faction', $characterFaction))
+            ->where(fn (Builder $builder) => $builder->whereNull('faction')->orWhere('faction', $characterFaction))
             ->get();
     }
 
@@ -159,7 +160,7 @@ class ProfessionProgressAggregator
                 'tier_exists' => $tierExistsInGame,
                 'skill_points' => $skillPointsByExpansion[$exp]['skill_points'] ?? 0,
                 'max_skill_points' => $hasTier
-                    ? ($skillPointsByExpansion[$exp]['max_skill_points'] ?? 0)
+                    ? $skillPointsByExpansion[$exp]['max_skill_points']
                     : ($dbMaxSkillLevels[$exp] ?? 0),
             ];
         }
@@ -189,7 +190,7 @@ class ProfessionProgressAggregator
             $categoryProgress[] = [
                 'name' => $catName,
                 'total' => count($items),
-                'completed' => count(array_filter($items, fn (array $item) => $item['is_completed'])),
+                'completed' => count(array_filter($items, fn (array $item): bool => $item['is_completed'])),
                 'items' => $items,
             ];
         }

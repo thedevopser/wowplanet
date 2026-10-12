@@ -13,6 +13,7 @@ use App\Application\Import\ImportStep;
 use App\Application\Import\ImportWait;
 use App\Application\Import\RowTally;
 use App\Infrastructure\Reference\ReferenceStore;
+use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Jobs\RunImportJob;
 use App\Models\WowCollectionTaxonomy;
 use App\Models\WowMount;
@@ -879,7 +880,7 @@ test('a failed job that can no longer be read is refused with the reason', funct
 });
 
 test('reloading the taxonomy snapshot merges it into the base and says how much it brought', function (): void {
-    writeTestTaxonomySnapshot(['mount' => [6 => new App\Infrastructure\Taxonomy\TaxonomyEntry('Racial', 'Human')]]);
+    writeTestTaxonomySnapshot(['mount' => [6 => new TaxonomyEntry('Racial', 'Human')]]);
 
     $this->withSession(adminSession())
         ->postJson('/api/admin/taxonomy/load')

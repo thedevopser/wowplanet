@@ -22,14 +22,14 @@ class ReferenceMaps
     /**
      * Masque de groupe de faction d'une zone, tel que porté par AreaTable.
      */
-    private const ZONE_FACTION_GROUPS = [2 => 'Alliance', 4 => 'Horde'];
+    private const array ZONE_FACTION_GROUPS = [2 => 'Alliance', 4 => 'Horde'];
 
     /**
      * Gabarit d'icône du CDN Blizzard, celui-là même que l'API sert pour les mascottes
      * et les hauts faits. Les montures sont les seules à devoir le composer : ni leur
      * détail ni aucun espace de media n'expose leur icône.
      */
-    private const ICON_URL = 'https://render.worldofwarcraft.com/%s/icons/56/%d.jpg';
+    private const string ICON_URL = 'https://render.worldofwarcraft.com/%s/icons/56/%d.jpg';
 
     /**
      * @return array<int, int> [quest_id => expansion_id]

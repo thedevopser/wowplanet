@@ -29,9 +29,9 @@ final readonly class AchievementTaxonomy
      *
      * @var list<string>
      */
-    private const PLACE_NAMED_CATEGORIES = ['Kalimdor', "Royaumes de l'Est", 'Outreterre', 'Norfendre'];
+    private const array PLACE_NAMED_CATEGORIES = ['Kalimdor', "Royaumes de l'Est", 'Outreterre', 'Norfendre'];
 
-    private const RECENT_ACHIEVEMENT_ID = 40000;
+    private const int RECENT_ACHIEVEMENT_ID = 40000;
 
     /**
      * @param  list<AchievementPlacement>  $placements

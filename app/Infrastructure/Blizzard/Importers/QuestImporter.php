@@ -9,6 +9,7 @@ use App\Infrastructure\Blizzard\BlizzardInternalName;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Models\WowQuest;
+use Illuminate\Support\Collection;
 
 final readonly class QuestImporter
 {
@@ -39,7 +40,7 @@ final readonly class QuestImporter
         $this->info(sprintf('  Zone faction map: %d entries', count($zoneFactionMap)));
 
         $index = $this->fetchWithRetry('data/wow/quest/area/index');
-        if (! $index instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $index instanceof ResponsePayload) {
             $this->info('ERROR: Could not fetch quest area index.');
 
             return;
@@ -166,7 +167,7 @@ final readonly class QuestImporter
         $written = 0;
 
         foreach (array_chunk($rows, 500) as $chunk) {
-            /** @var \Illuminate\Support\Collection<int, WowQuest> $stored */
+            /** @var Collection<int, WowQuest> $stored */
             $stored = WowQuest::query()
                 ->whereIn('id', array_column($chunk, 'id'))
                 ->get()

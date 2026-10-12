@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  */
 class PlayableNameService
 {
-    private const TTL_S = 2592000;
+    private const int TTL_S = 2592000;
 
     public function __construct(
         private readonly BlizzardApiClient $blizzardApiClient,

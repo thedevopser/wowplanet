@@ -8,6 +8,7 @@ use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Mockery\Expectation;
 
 beforeEach(function (): void {
     config(['services.blizzard.region' => 'eu']);
@@ -187,7 +188,7 @@ test('getClassIcons skips failed responses', function (): void {
 function mockAccountCharacters(int $times = 1): void
 {
     $mock = test()->mock(BlizzardApiClient::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getWithUserToken');
     $exp->times($times)->with('profile/user/wow', 'user-token')->andReturn(ResponsePayload::forEndpoint('profile/user/wow', [
         'wow_accounts' => [
@@ -227,7 +228,7 @@ test('ownsCharacter asks Blizzard for the account once per session', function ()
 test('ownsCharacter is false when the account cannot be read', function (): void {
     Session::put('blizzard_user_token', 'user-token');
     $mock = $this->mock(BlizzardApiClient::class);
-    /** @var \Mockery\Expectation $exp */
+    /** @var Expectation $exp */
     $exp = $mock->shouldReceive('getWithUserToken');
     $exp->andThrow(new RuntimeException('Blizzard down'));
 

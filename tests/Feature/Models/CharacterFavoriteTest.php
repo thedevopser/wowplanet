@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\CharacterFavorite;
+use Illuminate\Database\QueryException;
 
 // ─── CharacterFavorite Model ────────────────────────────────
 
@@ -33,7 +34,7 @@ test('CharacterFavorite enforces uniqueness per user and character', function ()
         'bnet_user_id' => '111',
         'realm_slug' => 'hyjal',
         'character_name' => 'thrall',
-    ]))->toThrow(Illuminate\Database\QueryException::class);
+    ]))->toThrow(QueryException::class);
 });
 
 test('CharacterFavorite factory creates valid instance', function (): void {

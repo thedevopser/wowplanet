@@ -54,8 +54,8 @@ test('console formatting is stripped, the journal being read as plain text', fun
 });
 
 test('two commands followed at once do not mix their journals', function (): void {
-    (new ImportLogOutput(resolve(ImportLog::class), 'job-1'))->writeln('celle de job-1');
-    (new ImportLogOutput(resolve(ImportLog::class), 'job-2'))->writeln('celle de job-2');
+    new ImportLogOutput(resolve(ImportLog::class), 'job-1')->writeln('celle de job-1');
+    new ImportLogOutput(resolve(ImportLog::class), 'job-2')->writeln('celle de job-2');
 
     expect(journalOf('job-1'))->toContain('celle de job-1')
         ->and(journalOf('job-1'))->not->toContain('celle de job-2');

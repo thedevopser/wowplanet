@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Database\Factories\CharacterVisitFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,13 +17,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $display_realm
  * @property string $class_name
  * @property int $level
- * @property \Carbon\Carbon $last_visited_at
+ * @property Carbon $last_visited_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class CharacterVisit extends Model
 {
-    /** @use HasFactory<\Database\Factories\CharacterVisitFactory> */
+    /** @use HasFactory<CharacterVisitFactory> */
     use HasFactory;
 
     protected $fillable = [

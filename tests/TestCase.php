@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -12,7 +13,7 @@ abstract class TestCase extends BaseTestCase
         $application = parent::createApplication();
 
         // Set before any Redis connection opens: parallel processes share the test indexes.
-        $application->make(\Illuminate\Contracts\Config\Repository::class)->set('database.redis.options.prefix', testRedisPrefix());
+        $application->make(Repository::class)->set('database.redis.options.prefix', testRedisPrefix());
 
         return $application;
     }

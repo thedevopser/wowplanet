@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use App\Infrastructure\Blizzard\BlizzardApiClient;
+use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Blizzard\Importers\AppearanceImporter;
 use App\Models\WowAppearance;
 use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -22,7 +26,7 @@ beforeEach(function (): void {
  * @param  array<string, list<int>>  $slots  [slotType => list<appearanceId>]
  * @param  list<string>  $failing
  */
-function mockSlotIndexes(\Mockery\MockInterface $mock, array $slots, array $failing = []): void
+function mockSlotIndexes(MockInterface $mock, array $slots, array $failing = []): void
 {
     $allSlots = [
         'HEAD', 'SHOULDER', 'BODY', 'CHEST', 'WAIST', 'LEGS', 'FEET', 'WRIST', 'HAND',
@@ -32,10 +36,10 @@ function mockSlotIndexes(\Mockery\MockInterface $mock, array $slots, array $fail
 
     foreach ($allSlots as $allSlot) {
         $expectation = $mock->shouldReceive('get')
-            ->with('data/wow/item-appearance/slot/'.$allSlot, \Mockery::any());
+            ->with('data/wow/item-appearance/slot/'.$allSlot, Mockery::any());
 
         if (in_array($allSlot, $failing, true)) {
-            $expectation->andThrow(new \Exception('API error: 404 Not Found'));
+            $expectation->andThrow(new Exception('API error: 404 Not Found'));
 
             continue;
         }
@@ -50,13 +54,13 @@ function mockSlotIndexes(\Mockery\MockInterface $mock, array $slots, array $fail
 /**
  * Borne du balayage : le plus grand identifiant d'item du catalogue.
  */
-function mockHighestItemId(\Mockery\MockInterface $mock, ?int $highestItemId): void
+function mockHighestItemId(MockInterface $mock, ?int $highestItemId): void
 {
     $expectation = $mock->shouldReceive('get')
         ->withArgs(fn (string $endpoint): bool => str_contains($endpoint, 'orderby=id:desc'));
 
     if ($highestItemId === null) {
-        $expectation->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        $expectation->andThrow(new Exception('API error: 500 Internal Server Error'));
 
         return;
     }
@@ -88,21 +92,21 @@ function itemDocument(int $id, string $name, string $quality, array $appearanceI
  *
  * @param  array<int, list<array<string, mixed>>>  $windows  [windowIndex => list<document>]
  */
-function mockSearchWindows(\Mockery\MockInterface $mock, string $endpoint, array $windows): void
+function mockSearchWindows(MockInterface $mock, string $endpoint, array $windows): void
 {
     foreach ($windows as $window => $documents) {
         $range = sprintf('id=[%d,%d]', $window * 1000, $window * 1000 + 999);
 
         $mock->shouldReceive('getAsync')
             ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint.'?') && str_contains($requested, $range))
-            ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
+            ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
                 'results' => array_map(static fn (array $document): array => ['data' => $document], $documents),
             ]))));
     }
 
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint.'?'))
-        ->andReturnUsing(fn (): \GuzzleHttp\Promise\PromiseInterface => Create::promiseFor(new Response(200, [], '{"results":[]}')));
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], '{"results":[]}')));
 }
 
 /**
@@ -123,7 +127,7 @@ function mediaDocument(int $id, string $icon, ?int $fileDataId = null): array
 }
 
 test('it builds the wardrobe from item searches without a single appearance detail call', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, [
@@ -177,7 +181,7 @@ test('it builds the wardrobe from item searches without a single appearance deta
 });
 
 test('only the appearances listed in the slot indexes enter the catalog', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -199,7 +203,7 @@ test('only the appearances listed in the slot indexes enter the catalog', functi
 });
 
 test('the representative item is the best quality, ties broken by the lowest item id', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -227,7 +231,7 @@ test('the representative item is the best quality, ties broken by the lowest ite
 test('it aborts without deleting anything when a single slot index fails', function (): void {
     WowAppearance::factory()->create(['id' => 999, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     // 17 slots répondent, CLOAK non : un index partiel effacerait tout un slot.
@@ -243,7 +247,7 @@ test('it aborts without deleting anything when a single slot index fails', funct
 test('it aborts without touching the catalog when the highest item id is unreadable', function (): void {
     WowAppearance::factory()->create(['id' => 999, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -263,7 +267,7 @@ test('it deletes stale appearances no longer present in the API slot indexes', f
     // Reliquat désactivé par une passe précédente : doit être purgé lui aussi.
     WowAppearance::factory()->create(['id' => 998, 'is_active' => false]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -279,7 +283,7 @@ test('it deletes stale appearances no longer present in the API slot indexes', f
 });
 
 test('an appearance whose items carry no name gets no row', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [888]]);
@@ -296,7 +300,7 @@ test('an appearance whose items carry no name gets no row', function (): void {
 });
 
 test('an appearance whose representative item has no icon keeps a null icon', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [900]]);
@@ -325,7 +329,7 @@ test('a row already holding the same representative keeps its icon untouched', f
         'icon_file_data_id' => 7,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -352,7 +356,7 @@ test('a full refresh refetches the icons of every row', function (): void {
         'icon_file_data_id' => 7,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -380,7 +384,7 @@ test('a better representative item replaces the stale icon of the row', function
         'icon_file_data_id' => 7,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -407,7 +411,7 @@ test('a better representative item replaces the stale icon of the row', function
 test('the limit caps the swept windows and leaves the catalog untouched', function (): void {
     WowAppearance::factory()->create(['id' => 999, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321, 322]]);
@@ -431,9 +435,9 @@ test('the limit caps the swept windows and leaves the catalog untouched', functi
 test('importChunk stops without sleeping when the hourly budget is exhausted', function (): void {
     // Budget déjà au-delà du plafond réservé aux imports → importChunk doit rendre la
     // main (le job se re-dispatchera), sans dormir ni balayer la moindre fenêtre.
-    resolve(\App\Infrastructure\Blizzard\HourlyBudgetGuard::class)->consume(\App\Infrastructure\Blizzard\HourlyBudgetGuard::HOURLY_LIMIT);
+    resolve(HourlyBudgetGuard::class)->consume(HourlyBudgetGuard::HOURLY_LIMIT);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -450,7 +454,7 @@ test('importChunk stops without sleeping when the hourly budget is exhausted', f
 });
 
 test('importChunk resumes at the window where the previous pass stopped', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321, 322]]);
@@ -477,12 +481,12 @@ test('importChunk resumes at the window where the previous pass stopped', functi
 });
 
 test('it returns early when every slot index fails', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     $client->shouldReceive('get')
         ->withArgs(fn (string $endpoint): bool => str_starts_with($endpoint, 'data/wow/item-appearance/slot/'))
-        ->andThrow(new \Exception('API error: 500 Internal Server Error'));
+        ->andThrow(new Exception('API error: 500 Internal Server Error'));
 
     resolve(AppearanceImporter::class)->import();
 
@@ -501,7 +505,7 @@ test('a stored representative of better quality survives a sweep that only finds
         'icon_file_data_id' => 9,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -528,7 +532,7 @@ test('a row still without any representative takes the one the sweep finds', fun
         'icon_url' => null,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -545,7 +549,7 @@ test('a row still without any representative takes the one the sweep finds', fun
 });
 
 test('an item the media search does not know leaves its appearance without icon', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -572,7 +576,7 @@ test('a full refresh writes nothing when every icon is already correct', functio
         'icon_file_data_id' => 1,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -580,19 +584,19 @@ test('a full refresh writes nothing when every icon is already correct', functio
     mockSearchWindows($client, 'data/wow/search/item', [0 => [itemDocument(10, 'Heaume', 'RARE', [321])]]);
     mockSearchWindows($client, 'data/wow/search/media', [0 => [mediaDocument(10, 'https://render.worldofwarcraft.com/eu/icons/56/a.jpg', 1)]]);
 
-    \Illuminate\Support\Facades\DB::enableQueryLog();
+    DB::enableQueryLog();
     resolve(AppearanceImporter::class)->import(full: true);
     $writes = array_filter(
-        \Illuminate\Support\Facades\DB::getQueryLog(),
+        DB::getQueryLog(),
         static fn (array $query): bool => str_contains((string) $query['query'], 'insert into "wow_appearances"'),
     );
-    \Illuminate\Support\Facades\DB::disableQueryLog();
+    DB::disableQueryLog();
 
     expect($writes)->toBe([]);
 });
 
 test('importChunk hands back its position when the time box runs out', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -610,7 +614,7 @@ test('importChunk hands back its position when the time box runs out', function 
 test('a sweep stopped before its first window deletes nothing and keeps its offset', function (): void {
     WowAppearance::factory()->create(['id' => 999, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -618,7 +622,7 @@ test('a sweep stopped before its first window deletes nothing and keeps its offs
     $client->shouldNotReceive('getAsync');
 
     $appearanceImportProgress = resolve(AppearanceImporter::class)
-        ->importChunk(full: false, offset: 0, timeBoxSeconds: 600, limit: null, stopRequested: static fn (): bool => true);
+        ->importChunk(full: false, offset: 0, timeBoxSeconds: 600, stopRequested: static fn (): bool => true);
 
     expect($appearanceImportProgress->done)->toBeFalse()
         ->and($appearanceImportProgress->offset)->toBe(0)
@@ -628,7 +632,7 @@ test('a sweep stopped before its first window deletes nothing and keeps its offs
 test('a sweep stopped mid-flight keeps what it swept and spares the catalog', function (): void {
     WowAppearance::factory()->create(['id' => 999, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['HEAD' => [321]]);
@@ -642,7 +646,6 @@ test('a sweep stopped mid-flight keeps what it swept and spares the catalog', fu
         full: false,
         offset: 0,
         timeBoxSeconds: 600,
-        limit: null,
         stopRequested: function () use (&$turns): bool {
             $turns++;
 
@@ -659,7 +662,7 @@ test('a sweep stopped mid-flight keeps what it swept and spares the catalog', fu
 });
 
 test('an item carrying an internal Blizzard name never represents an appearance', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['WEAPON' => [321, 322]]);
@@ -683,7 +686,7 @@ test('a stored appearance under an internal name yields to any released represen
         'quality' => 4, 'item_id' => 10,
     ]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['WEAPON' => [321]]);
@@ -702,7 +705,7 @@ test('a full sweep removes the listed appearances still named by a placeholder',
     WowAppearance::factory()->create(['id' => 116141, 'name_fr' => '[EN] Appearance #116141', 'slot' => 'CLOAK', 'category' => null]);
     WowAppearance::factory()->create(['id' => 322, 'name_fr' => "DNT Ula'tek Pole Dummy F", 'slot' => 'WEAPON']);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockSlotIndexes($client, ['CLOAK' => [116141, 321], 'WEAPON' => [322]]);

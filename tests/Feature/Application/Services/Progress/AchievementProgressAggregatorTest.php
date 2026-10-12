@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Application\Services\Progress\AchievementProgressAggregator;
+use App\Domain\ValueObjects\ExpansionId;
 use App\Models\WowAchievement;
 
 test('aggregate groups achievements by expansion and category', function (): void {
@@ -38,18 +39,18 @@ test('aggregate returns a slot for every expansion plus the unclassified bucket'
     $result = $aggregator->aggregate([]);
 
     expect($result)->toHaveCount(13);
-    expect(array_keys($result))->toBe([...range(0, 11), \App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED]);
+    expect(array_keys($result))->toBe([...range(0, 11), ExpansionId::UNCLASSIFIED]);
 });
 
 test('aggregate counts the achievements nothing dates instead of dropping them', function (): void {
-    WowAchievement::factory()->create(['id' => 1685, 'expansion_id' => \App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED, 'category_name' => 'Évènements mondiaux', 'is_active' => true]);
+    WowAchievement::factory()->create(['id' => 1685, 'expansion_id' => ExpansionId::UNCLASSIFIED, 'category_name' => 'Évènements mondiaux', 'is_active' => true]);
 
     $aggregator = new AchievementProgressAggregator;
     $result = $aggregator->aggregate([1685]);
 
-    expect($result[\App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED]['total'])->toBe(1)
-        ->and($result[\App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED]['completed'])->toBe(1)
-        ->and($result[\App\Domain\ValueObjects\ExpansionId::UNCLASSIFIED]['categories'][0]['name'])->toBe('Évènements mondiaux');
+    expect($result[ExpansionId::UNCLASSIFIED]['total'])->toBe(1)
+        ->and($result[ExpansionId::UNCLASSIFIED]['completed'])->toBe(1)
+        ->and($result[ExpansionId::UNCLASSIFIED]['categories'][0]['name'])->toBe('Évènements mondiaux');
 });
 
 test('aggregate marks correct items as completed in category', function (): void {

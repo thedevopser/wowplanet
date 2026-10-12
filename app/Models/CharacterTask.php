@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Database\Factories\CharacterTaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,14 +17,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property string $reset_type
  * @property bool $is_completed
- * @property \Carbon\Carbon|null $completed_at
+ * @property Carbon|null $completed_at
  * @property int $sort_order
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  */
 class CharacterTask extends Model
 {
-    /** @use HasFactory<\Database\Factories\CharacterTaskFactory> */
+    /** @use HasFactory<CharacterTaskFactory> */
     use HasFactory;
 
     protected $fillable = [

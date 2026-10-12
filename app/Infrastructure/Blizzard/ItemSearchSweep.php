@@ -23,9 +23,9 @@ final readonly class ItemSearchSweep
     use ImportsFromBlizzardApi;
     use SweepsIdWindows;
 
-    public const WINDOW_SIZE = SearchIdWindow::SIZE;
+    public const int WINDOW_SIZE = SearchIdWindow::SIZE;
 
-    private const ITEM_ENDPOINT = 'data/wow/search/item';
+    private const string ITEM_ENDPOINT = 'data/wow/search/item';
 
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
@@ -51,7 +51,7 @@ final readonly class ItemSearchSweep
     public function highestItemId(): ?int
     {
         $decoded = $this->fetchWithRetry(self::ITEM_ENDPOINT.'?_pageSize=1&orderby=id:desc');
-        if (! $decoded instanceof \App\Infrastructure\Blizzard\Responses\ResponsePayload) {
+        if (! $decoded instanceof ResponsePayload) {
             return null;
         }
 

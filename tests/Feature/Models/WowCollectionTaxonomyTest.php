@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Schema;
 
 test('it carries the discriminator, the Blizzard identifier and the curated ranking', function (): void {
@@ -28,7 +29,7 @@ test('it refuses a second row for the same collection and identifier', function 
     expect(fn (): WowCollectionTaxonomy => WowCollectionTaxonomy::factory()->create([
         'entity' => CollectionEntity::Mount,
         'entry_id' => 42,
-    ]))->toThrow(Illuminate\Database\UniqueConstraintViolationException::class);
+    ]))->toThrow(UniqueConstraintViolationException::class);
 });
 
 test('it reads back its discriminator as an entity', function (): void {

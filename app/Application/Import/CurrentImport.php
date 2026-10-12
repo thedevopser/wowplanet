@@ -25,9 +25,9 @@ final readonly class CurrentImport
      * panneau suivre indéfiniment un job qui ne rendra plus rien. La durée couvre le
      * `retryUntil` du job, au-delà duquel plus aucune passe ne sera tentée.
      */
-    public const TTL_S = 86400;
+    public const int TTL_S = 86400;
 
-    private const KEY = 'import_current';
+    private const string KEY = 'import_current';
 
     public function mark(string $jobId, int $startedAt): void
     {

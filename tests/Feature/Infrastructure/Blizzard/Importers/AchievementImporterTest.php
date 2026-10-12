@@ -10,7 +10,9 @@ use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use Mockery\MockInterface;
 
 beforeEach(function (): void {
     Sleep::fake();
@@ -21,7 +23,7 @@ beforeEach(function (): void {
  *
  * @param  list<array{id: int, name: string, parent?: int, achievements?: array<int, string>}>  $categories
  */
-function mockAchievementHierarchy(\Mockery\MockInterface $mock, array $categories): void
+function mockAchievementHierarchy(MockInterface $mock, array $categories): void
 {
     mockAchievementCategoryIndex($mock, $categories);
 
@@ -33,10 +35,10 @@ function mockAchievementHierarchy(\Mockery\MockInterface $mock, array $categorie
 /**
  * @param  list<array{id: int, name: string, parent?: int, achievements?: array<int, string>}>  $categories
  */
-function mockAchievementCategoryIndex(\Mockery\MockInterface $mock, array $categories): void
+function mockAchievementCategoryIndex(MockInterface $mock, array $categories): void
 {
     $mock->shouldReceive('get')
-        ->with('data/wow/achievement-category/index', \Mockery::any())
+        ->with('data/wow/achievement-category/index', Mockery::any())
         ->andReturn([
             'categories' => array_map(static fn (array $category): array => ['id' => $category['id'], 'name' => $category['name']], $categories),
         ]);
@@ -45,7 +47,7 @@ function mockAchievementCategoryIndex(\Mockery\MockInterface $mock, array $categ
 /**
  * @param  array{id: int, name: string, parent?: int, achievements?: array<int, string>}  $category
  */
-function mockAchievementCategory(\Mockery\MockInterface $mock, array $category): void
+function mockAchievementCategory(MockInterface $mock, array $category): void
 {
     $payload = ['id' => $category['id'], 'name' => $category['name'], 'achievements' => []];
     foreach (($category['achievements'] ?? []) as $achievementId => $achievementName) {
@@ -64,7 +66,7 @@ function mockAchievementCategory(\Mockery\MockInterface $mock, array $category):
 /**
  * @param  array<int, array{points: int, faction?: string}>  $details
  */
-function mockAchievementDetails(\Mockery\MockInterface $mock, array $details): void
+function mockAchievementDetails(MockInterface $mock, array $details): void
 {
     foreach ($details as $id => $detail) {
         $payload = ['id' => $id, 'points' => $detail['points']];
@@ -81,7 +83,7 @@ function mockAchievementDetails(\Mockery\MockInterface $mock, array $details): v
 /**
  * @param  array<int, array<int, string|null>>  $windows  index de fenêtre → identifiant → icône
  */
-function mockAchievementMedia(\Mockery\MockInterface $mock, array $windows): void
+function mockAchievementMedia(MockInterface $mock, array $windows): void
 {
     foreach ($windows as $window => $icons) {
         $documents = [];
@@ -104,7 +106,7 @@ function mockAchievementMedia(\Mockery\MockInterface $mock, array $windows): voi
 /**
  * Fait échouer un endpoint précis, pour distinguer un appel dégradé d'un appel absent.
  */
-function failAchievementEndpoint(\Mockery\MockInterface $mock, string $endpoint): void
+function failAchievementEndpoint(MockInterface $mock, string $endpoint): void
 {
     $mock->shouldReceive('getAsync')
         ->withArgs(fn (string $requested): bool => str_starts_with($requested, $endpoint))
@@ -112,7 +114,7 @@ function failAchievementEndpoint(\Mockery\MockInterface $mock, string $endpoint)
 }
 
 test('the catalog is built from the hierarchy, the details and the media', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockAchievementHierarchy($client, [
@@ -150,7 +152,7 @@ test('the catalog is built from the hierarchy, the details and the media', funct
 });
 
 test('an achievement no ancestor dates lands in the unclassified bucket, not in Classic', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
 
     mockAchievementHierarchy($client, [
@@ -168,7 +170,7 @@ test('an achievement no ancestor dates lands in the unclassified bucket, not in 
 test('a hierarchy holding no achievement at all touches nothing', function (): void {
     WowAchievement::query()->create(['id' => 400, 'name_fr' => 'Haut-fait existant', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 10, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes']]);
 
@@ -181,9 +183,9 @@ test('a hierarchy holding no achievement at all touches nothing', function (): v
 test('it aborts without touching the catalog when the category index fails', function (): void {
     WowAchievement::query()->create(['id' => 400, 'name_fr' => 'Haut-fait existant', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 10, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
-    $client->shouldReceive('get')->andThrow(new \Exception('API error: 500 Internal Server Error'));
+    $client->shouldReceive('get')->andThrow(new Exception('API error: 500 Internal Server Error'));
     $client->shouldNotReceive('getAsync');
 
     resolve(AchievementImporter::class)->import();
@@ -195,7 +197,7 @@ test('it aborts without touching the catalog when the category index fails', fun
 test('it aborts without touching the catalog when a single category detail fails', function (): void {
     WowAchievement::query()->create(['id' => 400, 'name_fr' => 'Haut-fait existant', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 10, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementCategoryIndex($client, [
         ['id' => 96, 'name' => 'Quêtes'],
@@ -213,7 +215,7 @@ test('it aborts without touching the catalog when a single category detail fails
 test('an achievement that left the hierarchy leaves the catalog', function (): void {
     WowAchievement::query()->create(['id' => 900, 'name_fr' => 'Retiré du jeu', 'expansion_id' => 0, 'category_name' => 'Tours de force', 'points' => 0, 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
     mockAchievementDetails($client, [504 => ['points' => 10]]);
@@ -228,7 +230,7 @@ test('an achievement that left the hierarchy leaves the catalog', function (): v
 test('an unreachable detail leaves the points and the faction already in base alone', function (): void {
     WowAchievement::query()->create(['id' => 504, 'name_fr' => 'Ancien nom', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 42, 'faction' => 'Alliance', 'icon_url' => 'https://render.worldofwarcraft.com/eu/icons/56/old.jpg', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
     failAchievementEndpoint($client, 'data/wow/achievement/504');
@@ -246,7 +248,7 @@ test('an unreachable detail leaves the points and the faction already in base al
 test('a detail that carries no faction clears the faction the catalog held', function (): void {
     WowAchievement::query()->create(['id' => 504, 'name_fr' => '100 quêtes achevées', 'expansion_id' => 0, 'category_name' => 'Quêtes', 'points' => 10, 'faction' => 'Alliance', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
     mockAchievementDetails($client, [504 => ['points' => 10]]);
@@ -260,7 +262,7 @@ test('a detail that carries no faction clears the faction the catalog held', fun
 test('a media window the API did not answer leaves the icon already in base alone', function (): void {
     WowAchievement::query()->create(['id' => 504, 'name_fr' => '100 quêtes achevées', 'expansion_id' => ExpansionId::UNCLASSIFIED, 'category_name' => 'Quêtes', 'points' => 10, 'icon_url' => 'https://render.worldofwarcraft.com/eu/icons/56/kept.jpg', 'is_active' => true]);
 
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
     mockAchievementDetails($client, [504 => ['points' => 10]]);
@@ -272,7 +274,7 @@ test('a media window the API did not answer leaves the icon already in base alon
 });
 
 test('a second pass over an unchanged catalog writes nothing', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [
         ['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']],
@@ -299,7 +301,7 @@ test('a second pass over an unchanged catalog writes nothing', function (): void
 });
 
 test('the report names the categories nothing dates and the dating signals going stale', function (): void {
-    /** @var BlizzardApiClient|\Mockery\MockInterface $client */
+    /** @var BlizzardApiClient|MockInterface $client */
     $client = $this->mock(BlizzardApiClient::class);
     mockAchievementHierarchy($client, [
         ['id' => 96, 'name' => 'Quêtes'],
@@ -310,7 +312,7 @@ test('the report names the categories nothing dates and the dating signals going
     mockAchievementMedia($client, [41 => [41999 => null], 1 => [1685 => null]]);
 
     $report = [];
-    \Illuminate\Support\Facades\Log::shouldReceive('info')->andReturnUsing(function (string $message) use (&$report): void {
+    Log::shouldReceive('info')->andReturnUsing(function (string $message) use (&$report): void {
         $report[] = $message;
     });
 

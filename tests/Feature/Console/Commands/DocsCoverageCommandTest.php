@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use App\Domain\Services\ScoreCalculator;
+use App\Http\Controllers\PvpController;
+use App\Providers\AppServiceProvider;
 
 beforeEach(function (): void {
     $this->docsTmpDir = testTempPath('docs-coverage');
@@ -64,9 +67,9 @@ test('it names the undocumented classes, grouped by layer', function (): void {
     // correspond : des chaînes qui se recouvrent se voleraient mutuellement leur ligne.
     $this->artisan('docs:coverage')
         ->expectsOutputToContain('Domain (1)')
-        ->expectsOutputToContain(\App\Domain\Services\ScoreCalculator::class)
+        ->expectsOutputToContain(ScoreCalculator::class)
         ->expectsOutputToContain('Http (1)')
-        ->expectsOutputToContain(\App\Http\Controllers\PvpController::class)
+        ->expectsOutputToContain(PvpController::class)
         ->assertExitCode(1);
 });
 
@@ -90,7 +93,7 @@ test('it fails as soon as one class more than the ceiling is undocumented', func
 test('an excluded class is not required to be documented', function (): void {
     docsCoverageSource($this->docsTmpDir, 'Providers/AppServiceProvider.php');
     docsCoveragePage($this->docsTmpDir, 'index.md', 'Rien ici.');
-    config(['documentation.exclude' => [\App\Providers\AppServiceProvider::class => 'câblage de conteneur']]);
+    config(['documentation.exclude' => [AppServiceProvider::class => 'câblage de conteneur']]);
 
     $this->artisan('docs:coverage')->assertExitCode(0);
 });

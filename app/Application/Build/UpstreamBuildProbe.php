@@ -25,11 +25,11 @@ use RuntimeException;
  */
 final readonly class UpstreamBuildProbe
 {
-    private const TTL_S = 3600;
+    private const int TTL_S = 3600;
 
-    private const OUTCOME_OK = 'ok';
+    private const string OUTCOME_OK = 'ok';
 
-    private const OUTCOME_UNREACHABLE = 'unreachable';
+    private const string OUTCOME_UNREACHABLE = 'unreachable';
 
     public function __construct(
         private BlizzardApiClient $blizzardApiClient,

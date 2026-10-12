@@ -128,7 +128,7 @@ test('labels are trimmed, so a stray space never forks the vocabulary', function
 test('it exports the snapshot in the same breath, so the repository never falls behind', function (): void {
     arbitrate($this->snapshotPath, [7], 'Racial', 'Human');
 
-    expect((new CollectionTaxonomySnapshot($this->snapshotPath))->entriesFor(CollectionEntity::Mount))
+    expect(new CollectionTaxonomySnapshot($this->snapshotPath)->entriesFor(CollectionEntity::Mount))
         ->toHaveKey(7);
 });
 

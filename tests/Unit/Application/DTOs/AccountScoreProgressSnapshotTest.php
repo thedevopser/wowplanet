@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\DTOs\AccountScoreProgress;
 use App\Application\DTOs\CharacterProfileDTO;
+use Illuminate\Support\Facades\Date;
 
 /**
  * @param  list<int>  $questsDone
@@ -72,7 +73,7 @@ function richAccountProfile(string $name, array $questsDone, array $recipesDone,
 }
 
 test('the account result is unchanged', function (): void {
-    \Illuminate\Support\Facades\Date::setTestNow('2026-09-23T12:00:00Z');
+    Date::setTestNow('2026-09-23T12:00:00Z');
 
     $progress = new AccountScoreProgress([['realmSlug' => 'hyjal', 'name' => 'Thrall'], ['realmSlug' => 'hyjal', 'name' => 'Jaina']]);
     $progress->mergeProfile(richAccountProfile('Thrall', [1], [2], 1, 40, ['NORMAL' => [3, 1], 'HEROIC' => [1]], true));
