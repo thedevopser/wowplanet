@@ -68,6 +68,22 @@ final class ReferenceCatalog
                 new ReferenceColumn('SpellID', 'spell_id', ReferenceColumnType::Integer),
                 new ReferenceColumn('SpellIconFileDataID', 'spell_icon_file_data_id', ReferenceColumnType::Integer),
             ]),
+            new ReferenceTable('DataTagXHouseDecorRecord', 'data_tag_x_house_decor_record', null, [
+                new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
+                new ReferenceColumn('DataTagID', 'data_tag_id', ReferenceColumnType::Integer),
+                new ReferenceColumn('HouseDecorID', 'house_decor_id', ReferenceColumnType::Integer),
+            ]),
+            new ReferenceTable('DataTagGroupXDataTag', 'data_tag_group_x_data_tag', null, [
+                new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
+                new ReferenceColumn('DataTagGroupID', 'data_tag_group_id', ReferenceColumnType::Integer),
+                new ReferenceColumn('DataTag', 'data_tag', ReferenceColumnType::Integer),
+            ]),
+            // Sans locale, wago sert l'anglais : la langue des libellés de la taxonomie curée.
+            new ReferenceTable('DataTagInfo', 'data_tag_info', null, [
+                new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
+                new ReferenceColumn('DataTag', 'data_tag', ReferenceColumnType::Integer),
+                new ReferenceColumn('Description_lang', 'description_lang', ReferenceColumnType::Text),
+            ]),
         ];
     }
 

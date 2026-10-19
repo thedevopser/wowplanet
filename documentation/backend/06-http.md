@@ -255,7 +255,7 @@ Le panneau a son propre limiteur, `admin`, à 180 requêtes par minute et par se
 
 Ces routes se déclarent avant la route catch-all de `routes/web.php`, qui avalerait sinon toute route de premier niveau.
 
-`ReferenceController::page()` passe trois props : `tables`, l'état des huit tables du socle ; `store`, le contenu du magasin des fichiers téléchargés avec ses totaux et les entrées d'inventaire sans fichier ; et `liveBuild`, le build que wago sert, ou `null` s'il n'a pas pu être lu.
+`ReferenceController::page()` passe trois props : `tables`, l'état des tables du socle ; `store`, le contenu du magasin des fichiers téléchargés avec ses totaux et les entrées d'inventaire sans fichier ; et `liveBuild`, le build que wago sert, ou `null` s'il n'a pas pu être lu.
 
 **Aucun chemin de fichier ne vient de la requête.** `purgeReference()` liste d'abord ce que le disque porte réellement, et confronte chaque nom reçu à cette liste. La règle passe par `Rule::in()` avec un tableau et non par la forme `in:a,b,c` : un nom de fichier orphelin est arbitraire et peut contenir une virgule, que la forme en chaîne couperait silencieusement.
 

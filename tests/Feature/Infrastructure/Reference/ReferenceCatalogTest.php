@@ -55,3 +55,22 @@ test('the spell misc table carries the icon file of a spell', function (): void 
         ->and($spellMisc->table())->toBe('wow_ref_spell_misc')
         ->and($spellMisc->targetColumns())->toBe(['id', 'spell_id', 'spell_icon_file_data_id']);
 });
+
+test('the decor tag tables link a decor to its tags, each tag to its group and its label', function (string $source, string $table, array $columns): void {
+    $referenceTable = (new ReferenceCatalog)->find($source);
+
+    expect($referenceTable)->not->toBeNull()
+        ->and($referenceTable->table())->toBe($table)
+        ->and($referenceTable->targetColumns())->toBe($columns);
+})->with([
+    'decor to tag' => ['DataTagXHouseDecorRecord', 'wow_ref_data_tag_x_house_decor_record', ['id', 'data_tag_id', 'house_decor_id']],
+    'tag to group' => ['DataTagGroupXDataTag', 'wow_ref_data_tag_group_x_data_tag', ['id', 'data_tag_group_id', 'data_tag']],
+    'tag label' => ['DataTagInfo', 'wow_ref_data_tag_info', ['id', 'data_tag', 'description_lang']],
+]);
+
+test('the tag labels are read in English, the language of the curated taxonomy', function (): void {
+    $dataTagInfo = (new ReferenceCatalog)->find('DataTagInfo');
+
+    expect($dataTagInfo)->not->toBeNull()
+        ->and($dataTagInfo->locale)->toBeNull();
+});

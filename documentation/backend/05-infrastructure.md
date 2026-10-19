@@ -677,7 +677,7 @@ Les correspondances que l'API Blizzard n'expose sur aucun endpoint — extension
 
 ### `ReferenceCatalog`
 
-Déclare les huit tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`.
+Déclare les onze tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`, et les trois tables d'étiquettes des décorations, `DataTagXHouseDecorRecord`, `DataTagGroupXDataTag` et `DataTagInfo`. Cette dernière est lue sans locale, donc en anglais : ses libellés d'extension sont ceux de la taxonomie curée.
 
 `SpellMisc` est la plus lourde du socle — 417 583 lignes pour 45 Mo — et n'est retenue que pour deux colonnes, `SpellID` et `SpellIconFileDataID`. C'est le prix de l'icône des montures, que l'API n'expose nulle part.
 
@@ -701,7 +701,7 @@ Encodage d'une ligne au format texte de `COPY`. Ce format sépare par tabulation
 
 Six classes de la couche Application portent ce que `/admin/reference` affiche : deux pour l'état des tables, quatre pour l'inventaire des fichiers téléchargés.
 
-**`ReferenceInventory`** rend, pour chacune des huit tables, ce qu'elle pèse, quand elle a été chargée et sous quel build, et l'écart avec le chargement précédent. Les lignes sont **comptées sur la table**, pas relues de l'inventaire : ce dernier dit ce qu'un chargement a écrit, la table dit ce qui reste, et les deux divergent dès qu'on touche à la base autrement que par la commande de synchronisation.
+**`ReferenceInventory`** rend, pour chacune des tables du socle, ce qu'elle pèse, quand elle a été chargée et sous quel build, et l'écart avec le chargement précédent. Les lignes sont **comptées sur la table**, pas relues de l'inventaire : ce dernier dit ce qu'un chargement a écrit, la table dit ce qui reste, et les deux divergent dès qu'on touche à la base autrement que par la commande de synchronisation.
 
 Trois signaux en sortent : une table vide, une table restée sur un build antérieur, et une table **dégarnie**. Ce dernier mérite son seuil écrit. La commande de synchronisation refuse déjà d'écrire une source tombée sous la moitié du chargement précédent ; `VolumeShrink::ALERT_RATIO` vaut **0,9**, et signale donc tout chargement qui a retenu moins de neuf dixièmes de son prédécesseur. Entre les deux valeurs, le chargement aboutit sans que rien ne le dise : c'est exactement l'angle mort que la page comble, et c'est le signal le plus utile de l'écran — un patch qui renomme une colonne se manifeste par une table qui se vide, pas par une erreur. `VolumeShrink` porte ce seuil pour tout le projet : l'historique des imports lit la chute de volumétrie d'une entité au même seuil.
 
@@ -783,6 +783,7 @@ Les correspondances que l'import tire du socle.
 | `zoneFactions()` | `array<int, string>` | `wow_ref_area_table`, `FactionGroupMask` : 2 pour l'Alliance, 4 pour la Horde |
 | `mountSpells()` | `array<int, int>` | `wow_ref_mount`, `SourceSpellID` |
 | `mountIcons()` | `array<int, string>` | `wow_ref_mount` joint à `wow_ref_spell_misc` par le sort source |
+| `decorExpansions()` | `array<int, string>` | `wow_ref_data_tag_x_house_decor_record` joint aux étiquettes du groupe Expansion (`DataTagGroup` 4) et à leur libellé anglais ; une décoration à deux extensions est laissée de côté |
 
 Les cartes sont construites une fois en début de passe et gardées en mémoire : quelques dizaines de milliers d'entiers ne pèsent rien, là où un aller-retour SQL par quête coûterait la passe entière. Une quête sans titre est ignorée partout, comme le faisait la lecture du CSV : elle n'entre au catalogue sous aucune forme.
 

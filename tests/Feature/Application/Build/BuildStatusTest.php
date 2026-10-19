@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Application\Build\BuildStatus;
 use App\Application\Import\ImportStage;
+use App\Infrastructure\Reference\ReferenceCatalog;
 use App\Models\WowImportState;
 use App\Models\WowReferenceDownload;
 use Illuminate\Support\Facades\Cache;
@@ -197,7 +198,7 @@ test('the socle says how many of its tables are behind, its build alone not tell
     $entry = entriesByStage()['reference'];
 
     expect($entry['state'])->toBe('stale')
-        ->and($entry['note'])->toBe('1 table sur 8 en retard');
+        ->and($entry['note'])->toBe(sprintf('1 table sur %d en retard', count((new ReferenceCatalog)->sources())));
 });
 
 test('a socle fully loaded carries no note to explain', function (): void {

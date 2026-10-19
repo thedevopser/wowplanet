@@ -23,7 +23,7 @@ Les étapes, dans leur ordre d'exécution.
 | Décorations | `decor` | — | `wow_decors` |
 | Garde-robe | `appearances` | — | `wow_appearances` |
 
-Le socle de référence ouvre la chaîne : les quêtes, les métiers et les montures tirent de `wow_ref_*` ce que l'API n'expose pas, et un import parti d'une base vide sans lui sortirait faux sans rien signaler. Ce n'est pas une entité de catalogue, d'où l'absence de table comptée : `wow_ref_*` est chargée par `COPY` dans des tables sans horodatages.
+Le socle de référence ouvre la chaîne : les quêtes, les métiers, les montures et les décorations tirent de `wow_ref_*` ce que l'API n'expose pas, et un import parti d'une base vide sans lui sortirait faux sans rien signaler. Ce n'est pas une entité de catalogue, d'où l'absence de table comptée : `wow_ref_*` est chargée par `COPY` dans des tables sans horodatages.
 
 L'ordre est vérifié contre les dépendances déclarées plutôt que simplement écrit — une dépendance ajoutée à contresens de la chaîne fait tomber le test.
 

@@ -36,6 +36,7 @@ test('the stages fed by the reference socle declare it', function (): void {
     expect(ImportStage::Quests->dependsOn())->toBe([ImportStage::Reference])
         ->and(ImportStage::Mounts->dependsOn())->toBe([ImportStage::Reference])
         ->and(ImportStage::Professions->dependsOn())->toBe([ImportStage::Reference])
+        ->and(ImportStage::Decor->dependsOn())->toBe([ImportStage::Reference])
         ->and(ImportStage::Achievements->dependsOn())->toBe([]);
 });
 
