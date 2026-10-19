@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Reference;
 
 /**
- * Range le contenu du magasin de référence en quatre états, à partir de ce qu'on lui
+ * Range le contenu du magasin de référence en trois états, à partir de ce qu'on lui
  * donne et de rien d'autre.
  *
  * Aucune lecture de disque ni de base ici : le classement est la seule règle de l'écran
@@ -17,10 +17,9 @@ final readonly class ReferenceFileClassifier
     /**
      * @param  array<string, int>  $sizes  Taille en octets, par nom de fichier réellement présent
      * @param  list<array{filename: string, source_table: string, build: string, loaded_at: int}>  $inventory
-     * @param  list<string>  $taxonomyFilenames  Instantanés déposés par le tirage amont de la taxonomie
      * @return array{files: list<array{filename: string, state: string, bytes: int, source_table: string|null, build: string|null, loaded_at: int|null}>, missing: list<array{filename: string, source_table: string, build: string, loaded_at: int}>}
      */
-    public function classify(array $sizes, array $inventory, array $taxonomyFilenames): array
+    public function classify(array $sizes, array $inventory): array
     {
         $loads = $this->indexByFilename($inventory);
         $inService = $this->inServiceFilenames($inventory);
@@ -34,7 +33,7 @@ final readonly class ReferenceFileClassifier
 
             $files[] = [
                 'filename' => $filename,
-                'state' => $this->state($filename, $load, $inService, $taxonomyFilenames)->value,
+                'state' => $this->state($filename, $load, $inService)->value,
                 'bytes' => $bytes,
                 'source_table' => $load['source_table'] ?? null,
                 'build' => $load['build'] ?? null,
@@ -48,14 +47,9 @@ final readonly class ReferenceFileClassifier
     /**
      * @param  array{filename: string, source_table: string, build: string, loaded_at: int}|null  $load
      * @param  array<string, true>  $inService
-     * @param  list<string>  $taxonomyFilenames
      */
-    private function state(string $filename, ?array $load, array $inService, array $taxonomyFilenames): ReferenceFileState
+    private function state(string $filename, ?array $load, array $inService): ReferenceFileState
     {
-        if (in_array($filename, $taxonomyFilenames, true)) {
-            return ReferenceFileState::Taxonomy;
-        }
-
         if ($load === null) {
             return ReferenceFileState::Orphan;
         }

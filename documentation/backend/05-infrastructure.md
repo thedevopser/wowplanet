@@ -286,7 +286,7 @@ Ce que rien ne date tombe dans `ExpansionId::UNCLASSIFIED`, pas dans l'extension
 
 ### Lecture typée (`ResponsePayload`)
 
-Tout JSON venu de l'extérieur — réponse de l'API Blizzard, export curé de SimpleArmory — est enveloppé dans un `ResponsePayload` dès son décodage, et n'en sort que typé. C'est là que le `mixed` de `json_decode` s'arrête.
+Tout JSON venu de l'extérieur — une réponse de l'API Blizzard — est enveloppé dans un `ResponsePayload` dès son décodage, et n'en sort que typé. C'est là que le `mixed` de `json_decode` s'arrête.
 
 | Lecture | Absent | Mauvais type |
 |---|---|---|
@@ -299,7 +299,7 @@ Tout JSON venu de l'extérieur — réponse de l'API Blizzard, export curé de S
 
 Les tables indexées par identifiant (`stringMap`, `objectMap`, et `entries()` pour une table imbriquée) acceptent une liste au même titre qu'un objet : un objet JSON aux clés `"0"`, `"1"`… revient en liste une fois décodé. Les lectures tolérantes ne servent qu'où le code d'origine tolérait déjà, et où un test fixe cette tolérance ; partout ailleurs, un écart au contrat lève. Les messages nomment le chemin complet du champ (`subcats.0.items.3.ID`) et la source. `isEmpty()` distingue une réponse vide — un endpoint en 404 — d'une réponse lacunaire.
 
-Les deux exceptions de lecture descendent de `BlizzardContractException`, classe abstraite qui ne sert qu'à les attraper ensemble : un appelant qui veut traiter « l'amont n'a pas tenu son contrat », quelle qu'en soit la forme, attrape la mère. C'est ce que fait `SimpleArmoryTaxonomyReader`, qui la traduit en `TaxonomySourceUnavailableException::malformed()`. Partout ailleurs, elle remonte : une réponse qui trahit son contrat est une erreur à voir, pas une donnée à deviner.
+Les deux exceptions de lecture descendent de `BlizzardContractException`, classe abstraite qui ne sert qu'à les attraper ensemble : un appelant qui veut traiter « l'amont n'a pas tenu son contrat », quelle qu'en soit la forme, attrape la mère. Aujourd'hui, personne ne l'attrape et elle remonte : une réponse qui trahit son contrat est une erreur à voir, pas une donnée à deviner.
 
 **Où le `mixed` entre, et où il s'arrête.** Une valeur de forme inconnue n'a le droit d'entrer que dans les fichiers listés par `mixed-boundaries.txt`, chacun avec son motif, et `make mixed-check` fait échouer la CI si un autre fichier écrit `mixed`. Côté Blizzard, il y en a quatre : `BlizzardApiClient`, dont `get()` rend le corps décodé ; `ResponsePayload`, qui le tient et n'en rend que des valeurs typées ; `UnexpectedFieldTypeException`, qui transporte la valeur fautive, quel que soit son type ; le trait `ImportsFromBlizzardApi`, où la raison du rejet d'une promesse Guzzle arrive sans type et devient un `Throwable` dès sa réception. Tout le reste du code ne voit que des objets de réponse ou des types précis.
 
@@ -461,7 +461,6 @@ Elle vit dans la table `wow_collection_taxonomy`, hors de la famille `wow_ref_*`
 |---|---|
 | `fromOption(string $name): self` | Résout l'entité d'une option de commande, insensible à la casse. Lève `InvalidArgumentException` en listant les entités connues. |
 | `catalogue(): Builder` | Requête sur la table du catalogue que le site lit pour cette collection (`wow_mounts`, `wow_pets`, `wow_decors`). Partagée par `PendingTaxonomyEntries` et `TaxonomyArbitration`. |
-| `simpleArmoryFile(): string` | Nom du fichier curé dont cette collection s'amorce. |
 
 ### `TaxonomyEntry`
 
@@ -489,25 +488,8 @@ Amorçage et enrichissement de la table.
 | Méthode | Description |
 |---|---|
 | `load(CollectionEntity): array{read: int, inserted: int, skipped: int}` | Charge la collection depuis l'instantané. |
-| `loadEntries(CollectionEntity, array<int, TaxonomyEntry>): array{read, inserted, skipped}` | Charge les entrées qu'on lui tend — c'est par là qu'un tirage amont fait entrer la curation d'un patch. |
 
 Le chargement est strictement additif : `insertOrIgnore` laisse en place toute ligne connue, si bien que la première exécution amorce et que les suivantes n'ajoutent que les entrées d'un nouveau patch. C'est ce qui fait survivre un arbitrage manuel.
-
-### `SimpleArmoryClient`
-
-Frontière [simplearmory.com](https://simplearmory.com), amont de la curation.
-
-**Méthode** : `fetch(CollectionEntity $collectionEntity): int` — télécharge le document curé sur le disque `reference` et rend sa taille en octets. Une réponse refusée ou vide lève `TaxonomyUpstreamUnreachableException` et ne laisse rien derrière elle.
-
-Elle n'est traversée que par un tirage manuel, une fois par patch : l'amont indisponible n'empêche aucun import. Base et délai se règlent par `services.simplearmory`.
-
-### `SimpleArmoryTaxonomyReader`
-
-**Méthode** : `entriesFor(CollectionEntity $collectionEntity): array<int, TaxonomyEntry>`
-
-Lit un document curé depuis le disque `reference` et n'en tire que le rangement. Une entrée non sortie ou sans identifiant utilisable est ignorée ; un identifiant listé sous plusieurs catégories garde sa **dernière** occurrence, ce qu'a fait chaque import jusqu'ici, donc ce qui a produit le rangement en place.
-
-Chaque catégorie est lue par un `ResponsePayload`, avec trois tolérances délibérées : une catégorie qui n'est pas un objet est ignorée, un libellé qui n'est pas du texte vaut « rangé nulle part » (`lenientString`), un identifiant se lit par `lenientInt`. Au-delà, un export mal formé — des sous-catégories qui ne sont pas une liste, un drapeau `notObtainable` qui n'est pas un booléen — lève `TaxonomySourceUnavailableException::malformed()`, dont le message nomme le fichier, la catégorie et le chemin du champ.
 
 ### `CollectionTaxonomyReader`
 
@@ -528,15 +510,11 @@ Les onze libellés existent déjà dans les dictionnaires de traduction des troi
 
 ### `TaxonomySourceUnavailableException`
 
-Levée quand la source de l'amorçage est absente, illisible ou vide. Un amorçage qui ne trouve rien et se tait laisserait croire la taxonomie à jour alors qu'elle est restée vide. `malformed()` couvre l'export présent mais mal formé, et garde l'exception de contrat d'origine comme cause.
+Levée quand la source de l'amorçage est absente, illisible ou vide. Un amorçage qui ne trouve rien et se tait laisserait croire la taxonomie à jour alors qu'elle est restée vide.
 
 ### `TaxonomySnapshotMalformedException`
 
 Levée quand l'instantané est là mais que sa forme est fausse : en-tête, nombre de colonnes, entité, identifiant ou marqueur d'obtention.
-
-### `TaxonomyUpstreamUnreachableException`
-
-Levée quand l'amont curé refuse le téléchargement ou répond vide. Un tirage amont étant hors de tout chemin d'import, elle n'arrête jamais un import.
 
 ### L'arbitrage vu du panneau (`app/Application/Taxonomy/`)
 
@@ -719,13 +697,11 @@ Le lancement depuis le panneau passe par `AdminService::startReferenceSync()`, q
 
 Quatre classes de plus portent l'inventaire des fichiers téléchargés et leur purge. `storage/app/blizzard/` avait accumulé 66 Mo de reliquats parce que rien ne les affichait ; c'est cette dérive que l'écran empêche de recommencer sur `storage/app/wow-reference/`.
 
-**`ReferenceFileState`** énumère ce qu'un fichier vaut encore : `live`, `obsolete`, `taxonomy`, `orphan`. `isSweepable()` dit ce qu'un nettoyage en lot a le droit d'emporter — les obsolètes et les orphelins, jamais les deux autres.
+**`ReferenceFileState`** énumère ce qu'un fichier vaut encore : `live`, `obsolete`, `orphan`. `isSweepable()` dit ce qu'un nettoyage en lot a le droit d'emporter — les obsolètes et les orphelins, jamais le fichier en service. Les exports curés `mounts.json`, `pets.json` et `decors.json` qu'avait laissés l'ancien tirage depuis SimpleArmory sont des orphelins comme les autres.
 
 **`ReferenceFileClassifier`** applique la règle, et rien d'autre : aucune lecture de disque ni de base, ce qui la rend vérifiable sans rien monter. Deux points la gouvernent.
 
 **« En service » veut dire chargé, pas publié par wago.** Le fichier en service d'une table est celui de son **dernier chargement selon `downloaded_at`**, donc celui dont le chargement a produit ce qui est dans la table. Le classement ne dépend d'aucun appel sortant et reste juste quand wago est injoignable. Deux chargements enregistrés dans la même seconde sont départagés par le build, pour que l'ordre de lecture de la base ne décide de rien.
-
-**Les trois instantanés de taxonomie forment une famille à part.** `mounts.json`, `pets.json` et `decors.json` sont déposés sur ce disque par `SimpleArmoryClient`, qui écrit directement et ne crée aucune entrée d'inventaire. Par le seul critère « présent sur disque et absent de l'inventaire » ils passeraient pour des orphelins purgeables, ce qui serait faux. Ils sont reconnus par `CollectionEntity::simpleArmoryFile()`, la source de vérité qui existait déjà : les inventorier aurait demandé de rendre `build` et `row_count` nullables pour des fichiers qui n'ont ni build WoW ni table cible.
 
 Une ligne d'inventaire dont le fichier a disparu du disque sort à part, signalée plutôt qu'affichée comme si de rien n'était.
 
@@ -741,7 +717,7 @@ Remplace le contenu d'une table de référence par `COPY`, cinq mille lignes à 
 
 ### `ReferenceStore`
 
-Magasin des fichiers téléchargés, sur le disque `reference` (`storage/app/wow-reference/`) : les CSV du socle, et les documents curés d'un tirage amont. Le nom de fichier d'une table porte le build — deux synchronisations d'un même build écrivent le même fichier, deux builds différents en laissent deux.
+Magasin des fichiers téléchargés, sur le disque `reference` (`storage/app/wow-reference/`) : les CSV du socle. Le nom de fichier d'une table porte le build — deux synchronisations d'un même build écrivent le même fichier, deux builds différents en laissent deux.
 
 | Méthode | Retour | Description |
 |---|---|---|

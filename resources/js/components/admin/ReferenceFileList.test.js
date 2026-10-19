@@ -14,7 +14,6 @@ const file = (overrides = {}) => ({
 
 const obsolete = () => file({ filename: 'faction-12.1.0.69587.csv', state: 'obsolete', build: '12.1.0.69587' });
 const orphan = () => file({ filename: 'spell_name.csv', state: 'orphan', bytes: 4_096, source_table: null, build: null, loaded_at: null });
-const taxonomy = () => file({ filename: 'mounts.json', state: 'taxonomy', bytes: 390_055, source_table: null, build: null, loaded_at: null });
 
 const mountList = (files = [file()], props = {}) => mountWithPlugins(ReferenceFileList, {
     props: { files, missing: [], selected: [], disabled: false, ...props },
@@ -48,23 +47,10 @@ describe('ReferenceFileList', () => {
         expect(wrapper.get('[data-state="orphan"]').text()).toContain('Orphelin');
     });
 
-    it('sets an upstream taxonomy snapshot apart, so it never reads as an orphan', async () => {
-        const wrapper = await mountList([taxonomy()]);
-
-        expect(wrapper.get('[data-state="taxonomy"]').text()).toContain('Taxonomie');
-        expect(wrapper.text()).not.toContain('Orphelin');
-    });
-
     it('offers no selection on the file in service, which a sweep must not take', async () => {
         const wrapper = await mountList([file(), obsolete()]);
 
         expect(wrapper.findAll('[data-action="select-file"]')).toHaveLength(1);
-    });
-
-    it('offers no selection on a taxonomy snapshot either', async () => {
-        const wrapper = await mountList([taxonomy()]);
-
-        expect(wrapper.find('[data-action="select-file"]').exists()).toBe(false);
     });
 
     it('asks for a file to be selected, by its name', async () => {

@@ -598,7 +598,7 @@ test('sweeping the store takes the obsolete and the orphans, and reports what it
     Storage::disk(ReferenceStore::DISK)->assertMissing('spell_name.csv');
 });
 
-test('a sweep never takes the file in service nor an upstream taxonomy snapshot', function (): void {
+test('a sweep never takes the file in service, but takes a curated export a former pull left behind', function (): void {
     Storage::fake(ReferenceStore::DISK);
 
     $live = WowReferenceDownload::factory()->create(['source_table' => 'Faction', 'build' => '12.1.0.69875', 'downloaded_at' => '2026-09-20 08:55:02']);
@@ -608,10 +608,10 @@ test('a sweep never takes the file in service nor an upstream taxonomy snapshot'
     $this->withSession(adminSession())
         ->postJson('/api/admin/reference/purge', ['scope' => 'obsolete'])
         ->assertOk()
-        ->assertJson(['files' => 0, 'bytes' => 0]);
+        ->assertJson(['files' => 1, 'bytes' => 10]);
 
     Storage::disk(ReferenceStore::DISK)->assertExists($live->filename);
-    Storage::disk(ReferenceStore::DISK)->assertExists('mounts.json');
+    Storage::disk(ReferenceStore::DISK)->assertMissing('mounts.json');
 });
 
 test('a named file is removed one by one, even when it is the one in service', function (): void {

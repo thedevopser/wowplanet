@@ -11,12 +11,8 @@ use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
  * Instantané versionné du rangement curé des collections (database/data/collection_taxonomy.csv).
  *
  * C'est la seule source dont l'amorçage dépend, et elle vit dans le dépôt : reconstruire la
- * taxonomie de zéro ne demande ni réseau ni tiers. SimpleArmory reste l'amont d'où vient la
- * curation d'un nouveau patch, mais l'instantané en est la trace, et c'est lui qui fait foi.
- *
- * Il est exporté depuis la base et non reconstruit depuis les fichiers curés : ceux-ci marquent
- * hors d'atteinte 301 montures et 131 mascottes que la base garde délibérément obtenables, et
- * réamorcer depuis eux changerait deux dénominateurs.
+ * taxonomie de zéro ne demande ni réseau ni tiers. Un nouveau patch s'y range par les
+ * arbitrages du panneau, puis l'instantané est réexporté depuis la base : c'est lui qui fait foi.
  *
  * Le format est un CSV de cinq colonnes plutôt qu'un JSON : le fichier reçoit des arbitrages
  * manuels, et une ligne par entrée se relit et se diffe, là où un objet imbriqué ne le fait pas.

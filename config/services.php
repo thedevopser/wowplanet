@@ -43,13 +43,6 @@ return [
         'timeout' => (int) env('WAGO_TIMEOUT', 120),
     ],
 
-    // Amont de la curation des collections, tiré à la main une fois par patch. Aucun import
-    // ne passe par là : le chemin d'exécution lit l'instantané versionné du dépôt.
-    'simplearmory' => [
-        'base_url' => env('SIMPLEARMORY_BASE_URL', 'https://simplearmory.com/data'),
-        'timeout' => (int) env('SIMPLEARMORY_TIMEOUT', 120),
-    ],
-
     // L'export qui suit un arbitrage réécrit l'instantané du dépôt. En production ce fichier
     // vit dans l'image et ne peut pas être commité : il y reste la version commitée.
     'taxonomy' => [

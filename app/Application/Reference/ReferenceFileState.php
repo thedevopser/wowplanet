@@ -16,15 +16,13 @@ enum ReferenceFileState: string
 {
     case Live = 'live';
     case Obsolete = 'obsolete';
-    case Taxonomy = 'taxonomy';
     case Orphan = 'orphan';
 
     /**
      * Ce que le nettoyage en lot emporte.
      *
-     * Un fichier en service est la preuve de ce qui a été chargé, et un instantané de
-     * taxonomie vient d'un tirage manuel : ni l'un ni l'autre ne doit partir dans un
-     * balayage, seulement sur une désignation explicite.
+     * Un fichier en service est la preuve de ce qui a été chargé : il ne doit pas partir
+     * dans un balayage, seulement sur une désignation explicite.
      */
     public function isSweepable(): bool
     {

@@ -81,7 +81,7 @@ Chaque page est rendue par un contrôleur, sous le nom de son fichier, pour une 
 | `admin/QueueJobList.vue` | Jobs d'une file : libellé, compte s'il y en a un, et durée depuis leur prise ou leur mise en file, calculée sur l'horloge qu'on lui passe (jamais négative). Un message de liste vide est optionnel : sans lui, une liste vide ne rend rien. |
 | `admin/FailedJobList.vue` | Jobs échoués avec leur classe, leur motif et leur date, et les boutons de relance et de suppression. La confirmation est portée par la page. |
 | `admin/ApplicationErrorList.vue` | Dernières erreurs applicatives, horodatées, avec l'endroit où l'exception a été levée. |
-| `admin/ReferenceFileList.vue` | Inventaire des fichiers du magasin de référence : taille, état (`live`, `obsolete`, `taxonomy`, `orphan`), chargement d'origine, sélection et suppression. Seuls un fichier obsolète et un orphelin s'attrapent par une case ; un fichier en service et un instantané de taxonomie ne se suppriment qu'un par un, par leur bouton. Signale à part les chargements dont le fichier a disparu du disque. |
+| `admin/ReferenceFileList.vue` | Inventaire des fichiers du magasin de référence : taille, état (`live`, `obsolete`, `orphan`), chargement d'origine, sélection et suppression. Seuls un fichier obsolète et un orphelin s'attrapent par une case ; un fichier en service ne se supprime qu'un par un, par son bouton. Signale à part les chargements dont le fichier a disparu du disque. |
 | `DatabasePageHeader.vue` | En-tête commun aux pages de base de données : titre en `h1`, sous-titre facultatif et nombre d'éléments, sur un liseré à la couleur de la dimension. |
 | `DatabasePagination.vue` | Composant de pagination réutilisable pour les listes de la base de données. |
 

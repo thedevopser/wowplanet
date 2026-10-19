@@ -46,13 +46,4 @@ enum CollectionEntity: string
             self::Decor => WowDecor::query(),
         };
     }
-
-    public function simpleArmoryFile(): string
-    {
-        return match ($this) {
-            self::Mount => 'mounts.json',
-            self::Pet => 'pets.json',
-            self::Decor => 'decors.json',
-        };
-    }
 }

@@ -7,10 +7,6 @@ namespace App\Console\Commands;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomyLoader;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
-use App\Infrastructure\Taxonomy\Exceptions\TaxonomyUpstreamUnreachableException;
-use App\Infrastructure\Taxonomy\SimpleArmoryClient;
-use App\Infrastructure\Taxonomy\SimpleArmoryTaxonomyReader;
-use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -19,53 +15,30 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * Charge en base la taxonomie des collections, et l'enrichit de la curation d'un nouveau patch.
+ * Charge en base la taxonomie des collections depuis l'instantané versionné du dépôt.
  *
- * Deux chemins, parce que les deux besoins sont distincts. Par défaut la commande lit
- * l'instantané versionné du dépôt : reconstruire la taxonomie de zéro ne demande alors ni
- * réseau ni tiers. Avec `--upstream` elle va chercher la curation fraîche chez SimpleArmory,
- * seul amont à ranger une monture ou une décoration, puis réexporte l'instantané pour que le
- * dépôt garde la trace de ce que le patch a apporté.
+ * Reconstruire la taxonomie de zéro ne demande ainsi ni réseau ni tiers : la curation est
+ * notre donnée, enrichie par les arbitrages du panneau puis réexportée dans l'instantané.
  *
- * Le chargement étant additif dans les deux cas, aucune valeur déjà en base n'est réécrite et
- * un arbitrage manuel survit. `--upstream` refuse une taxonomie vide : c'est un chemin
- * d'enrichissement, et l'appliquer à une base nue ferait entrer une curation que l'instantané
- * contredit délibérément sur plusieurs centaines d'entrées.
+ * Le chargement est additif : aucune valeur déjà en base n'est réécrite et un arbitrage
+ * manuel survit.
  *
  * Les collections demandées sont chargées dans une seule transaction : une source manquante
  * laisse la taxonomie exactement dans l'état où elle était, plutôt qu'à moitié chargée.
  */
 #[Description('Charge la taxonomie curée des montures, mascottes et décorations')]
 #[Signature('app:collection-taxonomy-sync
-        {--entity= : Synchroniser une seule collection}
-        {--upstream : Tirer la curation fraîche de SimpleArmory au lieu de lire l\'instantané}')]
+        {--entity= : Synchroniser une seule collection}')]
 class CollectionTaxonomySyncCommand extends Command
 {
-    public function handle(
-        CollectionTaxonomyLoader $collectionTaxonomyLoader,
-        SimpleArmoryClient $simpleArmoryClient,
-        SimpleArmoryTaxonomyReader $simpleArmoryTaxonomyReader,
-    ): int {
-        $upstream = (bool) $this->option('upstream');
-
+    public function handle(CollectionTaxonomyLoader $collectionTaxonomyLoader): int
+    {
         try {
             $entities = $this->entitiesToSync();
 
-            if ($upstream && ! $this->assertSeededTaxonomy()) {
-                return self::FAILURE;
-            }
-
             /** @var list<array{entity: CollectionEntity, read: int, inserted: int, skipped: int}> $results */
-            $results = DB::transaction(fn (): array => $this->loadAll(
-                $collectionTaxonomyLoader,
-                $entities,
-                $upstream ? fn (CollectionEntity $collectionEntity): array => $this->pullUpstream(
-                    $simpleArmoryClient,
-                    $simpleArmoryTaxonomyReader,
-                    $collectionEntity,
-                ) : null,
-            ));
-        } catch (InvalidArgumentException|TaxonomySourceUnavailableException|TaxonomyUpstreamUnreachableException $exception) {
+            $results = DB::transaction(fn (): array => $this->loadAll($collectionTaxonomyLoader, $entities));
+        } catch (InvalidArgumentException|TaxonomySourceUnavailableException $exception) {
             $this->error($exception->getMessage());
 
             return self::FAILURE;
@@ -73,38 +46,7 @@ class CollectionTaxonomySyncCommand extends Command
 
         $this->report($results);
 
-        if ($upstream) {
-            $this->newLine();
-            $this->call('app:collection-taxonomy-export');
-        }
-
         return self::SUCCESS;
-    }
-
-    private function assertSeededTaxonomy(): bool
-    {
-        if (WowCollectionTaxonomy::query()->exists()) {
-            return true;
-        }
-
-        $this->error(
-            'Taxonomie vide : amorcez-la depuis l\'instantané avant de tirer un patch de l\'amont curé.'
-        );
-
-        return false;
-    }
-
-    /**
-     * @return array<int, TaxonomyEntry>
-     */
-    private function pullUpstream(
-        SimpleArmoryClient $simpleArmoryClient,
-        SimpleArmoryTaxonomyReader $simpleArmoryTaxonomyReader,
-        CollectionEntity $collectionEntity,
-    ): array {
-        $simpleArmoryClient->fetch($collectionEntity);
-
-        return $simpleArmoryTaxonomyReader->entriesFor($collectionEntity);
     }
 
     /**
@@ -124,19 +66,14 @@ class CollectionTaxonomySyncCommand extends Command
 
     /**
      * @param  list<CollectionEntity>  $entities
-     * @param  (callable(CollectionEntity): array<int, TaxonomyEntry>)|null  $upstream
      * @return list<array{entity: CollectionEntity, read: int, inserted: int, skipped: int}>
      */
-    private function loadAll(CollectionTaxonomyLoader $collectionTaxonomyLoader, array $entities, ?callable $upstream): array
+    private function loadAll(CollectionTaxonomyLoader $collectionTaxonomyLoader, array $entities): array
     {
         $results = [];
 
         foreach ($entities as $entity) {
-            $result = $upstream === null
-                ? $collectionTaxonomyLoader->load($entity)
-                : $collectionTaxonomyLoader->loadEntries($entity, $upstream($entity));
-
-            $results[] = ['entity' => $entity, ...$result];
+            $results[] = ['entity' => $entity, ...$collectionTaxonomyLoader->load($entity)];
         }
 
         return $results;

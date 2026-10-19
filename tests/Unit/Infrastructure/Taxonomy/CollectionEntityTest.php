@@ -8,14 +8,6 @@ test('it covers the three collections the taxonomy curates', function (): void {
     expect(CollectionEntity::cases())->toHaveCount(3);
 });
 
-test('it names the SimpleArmory file each collection is seeded from', function (CollectionEntity $collectionEntity, string $filename): void {
-    expect($collectionEntity->simpleArmoryFile())->toBe($filename);
-})->with([
-    'mount' => [CollectionEntity::Mount, 'mounts.json'],
-    'pet' => [CollectionEntity::Pet, 'pets.json'],
-    'decor' => [CollectionEntity::Decor, 'decors.json'],
-]);
-
 test('it resolves an entity from the name a command option carries', function (): void {
     expect(CollectionEntity::fromOption('pet'))->toBe(CollectionEntity::Pet);
 });

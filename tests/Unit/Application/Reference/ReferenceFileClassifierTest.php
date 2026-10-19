@@ -10,9 +10,9 @@ use App\Application\Reference\ReferenceFileState;
  * @param  list<array{filename: string, source_table: string, build: string, loaded_at: int}>  $inventory
  * @return array{files: list<array{filename: string, state: string, bytes: int, source_table: string|null, build: string|null, loaded_at: int|null}>, missing: list<array{filename: string, source_table: string, build: string, loaded_at: int}>}
  */
-function classify(array $sizes, array $inventory = [], array $taxonomy = ['mounts.json']): array
+function classify(array $sizes, array $inventory = []): array
 {
-    return (new ReferenceFileClassifier)->classify($sizes, $inventory, $taxonomy);
+    return (new ReferenceFileClassifier)->classify($sizes, $inventory);
 }
 
 /**
@@ -97,24 +97,10 @@ test('a file the inventory does not know is an orphan', function (): void {
     expect(statesByFilename($contents))->toBe(['spell_name.csv' => ReferenceFileState::Orphan->value]);
 });
 
-test('an upstream taxonomy snapshot is recognised, never taken for an orphan', function (): void {
-    $contents = classify(
-        ['mounts.json' => 390_055, 'pets.json' => 393_280],
-        [],
-        ['mounts.json', 'pets.json', 'decors.json'],
-    );
+test('a curated export left in the store is an orphan the purge may sweep', function (): void {
+    $contents = classify(['mounts.json' => 390_055]);
 
-    expect(statesByFilename($contents))->toBe([
-        'mounts.json' => ReferenceFileState::Taxonomy->value,
-        'pets.json' => ReferenceFileState::Taxonomy->value,
-    ]);
-});
-
-test('a taxonomy snapshot that has not been pulled yet is simply absent', function (): void {
-    $contents = classify([], [], ['mounts.json', 'pets.json', 'decors.json']);
-
-    expect($contents['files'])->toBe([])
-        ->and($contents['missing'])->toBe([]);
+    expect(statesByFilename($contents))->toBe(['mounts.json' => ReferenceFileState::Orphan->value]);
 });
 
 test('an inventory row whose file has vanished is reported apart, not as a file', function (): void {
