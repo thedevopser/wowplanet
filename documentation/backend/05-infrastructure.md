@@ -20,7 +20,7 @@ Client HTTP vers l'API Blizzard (OAuth2 client credentials). Gère automatiqueme
 | `getIfModifiedSince()` | `string $endpoint, ?string $lastModified, array<string, string> $query` | `?ResponsePayload` | Revalidation d'un index par `If-Modified-Since`. Rend `null` sur un 304, qui veut dire *inchangé* et non *échoué* : le corps vide d'un 304 n'atteint jamais le décodage JSON. |
 | `getWithUserToken()` | `string $endpoint, string $userToken, array<string, string> $query` | `ResponsePayload` | Requête GET avec token utilisateur (OAuth2 user flow). |
 | `getAsync()` | `string $endpoint, array $query` | `PromiseInterface` | Requête GET asynchrone (Guzzle promise). |
-| `currentBuild()` | — | `?string` | Le build WoW servi par l'API, lu dans l'en-tête `battlenet-namespace` (voir `BlizzardNamespace`). Une sonde ne part que si aucune réponse n'en a encore livré un. |
+| `currentBuild()` | — | `?string` | Le build WoW servi par l'API, lu dans l'en-tête `battlenet-namespace` (voir `BlizzardNamespace`). Relu à chaque appel par une sonde sur `playable-class/index` : le client est un singleton et le worker de queue vit d'un patch à l'autre, un build gardé en mémoire ferait sauter chaque étape jusqu'au redémarrage. |
 | `lastSeenBuild()`, `lastModifiedSeen()` | — | `?string` | Le dernier build et le dernier `Last-Modified` vus passer, que l'import retient pour sa prochaine revalidation (`ImportBuildGate`). |
 | `getRegion()` | — | `string` | Région configurée (ex. : `eu`). |
 | `getCurrentMythicSeasonId()`, `getCurrentPvpSeasonId()` | — | `int` | Saison Mythique+ ou JcJ courante. `0` hors saison, valeur d'absence attendue par les appelants. |

@@ -122,22 +122,30 @@ class BlizzardApiClient
      */
     public function get(string $endpoint, array $query = []): array
     {
-        $accessToken = $this->getAccessToken();
-
         [$endpoint, $query] = $this->mergeEndpointQuery($endpoint, $query);
+
+        $response = $this->send($endpoint, $query);
+        $this->recordBuild($response);
+
+        return $this->decode($endpoint, $response);
+    }
+
+    /**
+     * @param  array<string, string>  $query
+     *
+     * @throws GuzzleException
+     */
+    private function send(string $endpoint, array $query): ResponseInterface
+    {
         $namespace = is_string($query['namespace'] ?? null) ? $query['namespace'] : $this->namespace;
 
-        $response = $this->client->get($endpoint, [
+        return $this->client->get($endpoint, [
             'headers' => [
-                'Authorization' => 'Bearer '.$accessToken,
+                'Authorization' => 'Bearer '.$this->getAccessToken(),
                 'Battlenet-Namespace' => $namespace,
             ],
             'query' => array_merge(['locale' => 'fr_FR'], $query),
         ]);
-
-        $this->recordBuild($response);
-
-        return $this->decode($endpoint, $response);
     }
 
     public function lastSeenBuild(): ?string
@@ -192,18 +200,17 @@ class BlizzardApiClient
     }
 
     /**
-     * Le build sert à décider s'il y a lieu d'importer : la sonde ne part donc que
-     * si aucune réponse n'a encore livré le sien.
+     * Le build sert à décider s'il y a lieu d'importer : il est relu à chaque appel. Le
+     * client est un singleton, et le worker de queue vit d'un patch à l'autre — un build
+     * gardé en mémoire ferait passer chaque étape pour à jour jusqu'au redémarrage.
      *
      * @throws GuzzleException
      */
     public function currentBuild(): ?string
     {
-        if ($this->lastSeenBuild === null) {
-            $this->get(self::BUILD_PROBE_ENDPOINT, ['namespace' => 'static-'.$this->region]);
-        }
+        $response = $this->send(self::BUILD_PROBE_ENDPOINT, ['namespace' => 'static-'.$this->region]);
 
-        return $this->lastSeenBuild;
+        return BlizzardNamespace::build($response->getHeaderLine('battlenet-namespace'));
     }
 
     private function recordBuild(ResponseInterface $response): void

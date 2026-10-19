@@ -298,6 +298,8 @@ L'unique endroit qui sait qu'une étape se juge contre l'amont de sa famille : l
 
 Cette classe est appelée par le bandeau **et** par `ImportPipeline::begin()`. Ils ne peuvent donc pas diverger, et c'est ce qui rend le bouton de mise à jour honnête : sans elle, l'étape du socle était retenue sur le build Blizzard du moment, et un socle que wago avait dépassé était signalé en retard par l'écran puis sauté par l'import qu'on venait de lancer.
 
+Le build Blizzard est lu **une fois, au lancement** de l'import, en incrémental comme en forcé, et porté par `ImportRun` jusqu'à sa fin : c'est sous ce build que `ImportPipeline` retient chaque étape aboutie. Un patch tombé en plein import fait donc repasser l'étape au suivant, au lieu de la déclarer à jour sur des données lues avant lui. Une API muette au lancement laisse le build à `null` : rien n'est sauté, rien n'est retenu. L'étape du socle n'est jamais retenue dans `wow_import_states`, sa fraîcheur se lisant sur l'inventaire de ses chargements.
+
 Les builds entrent en paramètre plutôt que d'être lus là : les lire coûte deux requêtes sortantes, qui n'ont leur place ni dans une boucle d'import ni dans le rendu d'une page. `begin()` n'interroge wago que si le socle figure parmi les étapes demandées.
 
 ### `ReferenceBuildState`

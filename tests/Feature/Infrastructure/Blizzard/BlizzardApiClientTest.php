@@ -477,12 +477,13 @@ test('currentBuild probes a lightweight index when nothing has been fetched yet'
         ->and($history)->toHaveCount(1);
 });
 
-test('currentBuild reuses the build already seen rather than spending a request', function (): void {
+test('currentBuild asks the API again on every call, so a long-lived worker sees a new patch', function (): void {
     Cache::put('blizzard_access_token', 'my-token', 3600);
 
     $history = [];
     $mockHandler = new MockHandler([
         new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
+        new Response(200, ['battlenet-namespace' => 'static-12.1.5_70077-eu'], '{}'),
     ]);
     $handlerStack = HandlerStack::create($mockHandler);
     $handlerStack->push(Middleware::history($history));
@@ -490,10 +491,25 @@ test('currentBuild reuses the build already seen rather than spending a request'
     $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
     $client = new BlizzardApiClient($guzzle);
 
+    expect($client->currentBuild())->toBe('12.1.0_68914')
+        ->and($client->currentBuild())->toBe('12.1.5_70077')
+        ->and($history)->toHaveCount(2);
+});
+
+test('currentBuild reads the build of its own probe, not one left by an earlier response', function (): void {
+    Cache::put('blizzard_access_token', 'my-token', 3600);
+
+    $mockHandler = new MockHandler([
+        new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
+        new Response(200, [], '{}'),
+    ]);
+
+    $guzzle = new Client(['handler' => HandlerStack::create($mockHandler), 'base_uri' => 'https://eu.api.blizzard.com/']);
+    $client = new BlizzardApiClient($guzzle);
+
     $client->get('data/wow/quest/1');
 
-    expect($client->currentBuild())->toBe('12.1.0_68914')
-        ->and($history)->toHaveCount(1);
+    expect($client->currentBuild())->toBeNull();
 });
 
 // ─── requêtes conditionnelles ───────────────────────────────

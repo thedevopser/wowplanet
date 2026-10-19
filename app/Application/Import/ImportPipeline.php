@@ -9,6 +9,7 @@ use App\Application\Services\DatabaseQueryService;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\HourlyBudgetGuard;
 use App\Infrastructure\Blizzard\ImportBuildGate;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Enchaîne les étapes d'un import, une passe à la fois, et publie ce qu'elles font.
@@ -117,7 +118,8 @@ final readonly class ImportPipeline
      */
     public function begin(string $jobId, array $stages, bool $force, string $trigger): ImportRun
     {
-        $importRun = ImportRun::start($jobId, $stages, now()->getTimestamp());
+        $blizzardBuild = $this->readBlizzardBuild();
+        $importRun = ImportRun::start($jobId, $stages, now()->getTimestamp(), $blizzardBuild);
 
         $this->currentImport->mark($jobId, $importRun->startedAt);
         $this->note($jobId, sprintf(
@@ -128,7 +130,6 @@ final readonly class ImportPipeline
         ));
 
         if (! $force) {
-            $blizzardBuild = $this->blizzardApiClient->currentBuild();
             // wago n'est interrogé que si le socle est de la partie : un import de
             // catalogue n'a rien à comparer à son build, et la requête serait perdue.
             $wagoBuild = in_array(ImportStage::Reference, $stages, true)
@@ -196,7 +197,7 @@ final readonly class ImportPipeline
         }
 
         if ($importStageResult->step->status === ImportStepStatus::Completed) {
-            $this->remember($importStageResult->step->stage);
+            $this->remember($importRun, $importStageResult->step->stage);
         }
 
         $this->noteOutcome($importRun->jobId, $importStageResult);
@@ -327,12 +328,30 @@ final readonly class ImportPipeline
      * Un build indéterminé n'est jamais bloquant : on n'inscrit rien plutôt que de
      * retenir une étape sous un build qu'on ne sait pas nommer.
      */
-    private function remember(ImportStage $importStage): void
+    /**
+     * L'étape est retenue sous le build lu au lancement, pas sous celui servi à sa fin : un
+     * patch tombé en plein import doit la faire repasser, pas la déclarer à jour. Le socle
+     * n'est pas retenu ici, sa fraîcheur se juge sur l'inventaire de ses chargements wago.
+     */
+    private function remember(ImportRun $importRun, ImportStage $importStage): void
     {
-        $build = $this->blizzardApiClient->currentBuild();
+        if ($importRun->build === null || $importStage === ImportStage::Reference) {
+            return;
+        }
 
-        if ($build !== null) {
-            $this->importBuildGate->remember($importStage->value, $build);
+        $this->importBuildGate->remember($importStage->value, $importRun->build);
+    }
+
+    /**
+     * Une API muette au lancement ne fait pas échouer l'import : sans build, aucune étape
+     * n'est sautée et aucune n'est retenue.
+     */
+    private function readBlizzardBuild(): ?string
+    {
+        try {
+            return $this->blizzardApiClient->currentBuild();
+        } catch (GuzzleException) {
+            return null;
         }
     }
 }
