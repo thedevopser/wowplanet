@@ -1081,7 +1081,7 @@ mount,1685,Racial,Dracthyr,true
 mount,1686,Racial,Dracthyr,true
 mount,1688,PVP,"Vicious Saddle",true
 mount,1689,PVP,"Vicious Saddle",true
-mount,1690,Dragonflight,Vendor,true
+mount,1690,,,true
 mount,1692,Promotion,"Blizzard Store",true
 mount,1698,Promotion,Recruit-A-Friend,true
 mount,1699,Promotion,"Annual Subscription",true
@@ -1122,7 +1122,7 @@ mount,1789,,,true
 mount,1792,Promotion,"Blizzard Store",true
 mount,1794,Dragonflight,Riddle,true
 mount,1795,Promotion,"Blizzard Store",true
-mount,1796,Dragonflight,Vendor,true
+mount,1796,,,true
 mount,1797,Promotion,"Annual Subscription",true
 mount,1798,"World Events",Anniversary,true
 mount,1799,"Past Limited Time","Trading Post Originals",true
@@ -1206,7 +1206,7 @@ mount,2089,"Past Limited Time","Remix: Pandaria",true
 mount,2090,"Past Limited Time",Plunderstorm,true
 mount,2091,Dragonflight,Achievement,true
 mount,2114,Shadowlands,Achievement,true
-mount,2115,Dragonflight,Vendor,true
+mount,2115,,,true
 mount,2116,"The War Within","Pre-Launch Event",true
 mount,2117,"The War Within","Pre-Launch Event",true
 mount,2118,"Past Limited Time","Remix: Pandaria",true
@@ -1642,6 +1642,7 @@ mount,3030,Midnight,"Raid Drop",true
 mount,3031,Midnight,"Prey Drop",true
 mount,3032,Midnight,Vendor,true
 mount,3033,Midnight,Vendor,true
+mount,3034,,,true
 mount,3036,"World Events","Midsummer Fire Festival",true
 mount,3043,Midnight,Vendor,true
 mount,3051,Midnight,"Zone Drop",true
@@ -1660,10 +1661,16 @@ mount,3102,"Past Limited Time","Trading Post Originals",true
 mount,3103,"Past Limited Time","Trading Post Originals",true
 mount,3104,"Past Limited Time","Trading Post Originals",true
 mount,3105,"World Events","Trading Post",true
+mount,3106,,,true
 mount,3107,"World Events","Trading Post",true
 mount,3119,"World Events","Trading Post",true
 mount,3125,"World Events","Trading Post",true
 mount,3137,Midnight,Vendor,true
+mount,3138,,,true
+mount,3139,,,true
+mount,3141,,,true
+mount,3142,,,true
+mount,3143,,,true
 mount,3144,Midnight,"Nemesis Drop",true
 pet,39,Profession,Engineering,true
 pet,40,Classic,"Alliance Vendor",true
@@ -1891,7 +1898,7 @@ pet,343,"World Event","Darkmoon Faire",true
 pet,346,Promotional,"Diablo III",true
 pet,347,Promotional,"Blizzard Store",true
 pet,348,Promotional,"Trading Card Game / Auction House",true
-pet,374,,,true
+pet,374,Classic,"Pet Battle",true
 pet,378,,,true
 pet,379,,,true
 pet,380,,,true
@@ -4157,7 +4164,11 @@ decor,1418,"Battle for Azeroth",Achievement,true
 decor,1426,Midnight,"Raid Drop",true
 decor,1427,Neighbourhoods,"Amani Troll Endeavors",true
 decor,1428,Midnight,Treasure,true
+decor,1429,Midnight,Vendor,true
 decor,1430,Neighbourhoods,"Cursed Keepsake",true
+decor,1431,Midnight,Vendor,true
+decor,1432,Midnight,Vendor,true
+decor,1433,Midnight,Vendor,true
 decor,1434,Neighbourhoods,"Neighbourhood Vendor",true
 decor,1435,Neighbourhoods,"Neighbourhood Vendor",true
 decor,1436,Neighbourhoods,"Neighbourhood Vendor",true
@@ -4884,6 +4895,8 @@ decor,8987,Neighbourhoods,"Grummle Endeavors",true
 decor,8988,Neighbourhoods,"Grummle Endeavors",true
 decor,8989,Neighbourhoods,"Grummle Endeavors",true
 decor,8990,Neighbourhoods,"Cursed Keepsake",true
+decor,8991,Midnight,Vendor,true
+decor,8992,Midnight,Vendor,true
 decor,8993,Midnight,Quest,true
 decor,9035,"Battle for Azeroth",Quest,true
 decor,9036,"Battle for Azeroth","Alliance Reputation",true
@@ -5546,6 +5559,7 @@ decor,15156,Midnight,"Renown: Zul'jarra's Forces",true
 decor,15157,Neighbourhoods,"Amani Troll Endeavors",true
 decor,15158,Midnight,"Renown: Amani Tribe",true
 decor,15160,Midnight,"Renown: Amani Tribe",true
+decor,15161,Midnight,"Amani Troll Endeavors",true
 decor,15229,Promotion,Fanta,false
 decor,15260,Midnight,"Renown: Singularity",true
 decor,15261,Neighbourhoods,"Neighbourhood Vendor",true
@@ -5596,6 +5610,7 @@ decor,15487,Midnight,Vendor,true
 decor,15488,Midnight,Reputation,true
 decor,15489,Midnight,Vendor,true
 decor,15490,Midnight,Quest,true
+decor,15491,Midnight,Vendor,true
 decor,15492,Midnight,Quest,true
 decor,15493,Midnight,Delves,true
 decor,15494,Midnight,Achievement,true
@@ -5648,6 +5663,9 @@ decor,15744,Midnight,Quest,true
 decor,15745,Midnight,Quest,true
 decor,15746,Midnight,Treasure,true
 decor,15747,Midnight,"Zone Feature",true
+decor,15748,Midnight,Vendor,true
+decor,15749,Midnight,Vendor,true
+decor,15750,Midnight,Vendor,true
 decor,15755,Midnight,"Raid Drop",true
 decor,15756,Midnight,"Raid Drop",true
 decor,15757,Midnight,Achievement,true
@@ -5691,6 +5709,8 @@ decor,16090,Profession,Tailoring,true
 decor,16092,Midnight,Quest,true
 decor,16093,Midnight,"Raid Drop",true
 decor,16094,Midnight,"Dungeon Drop",true
+decor,16095,Midnight,Vendor,true
+decor,16096,Midnight,Vendor,true
 decor,16097,Undiscovered,"Undiscovered Sources",true
 decor,16098,Neighbourhoods,,true
 decor,16099,Neighbourhoods,,true
@@ -5909,6 +5929,7 @@ decor,22181,Midnight,"Renown: Ritual Sites",true
 decor,22182,Midnight,"Renown: Ritual Sites",true
 decor,22183,Midnight,"Renown: Ritual Sites",true
 decor,22388,Midnight,"Renown: Ritual Sites",true
+decor,22399,Legion,Vendor,true
 decor,22775,Neighbourhoods,,true
 decor,22916,Neighbourhoods,"Amani Troll Endeavors",true
 decor,22917,Neighbourhoods,"Amani Troll Endeavors",true
@@ -5937,6 +5958,7 @@ decor,23548,Neighbourhoods,"Ohn'ahran Centaur Endeavors",true
 decor,23549,Neighbourhoods,"Ohn'ahran Centaur Endeavors",true
 decor,23550,Neighbourhoods,"Ohn'ahran Centaur Endeavors",true
 decor,23551,Neighbourhoods,"Ohn'ahran Centaur Endeavors",true
+decor,23552,Midnight,"Amani Troll Endeavors",true
 decor,23553,Neighbourhoods,"Neighbourhood Vendor",true
 decor,23554,Neighbourhoods,"Neighbourhood Vendor",true
 decor,23555,Neighbourhoods,"Neighbourhood Vendor",true
@@ -5972,6 +5994,7 @@ decor,25106,Neighbourhoods,"Neighbourhood Vendor",true
 decor,25121,Neighbourhoods,"Neighbourhood Vendor",true
 decor,25122,Neighbourhoods,"Neighbourhood Vendor",true
 decor,25128,Neighbourhoods,"Amani Troll Endeavors",true
+decor,25129,Midnight,"Amani Troll Endeavors",true
 decor,25131,Midnight,"Raid Drop",true
 decor,25132,Midnight,"Raid Drop",true
 decor,25133,Midnight,"Raid Drop",true
@@ -5993,9 +6016,21 @@ decor,25296,Midnight,Vendor,true
 decor,25297,Midnight,Reputation,true
 decor,25299,Midnight,Reputation,true
 decor,25300,Midnight,Reputation,true
+decor,25301,Midnight,Reputation,true
+decor,25302,Midnight,Reputation,true
+decor,25303,Midnight,Reputation,true
+decor,25304,Midnight,Reputation,true
+decor,25305,Midnight,Reputation,true
+decor,25306,Midnight,Reputation,true
 decor,25307,Midnight,Achievement,true
+decor,25308,Midnight,Vendor,true
+decor,25323,"Warlords of Draenor",Vendor,true
+decor,25324,"Warlords of Draenor",Vendor,true
+decor,25325,"Warlords of Draenor",Vendor,true
+decor,25326,"Warlords of Draenor",Vendor,true
 decor,25336,Midnight,Reputation,true
 decor,25337,Midnight,"Prey Drop",true
+decor,25474,Midnight,Vendor,true
 decor,25546,Neighbourhoods,Pepe,true
 decor,25564,Midnight,Vendor,true
 decor,25565,Midnight,Vendor,true
@@ -6013,6 +6048,22 @@ decor,25813,Midnight,"Raid Drop",true
 decor,25895,Neighbourhoods,"Neighbourhood Vendor",true
 decor,25896,Neighbourhoods,"Neighbourhood Vendor",true
 decor,25936,Promotion,Blizzcon,true
+decor,26009,Classic,"Zone Feature",true
+decor,26010,Classic,"Zone Feature",true
+decor,26011,Classic,"Zone Feature",true
+decor,26012,Classic,"Zone Feature",true
+decor,26013,Midnight,Vendor,true
+decor,26015,Midnight,Vendor,true
+decor,26016,Midnight,Vendor,true
+decor,26017,Midnight,Vendor,true
+decor,26018,Midnight,Vendor,true
+decor,26019,Midnight,Vendor,true
+decor,26020,Midnight,Vendor,true
+decor,26050,Classic,"Holiday Vendor",true
+decor,26051,Classic,"Holiday Vendor",true
+decor,26052,Classic,"Holiday Vendor",true
+decor,26053,Classic,"Holiday Vendor",true
+decor,26054,Classic,"Holiday Vendor",true
 decor,26097,Midnight,"Renown: Zul'jarra's Forces",true
 decor,26196,Midnight,Reputation,true
 decor,26197,Midnight,Reputation,true
@@ -6043,12 +6094,14 @@ decor,26381,Profession,Blacksmithing,true
 decor,26382,Profession,Blacksmithing,true
 decor,26383,Profession,Engineering,true
 decor,26384,Profession,Inscription,true
+decor,26385,Midnight,"Amani Troll Endeavors",true
 decor,26386,Neighbourhoods,"Tortollan Endeavors",true
 decor,26387,Neighbourhoods,"Tortollan Endeavors",true
 decor,26389,Neighbourhoods,"Tortollan Endeavors",true
 decor,26391,Profession,Alchemy,true
 decor,26477,Neighbourhoods,"Tortollan Endeavors",true
 decor,26478,Neighbourhoods,"Tortollan Endeavors",true
+decor,26479,"Warlords of Draenor",Vendor,true
 decor,26481,Midnight,Quest,true
 decor,26482,Neighbourhoods,"Tortollan Endeavors",true
 decor,26483,Neighbourhoods,"Tortollan Endeavors",true
@@ -6077,6 +6130,9 @@ decor,26705,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26706,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26707,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26708,Neighbourhoods,"Neighbourhood Vendor",true
+decor,26709,Dragonflight,Vendor,true
+decor,26710,Dragonflight,Vendor,true
+decor,26711,"Battle for Azeroth",Vendor,true
 decor,26785,Neighbourhoods,"Kobold Endeavors",true
 decor,26786,Neighbourhoods,"Kobold Endeavors",true
 decor,26787,Neighbourhoods,"Kobold Endeavors",true
@@ -6088,6 +6144,16 @@ decor,26876,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26877,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26878,Neighbourhoods,,true
 decor,26879,Neighbourhoods,,true
+decor,26880,Midnight,Vendor,true
+decor,26881,"Battle for Azeroth",Vendor,true
+decor,26882,"Battle for Azeroth",Vendor,true
+decor,26883,"Battle for Azeroth",Vendor,true
+decor,26884,"Battle for Azeroth",Vendor,true
+decor,26885,"Battle for Azeroth",Vendor,true
+decor,26886,"Battle for Azeroth",Vendor,true
+decor,26887,"Battle for Azeroth",Vendor,true
+decor,26888,"Battle for Azeroth",Vendor,true
+decor,26889,"Battle for Azeroth",Vendor,true
 decor,26935,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26936,Neighbourhoods,"Kobold Endeavors",true
 decor,26937,Neighbourhoods,"Kobold Endeavors",true
@@ -6103,5 +6169,197 @@ decor,27046,Neighbourhoods,,true
 decor,27076,Neighbourhoods,,true
 decor,27077,Neighbourhoods,,true
 decor,27167,Neighbourhoods,"Kobold Endeavors",true
+decor,27216,Midnight,Reputation,true
+decor,27217,Midnight,Vendor,true
+decor,27220,Dragonflight,Vendor,true
+decor,27255,"Warlords of Draenor",Vendor,true
+decor,27458,Midnight,"Amani Troll Endeavors",true
+decor,27606,"Warlords of Draenor",Vendor,true
+decor,27608,Legion,Vendor,true
+decor,27609,"Battle for Azeroth",Vendor,true
+decor,27610,"Battle for Azeroth",Vendor,true
+decor,27612,Shadowlands,Vendor,true
+decor,27613,Shadowlands,Vendor,true
+decor,27614,Shadowlands,Vendor,true
+decor,27617,Shadowlands,Vendor,true
+decor,27683,"Warlords of Draenor",Vendor,true
+decor,27684,Shadowlands,Vendor,true
+decor,27824,Legion,Vendor,true
 decor,27973,Neighbourhoods,"Neighbourhood Vendor",true
+decor,27982,"Battle for Azeroth",Vendor,true
+decor,28106,Legion,Vendor,true
+decor,28107,Legion,Vendor,true
+decor,28108,Legion,Vendor,true
+decor,28109,Legion,Vendor,true
+decor,28110,Shadowlands,Vendor,true
+decor,28111,Dragonflight,Vendor,true
+decor,28317,"Warlords of Draenor",Vendor,true
+decor,28318,"Warlords of Draenor",Vendor,true
+decor,28319,"Warlords of Draenor",Vendor,true
+decor,28320,"Warlords of Draenor",Vendor,true
+decor,28321,"Warlords of Draenor",Vendor,true
+decor,28322,"Warlords of Draenor",Vendor,true
+decor,28323,"Warlords of Draenor",Vendor,true
+decor,28324,"Warlords of Draenor",Vendor,true
+decor,28325,"Warlords of Draenor",Vendor,true
+decor,28326,"Warlords of Draenor",Vendor,true
+decor,28327,"Warlords of Draenor",Vendor,true
+decor,28328,"Warlords of Draenor",Vendor,true
+decor,28329,"Warlords of Draenor",Vendor,true
+decor,28330,"Warlords of Draenor",Vendor,true
+decor,28331,"Warlords of Draenor",Vendor,true
+decor,28332,"Warlords of Draenor",Vendor,true
+decor,28333,"Warlords of Draenor",Vendor,true
+decor,28334,"Warlords of Draenor",Vendor,true
+decor,28335,"Warlords of Draenor",Vendor,true
+decor,28336,"Warlords of Draenor",Vendor,true
+decor,28337,"Warlords of Draenor",Vendor,true
+decor,28338,"Warlords of Draenor",Vendor,true
+decor,28341,Shadowlands,Vendor,true
+decor,28343,Shadowlands,Vendor,true
+decor,28344,Shadowlands,Vendor,true
 decor,28350,Neighbourhoods,,true
+decor,28353,Shadowlands,Vendor,true
+decor,28354,Shadowlands,Vendor,true
+decor,28367,Shadowlands,Vendor,true
+decor,28427,Legion,Vendor,true
+decor,28428,Legion,Vendor,true
+decor,28429,Legion,Vendor,true
+decor,28430,Legion,Vendor,true
+decor,28431,Legion,Vendor,true
+decor,28432,Legion,Vendor,true
+decor,28433,Legion,Vendor,true
+decor,28434,Legion,Vendor,true
+decor,28435,Legion,Vendor,true
+decor,28436,Legion,Vendor,true
+decor,28437,Legion,Vendor,true
+decor,28438,Legion,Vendor,true
+decor,28439,Legion,Vendor,true
+decor,28440,Legion,Vendor,true
+decor,28441,Legion,Vendor,true
+decor,28442,Legion,Vendor,true
+decor,28443,Legion,Vendor,true
+decor,28444,Legion,Vendor,true
+decor,28445,Legion,Vendor,true
+decor,28446,Legion,Vendor,true
+decor,28448,Legion,Vendor,true
+decor,28450,"Warlords of Draenor",Vendor,true
+decor,28456,"Battle for Azeroth",Vendor,true
+decor,28457,"Battle for Azeroth",Vendor,true
+decor,28458,"Battle for Azeroth",Vendor,true
+decor,28463,"Battle for Azeroth",Vendor,true
+decor,28464,"Battle for Azeroth",Vendor,true
+decor,28465,"Battle for Azeroth",Vendor,true
+decor,28466,"Battle for Azeroth",Vendor,true
+decor,28467,"Battle for Azeroth",Vendor,true
+decor,28468,"Battle for Azeroth",Vendor,true
+decor,28469,"Battle for Azeroth",Vendor,true
+decor,28470,"Battle for Azeroth",Vendor,true
+decor,28471,"Battle for Azeroth",Vendor,true
+decor,28472,"Battle for Azeroth",Vendor,true
+decor,28473,"Battle for Azeroth",Vendor,true
+decor,28474,"Battle for Azeroth",Vendor,true
+decor,28475,"Battle for Azeroth",Vendor,true
+decor,28476,"Battle for Azeroth",Vendor,true
+decor,28477,"Battle for Azeroth",Vendor,true
+decor,28478,"Battle for Azeroth",Vendor,true
+decor,28479,"Battle for Azeroth",Vendor,true
+decor,28480,"Battle for Azeroth",Vendor,true
+decor,28481,"Battle for Azeroth",Vendor,true
+decor,28482,"Battle for Azeroth",Vendor,true
+decor,28483,"Battle for Azeroth",Vendor,true
+decor,28484,"Battle for Azeroth",Vendor,true
+decor,28485,"Battle for Azeroth",Vendor,true
+decor,28486,"Battle for Azeroth",Vendor,true
+decor,28487,"Battle for Azeroth",Vendor,true
+decor,28488,"Battle for Azeroth",Vendor,true
+decor,28489,"Battle for Azeroth",Vendor,true
+decor,28490,"Battle for Azeroth",Vendor,true
+decor,28491,"Battle for Azeroth",Vendor,true
+decor,28492,"Battle for Azeroth",Vendor,true
+decor,28493,Shadowlands,Vendor,true
+decor,28494,"Battle for Azeroth",Vendor,true
+decor,28495,"Battle for Azeroth",Vendor,true
+decor,28497,"Battle for Azeroth",Vendor,true
+decor,28498,"Battle for Azeroth",Vendor,true
+decor,28499,"Battle for Azeroth",Vendor,true
+decor,28508,"Battle for Azeroth",Vendor,true
+decor,28509,Shadowlands,Vendor,true
+decor,28510,Shadowlands,Vendor,true
+decor,28511,Shadowlands,Vendor,true
+decor,28512,Shadowlands,Vendor,true
+decor,28513,Shadowlands,Vendor,true
+decor,28514,Shadowlands,Vendor,true
+decor,28515,Shadowlands,Vendor,true
+decor,28516,Shadowlands,Vendor,true
+decor,28517,Shadowlands,Vendor,true
+decor,28518,Shadowlands,Vendor,true
+decor,28519,Shadowlands,Vendor,true
+decor,28520,Shadowlands,Vendor,true
+decor,28521,Shadowlands,Vendor,true
+decor,28522,Shadowlands,Vendor,true
+decor,28523,Shadowlands,Vendor,true
+decor,28524,Shadowlands,Vendor,true
+decor,28525,Shadowlands,Vendor,true
+decor,28526,Shadowlands,Vendor,true
+decor,28527,Shadowlands,Vendor,true
+decor,28528,Shadowlands,Vendor,true
+decor,28529,Shadowlands,Vendor,true
+decor,28530,Shadowlands,Vendor,true
+decor,28531,Shadowlands,Vendor,true
+decor,28532,Shadowlands,Vendor,true
+decor,28533,Shadowlands,Vendor,true
+decor,28534,Shadowlands,Vendor,true
+decor,28535,Shadowlands,Vendor,true
+decor,28536,Shadowlands,Vendor,true
+decor,28537,Shadowlands,Vendor,true
+decor,28538,Shadowlands,Vendor,true
+decor,28539,Shadowlands,Vendor,true
+decor,28540,Shadowlands,Vendor,true
+decor,28541,Shadowlands,Vendor,true
+decor,28542,Shadowlands,Vendor,true
+decor,28543,Shadowlands,Vendor,true
+decor,28544,Shadowlands,Vendor,true
+decor,28545,Shadowlands,Vendor,true
+decor,28546,Shadowlands,Vendor,true
+decor,28547,Shadowlands,Vendor,true
+decor,28548,Shadowlands,Vendor,true
+decor,28549,Shadowlands,Vendor,true
+decor,28550,Shadowlands,Vendor,true
+decor,28551,Shadowlands,Vendor,true
+decor,28552,Shadowlands,Vendor,true
+decor,28553,Shadowlands,Vendor,true
+decor,28554,Shadowlands,Vendor,true
+decor,28555,Shadowlands,Vendor,true
+decor,28556,Shadowlands,Vendor,true
+decor,28557,Shadowlands,Vendor,true
+decor,28558,Shadowlands,Vendor,true
+decor,28559,Shadowlands,Vendor,true
+decor,28560,Shadowlands,Vendor,true
+decor,28561,Shadowlands,Vendor,true
+decor,28562,Shadowlands,Vendor,true
+decor,28563,Shadowlands,Vendor,true
+decor,28564,Shadowlands,Vendor,true
+decor,28565,Shadowlands,Vendor,true
+decor,28566,Shadowlands,Vendor,true
+decor,28567,Shadowlands,Vendor,true
+decor,28568,Shadowlands,Vendor,true
+decor,28569,Shadowlands,Vendor,true
+decor,28570,Shadowlands,Vendor,true
+decor,28571,Shadowlands,Vendor,true
+decor,28572,Shadowlands,Vendor,true
+decor,28573,Shadowlands,Vendor,true
+decor,28574,Shadowlands,Vendor,true
+decor,28575,Shadowlands,Vendor,true
+decor,28576,Shadowlands,Vendor,true
+decor,28577,Shadowlands,Vendor,true
+decor,28578,Shadowlands,Vendor,true
+decor,28579,Shadowlands,Vendor,true
+decor,28629,"Warlords of Draenor",Vendor,true
+decor,28632,Legion,Vendor,true
+decor,28633,"Battle for Azeroth",Vendor,true
+decor,28634,Shadowlands,Vendor,true
+decor,28693,"Warlords of Draenor",Vendor,true
+decor,28694,"Battle for Azeroth",Vendor,true
+decor,29117,Midnight,"Amani Troll Endeavors",true
+decor,30255,"Warlords of Draenor",Vendor,true
