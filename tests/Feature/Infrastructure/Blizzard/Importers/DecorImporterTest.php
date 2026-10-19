@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Importers\DecorImporter;
+use App\Infrastructure\Reference\ReferenceMaps;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
 use App\Models\WowDecor;
@@ -225,4 +226,101 @@ test('it aborts without deleting anything when the decor index call fails', func
 
     expect(WowDecor::query()->count())->toBe(1)
         ->and(WowDecor::query()->findOrFail(300)->name_fr)->toBe('Décoration existante');
+});
+
+/**
+ * @param  array<int, string>  $expansions  [decor_id => expansion_label]
+ */
+function suggestExpansions(array $expansions): void
+{
+    test()->mock(ReferenceMaps::class)->shouldReceive('decorExpansions')->andReturn($expansions);
+}
+
+test('an uncurated decor carries the expansion its tags suggest, without being ranked', function (): void {
+    suggestExpansions([9242 => 'Shadowlands']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 9242, 'name' => 'Caisse de stockage terrestre']]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    $wowDecor = WowDecor::query()->findOrFail(9242);
+
+    expect($wowDecor->suggested_category)->toBe('Shadowlands')
+        ->and($wowDecor->category)->toBeNull()
+        ->and($wowDecor->source)->toBeNull();
+});
+
+test('a curated decor carries no suggestion, the curation having ranked it', function (): void {
+    curateDecor(126, 'Classic', 'Vendor');
+    suggestExpansions([126 => 'Warlords of Draenor']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 126, 'name' => 'Parchemin enroulé']]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    $wowDecor = WowDecor::query()->findOrFail(126);
+
+    expect($wowDecor->suggested_category)->toBeNull()
+        ->and($wowDecor->category)->toBe('Classic');
+});
+
+test('a suggestion is cleared once the curation ranks the decor', function (): void {
+    WowDecor::query()->create(['id' => 126, 'name_fr' => 'Parchemin enroulé', 'is_active' => true, 'suggested_category' => 'Warlords of Draenor']);
+    curateDecor(126, 'Warlords of Draenor', 'Alliance Garrison Vendor');
+    suggestExpansions([126 => 'Warlords of Draenor']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 126, 'name' => 'Parchemin enroulé']]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    expect(WowDecor::query()->findOrFail(126)->suggested_category)->toBeNull();
+});
+
+test('it reports how many decors awaiting arbitration come with a suggestion', function (): void {
+    suggestExpansions([998 => 'Midnight']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [
+        ['id' => 998, 'name' => 'Suggérée'],
+        ['id' => 999, 'name' => 'Sans étiquette'],
+    ]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    ob_start();
+    resolve(DecorImporter::class)->import();
+    $output = (string) ob_get_clean();
+
+    expect($output)->toContain('2 awaiting arbitration (absent from the taxonomy), 1 with a suggested category.');
+});
+
+test('a suggestion that has not changed leaves the row untouched', function (): void {
+    suggestExpansions([9242 => 'Shadowlands']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 9242, 'name' => 'Caisse de stockage terrestre']]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    ob_start();
+    resolve(DecorImporter::class)->import();
+    $output = (string) ob_get_clean();
+
+    expect($output)->toContain('Saving 0 decors');
 });

@@ -35,6 +35,21 @@ describe('PendingTaxonomyTable', () => {
         expect(wrapper.get('[data-role="pending-source"]').text()).toContain('—');
     });
 
+    it('shows the category the tags of the socle suggest for an entry', async () => {
+        const wrapper = await mountTable([entry({ pending_category: 'Shadowlands' }), entry({ id: 8, pending_category: null })]);
+
+        const cells = wrapper.findAll('[data-role="pending-category"]');
+
+        expect(cells[0].text()).toContain('Shadowlands');
+        expect(cells[1].text()).toContain('—');
+    });
+
+    it('leaves the suggestion column out of a collection that carries none', async () => {
+        const wrapper = await mountTable([entry({ pending_category: null })]);
+
+        expect(wrapper.find('[data-role="pending-category"]').exists()).toBe(false);
+    });
+
     it('selects an entry by its identifier', async () => {
         const wrapper = await mountTable();
 

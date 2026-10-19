@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Application\Services\DatabaseQueryService;
+use App\Application\Taxonomy\CatalogueRanking;
 use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Application\Taxonomy\TaxonomySnapshotExporter;
 use App\Application\Taxonomy\UnknownCollectionEntryException;
@@ -34,6 +35,7 @@ function arbitration(string $path): TaxonomyArbitration
         new TaxonomySnapshotExporter(new CollectionTaxonomySnapshot($path)),
         resolve(AdminAudit::class),
         resolve(DatabaseQueryService::class),
+        new CatalogueRanking,
     );
 }
 
@@ -260,4 +262,15 @@ test('an export that cannot write keeps the arbitration and says the snapshot dr
     expect($handler instanceof TestHandler && $handler->hasWarningThatContains('Collection taxonomy snapshot could not be exported'))->toBeTrue();
 
     unlink($directory);
+});
+
+test('arbitrating a decor clears the category its tags suggested', function (): void {
+    WowDecor::query()->create(['id' => 9242, 'name_fr' => 'Caisse de stockage terrestre', 'is_active' => true, 'suggested_category' => 'Shadowlands']);
+
+    arbitration($this->snapshotPath)->arbitrate(CollectionEntity::Decor, [9242], 'Shadowlands', null, '12345');
+
+    $wowDecor = WowDecor::query()->findOrFail(9242);
+
+    expect($wowDecor->category)->toBe('Shadowlands')
+        ->and($wowDecor->suggested_category)->toBeNull();
 });

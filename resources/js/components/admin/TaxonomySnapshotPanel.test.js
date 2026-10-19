@@ -57,6 +57,14 @@ describe('TaxonomySnapshotPanel', () => {
         expect(wrapper.find('[data-action="load-snapshot"]').exists()).toBe(true);
     });
 
+    it('says the entries it adds rank the collections at once, with no import to run', async () => {
+        const wrapper = await mountPanel({ in_step: false, missing_in_base: 6_106 });
+
+        await wrapper.get('[data-action="load-snapshot"]').trigger('click');
+
+        expect(wrapper.get('[data-confirm="load-snapshot"]').text()).toContain('sans attendre un import');
+    });
+
     it('asks to download and commit when the base holds what the snapshot does not', async () => {
         const wrapper = await mountPanel({ in_step: false, missing_in_file: 12, differing: 3 });
 

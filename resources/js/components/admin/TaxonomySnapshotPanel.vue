@@ -35,7 +35,7 @@
             <p>
                 {{ formatCount(snapshot.missing_in_base) }}
                 {{ snapshot.missing_in_base > 1 ? 'entrées de l\'instantané manquent en base' : 'entrée de l\'instantané manque en base' }}.
-                Tant qu'elles n'y sont pas, les imports rangent ces collections comme si elles n'avaient jamais été curées.
+                Tant qu'elles n'y sont pas, ces entrées restent en attente d'arbitrage.
             </p>
             <Button v-if="!confirming" data-action="load-snapshot" variant="primary" :disabled="busy" @click="confirming = true">
                 Charger l'instantané
@@ -48,8 +48,9 @@
             class="space-y-3 rounded-ui-md border border-warning/40 bg-warning/10 p-4"
         >
             <p class="text-sm text-default">
-                Les entrées absentes de la base vont y être ajoutées depuis l'instantané. Le chargement est additif :
-                rien de ce qui est déjà en base, arbitrages compris, n'est réécrit.
+                Les entrées absentes de la base vont y être ajoutées depuis l'instantané, et rangées aussitôt dans les
+                collections, sans attendre un import. Le chargement est additif : rien de ce qui est déjà en base,
+                arbitrages compris, n'est réécrit.
             </p>
             <div class="flex flex-wrap gap-3">
                 <Button data-action="confirm-load-snapshot" variant="primary" @click="load">

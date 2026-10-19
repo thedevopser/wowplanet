@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Infrastructure\Reference\ReferenceCatalog;
 use App\Infrastructure\Reference\ReferenceStore;
 use App\Models\WowReferenceDownload;
 use Illuminate\Http\Client\Factory;
@@ -56,10 +57,10 @@ test('the reference page is closed to anyone else', function (): void {
     $this->get('/admin/reference')->assertRedirect('/');
 });
 
-test('the page lists the eight tables of the socle', function (): void {
+test('the page lists every table of the socle', function (): void {
     $this->withSession(['is_admin' => true])
         ->get('/admin/reference')
-        ->assertInertia(fn (Assert $assert): Assert => $assert->has('tables', 8)->etc());
+        ->assertInertia(fn (Assert $assert): Assert => $assert->has('tables', count((new ReferenceCatalog)->sources()))->etc());
 });
 
 test('the page carries the build wago serves, to situate the socle against it', function (): void {

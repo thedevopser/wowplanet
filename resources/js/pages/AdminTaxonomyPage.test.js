@@ -363,7 +363,7 @@ describe('AdminTaxonomyPage, ranked entries', () => {
 
         await vi.waitFor(() => expect(wrapper.text()).toContain('2 entrées réaffectées'));
         expect(reload).toHaveBeenCalledWith({
-            only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot'],
+            only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot', 'suggestions'],
         });
     });
 
@@ -382,6 +382,83 @@ describe('AdminTaxonomyPage, ranked entries', () => {
 
     it('shows no accessibility violation that axe can detect', async () => {
         const wrapper = await mountPage(curatedProps());
+
+        await expectNoAxeViolations(wrapper.element);
+    });
+});
+
+describe('AdminTaxonomyPage, suggestions', () => {
+    const decor = (overrides = {}) => entry({ id: 9242, name: 'Caisse de stockage terrestre', pending_source: null, pending_category: 'Shadowlands', ...overrides });
+
+    const decorPage = (overrides = {}) => mountPage({
+        entity: 'decor',
+        entries: [decor(), decor({ id: 9243, name: 'Tonneau', pending_category: 'Midnight' })],
+        suggestions: [{ category: 'Shadowlands', entries: 84 }, { category: 'Midnight', entries: 44 }],
+        ...overrides,
+    });
+
+    it('pre-fills the category with the suggestion of the selected entry', async () => {
+        const wrapper = await decorPage();
+
+        await wrapper.findAll('[data-action="select-entry"]')[0].setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('Shadowlands');
+    });
+
+    it('clears a pre-filled category once the selection mixes suggestions', async () => {
+        const wrapper = await decorPage();
+
+        await wrapper.findAll('[data-action="select-entry"]')[0].setValue(true);
+        await wrapper.get('[data-action="select-all"]').setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('');
+    });
+
+    it('never overwrites a category the administrator typed', async () => {
+        const wrapper = await decorPage();
+
+        await wrapper.get('[data-field="category"] input').setValue('Neighbourhoods');
+        await wrapper.findAll('[data-action="select-entry"]')[0].setValue(true);
+
+        expect(wrapper.get('[data-field="category"] input').element.value).toBe('Neighbourhoods');
+    });
+
+    it('offers to file every pending entry of a suggestion at once, with its count', async () => {
+        const wrapper = await decorPage();
+
+        const actions = wrapper.findAll('[data-action="accept-suggestion"]');
+
+        expect(actions).toHaveLength(2);
+        expect(actions[0].text()).toContain('Shadowlands');
+        expect(actions[0].text()).toContain('84');
+    });
+
+    it('names a single suggested entry in the singular', async () => {
+        const wrapper = await decorPage({ suggestions: [{ category: 'Midnight', entries: 1 }] });
+
+        expect(wrapper.get('[data-action="accept-suggestion"]').text()).toBe('Ranger 1 entrée en « Midnight »');
+    });
+
+    it('files a whole suggestion through the server, since the page shows only a slice', async () => {
+        axios.post = vi.fn().mockResolvedValue({ data: { arbitrated: 84, snapshot: props().snapshot } });
+
+        const wrapper = await decorPage();
+        await wrapper.findAll('[data-action="accept-suggestion"]')[0].trigger('click');
+        await flushPromises();
+
+        expect(axios.post).toHaveBeenCalledWith('/api/admin/taxonomy/accept-suggestion', { entity: 'decor', category: 'Shadowlands' });
+        expect(wrapper.get('[role="status"]').text()).toContain('84 entrées rangées');
+        expect(reload).toHaveBeenCalled();
+    });
+
+    it('shows no suggestion block when nothing is suggested', async () => {
+        const wrapper = await mountPage();
+
+        expect(wrapper.find('[data-action="accept-suggestion"]').exists()).toBe(false);
+    });
+
+    it('has no accessibility violation with suggestions on screen', async () => {
+        const wrapper = await decorPage();
 
         await expectNoAxeViolations(wrapper.element);
     });

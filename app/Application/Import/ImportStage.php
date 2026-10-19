@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * Les étapes d'un import complet, dans l'ordre où elles s'enchaînent.
  *
  * Le socle de référence est une étape et non une entité de catalogue : les quêtes, les
- * montures et les métiers en tirent ce que l'API n'expose pas, et un import parti d'une
+ * montures, les métiers et les décorations en tirent ce que l'API n'expose pas, et un import parti d'une
  * base vide sans lui sortirait faux sans rien signaler. Il ouvre donc la chaîne.
  *
  * L'ordre est vérifié contre les dépendances déclarées plutôt que simplement écrit :
@@ -119,7 +119,7 @@ enum ImportStage: string
     public function dependsOn(): array
     {
         return match ($this) {
-            self::Quests, self::Professions, self::Mounts => [self::Reference],
+            self::Quests, self::Professions, self::Mounts, self::Decor => [self::Reference],
             default => [],
         };
     }

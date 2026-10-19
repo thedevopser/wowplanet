@@ -36,6 +36,7 @@ final readonly class TaxonomyArbitration
         private TaxonomySnapshotExporter $taxonomySnapshotExporter,
         private AdminAudit $adminAudit,
         private DatabaseQueryService $databaseQueryService,
+        private CatalogueRanking $catalogueRanking,
     ) {}
 
     /**
@@ -64,9 +65,7 @@ final readonly class TaxonomyArbitration
                 $this->file($collectionEntity, $entryId, $category, $source);
             }
 
-            $collectionEntity->catalogue()
-                ->whereIn('id', $entryIds)
-                ->update(['category' => $category, 'source' => $source]);
+            $this->catalogueRanking->rank($collectionEntity, $entryIds, $category, $source);
 
             return $previous;
         });

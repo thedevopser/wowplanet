@@ -69,7 +69,7 @@ Charge les tables de référence DB2 depuis wago.tools dans les tables `wow_ref_
 
 **Signature** : `app:wow-reference-sync {--table=}` — **Classe** : `WowReferenceSyncCommand`
 
-Elle lit le build LIVE, télécharge les huit tables du `ReferenceCatalog`, les écrit dans le magasin `storage/app/wow-reference/` puis les charge par `COPY`. La sortie rend la volumétrie table par table, avec l'écart au chargement précédent.
+Elle lit le build LIVE, télécharge les tables du `ReferenceCatalog`, les écrit dans le magasin `storage/app/wow-reference/` puis les charge par `COPY`. La sortie rend la volumétrie table par table, avec l'écart au chargement précédent.
 
 `SpellMisc` pèse à elle seule 45 Mo pour 417 583 lignes, contre une quarantaine de milliers pour les six premières : c'est le prix de l'icône des montures, que l'API n'expose sur aucun endpoint.
 
@@ -85,19 +85,15 @@ Le détail des classes est dans [Couche Infrastructure](05-infrastructure.md).
 
 Charge la taxonomie curée des montures, mascottes et décorations dans `wow_collection_taxonomy`.
 
-**Signature** : `app:collection-taxonomy-sync {--entity=} {--upstream}` — **Classe** : `CollectionTaxonomySyncCommand`
+**Signature** : `app:collection-taxonomy-sync {--entity=}` — **Classe** : `CollectionTaxonomySyncCommand`
 
-Deux chemins, parce que les deux besoins sont distincts. Par défaut la commande lit l'instantané versionné `database/data/collection_taxonomy.csv` : reconstruire la taxonomie de zéro ne demande alors ni réseau ni tiers. Avec `--upstream` elle tire la curation fraîche de SimpleArmory, seul amont à ranger une monture ou une décoration, puis réexporte l'instantané pour que le dépôt garde la trace de ce que le patch a apporté — le fichier produit est à commiter.
+La commande lit l'instantané versionné `database/data/collection_taxonomy.csv` : reconstruire la taxonomie de zéro ne demande ni réseau ni tiers. Un nouveau patch se range ensuite par les arbitrages du panneau, et l'instantané se réexporte depuis la base.
 
-Le chargement est additif dans les deux cas : **aucune valeur déjà en base n'est réécrite**, de sorte qu'un arbitrage manuel survit à autant de rafraîchissements qu'on voudra.
-
-`--upstream` refuse une taxonomie vide. C'est un chemin d'enrichissement, et l'appliquer à une base nue ferait entrer une curation que l'instantané contredit délibérément sur plusieurs centaines d'entrées — les fichiers curés marquent hors d'atteinte 301 montures et 131 mascottes que la base garde obtenables.
+Le chargement est additif : **aucune valeur déjà en base n'est réécrite**, de sorte qu'un arbitrage manuel survit à autant de rafraîchissements qu'on voudra.
 
 Les collections demandées sont chargées dans une seule transaction : une source manquante laisse la taxonomie exactement dans l'état où elle était, plutôt qu'à moitié amorcée. La sortie rend, par collection, le nombre d'entrées lues, le total en base et le nombre d'ajouts.
 
 `--entity` restreint la synchronisation à une collection (`mount`, `pet` ou `decor`).
-
-Elle n'est pas dans le chemin d'un import : aucun import ne contacte simplearmory.com, et un import complet réussit avec l'accès à ce domaine coupé.
 
 ---
 
@@ -107,7 +103,7 @@ Elle n'est pas dans le chemin d'un import : aucun import ne contacte simplearmor
 
 **Signature** : `app:collection-taxonomy-export {--path=}` — **Classe** : `CollectionTaxonomyExportCommand`
 
-C'est le pendant de `app:collection-taxonomy-sync` : celle-ci charge l'instantané en base, celle-là le regénère. On l'exécute après un arbitrage manuel, et `--upstream` l'appelle lui-même après un tirage. Le fichier produit se commite — sans quoi la curation ne vit que dans une base et se perd au prochain environnement.
+C'est le pendant de `app:collection-taxonomy-sync` : celle-ci charge l'instantané en base, celle-là le regénère. On l'exécute après un arbitrage manuel. Le fichier produit se commite — sans quoi la curation ne vit que dans une base et se perd au prochain environnement.
 
 Elle refuse d'écrire un instantané vide : une table vide au moment de l'export écraserait silencieusement le fichier curé du dépôt.
 

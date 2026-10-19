@@ -63,13 +63,13 @@ test('an older load of the same table comes out obsolete', function (): void {
         ->and($states[$new->filename])->toBe(ReferenceFileState::Live->value);
 });
 
-test('the three upstream taxonomy snapshots are recognised, not taken for orphans', function (): void {
+test('the curated exports a former pull left in the store come out orphan', function (): void {
     onDisk('mounts.json', 10);
     onDisk('pets.json', 10);
     onDisk('decors.json', 10);
 
     expect(array_column(contents()['files'], 'state'))
-        ->toBe(array_fill(0, 3, ReferenceFileState::Taxonomy->value));
+        ->toBe(array_fill(0, 3, ReferenceFileState::Orphan->value));
 });
 
 test('a file the inventory never heard of comes out orphan', function (): void {
@@ -99,8 +99,8 @@ test('the totals count the store and what a sweep would take from it', function 
     expect(contents()['totals'])->toBe([
         'files' => 4,
         'bytes' => 205,
-        'sweepable_files' => 2,
-        'sweepable_bytes' => 100,
+        'sweepable_files' => 3,
+        'sweepable_bytes' => 105,
     ]);
 });
 
@@ -127,7 +127,7 @@ test('a sweep targets the obsolete and the orphans, and nothing else', function 
     onDisk('mounts.json', 5);
 
     expect(resolve(ReferenceFileInventory::class)->sweepableFilenames())
-        ->toEqualCanonicalizing([$obsolete->filename, 'spell_name.csv']);
+        ->toEqualCanonicalizing([$obsolete->filename, 'spell_name.csv', 'mounts.json']);
 });
 
 test('the filenames it hands out are exactly what sits on disk', function (): void {

@@ -181,15 +181,3 @@ test('it fails loudly when the snapshot holds no entry for the requested collect
     expect(fn (): array => taxonomyLoader($this->loaderSnapshotPath)->load(CollectionEntity::Pet))
         ->toThrow(TaxonomySourceUnavailableException::class, 'pet');
 });
-
-test('loadEntries inserts entries handed to it without reading the snapshot', function (): void {
-    expect(taxonomyLoader($this->loaderSnapshotPath)->loadEntries(CollectionEntity::Mount, taxonomyEntries([7, 8])))
-        ->toBe(['read' => 2, 'inserted' => 2, 'skipped' => 0])
-        ->and(WowCollectionTaxonomy::query()->count())->toBe(2);
-});
-
-test('loadEntries handed nothing inserts nothing and reports it', function (): void {
-    expect(taxonomyLoader($this->loaderSnapshotPath)->loadEntries(CollectionEntity::Mount, []))
-        ->toBe(['read' => 0, 'inserted' => 0, 'skipped' => 0])
-        ->and(WowCollectionTaxonomy::query()->count())->toBe(0);
-});

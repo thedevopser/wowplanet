@@ -25,6 +25,9 @@ use App\Models\ImportHistoryEntry;
 use App\Models\ImportHistoryStep;
 use App\Models\WowImportState;
 use App\Models\WowPet;
+use App\Models\WowReferenceDownload;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Mockery\MockInterface;
@@ -148,6 +151,57 @@ test('an import running under an unknown build is not skipped by the gate', func
     $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
 
     expect($importRun->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Completed);
+});
+
+test('a stage is remembered under the build the import began with, even if a patch lands meanwhile', function (): void {
+    $this->apiClientMock->shouldReceive('currentBuild')->andReturn('12.1.0_68914', '12.1.5_70077');
+    $this->importerMock->shouldReceive('importPets')->once();
+
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
+
+    expect(WowImportState::query()->where('entity', 'pets')->value('build'))->toBe('12.1.0_68914');
+});
+
+test('the build is read once per import, when it begins', function (): void {
+    $this->apiClientMock->shouldReceive('currentBuild')->once()->andReturn('12.1.0_68914');
+    $this->importerMock->shouldReceive('importPets')->once();
+    $this->importerMock->shouldReceive('importDecor')->once();
+
+    $importRun = pipeline()->begin('job-1', [ImportStage::Pets, ImportStage::Decor], force: false, trigger: 'console');
+    $importRun = pipeline()->advance($importRun, false, false, null);
+
+    pipeline()->advance($importRun, false, false, null);
+
+    expect(WowImportState::query()->where('build', '12.1.0_68914')->count())->toBe(2);
+});
+
+test('a forced import also remembers the build it began with', function (): void {
+    $this->apiClientMock->shouldReceive('currentBuild')->once()->andReturn('12.1.5_70077');
+    $this->importerMock->shouldReceive('importPets')->once();
+
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: true, trigger: 'console'), false, true, null);
+
+    expect(WowImportState::query()->where('entity', 'pets')->value('build'))->toBe('12.1.5_70077');
+});
+
+test('an API unreachable when the import begins skips nothing and remembers nothing', function (): void {
+    $this->apiClientMock->shouldReceive('currentBuild')->andThrow(new ConnectException('unreachable', new Request('GET', 'data/wow/playable-class/index')));
+    WowImportState::query()->create(['entity' => 'pets', 'build' => '12.1.0_68914', 'imported_at' => now()]);
+    $this->importerMock->shouldReceive('importPets')->once();
+
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Pets], force: false, trigger: 'console'), false, false, null);
+
+    expect($importRun->step(ImportStage::Pets)->status)->toBe(ImportStepStatus::Completed)
+        ->and(WowImportState::query()->where('entity', 'pets')->value('build'))->toBe('12.1.0_68914');
+});
+
+test('the reference socle does not record the Blizzard build, being judged on wago', function (): void {
+    Artisan::shouldReceive('call')->once()->andReturn(0);
+    Artisan::shouldReceive('output')->andReturn('');
+
+    pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: true, trigger: 'console'), false, true, null);
+
+    expect(WowImportState::query()->where('entity', 'reference')->exists())->toBeFalse();
 });
 
 test('the stage being run is named in the tracking while it runs', function (): void {
@@ -575,3 +629,34 @@ test('a forced import tells its stages so, a plain one does not', function (bool
         limit: null,
     );
 })->with([true, false]);
+
+test('the journal says which tables the socle loaded and under which build, not three zeros', function (): void {
+    Artisan::shouldReceive('call')->once()->andReturnUsing(function (): int {
+        foreach (['Faction', 'Mount'] as $source) {
+            WowReferenceDownload::factory()->create(['source_table' => $source, 'build' => '12.1.5.70448', 'downloaded_at' => now()]);
+        }
+
+        return 0;
+    });
+    Artisan::shouldReceive('output')->andReturn('');
+
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: true, trigger: 'console'), false, true, null);
+
+    expect($importRun->step(ImportStage::Reference)->summary)->toBe('2 tables chargées · build 12.1.5.70448')
+        ->and(journal('job-1'))->toContain('Socle de référence — terminée · 2 tables chargées · build 12.1.5.70448 · ')
+        ->and(journal('job-1'))->not->toContain('0 créées');
+});
+
+test('a load done before the socle stage began is not counted in its summary', function (): void {
+    WowReferenceDownload::factory()->create(['source_table' => 'Faction', 'build' => '12.1.0.69933', 'downloaded_at' => now()->subWeek()]);
+    Artisan::shouldReceive('call')->once()->andReturnUsing(function (): int {
+        WowReferenceDownload::factory()->create(['source_table' => 'Mount', 'build' => '12.1.5.70448', 'downloaded_at' => now()]);
+
+        return 0;
+    });
+    Artisan::shouldReceive('output')->andReturn('');
+
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: true, trigger: 'console'), false, true, null);
+
+    expect($importRun->step(ImportStage::Reference)->summary)->toBe('1 table chargée · build 12.1.5.70448');
+});

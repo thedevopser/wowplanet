@@ -63,4 +63,10 @@ describe('ImportHistoryStepTable', () => {
         expect(row.get('[data-role="volume"]').text()).toBe('—');
         expect(row.find('[data-role="delta"]').exists()).toBe(false);
     });
+
+    it('shows no row counts for a stage that has none of its own tables', async () => {
+        const row = await rowOf([step({ stage: 'reference', label: 'Socle de référence', created: 0, updated: 0, deleted: 0, rows_after: null, previous_rows: null, delta: null })]);
+
+        expect(row.get('[data-role="rows"]').text()).toBe('—');
+    });
 });

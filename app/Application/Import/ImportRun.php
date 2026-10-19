@@ -12,8 +12,8 @@ namespace App\Application\Import;
  * Le résumé textuel qu'elle sait rendre est ce que le panneau d'administration affiche
  * déjà, ce qui enrichit le suivi sans toucher au front.
  *
- * @phpstan-type ImportStepPayload array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null}
- * @phpstan-type ImportRunPayload array{job_id: string, started_at: int, budget_used: int, wait: array{reason: string, seconds: int, count: int}|null, steps: list<ImportStepPayload>, interruption?: string|null, interrupted_at?: int|null}
+ * @phpstan-type ImportStepPayload array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null, summary?: string|null}
+ * @phpstan-type ImportRunPayload array{job_id: string, started_at: int, budget_used: int, wait: array{reason: string, seconds: int, count: int}|null, steps: list<ImportStepPayload>, interruption?: string|null, interrupted_at?: int|null, build?: string|null}
  */
 final readonly class ImportRun
 {
@@ -32,6 +32,7 @@ final readonly class ImportRun
         public ?ImportWait $wait,
         public ?ImportRunState $interruption = null,
         public ?int $interruptedAt = null,
+        public ?string $build = null,
     ) {
         throw_if(
             $interruption instanceof ImportRunState && ! $interruption->isInterruption(),
@@ -48,8 +49,9 @@ final readonly class ImportRun
 
     /**
      * @param  list<ImportStage>  $stages
+     * @param  string|null  $build  Build servi par l'API au lancement, `null` s'il n'a pas pu être lu
      */
-    public static function start(string $jobId, array $stages, int $startedAt): self
+    public static function start(string $jobId, array $stages, int $startedAt, ?string $build = null): self
     {
         return new self(
             $jobId,
@@ -57,6 +59,7 @@ final readonly class ImportRun
             array_map(ImportStep::pending(...), $stages),
             0,
             null,
+            build: $build,
         );
     }
 
@@ -84,22 +87,23 @@ final readonly class ImportRun
             $this->wait,
             $this->interruption,
             $this->interruptedAt,
+            $this->build,
         );
     }
 
     public function waitingOn(?ImportWait $importWait): self
     {
-        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, $importWait, $this->interruption, $this->interruptedAt);
+        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, $importWait, $this->interruption, $this->interruptedAt, $this->build);
     }
 
     public function withBudgetUsed(int $budgetUsed): self
     {
-        return new self($this->jobId, $this->startedAt, $this->steps, $budgetUsed, $this->wait, $this->interruption, $this->interruptedAt);
+        return new self($this->jobId, $this->startedAt, $this->steps, $budgetUsed, $this->wait, $this->interruption, $this->interruptedAt, $this->build);
     }
 
     public function paused(int $at): self
     {
-        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, $this->wait, ImportRunState::Paused, $at);
+        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, $this->wait, ImportRunState::Paused, $at, $this->build);
     }
 
     /**
@@ -108,12 +112,12 @@ final readonly class ImportRun
      */
     public function cancelled(int $at): self
     {
-        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, null, ImportRunState::Cancelled, $at);
+        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, null, ImportRunState::Cancelled, $at, $this->build);
     }
 
     public function resumed(): self
     {
-        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, null);
+        return new self($this->jobId, $this->startedAt, $this->steps, $this->budgetUsed, null, build: $this->build);
     }
 
     /**
@@ -314,6 +318,10 @@ final readonly class ImportRun
      */
     private function stepFacts(ImportStep $importStep): string
     {
+        if ($importStep->summary !== null) {
+            return sprintf(' · %s · %s', $importStep->summary, $this->duration($importStep->durationMs));
+        }
+
         $facts = [];
 
         if ($importStep->stage->tables() !== []) {
@@ -376,6 +384,7 @@ final readonly class ImportRun
             'steps' => array_map(static fn (ImportStep $importStep): array => $importStep->toArray(), $this->steps),
             'interruption' => $this->interruption?->value,
             'interrupted_at' => $this->interruptedAt,
+            'build' => $this->build,
         ];
     }
 
@@ -399,6 +408,7 @@ final readonly class ImportRun
             $payload['wait'] === null ? null : ImportWait::fromArray($payload['wait']),
             $interrupted ? $interruption : null,
             $interrupted ? ($payload['interrupted_at'] ?? 0) : null,
+            $payload['build'] ?? null,
         );
     }
 }

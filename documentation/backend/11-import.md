@@ -23,7 +23,7 @@ Les étapes, dans leur ordre d'exécution.
 | Décorations | `decor` | — | `wow_decors` |
 | Garde-robe | `appearances` | — | `wow_appearances` |
 
-Le socle de référence ouvre la chaîne : les quêtes, les métiers et les montures tirent de `wow_ref_*` ce que l'API n'expose pas, et un import parti d'une base vide sans lui sortirait faux sans rien signaler. Ce n'est pas une entité de catalogue, d'où l'absence de table comptée : `wow_ref_*` est chargée par `COPY` dans des tables sans horodatages.
+Le socle de référence ouvre la chaîne : les quêtes, les métiers, les montures et les décorations tirent de `wow_ref_*` ce que l'API n'expose pas, et un import parti d'une base vide sans lui sortirait faux sans rien signaler. Ce n'est pas une entité de catalogue, d'où l'absence de table comptée : `wow_ref_*` est chargée par `COPY` dans des tables sans horodatages.
 
 L'ordre est vérifié contre les dépendances déclarées plutôt que simplement écrit — une dépendance ajoutée à contresens de la chaîne fait tomber le test.
 
@@ -90,6 +90,8 @@ Les quatre premiers se déduisent des étapes. `paused` et `cancelled` ne sont a
 Ce qu'une étape a fait : son état, ses lignes, ses appels API, son temps, et son avancement quand elle se compte en fenêtres. Chaque passe rend une nouvelle étape qui cumule la précédente.
 
 `ImportStepStatus` vaut `pending`, `running`, `completed`, `failed` ou `skipped`. **`skipped` est terminal sans être un échec** : c'est la porte de build qui a constaté qu'il n'y avait rien à refaire.
+
+Une étape qui ne compte pas de lignes porte un **`summary`** à la place : le socle y dit ce que sa synchronisation a chargé (« 11 tables chargées · build 12.1.5.70448 »), relu par `ImportStageRunner` sur les entrées de `wow_reference_downloads` écrites depuis le début de l'étape — arrondi à la seconde, la précision de leurs horodatages. Le journal, le résumé de `ImportRun` et le panneau de suivi l'affichent au lieu des décomptes et des appels, qui s'y liraient « rien ne s'est passé ». Le résumé n'est pas archivé : l'historique, qui n'en a pas la colonne, affiche un tiret à la place des lignes du socle.
 
 ### `RowTally` et `RowTallyCounter`
 
@@ -297,6 +299,8 @@ Un échec n'écrit jamais le cache — la vue suivante retente — et ne touche 
 L'unique endroit qui sait qu'une étape se juge contre l'amont de sa famille : le socle contre wago, via `ReferenceBuildState`, tout le reste contre Blizzard, via `ImportBuildGate`.
 
 Cette classe est appelée par le bandeau **et** par `ImportPipeline::begin()`. Ils ne peuvent donc pas diverger, et c'est ce qui rend le bouton de mise à jour honnête : sans elle, l'étape du socle était retenue sur le build Blizzard du moment, et un socle que wago avait dépassé était signalé en retard par l'écran puis sauté par l'import qu'on venait de lancer.
+
+Le build Blizzard est lu **une fois, au lancement** de l'import, en incrémental comme en forcé, et porté par `ImportRun` jusqu'à sa fin : c'est sous ce build que `ImportPipeline` retient chaque étape aboutie. Un patch tombé en plein import fait donc repasser l'étape au suivant, au lieu de la déclarer à jour sur des données lues avant lui. Une API muette au lancement laisse le build à `null` : rien n'est sauté, rien n'est retenu. L'étape du socle n'est jamais retenue dans `wow_import_states`, sa fraîcheur se lisant sur l'inventaire de ses chargements.
 
 Les builds entrent en paramètre plutôt que d'être lus là : les lire coûte deux requêtes sortantes, qui n'ont leur place ni dans une boucle d'import ni dans le rendu d'une page. `begin()` n'interroge wago que si le socle figure parmi les étapes demandées.
 

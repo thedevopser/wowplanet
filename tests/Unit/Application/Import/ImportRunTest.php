@@ -391,6 +391,19 @@ test('asking for a stage outside the run names it', function (): void {
     runOf(ImportStage::Quests)->step(ImportStage::Mounts);
 })->throws(InvalidArgumentException::class, 'Stage outside this run: mounts');
 
+test('the build an import began under survives the tracking round trip', function (): void {
+    $importRun = ImportRun::start('job-1', [ImportStage::Quests], startedAt: 1_000, build: '12.1.5_70077');
+
+    expect(ImportRun::fromArray($importRun->toArray())->build)->toBe('12.1.5_70077');
+});
+
+test('an import published before it carried a build reads back with an unknown build', function (): void {
+    $payload = runOf(ImportStage::Quests)->toArray();
+    unset($payload['build']);
+
+    expect(ImportRun::fromArray($payload)->build)->toBeNull();
+});
+
 test('an interruption read back without its timestamp is dated at zero', function (): void {
     $payload = runOf(ImportStage::Quests)->toArray();
     $payload['interruption'] = 'paused';
@@ -421,4 +434,12 @@ test('a long estimate is given in minutes', function (): void {
         ->summary(now: 1_000);
 
     expect(explode(PHP_EOL, $summary)[1])->toEndWith(' · reste ~16 min 40 s');
+});
+
+test('the reference socle reports what it loaded instead of rows and Blizzard calls', function (): void {
+    $summary = runOf(ImportStage::Reference)
+        ->withStep(ImportStep::pending(ImportStage::Reference)->finished(RowTally::none(), 0, 23_381)->withSummary('11 tables chargées · build 12.1.5.70448'))
+        ->summary(now: 1_030);
+
+    expect(explode(PHP_EOL, $summary))->toContain('✓  Socle de référence — 11 tables chargées · build 12.1.5.70448 · 23 s');
 });

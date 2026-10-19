@@ -225,3 +225,52 @@ test('it picks the lowest spell misc row when a spell carries several', function
     expect((new ReferenceMaps)->mountIcons())
         ->toBe([6 => 'https://render.worldofwarcraft.com/eu/icons/56/132261.jpg']);
 });
+
+// ─── Extension des décorations ──────────────────────────────
+
+const EXPANSION_TAG_GROUP = 4;
+
+const STYLE_TAG_GROUP = 5;
+
+function seedReferenceTag(int $tag, int $group, string $label): void
+{
+    DB::table('wow_ref_data_tag_group_x_data_tag')->insert(['id' => $tag, 'data_tag_group_id' => $group, 'data_tag' => $tag]);
+    DB::table('wow_ref_data_tag_info')->insert(['id' => $tag, 'data_tag' => $tag, 'description_lang' => $label]);
+}
+
+function tagDecor(int $decorId, int ...$tags): void
+{
+    foreach ($tags as $tag) {
+        DB::table('wow_ref_data_tag_x_house_decor_record')->insert([
+            'id' => DB::table('wow_ref_data_tag_x_house_decor_record')->count() + 1,
+            'data_tag_id' => $tag,
+            'house_decor_id' => $decorId,
+        ]);
+    }
+}
+
+test('a decor carrying one expansion tag maps to that expansion', function (): void {
+    seedReferenceTag(104, EXPANSION_TAG_GROUP, 'Warlords of Draenor');
+    seedReferenceTag(107, EXPANSION_TAG_GROUP, 'Shadowlands');
+    tagDecor(126, 104);
+    tagDecor(9242, 107);
+
+    expect((new ReferenceMaps)->decorExpansions())->toBe([126 => 'Warlords of Draenor', 9242 => 'Shadowlands']);
+});
+
+test('tags outside the expansion group do not make an expansion', function (): void {
+    seedReferenceTag(104, EXPANSION_TAG_GROUP, 'Warlords of Draenor');
+    seedReferenceTag(160, STYLE_TAG_GROUP, 'Rustic');
+    tagDecor(126, 104, 160);
+    tagDecor(80, 160);
+
+    expect((new ReferenceMaps)->decorExpansions())->toBe([126 => 'Warlords of Draenor']);
+});
+
+test('a decor tagged with two expansions is left out rather than guessed', function (): void {
+    seedReferenceTag(104, EXPANSION_TAG_GROUP, 'Warlords of Draenor');
+    seedReferenceTag(105, EXPANSION_TAG_GROUP, 'Legion');
+    tagDecor(126, 104, 105);
+
+    expect((new ReferenceMaps)->decorExpansions())->toBe([]);
+});

@@ -16,7 +16,7 @@ use Illuminate\Console\Command;
  * Écrit l'instantané versionné de la taxonomie depuis la base.
  *
  * C'est le pendant de `app:collection-taxonomy-sync` : celle-ci charge l'instantané en base,
- * celle-là le regénère. On l'exécute après un arbitrage manuel ou un tirage amont, et on commite
+ * celle-là le regénère. On l'exécute après un arbitrage manuel, et on commite
  * le fichier produit — sans quoi la curation ne vit que dans une base et se perd au prochain
  * environnement.
  *

@@ -53,6 +53,7 @@ Route::middleware(['throttle:admin', 'admin'])->prefix('admin')->group(function 
     Route::post('/reference/sync', [AdminController::class, 'syncReference']);
     Route::post('/reference/purge', [AdminController::class, 'purgeReference']);
     Route::post('/taxonomy/arbitrate', [AdminController::class, 'arbitrateTaxonomy']);
+    Route::post('/taxonomy/accept-suggestion', [AdminController::class, 'acceptTaxonomySuggestion']);
     Route::post('/taxonomy/load', [AdminController::class, 'loadTaxonomySnapshot']);
     Route::get('/taxonomy/snapshot', [AdminController::class, 'downloadTaxonomySnapshot']);
     Route::get('/health/queue', [HealthController::class, 'queue']);

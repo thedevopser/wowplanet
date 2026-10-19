@@ -17,11 +17,9 @@ Client HTTP vers l'API Blizzard (OAuth2 client credentials). Gère automatiqueme
 | `getAccessToken()` | — | `string` | Retourne le token d'accès, le renouvelle si expiré. |
 | `get()` | `string $endpoint, array<string, string> $query` | `array<array-key, mixed>` | Requête GET synchrone avec token application, réponse décodée brute. Ceux qui mettent en cache des données plutôt que des objets (journal d'instance, arbre de talents) la gardent telle quelle ; les autres appelants l'enveloppent aussitôt dans un `ResponsePayload`. C'est l'une des frontières de `mixed-boundaries.txt`. |
 | `getResponse()` | `string $endpoint, array<string, string> $query` | `ResponsePayload` | La porte typée : la même requête, lue par un `ResponsePayload`. C'est le chemin par défaut. |
-| `getIfModifiedSince()` | `string $endpoint, ?string $lastModified, array<string, string> $query` | `?ResponsePayload` | Revalidation d'un index par `If-Modified-Since`. Rend `null` sur un 304, qui veut dire *inchangé* et non *échoué* : le corps vide d'un 304 n'atteint jamais le décodage JSON. |
 | `getWithUserToken()` | `string $endpoint, string $userToken, array<string, string> $query` | `ResponsePayload` | Requête GET avec token utilisateur (OAuth2 user flow). |
 | `getAsync()` | `string $endpoint, array $query` | `PromiseInterface` | Requête GET asynchrone (Guzzle promise). |
-| `currentBuild()` | — | `?string` | Le build WoW servi par l'API, lu dans l'en-tête `battlenet-namespace` (voir `BlizzardNamespace`). Une sonde ne part que si aucune réponse n'en a encore livré un. |
-| `lastSeenBuild()`, `lastModifiedSeen()` | — | `?string` | Le dernier build et le dernier `Last-Modified` vus passer, que l'import retient pour sa prochaine revalidation (`ImportBuildGate`). |
+| `currentBuild()` | — | `?string` | Le build WoW servi par l'API, lu dans l'en-tête `battlenet-namespace` (voir `BlizzardNamespace`). Relu à chaque appel par une sonde sur `playable-class/index` : le client est un singleton et le worker de queue vit d'un patch à l'autre, un build gardé en mémoire ferait sauter chaque étape jusqu'au redémarrage. |
 | `getRegion()` | — | `string` | Région configurée (ex. : `eu`). |
 | `getCurrentMythicSeasonId()`, `getCurrentPvpSeasonId()` | — | `int` | Saison Mythique+ ou JcJ courante. `0` hors saison, valeur d'absence attendue par les appelants. |
 | `getCurrentMythicDungeons()` | — | `list<MythicDungeon>` | Donjons de la rotation Mythique+ de la saison, en cache 24 h. Liste vide si l'appel échoue ou si l'index est vide, et dans ce cas rien n'est mis en cache. |
@@ -43,8 +41,7 @@ Décide s'il y a lieu de réimporter une entité, en comparant le build servi pa
 | Méthode | Retour | Description |
 |---|---|---|
 | `isUpToDate(string $entity, ?string $currentBuild)` | `bool` | Faux si l'entité n'a jamais été importée, si son build diffère, ou si le build courant est inconnu — dans le doute on importe. |
-| `remember(string $entity, string $build, ?string $lastModified)` | `void` | Enregistre le build d'un import réussi. |
-| `lastModifiedFor(string $entity)` | `string\|null` | Date à renvoyer en `If-Modified-Since` à la prochaine revalidation. |
+| `remember(string $entity, string $build)` | `void` | Enregistre le build d'un import réussi. |
 
 L'état vit dans `wow_import_states`, **en base et non en cache** : c'est un état d'import, il doit survivre à un `cache:clear`. Il est tenu **par entité et non globalement**, parce qu'un patch peut ne toucher que les recettes et que réimporter les 22 000 apparences pour autant serait absurde.
 
@@ -289,7 +286,7 @@ Ce que rien ne date tombe dans `ExpansionId::UNCLASSIFIED`, pas dans l'extension
 
 ### Lecture typée (`ResponsePayload`)
 
-Tout JSON venu de l'extérieur — réponse de l'API Blizzard, export curé de SimpleArmory — est enveloppé dans un `ResponsePayload` dès son décodage, et n'en sort que typé. C'est là que le `mixed` de `json_decode` s'arrête.
+Tout JSON venu de l'extérieur — une réponse de l'API Blizzard — est enveloppé dans un `ResponsePayload` dès son décodage, et n'en sort que typé. C'est là que le `mixed` de `json_decode` s'arrête.
 
 | Lecture | Absent | Mauvais type |
 |---|---|---|
@@ -302,7 +299,7 @@ Tout JSON venu de l'extérieur — réponse de l'API Blizzard, export curé de S
 
 Les tables indexées par identifiant (`stringMap`, `objectMap`, et `entries()` pour une table imbriquée) acceptent une liste au même titre qu'un objet : un objet JSON aux clés `"0"`, `"1"`… revient en liste une fois décodé. Les lectures tolérantes ne servent qu'où le code d'origine tolérait déjà, et où un test fixe cette tolérance ; partout ailleurs, un écart au contrat lève. Les messages nomment le chemin complet du champ (`subcats.0.items.3.ID`) et la source. `isEmpty()` distingue une réponse vide — un endpoint en 404 — d'une réponse lacunaire.
 
-Les deux exceptions de lecture descendent de `BlizzardContractException`, classe abstraite qui ne sert qu'à les attraper ensemble : un appelant qui veut traiter « l'amont n'a pas tenu son contrat », quelle qu'en soit la forme, attrape la mère. C'est ce que fait `SimpleArmoryTaxonomyReader`, qui la traduit en `TaxonomySourceUnavailableException::malformed()`. Partout ailleurs, elle remonte : une réponse qui trahit son contrat est une erreur à voir, pas une donnée à deviner.
+Les deux exceptions de lecture descendent de `BlizzardContractException`, classe abstraite qui ne sert qu'à les attraper ensemble : un appelant qui veut traiter « l'amont n'a pas tenu son contrat », quelle qu'en soit la forme, attrape la mère. Aujourd'hui, personne ne l'attrape et elle remonte : une réponse qui trahit son contrat est une erreur à voir, pas une donnée à deviner.
 
 **Où le `mixed` entre, et où il s'arrête.** Une valeur de forme inconnue n'a le droit d'entrer que dans les fichiers listés par `mixed-boundaries.txt`, chacun avec son motif, et `make mixed-check` fait échouer la CI si un autre fichier écrit `mixed`. Côté Blizzard, il y en a quatre : `BlizzardApiClient`, dont `get()` rend le corps décodé ; `ResponsePayload`, qui le tient et n'en rend que des valeurs typées ; `UnexpectedFieldTypeException`, qui transporte la valeur fautive, quel que soit son type ; le trait `ImportsFromBlizzardApi`, où la raison du rejet d'une promesse Guzzle arrive sans type et devient un `Throwable` dès sa réception. Tout le reste du code ne voit que des objets de réponse ou des types précis.
 
@@ -416,7 +413,7 @@ Chaque importeur lit les données sources, les transforme et les sauvegarde via 
 | `AchievementImporter` | hiérarchie `achievement-category` + détail de chaque haut fait + balayage des media | `WowAchievement` |
 | `MountImporter` | `mount/index` + balayage `search/mount` + taxonomie curée + socle pour le sort et l'icône | `WowMount` |
 | `PetImporter` | `pet/index` + détail de chaque mascotte + taxonomie curée | `WowPet` |
-| `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée | `WowDecor` |
+| `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée + socle pour l'extension suggérée | `WowDecor` |
 | `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps, sans les quêtes au nom interne, supprimées si déjà en base ; détail des quêtes miroir pas encore jugées | `WowQuest` |
 | `ProfessionImporter` | `skill_line_ability.csv` + API Blizzard | `WowProfession`, `WowRecipe` |
 
@@ -429,6 +426,8 @@ Pour les trois collections, le partage d'autorité est explicite : **l'API tranc
 **Les mascottes sont le seul cas sans endpoint de recherche.** `data/wow/search/pet` répond 404 : leur identité vient du détail, un appel par mascotte. C'est sans regret, ce détail étant le seul des trois à porter l'icône en clair, avec l'identifiant de créature du lien Wowhead.
 
 **Le marqueur d'obtention des décorations est de la curation, jamais de l'API.** L'API atteste qu'une décoration existe, jamais qu'un joueur peut encore l'obtenir : un événement de pré-lancement clos ou une promotion retirée laissent une entrée hors d'atteinte, qui compterait au dénominateur et rendrait le 100 % inatteignable. Il vit donc dans la taxonomie, colonne `obtainable`. Les montures et les mascottes ne le lisent pas : leurs fichiers curés le portent, mais aucun import ne l'a jamais appliqué sur ces deux entités.
+
+**Une décoration en attente d'arbitrage arrive avec une catégorie suggérée.** `ReferenceMaps::decorExpansions()` tire du socle l'étiquette d'extension de la décoration, et l'importer la pose dans `suggested_category`, jamais dans `category` : une suggestion ne range rien, sans quoi le catalogue et le score compteraient comme rangée une entrée que personne n'a arbitrée. Une décoration curée n'en porte pas, même quand ses étiquettes en proposeraient une autre. `PendingTaxonomyEntries` la rend sous `pending_category`, à côté de `pending_source`.
 
 ---
 
@@ -462,7 +461,6 @@ Elle vit dans la table `wow_collection_taxonomy`, hors de la famille `wow_ref_*`
 |---|---|
 | `fromOption(string $name): self` | Résout l'entité d'une option de commande, insensible à la casse. Lève `InvalidArgumentException` en listant les entités connues. |
 | `catalogue(): Builder` | Requête sur la table du catalogue que le site lit pour cette collection (`wow_mounts`, `wow_pets`, `wow_decors`). Partagée par `PendingTaxonomyEntries` et `TaxonomyArbitration`. |
-| `simpleArmoryFile(): string` | Nom du fichier curé dont cette collection s'amorce. |
 
 ### `TaxonomyEntry`
 
@@ -490,25 +488,8 @@ Amorçage et enrichissement de la table.
 | Méthode | Description |
 |---|---|
 | `load(CollectionEntity): array{read: int, inserted: int, skipped: int}` | Charge la collection depuis l'instantané. |
-| `loadEntries(CollectionEntity, array<int, TaxonomyEntry>): array{read, inserted, skipped}` | Charge les entrées qu'on lui tend — c'est par là qu'un tirage amont fait entrer la curation d'un patch. |
 
 Le chargement est strictement additif : `insertOrIgnore` laisse en place toute ligne connue, si bien que la première exécution amorce et que les suivantes n'ajoutent que les entrées d'un nouveau patch. C'est ce qui fait survivre un arbitrage manuel.
-
-### `SimpleArmoryClient`
-
-Frontière [simplearmory.com](https://simplearmory.com), amont de la curation.
-
-**Méthode** : `fetch(CollectionEntity $collectionEntity): int` — télécharge le document curé sur le disque `reference` et rend sa taille en octets. Une réponse refusée ou vide lève `TaxonomyUpstreamUnreachableException` et ne laisse rien derrière elle.
-
-Elle n'est traversée que par un tirage manuel, une fois par patch : l'amont indisponible n'empêche aucun import. Base et délai se règlent par `services.simplearmory`.
-
-### `SimpleArmoryTaxonomyReader`
-
-**Méthode** : `entriesFor(CollectionEntity $collectionEntity): array<int, TaxonomyEntry>`
-
-Lit un document curé depuis le disque `reference` et n'en tire que le rangement. Une entrée non sortie ou sans identifiant utilisable est ignorée ; un identifiant listé sous plusieurs catégories garde sa **dernière** occurrence, ce qu'a fait chaque import jusqu'ici, donc ce qui a produit le rangement en place.
-
-Chaque catégorie est lue par un `ResponsePayload`, avec trois tolérances délibérées : une catégorie qui n'est pas un objet est ignorée, un libellé qui n'est pas du texte vaut « rangé nulle part » (`lenientString`), un identifiant se lit par `lenientInt`. Au-delà, un export mal formé — des sous-catégories qui ne sont pas une liste, un drapeau `notObtainable` qui n'est pas un booléen — lève `TaxonomySourceUnavailableException::malformed()`, dont le message nomme le fichier, la catégorie et le chemin du champ.
 
 ### `CollectionTaxonomyReader`
 
@@ -529,15 +510,11 @@ Les onze libellés existent déjà dans les dictionnaires de traduction des troi
 
 ### `TaxonomySourceUnavailableException`
 
-Levée quand la source de l'amorçage est absente, illisible ou vide. Un amorçage qui ne trouve rien et se tait laisserait croire la taxonomie à jour alors qu'elle est restée vide. `malformed()` couvre l'export présent mais mal formé, et garde l'exception de contrat d'origine comme cause.
+Levée quand la source de l'amorçage est absente, illisible ou vide. Un amorçage qui ne trouve rien et se tait laisserait croire la taxonomie à jour alors qu'elle est restée vide.
 
 ### `TaxonomySnapshotMalformedException`
 
 Levée quand l'instantané est là mais que sa forme est fausse : en-tête, nombre de colonnes, entité, identifiant ou marqueur d'obtention.
-
-### `TaxonomyUpstreamUnreachableException`
-
-Levée quand l'amont curé refuse le téléchargement ou répond vide. Un tirage amont étant hors de tout chemin d'import, elle n'arrête jamais un import.
 
 ### L'arbitrage vu du panneau (`app/Application/Taxonomy/`)
 
@@ -569,7 +546,7 @@ Un libellé vide est un rangement nul et non une chaîne vide : c'est la distinc
 
 **`UnknownCollectionEntryException`** est levée par l'arbitrage quand il nomme des entrées que le catalogue de la collection ne porte pas. Elle expose `entryIds`, la liste triée des identifiants refusés, que le contrôleur rend tels quels.
 
-**`TaxonomySnapshotMerge`** recharge en base la curation versionnée des trois collections, depuis le bouton de l'écran : c'est le remède d'une base en retard sur le fichier. La fusion est additive, comme celle que font les étapes d'import avant d'importer une collection, et elle est tracée sur la piste d'audit.
+**`TaxonomySnapshotMerge`** recharge en base la curation versionnée des trois collections, depuis le bouton de l'écran : c'est le remède d'une base en retard sur le fichier. La fusion est additive, comme celle que font les étapes d'import avant d'importer une collection, et elle est tracée sur la piste d'audit. Les entrées qu'elle ajoute rangent aussitôt le catalogue — catégorie, source et état obtenable, par `CatalogueRanking` — et la barre latérale est rafraîchie : un fichier déployé prend effet au clic, sans import forcé. Une entrée déjà en base n'est pas recopiée, la fusion n'ayant rien changé pour elle. `CatalogueRanking` est aussi l'écriture du catalogue de `TaxonomyArbitration`, et remet à nul la suggestion d'une décoration rangée.
 
 **Une garde côté tests.** L'instantané est un fichier versionné, et tout ce qui écrit en base peut demander son réexport. `tests/Pest.php` redirige donc `CollectionTaxonomySnapshot` vers un chemin temporaire pour toute la suite `Feature`, et `VersionedSnapshotIsLeftAloneTest` tient cette garde. Sans elle, un test réécrit les milliers de lignes de curation du dépôt avec ses quelques lignes de doublure — c'est arrivé.
 
@@ -680,7 +657,7 @@ Les correspondances que l'API Blizzard n'expose sur aucun endpoint — extension
 
 ### `ReferenceCatalog`
 
-Déclare les huit tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`.
+Déclare les onze tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`, et les trois tables d'étiquettes des décorations, `DataTagXHouseDecorRecord`, `DataTagGroupXDataTag` et `DataTagInfo`. Cette dernière est lue sans locale, donc en anglais : ses libellés d'extension sont ceux de la taxonomie curée.
 
 `SpellMisc` est la plus lourde du socle — 417 583 lignes pour 45 Mo — et n'est retenue que pour deux colonnes, `SpellID` et `SpellIconFileDataID`. C'est le prix de l'icône des montures, que l'API n'expose nulle part.
 
@@ -704,7 +681,7 @@ Encodage d'une ligne au format texte de `COPY`. Ce format sépare par tabulation
 
 Six classes de la couche Application portent ce que `/admin/reference` affiche : deux pour l'état des tables, quatre pour l'inventaire des fichiers téléchargés.
 
-**`ReferenceInventory`** rend, pour chacune des huit tables, ce qu'elle pèse, quand elle a été chargée et sous quel build, et l'écart avec le chargement précédent. Les lignes sont **comptées sur la table**, pas relues de l'inventaire : ce dernier dit ce qu'un chargement a écrit, la table dit ce qui reste, et les deux divergent dès qu'on touche à la base autrement que par la commande de synchronisation.
+**`ReferenceInventory`** rend, pour chacune des tables du socle, ce qu'elle pèse, quand elle a été chargée et sous quel build, et l'écart avec le chargement précédent. Les lignes sont **comptées sur la table**, pas relues de l'inventaire : ce dernier dit ce qu'un chargement a écrit, la table dit ce qui reste, et les deux divergent dès qu'on touche à la base autrement que par la commande de synchronisation.
 
 Trois signaux en sortent : une table vide, une table restée sur un build antérieur, et une table **dégarnie**. Ce dernier mérite son seuil écrit. La commande de synchronisation refuse déjà d'écrire une source tombée sous la moitié du chargement précédent ; `VolumeShrink::ALERT_RATIO` vaut **0,9**, et signale donc tout chargement qui a retenu moins de neuf dixièmes de son prédécesseur. Entre les deux valeurs, le chargement aboutit sans que rien ne le dise : c'est exactement l'angle mort que la page comble, et c'est le signal le plus utile de l'écran — un patch qui renomme une colonne se manifeste par une table qui se vide, pas par une erreur. `VolumeShrink` porte ce seuil pour tout le projet : l'historique des imports lit la chute de volumétrie d'une entité au même seuil.
 
@@ -720,13 +697,11 @@ Le lancement depuis le panneau passe par `AdminService::startReferenceSync()`, q
 
 Quatre classes de plus portent l'inventaire des fichiers téléchargés et leur purge. `storage/app/blizzard/` avait accumulé 66 Mo de reliquats parce que rien ne les affichait ; c'est cette dérive que l'écran empêche de recommencer sur `storage/app/wow-reference/`.
 
-**`ReferenceFileState`** énumère ce qu'un fichier vaut encore : `live`, `obsolete`, `taxonomy`, `orphan`. `isSweepable()` dit ce qu'un nettoyage en lot a le droit d'emporter — les obsolètes et les orphelins, jamais les deux autres.
+**`ReferenceFileState`** énumère ce qu'un fichier vaut encore : `live`, `obsolete`, `orphan`. `isSweepable()` dit ce qu'un nettoyage en lot a le droit d'emporter — les obsolètes et les orphelins, jamais le fichier en service. Les exports curés `mounts.json`, `pets.json` et `decors.json` qu'avait laissés l'ancien tirage depuis SimpleArmory sont des orphelins comme les autres.
 
 **`ReferenceFileClassifier`** applique la règle, et rien d'autre : aucune lecture de disque ni de base, ce qui la rend vérifiable sans rien monter. Deux points la gouvernent.
 
 **« En service » veut dire chargé, pas publié par wago.** Le fichier en service d'une table est celui de son **dernier chargement selon `downloaded_at`**, donc celui dont le chargement a produit ce qui est dans la table. Le classement ne dépend d'aucun appel sortant et reste juste quand wago est injoignable. Deux chargements enregistrés dans la même seconde sont départagés par le build, pour que l'ordre de lecture de la base ne décide de rien.
-
-**Les trois instantanés de taxonomie forment une famille à part.** `mounts.json`, `pets.json` et `decors.json` sont déposés sur ce disque par `SimpleArmoryClient`, qui écrit directement et ne crée aucune entrée d'inventaire. Par le seul critère « présent sur disque et absent de l'inventaire » ils passeraient pour des orphelins purgeables, ce qui serait faux. Ils sont reconnus par `CollectionEntity::simpleArmoryFile()`, la source de vérité qui existait déjà : les inventorier aurait demandé de rendre `build` et `row_count` nullables pour des fichiers qui n'ont ni build WoW ni table cible.
 
 Une ligne d'inventaire dont le fichier a disparu du disque sort à part, signalée plutôt qu'affichée comme si de rien n'était.
 
@@ -742,7 +717,7 @@ Remplace le contenu d'une table de référence par `COPY`, cinq mille lignes à 
 
 ### `ReferenceStore`
 
-Magasin des fichiers téléchargés, sur le disque `reference` (`storage/app/wow-reference/`) : les CSV du socle, et les documents curés d'un tirage amont. Le nom de fichier d'une table porte le build — deux synchronisations d'un même build écrivent le même fichier, deux builds différents en laissent deux.
+Magasin des fichiers téléchargés, sur le disque `reference` (`storage/app/wow-reference/`) : les CSV du socle. Le nom de fichier d'une table porte le build — deux synchronisations d'un même build écrivent le même fichier, deux builds différents en laissent deux.
 
 | Méthode | Retour | Description |
 |---|---|---|
@@ -786,6 +761,7 @@ Les correspondances que l'import tire du socle.
 | `zoneFactions()` | `array<int, string>` | `wow_ref_area_table`, `FactionGroupMask` : 2 pour l'Alliance, 4 pour la Horde |
 | `mountSpells()` | `array<int, int>` | `wow_ref_mount`, `SourceSpellID` |
 | `mountIcons()` | `array<int, string>` | `wow_ref_mount` joint à `wow_ref_spell_misc` par le sort source |
+| `decorExpansions()` | `array<int, string>` | `wow_ref_data_tag_x_house_decor_record` joint aux étiquettes du groupe Expansion (`DataTagGroup` 4) et à leur libellé anglais ; une décoration à deux extensions est laissée de côté |
 
 Les cartes sont construites une fois en début de passe et gardées en mémoire : quelques dizaines de milliers d'entiers ne pèsent rien, là où un aller-retour SQL par quête coûterait la passe entière. Une quête sans titre est ignorée partout, comme le faisait la lecture du CSV : elle n'entre au catalogue sous aucune forme.
 

@@ -153,6 +153,7 @@ Décoration de logement WoW. ID Blizzard comme clé primaire.
 | `item_id` | `int?` | ID de l'objet associé |
 | `icon_url` | `string?` | URL de l'icône |
 | `is_active` | `bool` | Toujours disponible |
+| `suggested_category` | `string?` | Extension proposée par les étiquettes du socle à une décoration en attente d'arbitrage ; nulle dès que la taxonomie la range |
 
 ---
 
@@ -221,7 +222,6 @@ Build WoW du dernier import réussi, une ligne par entité importée. Table `wow
 |---|---|
 | `entity` | Entité importée : `quests`, `mounts`, `appearances`… |
 | `build` | Build WoW servi par l'API au moment de l'import. |
-| `last_modified` | En-tête `Last-Modified` du dernier index revalidé, renvoyé tel quel en `If-Modified-Since`. |
 | `imported_at` | Date de l'import. |
 
 C'est la seule table applicative sans `bnet_user_id` : elle ne porte pas de donnée utilisateur mais un état de pipeline. Lue et écrite par `ImportBuildGate`.

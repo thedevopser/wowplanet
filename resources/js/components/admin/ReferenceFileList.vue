@@ -80,20 +80,17 @@ import Button from '../ui/Button.vue';
 const BADGES = {
     live: 'En service',
     obsolete: 'Obsolète',
-    taxonomy: 'Taxonomie amont',
     orphan: 'Orphelin',
 };
 
 const BADGE_TONES = {
     live: 'success',
     obsolete: 'neutral',
-    taxonomy: 'info',
     orphan: 'warning',
 };
 
-// Un fichier en service porte la preuve de ce qui est chargé, un instantané de taxonomie
-// vient d'un tirage manuel : ni l'un ni l'autre ne s'attrape par une case, seulement par
-// le bouton de suppression, un par un.
+// Un fichier en service porte la preuve de ce qui est chargé : il ne s'attrape pas par une
+// case, seulement par le bouton de suppression.
 const SWEEPABLE = ['obsolete', 'orphan'];
 
 const props = defineProps({

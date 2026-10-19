@@ -8,8 +8,8 @@ use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Console\Exception\InvalidOptionException;
 
 beforeEach(function (): void {
     $this->syncSnapshotPath = testTempPath('taxonomy-sync').'/collection_taxonomy.csv';
@@ -20,7 +20,6 @@ beforeEach(function (): void {
     );
 
     Storage::fake(ReferenceStore::DISK);
-    Http::preventStrayRequests();
 });
 
 afterEach(function (): void {
@@ -44,28 +43,6 @@ function writeSyncSnapshot(string $path, array $entryCounts): void
     }
 
     new CollectionTaxonomySnapshot($path)->write($entries);
-}
-
-/**
- * @param  array<string, list<int>>  $entryIds  entité => identifiants servis par l'amont
- */
-function fakeUpstream(array $entryIds): void
-{
-    $responses = [];
-
-    foreach ($entryIds as $entity => $ids) {
-        $filename = CollectionEntity::fromOption($entity)->simpleArmoryFile();
-
-        $responses['simplearmory.com/data/'.$filename] = Http::response(json_encode([[
-            'name' => 'Midnight',
-            'subcats' => [[
-                'name' => 'Quête',
-                'items' => array_map(static fn (int $id): array => ['ID' => $id, 'name' => 'Entrée '.$id], $ids),
-            ]],
-        ]], JSON_THROW_ON_ERROR));
-    }
-
-    Http::fake($responses);
 }
 
 function syncTaxonomyOutput(string ...$arguments): string
@@ -182,69 +159,6 @@ test('it fails when the snapshot is missing altogether', function (): void {
 
 // --- Tirage amont ---
 
-test('the upstream pull adds the entries a new patch brought', function (): void {
-    writeSyncSnapshot($this->syncSnapshotPath, ['mount' => 2, 'pet' => 2, 'decor' => 2]);
-    $this->artisan('app:collection-taxonomy-sync')->assertSuccessful();
-
-    fakeUpstream(['mount' => [1, 2, 3], 'pet' => [1, 2], 'decor' => [1, 2]]);
-
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertSuccessful();
-
-    expect(WowCollectionTaxonomy::query()->where('entity', CollectionEntity::Mount)->count())->toBe(3);
-});
-
-test('the upstream pull re-exports the snapshot so the new curation reaches the repository', function (): void {
-    writeSyncSnapshot($this->syncSnapshotPath, ['mount' => 2, 'pet' => 2, 'decor' => 2]);
-    $this->artisan('app:collection-taxonomy-sync')->assertSuccessful();
-
-    fakeUpstream(['mount' => [1, 2, 3], 'pet' => [1, 2], 'decor' => [1, 2]]);
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertSuccessful();
-
-    $entries = new CollectionTaxonomySnapshot($this->syncSnapshotPath)->read();
-
-    expect(array_keys($entries['mount']))->toBe([1, 2, 3])
-        ->and($entries['mount'][3]->category)->toBe('Midnight');
-});
-
-test('the upstream pull never rewrites an entry already ranked', function (): void {
-    writeSyncSnapshot($this->syncSnapshotPath, ['mount' => 2, 'pet' => 2, 'decor' => 2]);
-    $this->artisan('app:collection-taxonomy-sync')->assertSuccessful();
-
-    fakeUpstream(['mount' => [1, 2], 'pet' => [1, 2], 'decor' => [1, 2]]);
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertSuccessful();
-
-    expect(WowCollectionTaxonomy::query()->where('entity', CollectionEntity::Mount)->where('entry_id', 1)->sole()->category)
-        ->toBe('Classic');
-});
-
-test('the upstream pull refuses to run against an empty taxonomy', function (): void {
-    fakeUpstream(['mount' => [1], 'pet' => [1], 'decor' => [1]]);
-
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertFailed();
-
-    expect(WowCollectionTaxonomy::query()->count())->toBe(0);
-});
-
-test('an unreachable upstream leaves the taxonomy and the snapshot untouched', function (): void {
-    writeSyncSnapshot($this->syncSnapshotPath, ['mount' => 2, 'pet' => 2, 'decor' => 2]);
-    $this->artisan('app:collection-taxonomy-sync')->assertSuccessful();
-    $before = (string) file_get_contents($this->syncSnapshotPath);
-
-    Http::fake(['simplearmory.com/*' => Http::response('Not found', 404)]);
-
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true])->assertFailed();
-
-    expect(WowCollectionTaxonomy::query()->count())->toBe(6)
-        ->and(file_get_contents($this->syncSnapshotPath))->toBe($before);
-});
-
-test('the upstream pull can target a single collection', function (): void {
-    writeSyncSnapshot($this->syncSnapshotPath, ['mount' => 2, 'pet' => 2, 'decor' => 2]);
-    $this->artisan('app:collection-taxonomy-sync')->assertSuccessful();
-
-    fakeUpstream(['pet' => [1, 2, 3, 4]]);
-
-    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true, '--entity' => 'pet'])->assertSuccessful();
-
-    expect(WowCollectionTaxonomy::query()->where('entity', CollectionEntity::Pet)->count())->toBe(4);
-});
+test('the command no longer pulls any curation from a third party', function (): void {
+    $this->artisan('app:collection-taxonomy-sync', ['--upstream' => true]);
+})->throws(InvalidOptionException::class);

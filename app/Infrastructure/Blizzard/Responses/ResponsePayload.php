@@ -8,7 +8,7 @@ use App\Infrastructure\Blizzard\Responses\Exceptions\MissingFieldException;
 use App\Infrastructure\Blizzard\Responses\Exceptions\UnexpectedFieldTypeException;
 
 /**
- * Lecture typée d'un JSON externe décodé : réponse de l'API Blizzard, export curé de SimpleArmory.
+ * Lecture typée d'un JSON externe décodé : réponse de l'API Blizzard.
  *
  * C'est le seul endroit où le `mixed` sorti de `json_decode` est autorisé à vivre :
  * rien n'en ressort qui ne soit typé, et une réponse qui ne respecte pas le contrat

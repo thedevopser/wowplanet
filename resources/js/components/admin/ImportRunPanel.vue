@@ -167,6 +167,7 @@ function describe(step) {
     if (step.status === 'skipped') return 'déjà à jour pour ce build';
     if (step.status === 'failed') return `échec : ${step.error ?? 'raison inconnue'}`;
     if (step.status === 'running') return `${step.percent} % · ${formatCount(step.api_calls)} appels`;
+    if (step.summary) return `${step.summary} · ${formatDuration(Math.round(step.duration_ms / 1000))}`;
 
     return [
         `${formatCount(step.created)} ${plural(step.created, 'créée', 'créées')}`,

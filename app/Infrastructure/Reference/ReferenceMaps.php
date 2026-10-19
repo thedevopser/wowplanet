@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Les correspondances que l'import tire du socle : extension et faction des quêtes,
- * faction des recettes, faction des zones.
+ * faction des recettes, faction des zones, extension des décorations.
  *
  * Ces cartes remplacent le parsing de CSV à chaque import. Elles sont construites une
  * fois en début de passe et gardées en mémoire : quelques dizaines de milliers d'entiers
@@ -30,6 +30,12 @@ class ReferenceMaps
      * détail ni aucun espace de media n'expose leur icône.
      */
     private const string ICON_URL = 'https://render.worldofwarcraft.com/%s/icons/56/%d.jpg';
+
+    /**
+     * Groupe « Expansion » de DataTagGroup : ses étiquettes portent le nom anglais de
+     * l'extension, celui-là même que la taxonomie curée range en catégorie.
+     */
+    private const int EXPANSION_TAG_GROUP = 4; // @pest-mutate-ignore
 
     /**
      * @return array<int, int> [quest_id => expansion_id]
@@ -94,6 +100,31 @@ class ReferenceMaps
         }
 
         return $map;
+    }
+
+    /**
+     * Une décoration qui porte deux étiquettes d'extension est laissée de côté : en
+     * proposer une serait trancher à l'aveugle un rangement que la curation doit faire.
+     *
+     * @return array<int, string> [decor_id => expansion_label]
+     */
+    public function decorExpansions(): array
+    {
+        $rows = DB::table('wow_ref_data_tag_x_house_decor_record')
+            ->join('wow_ref_data_tag_group_x_data_tag', 'wow_ref_data_tag_group_x_data_tag.data_tag', '=', 'wow_ref_data_tag_x_house_decor_record.data_tag_id')
+            ->join('wow_ref_data_tag_info', 'wow_ref_data_tag_info.data_tag', '=', 'wow_ref_data_tag_x_house_decor_record.data_tag_id')
+            ->where('wow_ref_data_tag_group_x_data_tag.data_tag_group_id', self::EXPANSION_TAG_GROUP)
+            ->get(['wow_ref_data_tag_x_house_decor_record.house_decor_id as decor_id', 'wow_ref_data_tag_info.description_lang as label']);
+
+        $labels = [];
+        foreach ($rows as $row) {
+            $labels[ReferenceValue::int($row->decor_id)][] = ReferenceValue::string($row->label);
+        }
+
+        return array_map(
+            static fn (array $expansions): string => $expansions[0],
+            array_filter($labels, static fn (array $expansions): bool => count(array_unique($expansions)) === 1),
+        );
     }
 
     /**

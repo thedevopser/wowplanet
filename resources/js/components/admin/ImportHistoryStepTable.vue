@@ -25,7 +25,8 @@
                         <p v-if="step.error" class="font-mono tabular-nums text-xs text-danger break-all">{{ step.error }}</p>
                     </td>
                     <td data-role="rows" class="py-2.5 pr-3 text-right font-mono tabular-nums text-default whitespace-nowrap">
-                        +{{ formatCount(step.created) }} / ~{{ formatCount(step.updated) }} / −{{ formatCount(step.deleted) }}
+                        <template v-if="step.rows_after === null">—</template>
+                        <template v-else>+{{ formatCount(step.created) }} / ~{{ formatCount(step.updated) }} / −{{ formatCount(step.deleted) }}</template>
                     </td>
                     <td class="py-2.5 pr-3 text-right font-mono tabular-nums text-muted">{{ formatCount(step.api_calls) }}</td>
                     <td class="py-2.5 pr-3 text-right font-mono tabular-nums text-muted whitespace-nowrap">{{ formatDuration(Math.round(step.duration_ms / 1000)) }}</td>

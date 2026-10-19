@@ -89,6 +89,25 @@
                 </p>
             </div>
 
+            <div v-if="! curated && suggestions.length > 0" class="space-y-3">
+                <p class="text-sm text-muted">
+                    Les étiquettes du socle proposent une extension pour ces entrées. Ranger une suggestion range
+                    toutes les entrées en attente qui la portent, pas seulement celles affichées, sans source.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <Button
+                        v-for="suggestion in suggestions"
+                        :key="suggestion.category"
+                        data-action="accept-suggestion"
+                        size="sm"
+                        :disabled="busy"
+                        @click="acceptSuggestion(suggestion.category)"
+                    >
+                        Ranger {{ formatCount(suggestion.entries) }} entrée{{ suggestion.entries > 1 ? 's' : '' }} en « {{ suggestion.category }} »
+                    </Button>
+                </div>
+            </div>
+
             <div class="grid gap-4 sm:grid-cols-2">
                 <Combobox v-model="chosenCategory" data-field="category" label="Catégorie" :options="vocabulary.categories" />
                 <Combobox v-model="chosenSource" data-field="source" label="Source" :options="vocabulary.sources" />
@@ -171,12 +190,14 @@ const props = defineProps({
     perPage: { type: Number, required: true },
     vocabulary: { type: Object, required: true },
     snapshot: { type: Object, required: true },
+    suggestions: { type: Array, default: () => [] },
 });
 
 const selection = ref([]);
 const term = ref(props.search);
 const chosenCategory = ref('');
 const chosenSource = ref('');
+const prefilled = ref('');
 const busy = ref(false);
 const filed = ref('');
 const error = ref('');
@@ -213,12 +234,29 @@ const select = ids => {
     selection.value = ids;
 
     if (! curated.value) {
+        prefillSuggestion(ids);
+
         return;
     }
 
     const single = ids.length === 1 ? props.entries.find(entry => entry.id === ids[0]) : null;
     chosenCategory.value = single?.category ?? '';
     chosenSource.value = single?.source ?? '';
+};
+
+// La suggestion ne remplit la catégorie que si la sélection la partage, et jamais par-dessus
+// ce que l'administrateur a tapé : seule une valeur posée par elle-même peut être retirée.
+const prefillSuggestion = ids => {
+    const suggestions = new Set(ids.map(id => props.entries.find(entry => entry.id === id)?.pending_category ?? null));
+    const shared = suggestions.size === 1 ? [...suggestions][0] : null;
+    const untouched = chosenCategory.value === '' || chosenCategory.value === prefilled.value;
+
+    if (! untouched) {
+        return;
+    }
+
+    chosenCategory.value = shared ?? '';
+    prefilled.value = shared ?? '';
 };
 
 // La liste vient du serveur : changer de collection, de mode, de filtre ou chercher, c'est
@@ -261,11 +299,35 @@ const file = async (chosenCategory, chosenSource) => {
         const plural = count > 1 ? 's' : '';
         filed.value = `${count} entrée${plural} ${curated.value ? 'réaffectée' : 'rangée'}${plural}`;
         selection.value = [];
-        router.reload({ only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot'] });
+        reloadLists();
     } catch (err) {
         error.value = err.response?.data?.message || "Erreur lors de l'arbitrage";
     } finally {
         busy.value = false;
     }
 };
+
+const acceptSuggestion = async category => {
+    busy.value = true;
+    filed.value = '';
+    error.value = '';
+
+    try {
+        const response = await axios.post('/api/admin/taxonomy/accept-suggestion', { entity: props.entity, category });
+
+        const count = response.data.arbitrated;
+        const plural = count > 1 ? 's' : '';
+        filed.value = `${formatCount(count)} entrée${plural} rangée${plural} en « ${category} »`;
+        selection.value = [];
+        reloadLists();
+    } catch (err) {
+        error.value = err.response?.data?.message || "Erreur lors de l'arbitrage";
+    } finally {
+        busy.value = false;
+    }
+};
+
+const reloadLists = () => router.reload({
+    only: ['entries', 'counts', 'curatedCounts', 'matched', 'categories', 'vocabulary', 'snapshot', 'suggestions'],
+});
 </script>

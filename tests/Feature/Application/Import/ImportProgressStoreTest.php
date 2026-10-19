@@ -160,3 +160,14 @@ test('a cancelled import counts down to no abandonment, being over already', fun
 
     expect($store->payload('job-1')['abandoned_in'])->toBeNull();
 });
+
+test('the payload carries the summary of a stage that counts no rows', function (): void {
+    $store = new ImportProgressStore;
+
+    $store->save(
+        ImportRun::start('job-1', [ImportStage::Reference], now()->getTimestamp())
+            ->withStep(ImportStep::pending(ImportStage::Reference)->finished(RowTally::none(), 0, 23_381)->withSummary('11 tables chargées · build 12.1.5.70448'))
+    );
+
+    expect($store->payload('job-1')['steps'][0]['summary'])->toBe('11 tables chargées · build 12.1.5.70448');
+});

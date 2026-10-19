@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Application\Reference;
 
 use App\Infrastructure\Reference\ReferenceStore;
-use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowReferenceDownload;
 
 /**
@@ -32,7 +31,6 @@ final readonly class ReferenceFileInventory
         $classified = $this->referenceFileClassifier->classify(
             $this->referenceStore->sizes(),
             $this->loads(),
-            $this->taxonomyFilenames(),
         );
 
         return [...$classified, 'totals' => $this->totals($classified['files'])];
@@ -97,19 +95,5 @@ final readonly class ReferenceFileInventory
                 'loaded_at' => $wowReferenceDownload->downloaded_at->getTimestamp(),
             ])
             ->all());
-    }
-
-    /**
-     * Les instantanés du tirage amont de la taxonomie, qui partagent ce disque sans
-     * passer par l'inventaire : le client amont écrit directement dessus.
-     *
-     * @return list<string>
-     */
-    private function taxonomyFilenames(): array
-    {
-        return array_map(
-            static fn (CollectionEntity $collectionEntity): string => $collectionEntity->simpleArmoryFile(),
-            CollectionEntity::cases(),
-        );
     }
 }

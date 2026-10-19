@@ -13,10 +13,6 @@ use App\Models\WowCollectionTaxonomy;
  * Le chargement est strictement additif : `insertOrIgnore` laisse en place toute ligne déjà
  * connue, si bien que la première exécution amorce et que les suivantes ne font qu'ajouter les
  * entrées d'un nouveau patch. C'est ce qui permet à un arbitrage manuel de survivre.
- *
- * `load()` prend ses entrées de l'instantané, `loadEntries()` de ce qu'on lui tend : c'est par
- * là qu'un tirage amont fait entrer la curation d'un nouveau patch avant de réexporter
- * l'instantané.
  */
 final readonly class CollectionTaxonomyLoader
 {
@@ -45,7 +41,7 @@ final readonly class CollectionTaxonomyLoader
      * @param  array<int, TaxonomyEntry>  $entries
      * @return array{read: int, inserted: int, skipped: int}
      */
-    public function loadEntries(CollectionEntity $collectionEntity, array $entries): array
+    private function loadEntries(CollectionEntity $collectionEntity, array $entries): array
     {
         $rows = $this->rows($collectionEntity, $entries);
         $inserted = 0;

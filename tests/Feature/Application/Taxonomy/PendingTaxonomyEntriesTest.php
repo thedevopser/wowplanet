@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Taxonomy\PendingTaxonomyEntries;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowPet;
 
@@ -39,7 +40,7 @@ test('a catalogue entry the taxonomy does not carry is pending', function (): vo
     catalogued(7, 'Loup gris');
 
     expect(pending()->forEntity(CollectionEntity::Mount))
-        ->toBe([['id' => 7, 'name' => 'Loup gris', 'pending_source' => null]]);
+        ->toBe([['id' => 7, 'name' => 'Loup gris', 'pending_source' => null, 'pending_category' => null]]);
 });
 
 test('a curated entry is not pending', function (): void {
@@ -123,4 +124,49 @@ test('a search that matches nothing yields nothing rather than everything', func
     catalogued(7, 'Loup gris');
 
     expect(pending()->forEntity(CollectionEntity::Mount, 'griffon'))->toBe([]);
+});
+
+test('a pending decor carries the category its expansion tag suggests', function (): void {
+    WowDecor::query()->create(['id' => 9242, 'name_fr' => 'Caisse de stockage terrestre', 'is_active' => true, 'suggested_category' => 'Shadowlands']);
+
+    expect(pending()->forEntity(CollectionEntity::Decor)[0]['pending_category'])->toBe('Shadowlands');
+});
+
+function suggestedDecor(int $id, ?string $suggestion): void
+{
+    WowDecor::query()->create(['id' => $id, 'name_fr' => 'Décoration '.$id, 'is_active' => true, 'suggested_category' => $suggestion]);
+}
+
+test('the suggestions of the pending decors are counted per category, largest first', function (): void {
+    suggestedDecor(1, 'Midnight');
+    suggestedDecor(2, 'Shadowlands');
+    suggestedDecor(3, 'Shadowlands');
+    suggestedDecor(4, null);
+
+    expect(pending()->suggestions(CollectionEntity::Decor))->toBe([
+        ['category' => 'Shadowlands', 'entries' => 2],
+        ['category' => 'Midnight', 'entries' => 1],
+    ]);
+});
+
+test('a decor already curated no longer counts among the suggestions', function (): void {
+    suggestedDecor(2, 'Shadowlands');
+    curated(CollectionEntity::Decor, 2, 'Shadowlands', 'Vendor');
+
+    expect(pending()->suggestions(CollectionEntity::Decor))->toBe([]);
+});
+
+test('the collections without tags carry no suggestion', function (): void {
+    catalogued(7, 'Loup gris');
+
+    expect(pending()->suggestions(CollectionEntity::Mount))->toBe([]);
+});
+
+test('it names the pending decors a category is suggested for, and only those', function (): void {
+    suggestedDecor(1, 'Midnight');
+    suggestedDecor(2, 'Shadowlands');
+    suggestedDecor(3, 'Shadowlands');
+    curated(CollectionEntity::Decor, 3, 'Shadowlands', 'Vendor');
+
+    expect(pending()->suggestedFor(CollectionEntity::Decor, 'Shadowlands'))->toBe([2]);
 });

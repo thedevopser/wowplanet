@@ -36,8 +36,8 @@ function entryOf(string $source, ?string $liveBuild = null): array
 test('it lists every table of the reference catalogue', function (): void {
     $entries = resolve(ReferenceInventory::class)->entries(null);
 
-    expect($entries)->toHaveCount(8)
-        ->and(array_column($entries, 'source'))->toContain('Faction', 'AreaTable', 'SpellMisc');
+    expect($entries)->toHaveCount(11)
+        ->and(array_column($entries, 'source'))->toContain('Faction', 'AreaTable', 'SpellMisc', 'DataTagXHouseDecorRecord');
 });
 
 test('a table nobody has ever loaded says so rather than showing a zero', function (): void {
