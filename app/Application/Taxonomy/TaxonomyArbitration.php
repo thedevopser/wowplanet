@@ -66,7 +66,7 @@ final readonly class TaxonomyArbitration
 
             $collectionEntity->catalogue()
                 ->whereIn('id', $entryIds)
-                ->update(['category' => $category, 'source' => $source]);
+                ->update($this->ranking($collectionEntity, $category, $source));
 
             return $previous;
         });
@@ -78,6 +78,21 @@ final readonly class TaxonomyArbitration
             'arbitrated' => count($entryIds),
             'snapshot' => $this->export(),
         ];
+    }
+
+    /**
+     * Une décoration rangée n'a plus de suggestion à offrir : la garder la ferait reparaître
+     * si l'entrée revenait un jour en attente, sous une proposition que personne n'a relue.
+     *
+     * @return array<string, string|null>
+     */
+    private function ranking(CollectionEntity $collectionEntity, ?string $category, ?string $source): array
+    {
+        $ranking = ['category' => $category, 'source' => $source];
+
+        return $collectionEntity === CollectionEntity::Decor
+            ? [...$ranking, 'suggested_category' => null]
+            : $ranking;
     }
 
     /**

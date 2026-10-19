@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Taxonomy;
 
+use App\Infrastructure\Reference\ReferenceValue;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
 use App\Models\WowDecor;
@@ -54,6 +55,54 @@ final readonly class PendingTaxonomyEntries
             ],
             $models,
         );
+    }
+
+    /**
+     * Les catégories que les étiquettes du socle proposent aux décorations en attente, avec
+     * le nombre d'entrées de chacune : de quoi tout ranger d'un coup quand la suggestion tient.
+     *
+     * @return list<array{category: string, entries: int}>
+     */
+    public function suggestions(CollectionEntity $collectionEntity): array
+    {
+        if ($collectionEntity !== CollectionEntity::Decor) {
+            return [];
+        }
+
+        $rows = WowDecor::query()
+            ->whereNotIn('id', $this->curatedIds($collectionEntity))
+            ->whereNotNull('suggested_category')
+            ->selectRaw('suggested_category, count(*) as entries')
+            ->groupBy('suggested_category')
+            ->orderByDesc('entries')
+            ->orderBy('suggested_category')
+            ->toBase()
+            ->get();
+
+        return array_values($rows->map(static fn (object $row): array => [
+            'category' => ReferenceValue::string($row->suggested_category ?? null),
+            'entries' => ReferenceValue::int($row->entries ?? null),
+        ])->all());
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function suggestedFor(CollectionEntity $collectionEntity, string $category): array
+    {
+        if ($collectionEntity !== CollectionEntity::Decor) {
+            return [];
+        }
+
+        /** @var list<int> $ids */
+        $ids = WowDecor::query()
+            ->whereNotIn('id', $this->curatedIds($collectionEntity))
+            ->where('suggested_category', $category)
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        return $ids;
     }
 
     /**

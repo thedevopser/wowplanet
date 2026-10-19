@@ -61,6 +61,7 @@ class TaxonomyController extends Controller
                 ...$shared,
                 'entries' => array_slice($pending, 0, self::PER_PAGE),
                 'matched' => count($pending),
+                'suggestions' => $this->pendingTaxonomyEntries->suggestions($entity),
             ]);
         }
 

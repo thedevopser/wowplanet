@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowPet;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -247,5 +248,16 @@ test('a blank category filter is no filter at all', function (): void {
         ->assertInertia(fn (Assert $assert): Assert => $assert
             ->where('category', null)
             ->has('entries', 1)
+            ->etc());
+});
+
+test('the pending decors come with the suggestions they carry, counted per category', function (): void {
+    WowDecor::query()->create(['id' => 9242, 'name_fr' => 'Caisse de stockage terrestre', 'is_active' => true, 'suggested_category' => 'Shadowlands']);
+
+    $this->withSession(['is_admin' => true])
+        ->get('/admin/taxonomy?entity=decor')
+        ->assertInertia(fn (Assert $assert): Assert => $assert
+            ->where('suggestions', [['category' => 'Shadowlands', 'entries' => 1]])
+            ->where('entries.0.pending_category', 'Shadowlands')
             ->etc());
 });

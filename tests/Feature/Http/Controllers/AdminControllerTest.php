@@ -16,6 +16,7 @@ use App\Infrastructure\Reference\ReferenceStore;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Jobs\RunImportJob;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowReferenceDownload;
 use Illuminate\Http\Client\Request;
@@ -915,3 +916,57 @@ test('reloading and downloading the snapshot are closed to anyone but an adminis
     'reload' => ['POST', '/api/admin/taxonomy/load'],
     'download' => ['GET', '/api/admin/taxonomy/snapshot'],
 ]);
+
+function pendingDecor(int $id, ?string $suggestion): void
+{
+    WowDecor::query()->create(['id' => $id, 'name_fr' => 'Décoration '.$id, 'is_active' => true, 'suggested_category' => $suggestion]);
+}
+
+test('accepting a suggestion files every pending decor it is suggested for under it, with no source', function (): void {
+    pendingDecor(1, 'Shadowlands');
+    pendingDecor(2, 'Shadowlands');
+    pendingDecor(3, 'Midnight');
+
+    $this->withSession(adminSession())
+        ->postJson('/api/admin/taxonomy/accept-suggestion', ['entity' => 'decor', 'category' => 'Shadowlands'])
+        ->assertOk()
+        ->assertJsonPath('arbitrated', 2);
+
+    expect(WowDecor::query()->findOrFail(1)->category)->toBe('Shadowlands')
+        ->and(WowDecor::query()->findOrFail(1)->source)->toBeNull()
+        ->and(WowDecor::query()->findOrFail(3)->category)->toBeNull()
+        ->and(WowCollectionTaxonomy::query()->where('entity', 'decor')->pluck('entry_id')->all())->toEqualCanonicalizing([1, 2]);
+});
+
+test('accepting a suggestion leaves one trace for the whole batch', function (): void {
+    pendingDecor(1, 'Shadowlands');
+    pendingDecor(2, 'Shadowlands');
+
+    $this->withSession(adminSession())
+        ->postJson('/api/admin/taxonomy/accept-suggestion', ['entity' => 'decor', 'category' => 'Shadowlands'])
+        ->assertOk();
+
+    expect(auditTrail())->toHaveCount(1)
+        ->and(auditTrail()[0]['context']['entries'])->toBe([1, 2]);
+});
+
+test('accepting a suggestion nobody carries files nothing', function (): void {
+    pendingDecor(1, 'Midnight');
+
+    $this->withSession(adminSession())
+        ->postJson('/api/admin/taxonomy/accept-suggestion', ['entity' => 'decor', 'category' => 'Shadowlands'])
+        ->assertOk()
+        ->assertJsonPath('arbitrated', 0);
+
+    expect(WowCollectionTaxonomy::query()->count())->toBe(0);
+});
+
+test('accepting a suggestion needs the category it accepts', function (): void {
+    $this->withSession(adminSession())
+        ->postJson('/api/admin/taxonomy/accept-suggestion', ['entity' => 'decor'])
+        ->assertUnprocessable();
+});
+
+test('accepting a suggestion is closed to anyone but an administrator', function (): void {
+    $this->postJson('/api/admin/taxonomy/accept-suggestion', ['entity' => 'decor', 'category' => 'Shadowlands'])->assertForbidden();
+});

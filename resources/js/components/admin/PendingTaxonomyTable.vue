@@ -21,7 +21,8 @@
                     </th>
                     <th class="py-2 pr-3 font-medium text-right">ID</th>
                     <th class="py-2 pr-3 font-medium">Nom</th>
-                    <th class="py-2 font-medium">Valeur d'attente</th>
+                    <th class="py-2 pr-3 font-medium">Valeur d'attente</th>
+                    <th v-if="hasSuggestions" class="py-2 font-medium">Suggestion</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,8 +40,12 @@
                     </td>
                     <td class="py-2.5 pr-3 text-right font-mono text-xs tabular-nums text-muted">{{ entry.id }}</td>
                     <td class="py-2.5 pr-3 text-default">{{ entry.name }}</td>
-                    <td data-role="pending-source" class="py-2.5 whitespace-nowrap">
+                    <td data-role="pending-source" class="py-2.5 pr-3 whitespace-nowrap">
                         <Badge v-if="entry.pending_source" tone="warning">{{ entry.pending_source }}</Badge>
+                        <span v-else class="text-subtle">—</span>
+                    </td>
+                    <td v-if="hasSuggestions" data-role="pending-category" class="py-2.5 whitespace-nowrap">
+                        <Badge v-if="entry.pending_category" tone="info">{{ entry.pending_category }}</Badge>
                         <span v-else class="text-subtle">—</span>
                     </td>
                 </tr>
@@ -60,6 +65,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:selected']);
+
+// Seules les décorations portent une suggestion : ailleurs, la colonne serait vide.
+const hasSuggestions = computed(() => props.entries.some(entry => entry.pending_category));
 
 const allSelected = computed(() => props.entries.length > 0
     && props.entries.every(entry => props.selected.includes(entry.id)));

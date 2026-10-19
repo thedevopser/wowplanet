@@ -14,6 +14,7 @@ use App\Application\Import\ImportSignal;
 use App\Application\Import\ImportStage;
 use App\Application\Reference\ReferenceFileInventory;
 use App\Application\Services\AdminService;
+use App\Application\Taxonomy\PendingTaxonomyEntries;
 use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Application\Taxonomy\TaxonomySnapshotExporter;
 use App\Application\Taxonomy\TaxonomySnapshotMerge;
@@ -274,6 +275,35 @@ class AdminController extends Controller
         }
 
         return response()->json($report);
+    }
+
+    /**
+     * Range d'un coup toutes les entrées en attente sous la catégorie que leurs étiquettes
+     * proposent, source vide : la page n'en montre qu'une tranche, la sélection se fait donc
+     * ici. Un seul arbitrage, donc une seule trace d'audit pour le lot.
+     */
+    public function acceptTaxonomySuggestion(Request $request, PendingTaxonomyEntries $pendingTaxonomyEntries): JsonResponse
+    {
+        $entities = implode(',', array_column(CollectionEntity::cases(), 'value'));
+
+        $request->validate([
+            'entity' => ['required', 'string', 'in:'.$entities],
+            'category' => ['required', 'string', 'max:255'],
+        ]);
+
+        /** @var string $entity */
+        $entity = $request->input('entity');
+        $collectionEntity = CollectionEntity::from($entity);
+        /** @var string $category */
+        $category = $request->input('category');
+
+        return response()->json($this->taxonomyArbitration->arbitrate(
+            $collectionEntity,
+            $pendingTaxonomyEntries->suggestedFor($collectionEntity, $category),
+            $category,
+            null,
+            $this->getAuthenticatedUserId() ?? RunImportJob::PANEL_TRIGGER,
+        ));
     }
 
     /**

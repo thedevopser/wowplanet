@@ -261,3 +261,14 @@ test('an export that cannot write keeps the arbitration and says the snapshot dr
 
     unlink($directory);
 });
+
+test('arbitrating a decor clears the category its tags suggested', function (): void {
+    WowDecor::query()->create(['id' => 9242, 'name_fr' => 'Caisse de stockage terrestre', 'is_active' => true, 'suggested_category' => 'Shadowlands']);
+
+    arbitration($this->snapshotPath)->arbitrate(CollectionEntity::Decor, [9242], 'Shadowlands', null, '12345');
+
+    $wowDecor = WowDecor::query()->findOrFail(9242);
+
+    expect($wowDecor->category)->toBe('Shadowlands')
+        ->and($wowDecor->suggested_category)->toBeNull();
+});
