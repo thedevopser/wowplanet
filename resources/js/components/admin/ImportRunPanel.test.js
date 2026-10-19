@@ -97,6 +97,16 @@ describe('ImportRunPanel', () => {
         expect(wrapper.text()).toContain('1 supprimée');
     });
 
+    it('reports what the socle loaded rather than rows it does not count', async () => {
+        const wrapper = await mountPanel({
+            steps: [{ stage: 'reference', label: 'Socle de référence', status: 'completed', percent: 100, created: 0, updated: 0, deleted: 0, api_calls: 0, duration_ms: 23381, error: null, summary: '11 tables chargées · build 12.1.5.70448' }],
+        });
+
+        expect(wrapper.text()).toContain('11 tables chargées · build 12.1.5.70448');
+        expect(wrapper.text()).not.toContain('0 créée');
+        expect(wrapper.text()).not.toContain('0 appels');
+    });
+
     it('offers to pause an import that is running', async () => {
         const wrapper = await mountPanel();
 

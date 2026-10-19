@@ -12,7 +12,7 @@ namespace App\Application\Import;
  * Le résumé textuel qu'elle sait rendre est ce que le panneau d'administration affiche
  * déjà, ce qui enrichit le suivi sans toucher au front.
  *
- * @phpstan-type ImportStepPayload array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null}
+ * @phpstan-type ImportStepPayload array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null, summary?: string|null}
  * @phpstan-type ImportRunPayload array{job_id: string, started_at: int, budget_used: int, wait: array{reason: string, seconds: int, count: int}|null, steps: list<ImportStepPayload>, interruption?: string|null, interrupted_at?: int|null, build?: string|null}
  */
 final readonly class ImportRun
@@ -318,6 +318,10 @@ final readonly class ImportRun
      */
     private function stepFacts(ImportStep $importStep): string
     {
+        if ($importStep->summary !== null) {
+            return sprintf(' · %s · %s', $importStep->summary, $this->duration($importStep->durationMs));
+        }
+
         $facts = [];
 
         if ($importStep->stage->tables() !== []) {

@@ -93,3 +93,19 @@ test('starting a resumable step again keeps the offset it had', function (): voi
     expect($importStep->offset)->toBe(143)
         ->and($importStep->total)->toBe(572);
 });
+
+test('a finished step can carry the summary of a stage that counts no rows', function (): void {
+    $importStep = ImportStep::pending(ImportStage::Reference)
+        ->finished(RowTally::none(), apiCalls: 0, durationMs: 23_381)
+        ->withSummary('11 tables chargées · build 12.1.5.70448');
+
+    expect($importStep->summary)->toBe('11 tables chargées · build 12.1.5.70448')
+        ->and(ImportStep::fromArray($importStep->toArray()))->toEqual($importStep);
+});
+
+test('a step published before it carried a summary reads back without one', function (): void {
+    $payload = ImportStep::pending(ImportStage::Reference)->toArray();
+    unset($payload['summary']);
+
+    expect(ImportStep::fromArray($payload)->summary)->toBeNull();
+});

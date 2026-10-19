@@ -222,7 +222,12 @@ final readonly class ImportPipeline
         $label = $step->stage->label();
 
         $this->note($jobId, match ($step->status) {
-            ImportStepStatus::Completed => sprintf(
+            ImportStepStatus::Completed => $step->summary !== null ? sprintf(
+                '%s — terminée · %s · %d ms.',
+                $label,
+                $step->summary,
+                $step->durationMs,
+            ) : sprintf(
                 '%s — terminée · %d créées, %d mises à jour, %d supprimées · %d appels · %d ms.',
                 $label,
                 $step->rows->created,

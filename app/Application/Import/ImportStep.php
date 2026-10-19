@@ -22,6 +22,7 @@ final readonly class ImportStep
         public int $offset,
         public int $total,
         public ?string $error,
+        public ?string $summary = null,
     ) {}
 
     public static function pending(ImportStage $importStage): self
@@ -88,6 +89,15 @@ final readonly class ImportStep
         return new self($this->stage, ImportStepStatus::Skipped, $this->rows, $this->apiCalls, $this->durationMs, $this->offset, $this->total, null);
     }
 
+    /**
+     * Le compte rendu d'une étape qui ne compte pas de lignes : le socle dit ce qu'il a
+     * chargé, là où trois zéros se liraient « rien ne s'est passé ».
+     */
+    public function withSummary(string $summary): self
+    {
+        return new self($this->stage, $this->status, $this->rows, $this->apiCalls, $this->durationMs, $this->offset, $this->total, $this->error, $summary);
+    }
+
     public function isTerminal(): bool
     {
         return $this->status->isTerminal();
@@ -111,7 +121,7 @@ final readonly class ImportStep
     }
 
     /**
-     * @return array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null}
+     * @return array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null, summary: string|null}
      */
     public function toArray(): array
     {
@@ -126,11 +136,12 @@ final readonly class ImportStep
             'offset' => $this->offset,
             'total' => $this->total,
             'error' => $this->error,
+            'summary' => $this->summary,
         ];
     }
 
     /**
-     * @param  array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null}  $payload
+     * @param  array{stage: string, status: string, created: int, updated: int, deleted: int, api_calls: int, duration_ms: int, offset: int, total: int, error: string|null, summary?: string|null}  $payload
      */
     public static function fromArray(array $payload): self
     {
@@ -151,6 +162,7 @@ final readonly class ImportStep
             $payload['offset'],
             $payload['total'],
             $payload['error'],
+            $payload['summary'] ?? null,
         );
     }
 }

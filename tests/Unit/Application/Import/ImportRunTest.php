@@ -435,3 +435,11 @@ test('a long estimate is given in minutes', function (): void {
 
     expect(explode(PHP_EOL, $summary)[1])->toEndWith(' · reste ~16 min 40 s');
 });
+
+test('the reference socle reports what it loaded instead of rows and Blizzard calls', function (): void {
+    $summary = runOf(ImportStage::Reference)
+        ->withStep(ImportStep::pending(ImportStage::Reference)->finished(RowTally::none(), 0, 23_381)->withSummary('11 tables chargées · build 12.1.5.70448'))
+        ->summary(now: 1_030);
+
+    expect(explode(PHP_EOL, $summary))->toContain('✓  Socle de référence — 11 tables chargées · build 12.1.5.70448 · 23 s');
+});

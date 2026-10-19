@@ -91,6 +91,8 @@ Ce qu'une étape a fait : son état, ses lignes, ses appels API, son temps, et s
 
 `ImportStepStatus` vaut `pending`, `running`, `completed`, `failed` ou `skipped`. **`skipped` est terminal sans être un échec** : c'est la porte de build qui a constaté qu'il n'y avait rien à refaire.
 
+Une étape qui ne compte pas de lignes porte un **`summary`** à la place : le socle y dit ce que sa synchronisation a chargé (« 11 tables chargées · build 12.1.5.70448 »), relu par `ImportStageRunner` sur les entrées de `wow_reference_downloads` écrites depuis le début de l'étape — arrondi à la seconde, la précision de leurs horodatages. Le journal, le résumé de `ImportRun` et le panneau de suivi l'affichent au lieu des décomptes et des appels, qui s'y liraient « rien ne s'est passé ». Le résumé n'est pas archivé : l'historique, qui n'en a pas la colonne, affiche un tiret à la place des lignes du socle.
+
 ### `RowTally` et `RowTallyCounter`
 
 Lignes créées, mises à jour et supprimées par une étape, **mesurées sur la base plutôt que rapportées par les importers**.

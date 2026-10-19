@@ -25,6 +25,7 @@ use App\Models\ImportHistoryEntry;
 use App\Models\ImportHistoryStep;
 use App\Models\WowImportState;
 use App\Models\WowPet;
+use App\Models\WowReferenceDownload;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -628,3 +629,34 @@ test('a forced import tells its stages so, a plain one does not', function (bool
         limit: null,
     );
 })->with([true, false]);
+
+test('the journal says which tables the socle loaded and under which build, not three zeros', function (): void {
+    Artisan::shouldReceive('call')->once()->andReturnUsing(function (): int {
+        foreach (['Faction', 'Mount'] as $source) {
+            WowReferenceDownload::factory()->create(['source_table' => $source, 'build' => '12.1.5.70448', 'downloaded_at' => now()]);
+        }
+
+        return 0;
+    });
+    Artisan::shouldReceive('output')->andReturn('');
+
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: true, trigger: 'console'), false, true, null);
+
+    expect($importRun->step(ImportStage::Reference)->summary)->toBe('2 tables chargées · build 12.1.5.70448')
+        ->and(journal('job-1'))->toContain('Socle de référence — terminée · 2 tables chargées · build 12.1.5.70448 · ')
+        ->and(journal('job-1'))->not->toContain('0 créées');
+});
+
+test('a load done before the socle stage began is not counted in its summary', function (): void {
+    WowReferenceDownload::factory()->create(['source_table' => 'Faction', 'build' => '12.1.0.69933', 'downloaded_at' => now()->subWeek()]);
+    Artisan::shouldReceive('call')->once()->andReturnUsing(function (): int {
+        WowReferenceDownload::factory()->create(['source_table' => 'Mount', 'build' => '12.1.5.70448', 'downloaded_at' => now()]);
+
+        return 0;
+    });
+    Artisan::shouldReceive('output')->andReturn('');
+
+    $importRun = pipeline()->advance(pipeline()->begin('job-1', [ImportStage::Reference], force: true, trigger: 'console'), false, true, null);
+
+    expect($importRun->step(ImportStage::Reference)->summary)->toBe('1 table chargée · build 12.1.5.70448');
+});

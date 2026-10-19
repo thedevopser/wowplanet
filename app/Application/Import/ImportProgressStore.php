@@ -123,6 +123,7 @@ final readonly class ImportProgressStore
                 'api_calls' => $importStep->apiCalls,
                 'duration_ms' => $importStep->durationMs,
                 'error' => $importStep->error,
+                'summary' => $importStep->summary,
             ], $importRun->steps),
         ];
     }

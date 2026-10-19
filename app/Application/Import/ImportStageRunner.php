@@ -14,6 +14,8 @@ use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomyLoader;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowReferenceDownload;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 
 /**
@@ -69,7 +71,35 @@ final readonly class ImportStageRunner
             );
         }
 
-        return new ImportStageResult($importStep->finished($tally, $calls, $durationMs), null);
+        $finished = $importStep->finished($tally, $calls, $durationMs);
+        $summary = $importStep->stage === ImportStage::Reference ? $this->referenceSummary($startedAt) : null;
+
+        return new ImportStageResult($summary === null ? $finished : $finished->withSummary($summary), null);
+    }
+
+    /**
+     * Ce que la synchronisation a chargé, relu sur l'inventaire de ses chargements. Les
+     * horodatages y sont à la seconde : le début de l'étape est arrondi d'autant, sans quoi
+     * une table chargée dans la seconde du lancement passerait pour antérieure.
+     */
+    private function referenceSummary(Carbon $startedAt): ?string
+    {
+        $builds = WowReferenceDownload::query()
+            ->where('downloaded_at', '>=', $startedAt->copy()->startOfSecond())
+            ->pluck('build');
+
+        if ($builds->isEmpty()) {
+            return null;
+        }
+
+        $tables = $builds->count();
+
+        return sprintf(
+            '%d %s · build %s',
+            $tables,
+            $tables > 1 ? 'tables chargées' : 'table chargée',
+            $builds->unique()->sort()->implode(', '),
+        );
     }
 
     /**
