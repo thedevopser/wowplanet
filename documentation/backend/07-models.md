@@ -153,6 +153,7 @@ Décoration de logement WoW. ID Blizzard comme clé primaire.
 | `item_id` | `int?` | ID de l'objet associé |
 | `icon_url` | `string?` | URL de l'icône |
 | `is_active` | `bool` | Toujours disponible |
+| `suggested_category` | `string?` | Extension proposée par les étiquettes du socle à une décoration en attente d'arbitrage ; nulle dès que la taxonomie la range |
 
 ---
 

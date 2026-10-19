@@ -413,7 +413,7 @@ Chaque importeur lit les données sources, les transforme et les sauvegarde via 
 | `AchievementImporter` | hiérarchie `achievement-category` + détail de chaque haut fait + balayage des media | `WowAchievement` |
 | `MountImporter` | `mount/index` + balayage `search/mount` + taxonomie curée + socle pour le sort et l'icône | `WowMount` |
 | `PetImporter` | `pet/index` + détail de chaque mascotte + taxonomie curée | `WowPet` |
-| `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée | `WowDecor` |
+| `DecorImporter` | `decor/index` + balayage `search/decor` + balayage des media d'items + taxonomie curée + socle pour l'extension suggérée | `WowDecor` |
 | `QuestImporter` | API Blizzard (liste par zone) + DB2 area/quest maps, sans les quêtes au nom interne, supprimées si déjà en base ; détail des quêtes miroir pas encore jugées | `WowQuest` |
 | `ProfessionImporter` | `skill_line_ability.csv` + API Blizzard | `WowProfession`, `WowRecipe` |
 
@@ -426,6 +426,8 @@ Pour les trois collections, le partage d'autorité est explicite : **l'API tranc
 **Les mascottes sont le seul cas sans endpoint de recherche.** `data/wow/search/pet` répond 404 : leur identité vient du détail, un appel par mascotte. C'est sans regret, ce détail étant le seul des trois à porter l'icône en clair, avec l'identifiant de créature du lien Wowhead.
 
 **Le marqueur d'obtention des décorations est de la curation, jamais de l'API.** L'API atteste qu'une décoration existe, jamais qu'un joueur peut encore l'obtenir : un événement de pré-lancement clos ou une promotion retirée laissent une entrée hors d'atteinte, qui compterait au dénominateur et rendrait le 100 % inatteignable. Il vit donc dans la taxonomie, colonne `obtainable`. Les montures et les mascottes ne le lisent pas : leurs fichiers curés le portent, mais aucun import ne l'a jamais appliqué sur ces deux entités.
+
+**Une décoration en attente d'arbitrage arrive avec une catégorie suggérée.** `ReferenceMaps::decorExpansions()` tire du socle l'étiquette d'extension de la décoration, et l'importer la pose dans `suggested_category`, jamais dans `category` : une suggestion ne range rien, sans quoi le catalogue et le score compteraient comme rangée une entrée que personne n'a arbitrée. Une décoration curée n'en porte pas, même quand ses étiquettes en proposeraient une autre. `PendingTaxonomyEntries` la rend sous `pending_category`, à côté de `pending_source`.
 
 ---
 

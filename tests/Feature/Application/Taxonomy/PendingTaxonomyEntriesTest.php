@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Taxonomy\PendingTaxonomyEntries;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Models\WowCollectionTaxonomy;
+use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowPet;
 
@@ -39,7 +40,7 @@ test('a catalogue entry the taxonomy does not carry is pending', function (): vo
     catalogued(7, 'Loup gris');
 
     expect(pending()->forEntity(CollectionEntity::Mount))
-        ->toBe([['id' => 7, 'name' => 'Loup gris', 'pending_source' => null]]);
+        ->toBe([['id' => 7, 'name' => 'Loup gris', 'pending_source' => null, 'pending_category' => null]]);
 });
 
 test('a curated entry is not pending', function (): void {
@@ -123,4 +124,10 @@ test('a search that matches nothing yields nothing rather than everything', func
     catalogued(7, 'Loup gris');
 
     expect(pending()->forEntity(CollectionEntity::Mount, 'griffon'))->toBe([]);
+});
+
+test('a pending decor carries the category its expansion tag suggests', function (): void {
+    WowDecor::query()->create(['id' => 9242, 'name_fr' => 'Caisse de stockage terrestre', 'is_active' => true, 'suggested_category' => 'Shadowlands']);
+
+    expect(pending()->forEntity(CollectionEntity::Decor)[0]['pending_category'])->toBe('Shadowlands');
 });

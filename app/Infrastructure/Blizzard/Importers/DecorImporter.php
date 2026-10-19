@@ -11,6 +11,7 @@ use App\Infrastructure\Blizzard\MediaSearchSweep;
 use App\Infrastructure\Blizzard\MediaSearchTag;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\SearchIdWindow;
+use App\Infrastructure\Reference\ReferenceMaps;
 use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomyReader;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
@@ -48,6 +49,7 @@ final readonly class DecorImporter
         private CollectionTaxonomyReader $collectionTaxonomyReader,
         private CollectionSearchSweep $collectionSearchSweep,
         private MediaSearchSweep $mediaSearchSweep,
+        private ReferenceMaps $referenceMaps,
     ) {
         $this->blizzardApiClient = $blizzardApiClient;
     }
@@ -66,6 +68,7 @@ final readonly class DecorImporter
             $itemIds,
             $this->fetchItemIcons($itemIds),
             $this->collectionTaxonomyReader->for(CollectionEntity::Decor),
+            $this->referenceMaps->decorExpansions(),
             $this->existingRows(),
         );
 
@@ -166,13 +169,13 @@ final readonly class DecorImporter
     }
 
     /**
-     * @return array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool}>
+     * @return array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
      */
     private function existingRows(): array
     {
         $rows = [];
 
-        foreach (WowDecor::query()->get(['id', 'name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active']) as $decor) {
+        foreach (WowDecor::query()->get(['id', 'name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category']) as $decor) {
             $rows[$decor->id] = [
                 'name_fr' => $decor->name_fr,
                 'category' => $decor->category,
@@ -180,6 +183,7 @@ final readonly class DecorImporter
                 'item_id' => $decor->item_id,
                 'icon_url' => $decor->icon_url,
                 'is_active' => $decor->is_active,
+                'suggested_category' => $decor->suggested_category,
             ];
         }
 
@@ -191,13 +195,15 @@ final readonly class DecorImporter
      * @param  array<int, int>  $itemIds
      * @param  array<int, string>  $icons
      * @param  array<int, TaxonomyEntry>  $taxonomy
-     * @param  array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool}>  $existing
-     * @return list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool}>
+     * @param  array<int, string>  $expansions  Extension suggérée par les étiquettes du socle
+     * @param  array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $existing
+     * @return list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
      */
-    private function buildRows(array $names, array $itemIds, array $icons, array $taxonomy, array $existing): array
+    private function buildRows(array $names, array $itemIds, array $icons, array $taxonomy, array $expansions, array $existing): array
     {
         $rows = [];
         $awaitingArbitration = 0;
+        $suggested = 0;
         $inactive = 0;
         $unchanged = 0;
 
@@ -217,7 +223,13 @@ final readonly class DecorImporter
                 'item_id' => $itemId,
                 'icon_url' => ($itemId === null ? null : $icons[$itemId] ?? null) ?? $previous['icon_url'] ?? null,
                 'is_active' => $entry->obtainable ?? true,
+                // Une suggestion n'a de sens qu'en attente d'arbitrage : la curation tranche.
+                'suggested_category' => $entry instanceof TaxonomyEntry ? null : $expansions[$id] ?? null,
             ];
+
+            if ($row['suggested_category'] !== null) {
+                $suggested++;
+            }
 
             if (! $row['is_active']) {
                 $inactive++;
@@ -233,13 +245,13 @@ final readonly class DecorImporter
         }
 
         $this->info(sprintf('  %d decors in catalog, %d not obtainable, %d already up to date.', count($names), $inactive, $unchanged));
-        $this->info(sprintf('  %d awaiting arbitration (absent from the taxonomy).', $awaitingArbitration));
+        $this->info(sprintf('  %d awaiting arbitration (absent from the taxonomy), %d with a suggested category.', $awaitingArbitration, $suggested));
 
         return $rows;
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool}>  $rows
+     * @param  list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $rows
      * @param  list<int>  $catalogIds
      */
     private function saveRows(array $rows, array $catalogIds): void
@@ -250,7 +262,7 @@ final readonly class DecorImporter
             WowDecor::query()->upsert(
                 $chunk,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active'],
+                update: ['name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category'],
             );
         }
 

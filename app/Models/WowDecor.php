@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $item_id
  * @property string|null $icon_url
  * @property bool $is_active
+ * @property string|null $suggested_category
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
     'item_id',
     'icon_url',
     'is_active',
+    'suggested_category',
 ])]
 #[Table(name: 'wow_decors', key: 'id')]
 #[WithoutIncrementing]

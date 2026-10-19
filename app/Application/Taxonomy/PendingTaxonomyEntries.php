@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 final readonly class PendingTaxonomyEntries
 {
     /**
-     * @return list<array{id: int, name: string, pending_source: string|null}>
+     * @return list<array{id: int, name: string, pending_source: string|null, pending_category: string|null}>
      */
     public function forEntity(CollectionEntity $collectionEntity, ?string $search = null): array
     {
@@ -35,15 +35,25 @@ final readonly class PendingTaxonomyEntries
 
         CatalogueSearch::apply($builder, $search);
 
-        return array_values($builder->get(['id', 'name_fr', 'source'])
-            ->map(static fn (WowMount|WowPet|WowDecor $model): array => [
+        $columns = $collectionEntity === CollectionEntity::Decor
+            ? ['id', 'name_fr', 'source', 'suggested_category']
+            : ['id', 'name_fr', 'source'];
+
+        /** @var list<WowMount|WowPet|WowDecor> $models */
+        $models = $builder->get($columns)->all();
+
+        return array_map(
+            static fn (WowMount|WowPet|WowDecor $model): array => [
                 'id' => $model->id,
                 'name' => $model->name_fr,
                 // La valeur d'attente que l'importer a posée depuis le type de source de
                 // l'API : elle oriente l'arbitrage sans le décider.
                 'pending_source' => $model->source,
-            ])
-            ->all());
+                // Seules les décorations en portent une, tirée des étiquettes du socle.
+                'pending_category' => $model instanceof WowDecor ? $model->suggested_category : null,
+            ],
+            $models,
+        );
     }
 
     /**
