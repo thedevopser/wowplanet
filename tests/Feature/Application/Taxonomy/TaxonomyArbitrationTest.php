@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Application\Services\DatabaseQueryService;
+use App\Application\Taxonomy\CatalogueRanking;
 use App\Application\Taxonomy\TaxonomyArbitration;
 use App\Application\Taxonomy\TaxonomySnapshotExporter;
 use App\Application\Taxonomy\UnknownCollectionEntryException;
@@ -34,6 +35,7 @@ function arbitration(string $path): TaxonomyArbitration
         new TaxonomySnapshotExporter(new CollectionTaxonomySnapshot($path)),
         resolve(AdminAudit::class),
         resolve(DatabaseQueryService::class),
+        new CatalogueRanking,
     );
 }
 
