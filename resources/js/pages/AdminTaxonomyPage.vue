@@ -103,7 +103,7 @@
                         :disabled="busy"
                         @click="acceptSuggestion(suggestion.category)"
                     >
-                        Ranger les {{ formatCount(suggestion.entries) }} en « {{ suggestion.category }} »
+                        Ranger {{ formatCount(suggestion.entries) }} entrée{{ suggestion.entries > 1 ? 's' : '' }} en « {{ suggestion.category }} »
                     </Button>
                 </div>
             </div>

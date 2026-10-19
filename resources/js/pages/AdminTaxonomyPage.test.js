@@ -433,6 +433,12 @@ describe('AdminTaxonomyPage, suggestions', () => {
         expect(actions[0].text()).toContain('84');
     });
 
+    it('names a single suggested entry in the singular', async () => {
+        const wrapper = await decorPage({ suggestions: [{ category: 'Midnight', entries: 1 }] });
+
+        expect(wrapper.get('[data-action="accept-suggestion"]').text()).toBe('Ranger 1 entrée en « Midnight »');
+    });
+
     it('files a whole suggestion through the server, since the page shows only a slice', async () => {
         axios.post = vi.fn().mockResolvedValue({ data: { arbitrated: 84, snapshot: props().snapshot } });
 
