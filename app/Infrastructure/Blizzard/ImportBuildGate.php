@@ -25,15 +25,8 @@ final class ImportBuildGate
             ->exists();
     }
 
-    public function remember(string $entity, string $build, ?string $lastModified = null): void
+    public function remember(string $entity, string $build): void
     {
-        WowImportState::query()->updateOrCreate(['entity' => $entity], ['build' => $build, 'last_modified' => $lastModified, 'imported_at' => Date::now()]);
-    }
-
-    public function lastModifiedFor(string $entity): ?string
-    {
-        $state = WowImportState::query()->where('entity', $entity)->first();
-
-        return $state?->last_modified;
+        WowImportState::query()->updateOrCreate(['entity' => $entity], ['build' => $build, 'imported_at' => Date::now()]);
     }
 }

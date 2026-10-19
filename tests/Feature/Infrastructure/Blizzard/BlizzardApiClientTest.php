@@ -426,40 +426,6 @@ test('getCurrentPvpSeasonId returns 0 when the index has no current season', fun
 
 // ─── build servi par l'API ──────────────────────────────────
 
-test('it records the build served with each response', function (): void {
-    Cache::put('blizzard_access_token', 'my-token', 3600);
-
-    $mockHandler = new MockHandler([
-        new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
-    ]);
-
-    $guzzle = new Client(['handler' => HandlerStack::create($mockHandler), 'base_uri' => 'https://eu.api.blizzard.com/']);
-    $client = new BlizzardApiClient($guzzle);
-
-    expect($client->lastSeenBuild())->toBeNull();
-
-    $client->get('data/wow/quest/1');
-
-    expect($client->lastSeenBuild())->toBe('12.1.0_68914');
-});
-
-test('a response without a versioned namespace leaves the last seen build alone', function (): void {
-    Cache::put('blizzard_access_token', 'my-token', 3600);
-
-    $mockHandler = new MockHandler([
-        new Response(200, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], '{}'),
-        new Response(200, ['battlenet-namespace' => 'profile-eu'], '{}'),
-    ]);
-
-    $guzzle = new Client(['handler' => HandlerStack::create($mockHandler), 'base_uri' => 'https://eu.api.blizzard.com/']);
-    $client = new BlizzardApiClient($guzzle);
-
-    $client->get('data/wow/quest/1');
-    $client->get('profile/user/wow');
-
-    expect($client->lastSeenBuild())->toBe('12.1.0_68914');
-});
-
 test('currentBuild probes a lightweight index when nothing has been fetched yet', function (): void {
     Cache::put('blizzard_access_token', 'my-token', 3600);
 
@@ -510,58 +476,6 @@ test('currentBuild reads the build of its own probe, not one left by an earlier 
     $client->get('data/wow/quest/1');
 
     expect($client->currentBuild())->toBeNull();
-});
-
-// ─── requêtes conditionnelles ───────────────────────────────
-
-test('a conditional request sends If-Modified-Since when a date is known', function (): void {
-    Cache::put('blizzard_access_token', 'my-token', 3600);
-
-    $history = [];
-    $mockHandler = new MockHandler([
-        new Response(200, ['Last-Modified' => 'Wed, 10 Sep 2026 08:00:00 GMT'], '{"id":1}'),
-    ]);
-    $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(Middleware::history($history));
-
-    $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
-    $client = new BlizzardApiClient($guzzle);
-
-    $payload = $client->getIfModifiedSince('data/wow/mount/index', 'Tue, 09 Sep 2026 08:00:00 GMT');
-
-    expect($payload?->requiredInt('id'))->toBe(1)
-        ->and($history[0]['request']->getHeaderLine('If-Modified-Since'))->toBe('Tue, 09 Sep 2026 08:00:00 GMT')
-        ->and($client->lastModifiedSeen())->toBe('Wed, 10 Sep 2026 08:00:00 GMT');
-});
-
-test('a conditional request without a known date sends no If-Modified-Since', function (): void {
-    Cache::put('blizzard_access_token', 'my-token', 3600);
-
-    $history = [];
-    $mockHandler = new MockHandler([new Response(200, [], '{"id":1}')]);
-    $handlerStack = HandlerStack::create($mockHandler);
-    $handlerStack->push(Middleware::history($history));
-
-    $guzzle = new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']);
-    $client = new BlizzardApiClient($guzzle);
-
-    $client->getIfModifiedSince('data/wow/mount/index', null);
-
-    expect($history[0]['request']->hasHeader('If-Modified-Since'))->toBeFalse();
-});
-
-test('a 304 means unchanged, not an error', function (): void {
-    Cache::put('blizzard_access_token', 'my-token', 3600);
-
-    $mockHandler = new MockHandler([
-        new Response(304, ['battlenet-namespace' => 'static-12.1.0_68914-eu'], ''),
-    ]);
-
-    $guzzle = new Client(['handler' => HandlerStack::create($mockHandler), 'base_uri' => 'https://eu.api.blizzard.com/']);
-    $client = new BlizzardApiClient($guzzle);
-
-    expect($client->getIfModifiedSince('data/wow/mount/index', 'Tue, 09 Sep 2026 08:00:00 GMT'))->toBeNull()
-        ->and($client->lastSeenBuild())->toBe('12.1.0_68914');
 });
 
 // ─── saisons relues du cache ────────────────────────────────

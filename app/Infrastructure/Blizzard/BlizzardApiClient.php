@@ -22,8 +22,6 @@ use Throwable;
 
 class BlizzardApiClient
 {
-    private const int NOT_MODIFIED = 304;
-
     /** Le plus petit index statique du catalogue : treize entrées pour lire un en-tête. */
     private const string BUILD_PROBE_ENDPOINT = 'data/wow/playable-class/index';
 
@@ -38,10 +36,6 @@ class BlizzardApiClient
     private readonly string $region;
 
     private readonly string $namespace;
-
-    private ?string $lastSeenBuild = null;
-
-    private ?string $lastModifiedSeen = null;
 
     public function __construct(private readonly Client $client)
     {
@@ -124,10 +118,7 @@ class BlizzardApiClient
     {
         [$endpoint, $query] = $this->mergeEndpointQuery($endpoint, $query);
 
-        $response = $this->send($endpoint, $query);
-        $this->recordBuild($response);
-
-        return $this->decode($endpoint, $response);
+        return $this->decode($endpoint, $this->send($endpoint, $query));
     }
 
     /**
@@ -148,57 +139,6 @@ class BlizzardApiClient
         ]);
     }
 
-    public function lastSeenBuild(): ?string
-    {
-        return $this->lastSeenBuild;
-    }
-
-    public function lastModifiedSeen(): ?string
-    {
-        return $this->lastModifiedSeen;
-    }
-
-    /**
-     * Revalidation d'un index : rend `null` quand Blizzard répond 304, ce qui veut dire
-     * inchangé et non échoué. Le corps d'un 304 étant vide, il ne doit jamais atteindre
-     * le décodage JSON.
-     *
-     * @param  array<string, string>  $query
-     *
-     * @throws GuzzleException
-     */
-    public function getIfModifiedSince(string $endpoint, ?string $lastModified, array $query = []): ?ResponsePayload
-    {
-        $accessToken = $this->getAccessToken();
-
-        [$endpoint, $query] = $this->mergeEndpointQuery($endpoint, $query);
-        $namespace = is_string($query['namespace'] ?? null) ? $query['namespace'] : $this->namespace;
-
-        $headers = [
-            'Authorization' => 'Bearer '.$accessToken,
-            'Battlenet-Namespace' => $namespace,
-        ];
-
-        if ($lastModified !== null) {
-            $headers['If-Modified-Since'] = $lastModified;
-        }
-
-        $response = $this->client->get($endpoint, [
-            'headers' => $headers,
-            'query' => array_merge(['locale' => 'fr_FR'], $query),
-        ]);
-
-        $this->recordBuild($response);
-
-        if ($response->getStatusCode() === self::NOT_MODIFIED) {
-            return null;
-        }
-
-        $this->lastModifiedSeen = $response->getHeaderLine('Last-Modified') ?: null;
-
-        return ResponsePayload::forEndpoint($endpoint, $this->decode($endpoint, $response));
-    }
-
     /**
      * Le build sert à décider s'il y a lieu d'importer : il est relu à chaque appel. Le
      * client est un singleton, et le worker de queue vit d'un patch à l'autre — un build
@@ -211,15 +151,6 @@ class BlizzardApiClient
         $response = $this->send(self::BUILD_PROBE_ENDPOINT, ['namespace' => 'static-'.$this->region]);
 
         return BlizzardNamespace::build($response->getHeaderLine('battlenet-namespace'));
-    }
-
-    private function recordBuild(ResponseInterface $response): void
-    {
-        $build = BlizzardNamespace::build($response->getHeaderLine('battlenet-namespace'));
-
-        if ($build !== null) {
-            $this->lastSeenBuild = $build;
-        }
     }
 
     /**

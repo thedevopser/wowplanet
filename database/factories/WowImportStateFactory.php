@@ -22,7 +22,6 @@ class WowImportStateFactory extends Factory
         return [
             'entity' => fake()->unique()->randomElement(['quests', 'mounts', 'pets', 'decor', 'professions']),
             'build' => sprintf('12.1.0_%d', fake()->numberBetween(60000, 69999)),
-            'last_modified' => null,
             'imported_at' => now(),
         ];
     }

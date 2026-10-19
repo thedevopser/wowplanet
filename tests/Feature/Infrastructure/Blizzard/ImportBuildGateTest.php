@@ -43,11 +43,3 @@ test('remembering an entity twice keeps one row and the latest build', function 
     expect(WowImportState::query()->where('entity', 'quests')->count())->toBe(1)
         ->and($gate->isUpToDate('quests', '12.1.0_68914'))->toBeTrue();
 });
-
-test('it keeps the last modified header alongside the build', function (): void {
-    $gate = new ImportBuildGate;
-    $gate->remember('quests', '12.1.0_68914', 'Wed, 10 Sep 2026 08:00:00 GMT');
-
-    expect($gate->lastModifiedFor('quests'))->toBe('Wed, 10 Sep 2026 08:00:00 GMT')
-        ->and($gate->lastModifiedFor('recipes'))->toBeNull();
-});

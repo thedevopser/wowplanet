@@ -22,7 +22,6 @@ use Illuminate\Support\Carbon;
  *
  * @property string $entity
  * @property string $build
- * @property string|null $last_modified
  * @property Carbon $imported_at
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
@@ -30,7 +29,6 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'entity',
     'build',
-    'last_modified',
     'imported_at',
 ])]
 #[Table(name: 'wow_import_states', key: 'entity', keyType: 'string')]

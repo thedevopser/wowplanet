@@ -17,11 +17,9 @@ Client HTTP vers l'API Blizzard (OAuth2 client credentials). Gère automatiqueme
 | `getAccessToken()` | — | `string` | Retourne le token d'accès, le renouvelle si expiré. |
 | `get()` | `string $endpoint, array<string, string> $query` | `array<array-key, mixed>` | Requête GET synchrone avec token application, réponse décodée brute. Ceux qui mettent en cache des données plutôt que des objets (journal d'instance, arbre de talents) la gardent telle quelle ; les autres appelants l'enveloppent aussitôt dans un `ResponsePayload`. C'est l'une des frontières de `mixed-boundaries.txt`. |
 | `getResponse()` | `string $endpoint, array<string, string> $query` | `ResponsePayload` | La porte typée : la même requête, lue par un `ResponsePayload`. C'est le chemin par défaut. |
-| `getIfModifiedSince()` | `string $endpoint, ?string $lastModified, array<string, string> $query` | `?ResponsePayload` | Revalidation d'un index par `If-Modified-Since`. Rend `null` sur un 304, qui veut dire *inchangé* et non *échoué* : le corps vide d'un 304 n'atteint jamais le décodage JSON. |
 | `getWithUserToken()` | `string $endpoint, string $userToken, array<string, string> $query` | `ResponsePayload` | Requête GET avec token utilisateur (OAuth2 user flow). |
 | `getAsync()` | `string $endpoint, array $query` | `PromiseInterface` | Requête GET asynchrone (Guzzle promise). |
 | `currentBuild()` | — | `?string` | Le build WoW servi par l'API, lu dans l'en-tête `battlenet-namespace` (voir `BlizzardNamespace`). Relu à chaque appel par une sonde sur `playable-class/index` : le client est un singleton et le worker de queue vit d'un patch à l'autre, un build gardé en mémoire ferait sauter chaque étape jusqu'au redémarrage. |
-| `lastSeenBuild()`, `lastModifiedSeen()` | — | `?string` | Le dernier build et le dernier `Last-Modified` vus passer, que l'import retient pour sa prochaine revalidation (`ImportBuildGate`). |
 | `getRegion()` | — | `string` | Région configurée (ex. : `eu`). |
 | `getCurrentMythicSeasonId()`, `getCurrentPvpSeasonId()` | — | `int` | Saison Mythique+ ou JcJ courante. `0` hors saison, valeur d'absence attendue par les appelants. |
 | `getCurrentMythicDungeons()` | — | `list<MythicDungeon>` | Donjons de la rotation Mythique+ de la saison, en cache 24 h. Liste vide si l'appel échoue ou si l'index est vide, et dans ce cas rien n'est mis en cache. |
@@ -43,8 +41,7 @@ Décide s'il y a lieu de réimporter une entité, en comparant le build servi pa
 | Méthode | Retour | Description |
 |---|---|---|
 | `isUpToDate(string $entity, ?string $currentBuild)` | `bool` | Faux si l'entité n'a jamais été importée, si son build diffère, ou si le build courant est inconnu — dans le doute on importe. |
-| `remember(string $entity, string $build, ?string $lastModified)` | `void` | Enregistre le build d'un import réussi. |
-| `lastModifiedFor(string $entity)` | `string\|null` | Date à renvoyer en `If-Modified-Since` à la prochaine revalidation. |
+| `remember(string $entity, string $build)` | `void` | Enregistre le build d'un import réussi. |
 
 L'état vit dans `wow_import_states`, **en base et non en cache** : c'est un état d'import, il doit survivre à un `cache:clear`. Il est tenu **par entité et non globalement**, parce qu'un patch peut ne toucher que les recettes et que réimporter les 22 000 apparences pour autant serait absurde.
 
