@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { enableAutoUnmount } from '@vue/test-utils';
 
 vi.mock('@inertiajs/vue3', async () => {
     const { reactive } = await import('vue');
@@ -37,6 +38,10 @@ const mountLayout = (options = {}) => mountWithPlugins(AppLayout, {
     slots: { default: '<p>Contenu de la page</p>' },
     ...options,
 });
+
+// Every layout watches the same mocked page: one left mounted would answer the flash
+// messages of the next test, into a store that test may then be handed.
+enableAutoUnmount(afterEach);
 
 beforeEach(() => {
     __page.url = '/';
