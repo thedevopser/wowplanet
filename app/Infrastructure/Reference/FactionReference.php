@@ -45,6 +45,12 @@ class FactionReference
     private const int STORMWIND_FACTION_ID = 72;
 
     /**
+     * Points d'un niveau de renom classique. Les périples saisonniers (gouffres, traque,
+     * labyrinthe) en prennent un autre, et l'API ne les renvoie jamais par personnage.
+     */
+    private const int STANDARD_RENOWN_LEVEL_THRESHOLD = 2500;
+
+    /**
      * @var list<array{id: int, name: string, reputation_index: int, parent_faction_id: int, renown_currency_id: int, friendship_rep_id: int, reputation_max_0: int, reputation_max_1: int, race_mask_low: int|null, race_mask_high: int|null}>|null
      */
     private ?array $rows = null;
@@ -182,8 +188,18 @@ class FactionReference
             $this->rows(),
             fn (array $row): bool => $row['reputation_index'] >= 0
                 && $row['parent_faction_id'] !== 0
-                && ! $this->isExcluded($row['name']),
+                && ! $this->isExcluded($row['name'])
+                && ! $this->isSeasonalJourney($row),
         ));
+    }
+
+    /**
+     * @param  array{renown_currency_id: int, reputation_max_0: int}  $row
+     */
+    private function isSeasonalJourney(array $row): bool
+    {
+        return $row['renown_currency_id'] !== 0
+            && $row['reputation_max_0'] !== self::STANDARD_RENOWN_LEVEL_THRESHOLD;
     }
 
     /**
@@ -211,8 +227,8 @@ class FactionReference
     }
 
     /**
-     * Réputations que l'endpoint `/reputations` de l'API ne retourne jamais : les compter
-     * au dénominateur rendrait le 100 % inatteignable.
+     * Réputations que l'endpoint `/reputations` de l'API ne retourne jamais, repérées par
+     * leur nom : les compter au dénominateur rendrait le 100 % inatteignable.
      */
     private function isExcluded(string $name): bool
     {
