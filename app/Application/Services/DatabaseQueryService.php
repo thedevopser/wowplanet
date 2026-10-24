@@ -214,24 +214,19 @@ class DatabaseQueryService
      */
     public function professions(): array
     {
-        $result = WowProfession::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'type'])
-            ->orderBy('name_fr')
-            ->get()
+        $result = $this->listedProfessions()
             ->map(fn (WowProfession $wowProfession): array => [
                 'id' => $wowProfession->id,
                 'name_fr' => $wowProfession->name_fr,
                 'type' => $wowProfession->type,
                 'slug' => $this->slugify($wowProfession->name_fr),
-                'recipe_count' => WowRecipe::query()->where('is_active', true)
-                    ->where('profession_id', $wowProfession->id)
-                    ->count(),
+                'recipe_count' => $wowProfession->active_recipes_count,
             ])
             ->all();
 
         return [
             'professions' => $result,
-            'total_professions' => WowProfession::query()->where('is_active', true)->count(),
+            'total_professions' => count($result),
             'total_recipes' => WowRecipe::query()->where('is_active', true)->count(),
         ];
     }
@@ -248,7 +243,7 @@ class DatabaseQueryService
         }
 
         $professionName = $this->deSlugify($professionSlug, 'professions');
-        $profession = WowProfession::query()->where('is_active', true)
+        $profession = WowProfession::query()->withActiveRecipes()
             ->where('name_fr', $professionName)
             ->first();
 
@@ -303,15 +298,11 @@ class DatabaseQueryService
                 'slug' => $e['slug'],
                 'count' => $e['count'],
             ], $this->buildExpansionList(WowQuest::class)),
-            'professions' => WowProfession::query()->where('is_active', true)
-                ->select(['id', 'name_fr', 'type'])
-                ->orderBy('name_fr')
-                ->get()
+            'professions' => $this->listedProfessions()
                 ->map(fn (WowProfession $wowProfession): array => [
                     'name' => $wowProfession->name_fr,
                     'slug' => $this->slugify($wowProfession->name_fr),
-                    'count' => WowRecipe::query()->where('is_active', true)
-                        ->where('profession_id', $wowProfession->id)->count(),
+                    'count' => $wowProfession->active_recipes_count,
                     'type' => $wowProfession->type,
                 ])
                 ->all(),
@@ -364,9 +355,21 @@ class DatabaseQueryService
             'pets' => WowPet::query()->where('is_active', true)->count(),
             'decors' => WowDecor::query()->where('is_active', true)->count(),
             'appearances' => WowAppearance::query()->where('is_active', true)->count(),
-            'professions' => WowProfession::query()->where('is_active', true)->count(),
+            'professions' => WowProfession::query()->withActiveRecipes()->count(),
             'recipes' => WowRecipe::query()->where('is_active', true)->count(),
         ];
+    }
+
+    /**
+     * @return Collection<int, WowProfession>
+     */
+    private function listedProfessions(): Collection
+    {
+        return WowProfession::query()->withActiveRecipes()
+            ->select(['id', 'name_fr', 'type'])
+            ->withCount(['recipes as active_recipes_count' => fn (Builder $builder) => $builder->where('is_active', true)])
+            ->orderBy('name_fr')
+            ->get();
     }
 
     private function resolvePerPage(?int $perPage): int
@@ -518,7 +521,7 @@ class DatabaseQueryService
                 ->distinct()
                 ->pluck('slot')
                 ->all(),
-            'professions' => WowProfession::query()->where('is_active', true)
+            'professions' => WowProfession::query()->withActiveRecipes()
                 ->pluck('name_fr')
                 ->all(),
             default => [],

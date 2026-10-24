@@ -235,7 +235,8 @@ test('the sitemap lists each active wardrobe slot and each active profession', f
     config(['app.url' => 'https://wowplanet.test']);
     WowAppearance::factory()->create(['slot' => 'HEAD']);
     WowAppearance::factory()->create(['slot' => 'CLOAK']);
-    WowProfession::factory()->create(['name_fr' => 'Couture']);
+    $profession = WowProfession::factory()->create(['name_fr' => 'Couture']);
+    WowRecipe::factory()->create(['profession_id' => $profession->id]);
 
     expect(sitemapUrls())
         ->toContain('https://wowplanet.test/base-de-donnees/garde-robe/head')
@@ -295,4 +296,19 @@ test('the rendered sitemap holds every listed page and is served from cache afte
         ->toContain('<changefreq>weekly</changefreq>')
         ->and(substr_count($xml, '<url>'))->toBe(9)
         ->and($databaseSeoService->generateSitemap())->toBe($xml);
+});
+
+test('a profession without any active recipe is left out of the sitemap and the counts', function (): void {
+    config(['app.url' => 'https://wowplanet.test']);
+    $listed = WowProfession::factory()->create(['name_fr' => 'Forge']);
+    WowRecipe::factory()->count(3)->create(['profession_id' => $listed->id]);
+    $empty = WowProfession::factory()->create(['name_fr' => 'Archeologie']);
+    WowRecipe::factory()->create(['profession_id' => $empty->id, 'is_active' => false]);
+
+    $databaseSeoService = resolve(DatabaseSeoService::class);
+
+    expect(sitemapUrls())->not->toContain('https://wowplanet.test/base-de-donnees/professions/archeologie')
+        ->and($databaseSeoService->getProfessionsMeta('archeologie'))->toBeNull()
+        ->and($databaseSeoService->getProfessionsMeta(null)['title'])->toContain('1 métiers')
+        ->and($databaseSeoService->getIndexMeta()['description'])->toContain('1 professions');
 });
