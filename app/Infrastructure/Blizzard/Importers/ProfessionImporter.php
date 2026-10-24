@@ -62,10 +62,10 @@ final readonly class ProfessionImporter
 
         $this->info(sprintf('Found %d professions. Fetching skill tiers...', count($professions)));
 
-        ['recipes' => $recipes, 'incomplete' => $incomplete] = $this->fetchRecipes($professions, $recipeFactionMap);
+        ['recipes' => $recipes, 'incomplete' => $incomplete, 'skill_levels' => $skillLevels] = $this->fetchRecipes($professions, $recipeFactionMap);
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
-        $this->saveProfessions($professions);
+        $this->saveProfessions($professions, $skillLevels, $incomplete);
         $this->deactivateProfessionsNotRetained(array_keys($professions), $unresolved);
         $this->saveRecipes($recipes);
         $this->deactivateRecipesNotReturned(array_column($recipes, 'id'), [...$unresolved, ...$incomplete]);
@@ -148,11 +148,12 @@ final readonly class ProfessionImporter
 
     /**
      * Recettes par tier : catégories → recettes, extension déduite du nom du tier.
-     * Un métier dont un palier n'a pas répondu est rendu dans `incomplete`.
+     * Un métier dont un palier n'a pas répondu est rendu dans `incomplete`. Le niveau
+     * maximal de chaque palier est relevé par extension, sans les paliers non reconnus.
      *
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
      * @param  array<int, string>  $recipeFactionMap
-     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>, incomplete: list<int>}
+     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
      */
     private function fetchRecipes(array $professions, array $recipeFactionMap): array
     {
@@ -164,7 +165,7 @@ final readonly class ProfessionImporter
                 $endpoints[$key] = sprintf('data/wow/profession/%d/skill-tier/%d', $profession['id'], $tier['id']);
                 $tierMeta[$key] = [
                     'profession_id' => $profession['id'],
-                    'expansion_id' => ExpansionTierMatcher::match($tier['name']) ?? 0,
+                    'matched_expansion_id' => ExpansionTierMatcher::match($tier['name']),
                 ];
             }
         }
@@ -173,6 +174,7 @@ final readonly class ProfessionImporter
 
         $recipes = [];
         $incomplete = [];
+        $skillLevels = [];
         foreach ($tierDetails as $key => $tierDetail) {
             if (! isset($tierMeta[$key])) {
                 continue;
@@ -185,6 +187,13 @@ final readonly class ProfessionImporter
 
                 continue;
             }
+
+            $maximumSkillLevel = $tierDetail->optionalInt('maximum_skill_level');
+            if ($meta['matched_expansion_id'] !== null && $maximumSkillLevel !== null) {
+                $skillLevels[$meta['profession_id']][$meta['matched_expansion_id']] = $maximumSkillLevel;
+            }
+
+            $expansionId = $meta['matched_expansion_id'] ?? 0;
 
             foreach ($tierDetail->objectList('categories') as $category) {
                 $categoryName = trim($category->optionalString('name') ?? '');
@@ -203,7 +212,7 @@ final readonly class ProfessionImporter
                         'id' => $recipeId,
                         'name_fr' => $recipeName,
                         'profession_id' => $meta['profession_id'],
-                        'expansion_id' => $meta['expansion_id'],
+                        'expansion_id' => $expansionId,
                         'category_name' => $categoryName,
                         'faction' => $recipeFactionMap[$recipeId] ?? null,
                         'is_active' => true,
@@ -212,13 +221,15 @@ final readonly class ProfessionImporter
             }
         }
 
-        return ['recipes' => array_values($recipes), 'incomplete' => array_values($incomplete)];
+        return ['recipes' => array_values($recipes), 'incomplete' => array_values($incomplete), 'skill_levels' => $skillLevels];
     }
 
     /**
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
+     * @param  array<int, array<int, int>>  $skillLevels
+     * @param  list<int>  $incomplete
      */
-    private function saveProfessions(array $professions): void
+    private function saveProfessions(array $professions, array $skillLevels, array $incomplete): void
     {
         /** @var Collection<int, WowProfession> $stored */
         $stored = WowProfession::query()
@@ -232,9 +243,14 @@ final readonly class ProfessionImporter
             /** @var WowProfession|null $existing */
             $existing = $stored->get($profession['id']);
 
+            // A tier that failed to answer keeps the ceiling already known for its expansion.
+            $knownLevels = in_array($profession['id'], $incomplete, true) ? ($existing->max_skill_levels ?? []) : [];
+            $maxSkillLevels = $this->sortedByExpansion(array_replace($knownLevels, $skillLevels[$profession['id']] ?? []));
+
             if ($existing instanceof WowProfession
                 && $existing->name_fr === $profession['name_fr']
                 && $existing->type === $profession['type']
+                && $this->sortedByExpansion($existing->max_skill_levels ?? []) === $maxSkillLevels
                 && $existing->is_active) {
                 continue;
             }
@@ -243,7 +259,7 @@ final readonly class ProfessionImporter
                 'id' => $profession['id'],
                 'name_fr' => $profession['name_fr'],
                 'type' => $profession['type'],
-                'max_skill_levels' => json_encode([]),
+                'max_skill_levels' => json_encode($maxSkillLevels, JSON_THROW_ON_ERROR),
                 'is_active' => true,
             ];
         }
@@ -252,11 +268,22 @@ final readonly class ProfessionImporter
             WowProfession::query()->upsert(
                 $rows,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'type', 'is_active'],
+                update: ['name_fr', 'type', 'max_skill_levels', 'is_active'],
             );
         }
 
         $this->info(sprintf('%d professions, %d written.', count($professions), count($rows)));
+    }
+
+    /**
+     * @param  array<int, int>  $levels
+     * @return array<int, int>
+     */
+    private function sortedByExpansion(array $levels): array
+    {
+        ksort($levels);
+
+        return $levels;
     }
 
     /**

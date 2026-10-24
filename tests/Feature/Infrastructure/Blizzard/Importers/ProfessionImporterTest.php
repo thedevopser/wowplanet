@@ -54,12 +54,14 @@ function mockProfessionDetail(MockInterface $mock, int $id, string $name, string
  *
  * @param  list<array{name: string, recipes: list<array{id: int, name: string}>}>  $categories
  */
-function mockSkillTierDetail(MockInterface $mock, int $professionId, int $tierId, array $categories): void
+function mockSkillTierDetail(MockInterface $mock, int $professionId, int $tierId, array $categories, ?int $maximumSkillLevel = null): void
 {
     $mock->shouldReceive('getAsync')
         ->with(sprintf('data/wow/profession/%d/skill-tier/%d', $professionId, $tierId), Mockery::any())
         ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(200, [], (string) json_encode([
             'id' => $tierId,
+            'minimum_skill_level' => 1,
+            ...($maximumSkillLevel === null ? [] : ['maximum_skill_level' => $maximumSkillLevel]),
             'categories' => array_map(fn (array $category): array => [
                 'name' => $category['name'],
                 'recipes' => array_map(fn (array $recipe): array => ['id' => $recipe['id'], 'name' => $recipe['name']], $category['recipes']),
@@ -505,4 +507,115 @@ test('it keeps the recipes of a profession whose detail could not be fetched', f
     resolve(ProfessionImporter::class)->import();
 
     expect(WowRecipe::query()->find(6001)->is_active)->toBeTrue();
+});
+
+// ─── Niveau maximal de chaque palier ────────────────────────
+
+test('it stores the maximum skill level of each tier by expansion', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 171, 'name' => 'Alchimie']]);
+    mockProfessionDetail($client, 171, 'Alchimie', 'PRIMARY', [
+        ['id' => 2485, 'name' => 'Alchimie classique'],
+        ['id' => 2478, 'name' => 'Alchimie de Kul Tiras / Alchimie de Zandalar'],
+        ['id' => 2906, 'name' => 'Alchimie de Midnight'],
+    ]);
+    mockSkillTierDetail($client, 171, 2485, [], maximumSkillLevel: 300);
+    mockSkillTierDetail($client, 171, 2478, [], maximumSkillLevel: 175);
+    mockSkillTierDetail($client, 171, 2906, [], maximumSkillLevel: 100);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(171)->max_skill_levels)->toEqualCanonicalizing([0 => 300, 7 => 175, 11 => 100]);
+});
+
+test('it leaves out a tier whose name matches no expansion', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 171, 'name' => 'Alchimie']]);
+    mockProfessionDetail($client, 171, 'Alchimie', 'PRIMARY', [
+        ['id' => 2906, 'name' => 'Alchimie de Midnight'],
+        ['id' => 9999, 'name' => 'Palier inconnu'],
+    ]);
+    mockSkillTierDetail($client, 171, 2906, [], maximumSkillLevel: 100);
+    mockSkillTierDetail($client, 171, 9999, [], maximumSkillLevel: 50);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(171)->max_skill_levels)->toBe([11 => 100]);
+});
+
+test('it stores no maximum skill level for a profession without skill tiers', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 794, 'name' => 'Archéologie']]);
+    mockProfessionDetail($client, 794, 'Archéologie', 'SECONDARY', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(794)->max_skill_levels)->toBe([]);
+});
+
+test('it keeps the known maximum skill level of a tier that could not be fetched', function (): void {
+    WowProfession::factory()->create(['id' => 171, 'name_fr' => 'Alchimie', 'type' => 'primary', 'max_skill_levels' => [0 => 300, 11 => 100]]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 171, 'name' => 'Alchimie']]);
+    mockProfessionDetail($client, 171, 'Alchimie', 'PRIMARY', [
+        ['id' => 2485, 'name' => 'Alchimie classique'],
+        ['id' => 2906, 'name' => 'Alchimie de Midnight'],
+    ]);
+    mockSkillTierDetail($client, 171, 2906, [], maximumSkillLevel: 125);
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/profession/171/skill-tier/2485', Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(404)));
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(171)->max_skill_levels)->toEqualCanonicalizing([0 => 300, 11 => 125]);
+});
+
+test('a maximum skill level changed upstream is rewritten', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary', 'max_skill_levels' => [10 => 75]]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, [], maximumSkillLevel: 100);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(164)->max_skill_levels)->toBe([10 => 100]);
+});
+
+test('a second pass over unchanged maximum skill levels writes nothing', function (): void {
+    $import = function (): void {
+        /** @var BlizzardApiClient&MockInterface $mock */
+        $mock = Mockery::mock(BlizzardApiClient::class);
+        app()->instance(BlizzardApiClient::class, $mock);
+
+        mockProfessionIndex($mock, [['id' => 171, 'name' => 'Alchimie']]);
+        mockProfessionDetail($mock, 171, 'Alchimie', 'PRIMARY', [
+            ['id' => 2485, 'name' => 'Alchimie classique'],
+            ['id' => 2499, 'name' => 'Alchimie de Dragonflight'],
+            ['id' => 2906, 'name' => 'Alchimie de Midnight'],
+        ]);
+        mockSkillTierDetail($mock, 171, 2906, [], maximumSkillLevel: 100);
+        mockSkillTierDetail($mock, 171, 2499, [], maximumSkillLevel: 100);
+        mockSkillTierDetail($mock, 171, 2485, [], maximumSkillLevel: 300);
+
+        resolve(ProfessionImporter::class)->import();
+    };
+
+    $import();
+    $writes = writesOnTableDuring('wow_professions', $import);
+
+    expect($writes)->toBe(0);
 });
