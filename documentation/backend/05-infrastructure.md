@@ -789,6 +789,8 @@ Une réputation est exclusive quand elle porte un plafond pour un camp et pas po
 
 Les réputations que l'endpoint `/reputations` ne retourne jamais sont exclues — parangon, saisons de gouffres et de traque, entrées `DEPRECATED`, `[DNT]` et `JOUEUR` — sans quoi elles compteraient au dénominateur et rendraient le 100 % inatteignable.
 
+Les périples saisonniers à renom (gouffres, traque, labyrinthe de Kindo'jan) sont écartés par une règle qui ne dépend pas de leur nom : ils accordent une monnaie de renom, comme toute réputation à renom, mais leurs niveaux ne prennent pas les 2 500 points des renoms classiques. Leur progression vit dans cette monnaie, que l'API de profil n'expose pas : ils ne sont ni dans `/reputations`, ni dans l'index statique `reputation-faction/index`, et aucun haut-fait, statistique ou quête ne permet d'en déduire le niveau.
+
 Les lectures sont mémorisées pour la durée de l'instance : l'agrégateur de progression des réputations interroge cinq de ces cartes à chaque profil de personnage.
 
 ---

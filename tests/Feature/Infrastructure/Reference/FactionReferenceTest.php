@@ -102,6 +102,28 @@ test('it leaves out the reputations the API never returns', function (string $na
     'player' => ['JOUEUR Something'],
 ]);
 
+test('it leaves out a seasonal journey, whose renown levels do not take the standard threshold', function (): void {
+    seedReferenceFaction(DRAGONFLIGHT_HEADER, 'Dragonflight');
+    seedReferenceFaction(500, 'Le labyrinthe de Kindo’jan', parentFactionId: DRAGONFLIGHT_HEADER, renownCurrencyId: 3536, reputationMax0: 2100);
+
+    expect(factionReference()->expansions())->toBe([])
+        ->and(factionReference()->names())->toBe([]);
+});
+
+test('it keeps a renown reputation whose levels take the standard threshold', function (): void {
+    seedReferenceFaction(DRAGONFLIGHT_HEADER, 'Dragonflight');
+    seedReferenceFaction(500, 'Tribu des Amani', parentFactionId: DRAGONFLIGHT_HEADER, renownCurrencyId: 3000, reputationMax0: 2500);
+
+    expect(factionReference()->expansions())->toBe([500 => 9]);
+});
+
+test('it keeps a traditional reputation whatever its threshold', function (): void {
+    seedReferenceFaction(LEGION_HEADER, 'Legion');
+    seedReferenceFaction(500, 'Les Sentinelles', parentFactionId: LEGION_HEADER, reputationMax0: 42000);
+
+    expect(factionReference()->expansions())->toBe([500 => 6]);
+});
+
 // ─── Nom d'une réputation ───────────────────────────────────
 
 test('it reads the localized name of a reputation', function (): void {
