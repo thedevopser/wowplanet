@@ -103,6 +103,24 @@ class ReferenceMaps
     }
 
     /**
+     * L'API ne donne pas le sort d'une recette, seul identifiant qu'une infobulle
+     * Wowhead sache lire : sans lui, le lien retombe sur une recherche par nom.
+     *
+     * @return array<int, int> [recipe_id => spell_id]
+     */
+    public function recipeSpells(): array
+    {
+        $rows = DB::table('wow_ref_skill_line_ability')->where('spell_id', '>', 0)->get(['id', 'spell_id']);
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[ReferenceValue::int($row->id)] = ReferenceValue::int($row->spell_id);
+        }
+
+        return $map;
+    }
+
+    /**
      * Une décoration qui porte deux étiquettes d'extension est laissée de côté : en
      * proposer une serait trancher à l'aveugle un rangement que la curation doit faire.
      *

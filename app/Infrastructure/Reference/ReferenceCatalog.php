@@ -53,6 +53,7 @@ final class ReferenceCatalog
                 new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
                 new ReferenceColumn('RaceMasks_0', 'race_masks_0', ReferenceColumnType::BigInteger),
                 new ReferenceColumn('RaceMasks_1', 'race_masks_1', ReferenceColumnType::BigInteger),
+                new ReferenceColumn('Spell', 'spell_id', ReferenceColumnType::Integer),
             ]),
             new ReferenceTable('CurrencyTypes', 'currency_types', 'frFR', [
                 new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
