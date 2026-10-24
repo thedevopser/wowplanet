@@ -31,6 +31,7 @@ beforeEach(function (): void {
     $this->referenceMapsMock->shouldReceive('questFactions')->andReturn([])->byDefault();
     $this->referenceMapsMock->shouldReceive('zoneFactions')->andReturn([])->byDefault();
     $this->referenceMapsMock->shouldReceive('recipeFactions')->andReturn([])->byDefault();
+    $this->referenceMapsMock->shouldReceive('recipeSpells')->andReturn([])->byDefault();
     $this->factionReferenceMock->shouldReceive('factions')->andReturn([])->byDefault();
 
     seedCollectionTaxonomy();
@@ -100,6 +101,15 @@ test('a forced quest stage has the mirrored quests already judged examined again
 
 test('the profession stage tags the mirrored recipes', function (): void {
     $this->importerMock->shouldReceive('importProfessions')->once();
+    $this->importerMock->shouldReceive('tagMirrorRecipeFactions')->once();
+
+    expect(runStage(ImportStage::Professions)->status)->toBe(ImportStepStatus::Completed);
+});
+
+test('the profession stage hands the recipe spells of the socle to the importer', function (): void {
+    $this->referenceMapsMock->shouldReceive('recipeFactions')->andReturn([5001 => 'Alliance']);
+    $this->referenceMapsMock->shouldReceive('recipeSpells')->andReturn([5001 => 9001]);
+    $this->importerMock->shouldReceive('importProfessions')->once()->with([5001 => 'Alliance'], [5001 => 9001]);
     $this->importerMock->shouldReceive('tagMirrorRecipeFactions')->once();
 
     expect(runStage(ImportStage::Professions)->status)->toBe(ImportStepStatus::Completed);

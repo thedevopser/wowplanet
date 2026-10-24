@@ -619,3 +619,41 @@ test('a second pass over unchanged maximum skill levels writes nothing', functio
 
     expect($writes)->toBe(0);
 });
+
+// ─── Sort Wowhead des recettes ──────────────────────────────
+
+test('it links a recipe to the spell the socle gives it', function (): void {
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+
+    resolve(ProfessionImporter::class)->import([], [5001 => 9001]);
+
+    expect(WowRecipe::query()->find(5001)->wowhead_spell_id)->toBe(9001);
+});
+
+test('it rewrites a recipe spell the socle changed', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->create([
+        'id' => 5001,
+        'name_fr' => 'Plastron en acier',
+        'profession_id' => 164,
+        'expansion_id' => 10,
+        'category_name' => 'Armures',
+        'faction' => null,
+        'wowhead_spell_id' => 80001,
+    ]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import([], [5001 => 80002]);
+
+    expect(WowRecipe::query()->find(5001)->wowhead_spell_id)->toBe(80002);
+});
+
+test('a second pass with the same recipe spells writes nothing', function (): void {
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import([], [5001 => 9001]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    $writes = writesOnTableDuring('wow_recipes', fn () => resolve(ProfessionImporter::class)->import([], [5001 => 9001]));
+
+    expect($writes)->toBe(0);
+});

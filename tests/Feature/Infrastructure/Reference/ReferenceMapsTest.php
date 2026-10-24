@@ -33,12 +33,13 @@ function seedReferenceContentTuning(int $id, ?int $expansionId): void
 /**
  * @param  array{0: int|null, 1: int|null}|null  $raceMask
  */
-function seedReferenceSkillLineAbility(int $id, ?array $raceMask = null): void
+function seedReferenceSkillLineAbility(int $id, ?array $raceMask = null, ?int $spellId = null): void
 {
     DB::table('wow_ref_skill_line_ability')->insert([
         'id' => $id,
         'race_masks_0' => $raceMask[0] ?? null,
         'race_masks_1' => $raceMask[1] ?? null,
+        'spell_id' => $spellId,
     ]);
 }
 
@@ -142,6 +143,14 @@ test('it keys recipe factions by skill line ability, which is the recipe identif
     expect(referenceMaps()->recipeFactions())->toHaveKey(58288);
 });
 
+test('it maps each recipe to the spell its Wowhead link points to', function (): void {
+    seedReferenceSkillLineAbility(52036, spellId: 1226062);
+    seedReferenceSkillLineAbility(20);
+    seedReferenceSkillLineAbility(30, spellId: 0);
+
+    expect(referenceMaps()->recipeSpells())->toBe([52036 => 1226062]);
+});
+
 // ─── Faction des zones ──────────────────────────────────────
 
 test('it reads the faction of a zone from its faction group mask', function (): void {
@@ -168,6 +177,7 @@ test('it returns empty maps when the reference tables are empty', function (): v
     expect($referenceMaps->questExpansions())->toBe([])
         ->and($referenceMaps->questFactions())->toBe([])
         ->and($referenceMaps->recipeFactions())->toBe([])
+        ->and($referenceMaps->recipeSpells())->toBe([])
         ->and($referenceMaps->zoneFactions())->toBe([]);
 });
 

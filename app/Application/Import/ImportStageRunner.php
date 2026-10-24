@@ -181,7 +181,7 @@ final readonly class ImportStageRunner
 
     private function importProfessions(): null
     {
-        $this->blizzardBatchImporter->importProfessions($this->referenceMaps->recipeFactions());
+        $this->blizzardBatchImporter->importProfessions($this->referenceMaps->recipeFactions(), $this->referenceMaps->recipeSpells());
         $this->blizzardBatchImporter->tagMirrorRecipeFactions();
 
         return null;

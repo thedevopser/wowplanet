@@ -40,11 +40,13 @@ final readonly class ProfessionImporter
 
     /**
      * @param  array<int, string>  $recipeFactionMap  [recipeId => 'Alliance'|'Horde']
+     * @param  array<int, int>  $recipeSpellMap  [recipeId => spellId]
      */
-    public function import(array $recipeFactionMap = []): void
+    public function import(array $recipeFactionMap = [], array $recipeSpellMap = []): void
     {
         $this->info('Fetching profession index from Blizzard API...');
         $this->info(sprintf('  Recipe faction map: %d entries', count($recipeFactionMap)));
+        $this->info(sprintf('  Recipe spell map: %d entries', count($recipeSpellMap)));
 
         $index = $this->fetchWithRetry('data/wow/profession/index');
         if (! $index instanceof ResponsePayload) {
@@ -62,7 +64,7 @@ final readonly class ProfessionImporter
 
         $this->info(sprintf('Found %d professions. Fetching skill tiers...', count($professions)));
 
-        ['recipes' => $recipes, 'incomplete' => $incomplete, 'skill_levels' => $skillLevels] = $this->fetchRecipes($professions, $recipeFactionMap);
+        ['recipes' => $recipes, 'incomplete' => $incomplete, 'skill_levels' => $skillLevels] = $this->fetchRecipes($professions, $recipeFactionMap, $recipeSpellMap);
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
         $this->saveProfessions($professions, $skillLevels, $incomplete);
@@ -153,9 +155,10 @@ final readonly class ProfessionImporter
      *
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
      * @param  array<int, string>  $recipeFactionMap
-     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
+     * @param  array<int, int>  $recipeSpellMap
+     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
      */
-    private function fetchRecipes(array $professions, array $recipeFactionMap): array
+    private function fetchRecipes(array $professions, array $recipeFactionMap, array $recipeSpellMap): array
     {
         $endpoints = [];
         $tierMeta = [];
@@ -215,6 +218,7 @@ final readonly class ProfessionImporter
                         'expansion_id' => $expansionId,
                         'category_name' => $categoryName,
                         'faction' => $recipeFactionMap[$recipeId] ?? null,
+                        'wowhead_spell_id' => $recipeSpellMap[$recipeId] ?? null,
                         'is_active' => true,
                     ];
                 }
@@ -307,11 +311,11 @@ final readonly class ProfessionImporter
     }
 
     /**
-     * `wowhead_spell_id` n'est pas exposé par l'API : la colonne est préservée
-     * telle quelle (valeurs historiques), les nouvelles recettes restent sans lien
-     * direct (le front retombe sur une recherche Wowhead par nom).
+     * `wowhead_spell_id` n'est pas exposé par l'API : il vient du socle
+     * (`SkillLineAbility.Spell`). Une recette que le socle ne connaît pas encore garde
+     * la valeur déjà en base.
      *
-     * @param  list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>  $recipes
+     * @param  list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>  $recipes
      */
     private function saveRecipes(array $recipes): void
     {
@@ -334,6 +338,7 @@ final readonly class ProfessionImporter
                 // une faction que la carte de référence ne porte pas, et l'écraser par
                 // un nul à chaque passe lui ferait refaire son travail.
                 $recipe['faction'] ??= $existing?->faction;
+                $recipe['wowhead_spell_id'] ??= $existing?->wowhead_spell_id;
 
                 if ($existing instanceof WowRecipe && $this->isRecipeUnchanged($existing, $recipe)) {
                     continue;
@@ -349,7 +354,7 @@ final readonly class ProfessionImporter
             WowRecipe::query()->upsert(
                 $rows,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'profession_id', 'expansion_id', 'category_name', 'faction', 'is_active'],
+                update: ['name_fr', 'profession_id', 'expansion_id', 'category_name', 'faction', 'wowhead_spell_id', 'is_active'],
             );
 
             $written += count($rows);
@@ -386,7 +391,7 @@ final readonly class ProfessionImporter
     }
 
     /**
-     * @param  array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}  $recipe
+     * @param  array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}  $recipe
      */
     private function isRecipeUnchanged(WowRecipe $wowRecipe, array $recipe): bool
     {
@@ -395,6 +400,7 @@ final readonly class ProfessionImporter
             && $wowRecipe->expansion_id === $recipe['expansion_id']
             && $wowRecipe->category_name === $recipe['category_name']
             && $wowRecipe->faction === $recipe['faction']
+            && $wowRecipe->wowhead_spell_id === $recipe['wowhead_spell_id']
             && $wowRecipe->is_active === $recipe['is_active'];
     }
 

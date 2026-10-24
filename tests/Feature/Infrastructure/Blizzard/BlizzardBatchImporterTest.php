@@ -329,6 +329,19 @@ test('importProfessions assigns recipe factions from faction map', function (): 
     expect(WowRecipe::query()->find(5001)->faction)->toBe('Alliance');
 });
 
+test('importProfessions links each recipe to its spell from the spell map', function (): void {
+    $mock = $this->mock(BlizzardApiClient::class);
+    bbiMockProfessionApi($mock, 171, 'Alchimie', 'PRIMARY', 2871, 'Alchimie classique', [
+        ['name' => 'Potions classiques', 'recipes' => [
+            ['id' => 5001, 'name' => 'Potion de vie'],
+        ]],
+    ]);
+
+    resolve(BlizzardBatchImporter::class)->importProfessions([], [5001 => 9001]);
+
+    expect(WowRecipe::query()->find(5001)->wowhead_spell_id)->toBe(9001);
+});
+
 // ─── Mirror Quest Faction Tagging ───────────────────────────
 
 test('tagMirrorQuestFactions tags mirror quest pairs via API reputation', function (): void {

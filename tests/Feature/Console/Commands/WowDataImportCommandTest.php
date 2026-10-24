@@ -26,6 +26,7 @@ beforeEach(function (): void {
     $this->referenceMapsMock->shouldReceive('questFactions')->andReturn([])->byDefault();
     $this->referenceMapsMock->shouldReceive('zoneFactions')->andReturn([])->byDefault();
     $this->referenceMapsMock->shouldReceive('recipeFactions')->andReturn([])->byDefault();
+    $this->referenceMapsMock->shouldReceive('recipeSpells')->andReturn([])->byDefault();
     $this->factionReferenceMock->shouldReceive('factions')->andReturn([])->byDefault();
 });
 

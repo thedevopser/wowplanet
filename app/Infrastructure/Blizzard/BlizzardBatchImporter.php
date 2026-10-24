@@ -85,9 +85,10 @@ class BlizzardBatchImporter
 
     /**
      * @param  array<int, string>  $recipeFactionMap
+     * @param  array<int, int>  $recipeSpellMap
      */
-    public function importProfessions(array $recipeFactionMap = []): void
+    public function importProfessions(array $recipeFactionMap = [], array $recipeSpellMap = []): void
     {
-        $this->professionImporter->import($recipeFactionMap);
+        $this->professionImporter->import($recipeFactionMap, $recipeSpellMap);
     }
 }
