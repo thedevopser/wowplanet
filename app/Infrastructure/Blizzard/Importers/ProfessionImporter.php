@@ -23,6 +23,12 @@ final readonly class ProfessionImporter
 {
     use ImportsFromBlizzardApi;
 
+    // @pest-mutate-ignore
+    private const string TYPE_PRIMARY = 'PRIMARY';
+
+    // @pest-mutate-ignore
+    private const string TYPE_SECONDARY = 'SECONDARY';
+
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
     ) {
@@ -44,7 +50,7 @@ final readonly class ProfessionImporter
             return;
         }
 
-        $professions = $this->fetchProfessions($index->objectList('professions'));
+        ['professions' => $professions, 'unresolved' => $unresolved] = $this->fetchProfessions($index->objectList('professions'));
         if ($professions === []) {
             $this->info('ERROR: No primary/secondary professions found.');
 
@@ -57,17 +63,18 @@ final readonly class ProfessionImporter
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
         $this->saveProfessions($professions);
+        $this->deactivateProfessionsNotRetained(array_keys($professions), $unresolved);
         $this->saveRecipes($recipes);
 
         $this->info(sprintf('Profession import complete: %d professions, %d recipes.', count($professions), count($recipes)));
     }
 
     /**
-     * Détails des métiers, filtrés sur les types PRIMARY/SECONDARY (écarte les
-     * pseudo-métiers d'événements).
+     * Détails des métiers retenus par `isTrackedProfession()`. Les identifiants dont
+     * le détail n'a pas répondu sont rendus à part : leur absence ne prouve rien.
      *
      * @param  list<ResponsePayload>  $indexEntries
-     * @return array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>
+     * @return array{professions: array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>, unresolved: list<int>}
      */
     private function fetchProfessions(array $indexEntries): array
     {
@@ -82,16 +89,15 @@ final readonly class ProfessionImporter
         $details = $this->fetchBatchAsync($endpoints);
 
         $professions = [];
+        $unresolved = [];
         foreach ($details as $id => $detail) {
             if ($detail === null) {
+                $unresolved[] = (int) $id;
+
                 continue;
             }
 
             $typeValue = strtoupper($detail->optionalObject('type')?->optionalString('type') ?? '');
-            if (! in_array($typeValue, ['PRIMARY', 'SECONDARY'], true)) {
-                continue;
-            }
-
             $name = trim($detail->lenientString('name') ?? '');
             if ($name === '') {
                 continue;
@@ -105,6 +111,10 @@ final readonly class ProfessionImporter
                 }
             }
 
+            if (! $this->isTrackedProfession($typeValue, $tiers)) {
+                continue;
+            }
+
             $professions[(int) $id] = [
                 'id' => (int) $id,
                 'name_fr' => $name,
@@ -113,7 +123,23 @@ final readonly class ProfessionImporter
             ];
         }
 
-        return $professions;
+        return ['professions' => $professions, 'unresolved' => $unresolved];
+    }
+
+    /**
+     * Blizzard type PRIMARY des artisanats annexes (Suture abominable, Préparation de
+     * teinture…) que l'API laisse sans palier, donc sans recette ni progression. Un
+     * métier secondaire reste suivi sans palier : l'Archéologie n'en a pas.
+     *
+     * @param  list<array{id: int, name: string}>  $tiers
+     */
+    private function isTrackedProfession(string $type, array $tiers): bool
+    {
+        return match ($type) {
+            self::TYPE_SECONDARY => true,
+            self::TYPE_PRIMARY => $tiers !== [],
+            default => false,
+        };
     }
 
     /**
@@ -223,6 +249,26 @@ final readonly class ProfessionImporter
         }
 
         $this->info(sprintf('%d professions, %d written.', count($professions), count($rows)));
+    }
+
+    /**
+     * @param  list<int>  $retainedIds
+     * @param  list<int>  $unresolvedIds
+     */
+    private function deactivateProfessionsNotRetained(array $retainedIds, array $unresolvedIds): void
+    {
+        /** @var list<int> $staleIds */
+        $staleIds = WowProfession::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', [...$retainedIds, ...$unresolvedIds])
+            ->pluck('id')
+            ->all();
+
+        if ($staleIds !== []) {
+            WowProfession::query()->whereIn('id', $staleIds)->update(['is_active' => false]);
+        }
+
+        $this->info(sprintf('%d professions deactivated.', count($staleIds)));
     }
 
     /**

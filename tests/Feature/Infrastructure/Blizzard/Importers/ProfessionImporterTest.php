@@ -133,13 +133,110 @@ test('it skips professions that are neither primary nor secondary', function ():
         ['id' => 164, 'name' => 'Forge'],
         ['id' => 2777, 'name' => 'Chiffrage des âmes'],
     ]);
-    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', []);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, []);
     mockProfessionDetail($client, 2777, 'Chiffrage des âmes', 'OTHER', []);
 
     resolve(ProfessionImporter::class)->import();
 
     expect(WowProfession::query()->count())->toBe(1)
         ->and(WowProfession::query()->find(164))->not->toBeNull();
+});
+
+test('it skips a primary profession without any skill tier', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [
+        ['id' => 164, 'name' => 'Forge'],
+        ['id' => 2787, 'name' => 'Suture abominable'],
+    ]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, []);
+    mockProfessionDetail($client, 2787, 'Suture abominable', 'PRIMARY', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->pluck('id')->all())->toBe([164]);
+});
+
+test('it keeps a secondary profession without any skill tier', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 794, 'name' => 'Archéologie']]);
+    mockProfessionDetail($client, 794, 'Archéologie', 'SECONDARY', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(794))
+        ->name_fr->toBe('Archéologie')
+        ->type->toBe('secondary')
+        ->is_active->toBeTrue();
+});
+
+test('it deactivates a stored profession missing from the index', function (): void {
+    WowProfession::factory()->create(['id' => 2720, 'name_fr' => 'Bricolage de la casse', 'type' => 'primary', 'is_active' => true]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(2720)->is_active)->toBeFalse()
+        ->and(WowProfession::query()->find(164)->is_active)->toBeTrue();
+});
+
+test('it deactivates a stored primary profession that lost all its skill tiers', function (): void {
+    WowProfession::factory()->create(['id' => 2787, 'name_fr' => 'Suture abominable', 'type' => 'primary', 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [
+        ['id' => 164, 'name' => 'Forge'],
+        ['id' => 2787, 'name' => 'Suture abominable'],
+    ]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, []);
+    mockProfessionDetail($client, 2787, 'Suture abominable', 'PRIMARY', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(2787)->is_active)->toBeFalse();
+});
+
+test('it keeps a stored profession active when its detail could not be fetched', function (): void {
+    WowProfession::factory()->create(['id' => 171, 'name_fr' => 'Alchimie', 'type' => 'primary', 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [
+        ['id' => 164, 'name' => 'Forge'],
+        ['id' => 171, 'name' => 'Alchimie'],
+    ]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, []);
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/profession/171', Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(404)));
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(171)->is_active)->toBeTrue();
+});
+
+test('it deactivates nothing when no profession is retained', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary', 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 2777, 'name' => 'Chiffrage des âmes']]);
+    mockProfessionDetail($client, 2777, 'Chiffrage des âmes', 'OTHER', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->find(164)->is_active)->toBeTrue();
 });
 
 test('it assigns recipe factions from faction map', function (): void {
