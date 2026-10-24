@@ -35,7 +35,7 @@ class DatabaseSeoService
         $questCount = WowQuest::query()->where('is_active', true)->count();
         $petCount = WowPet::query()->where('is_active', true)->count();
         $decorCount = WowDecor::query()->where('is_active', true)->count();
-        $professionCount = WowProfession::query()->where('is_active', true)->count();
+        $professionCount = WowProfession::query()->withActiveRecipes()->count();
         $recipeCount = WowRecipe::query()->where('is_active', true)->count();
 
         $title = 'Base de données WoW complète | WowPlanet';
@@ -395,7 +395,7 @@ class DatabaseSeoService
 
         if ($professionSlug !== null) {
             $professionName = $this->deSlugifyCategory($professionSlug, 'professions');
-            $profession = WowProfession::query()->where('is_active', true)
+            $profession = WowProfession::query()->withActiveRecipes()
                 ->where('name_fr', $professionName)
                 ->first();
 
@@ -420,7 +420,7 @@ class DatabaseSeoService
                 [$professionName, $canonicalUrl],
             ];
         } else {
-            $professionCount = WowProfession::query()->where('is_active', true)->count();
+            $professionCount = WowProfession::query()->withActiveRecipes()->count();
             $recipeCount = WowRecipe::query()->where('is_active', true)->count();
             $title = sprintf('Professions WoW — %d métiers, %s recettes | WowPlanet', $professionCount, number_format($recipeCount, 0, ',', "\u{202f}"));
             $description = sprintf(
@@ -507,7 +507,7 @@ class DatabaseSeoService
         }
 
         /** @var list<string> $professionNames */
-        $professionNames = WowProfession::query()->where('is_active', true)
+        $professionNames = WowProfession::query()->withActiveRecipes()
             ->pluck('name_fr')
             ->all();
 
@@ -590,7 +590,7 @@ class DatabaseSeoService
                 ->distinct()
                 ->pluck('slot')
                 ->all(),
-            'professions' => WowProfession::query()->where('is_active', true)
+            'professions' => WowProfession::query()->withActiveRecipes()
                 ->pluck('name_fr')
                 ->all(),
             default => [],

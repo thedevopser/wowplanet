@@ -23,6 +23,15 @@ final readonly class ProfessionImporter
 {
     use ImportsFromBlizzardApi;
 
+    // @pest-mutate-ignore
+    private const string TYPE_PRIMARY = 'PRIMARY';
+
+    // @pest-mutate-ignore
+    private const string TYPE_SECONDARY = 'SECONDARY';
+
+    // @pest-mutate-ignore
+    private const int DEACTIVATION_CHUNK = 1000;
+
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
     ) {
@@ -44,7 +53,7 @@ final readonly class ProfessionImporter
             return;
         }
 
-        $professions = $this->fetchProfessions($index->objectList('professions'));
+        ['professions' => $professions, 'unresolved' => $unresolved] = $this->fetchProfessions($index->objectList('professions'));
         if ($professions === []) {
             $this->info('ERROR: No primary/secondary professions found.');
 
@@ -53,21 +62,23 @@ final readonly class ProfessionImporter
 
         $this->info(sprintf('Found %d professions. Fetching skill tiers...', count($professions)));
 
-        $recipes = $this->fetchRecipes($professions, $recipeFactionMap);
+        ['recipes' => $recipes, 'incomplete' => $incomplete, 'skill_levels' => $skillLevels] = $this->fetchRecipes($professions, $recipeFactionMap);
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
-        $this->saveProfessions($professions);
+        $this->saveProfessions($professions, $skillLevels, $incomplete);
+        $this->deactivateProfessionsNotRetained(array_keys($professions), $unresolved);
         $this->saveRecipes($recipes);
+        $this->deactivateRecipesNotReturned(array_column($recipes, 'id'), [...$unresolved, ...$incomplete]);
 
         $this->info(sprintf('Profession import complete: %d professions, %d recipes.', count($professions), count($recipes)));
     }
 
     /**
-     * Détails des métiers, filtrés sur les types PRIMARY/SECONDARY (écarte les
-     * pseudo-métiers d'événements).
+     * Détails des métiers retenus par `isTrackedProfession()`. Les identifiants dont
+     * le détail n'a pas répondu sont rendus à part : leur absence ne prouve rien.
      *
      * @param  list<ResponsePayload>  $indexEntries
-     * @return array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>
+     * @return array{professions: array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>, unresolved: list<int>}
      */
     private function fetchProfessions(array $indexEntries): array
     {
@@ -82,16 +93,15 @@ final readonly class ProfessionImporter
         $details = $this->fetchBatchAsync($endpoints);
 
         $professions = [];
+        $unresolved = [];
         foreach ($details as $id => $detail) {
             if ($detail === null) {
+                $unresolved[] = (int) $id;
+
                 continue;
             }
 
             $typeValue = strtoupper($detail->optionalObject('type')?->optionalString('type') ?? '');
-            if (! in_array($typeValue, ['PRIMARY', 'SECONDARY'], true)) {
-                continue;
-            }
-
             $name = trim($detail->lenientString('name') ?? '');
             if ($name === '') {
                 continue;
@@ -105,6 +115,10 @@ final readonly class ProfessionImporter
                 }
             }
 
+            if (! $this->isTrackedProfession($typeValue, $tiers)) {
+                continue;
+            }
+
             $professions[(int) $id] = [
                 'id' => (int) $id,
                 'name_fr' => $name,
@@ -113,15 +127,33 @@ final readonly class ProfessionImporter
             ];
         }
 
-        return $professions;
+        return ['professions' => $professions, 'unresolved' => $unresolved];
+    }
+
+    /**
+     * Blizzard type PRIMARY des artisanats annexes (Suture abominable, Préparation de
+     * teinture…) que l'API laisse sans palier, donc sans recette ni progression. Un
+     * métier secondaire reste suivi sans palier : l'Archéologie n'en a pas.
+     *
+     * @param  list<array{id: int, name: string}>  $tiers
+     */
+    private function isTrackedProfession(string $type, array $tiers): bool
+    {
+        return match ($type) {
+            self::TYPE_SECONDARY => true,
+            self::TYPE_PRIMARY => $tiers !== [],
+            default => false,
+        };
     }
 
     /**
      * Recettes par tier : catégories → recettes, extension déduite du nom du tier.
+     * Un métier dont un palier n'a pas répondu est rendu dans `incomplete`. Le niveau
+     * maximal de chaque palier est relevé par extension, sans les paliers non reconnus.
      *
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
      * @param  array<int, string>  $recipeFactionMap
-     * @return list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>
+     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
      */
     private function fetchRecipes(array $professions, array $recipeFactionMap): array
     {
@@ -133,7 +165,7 @@ final readonly class ProfessionImporter
                 $endpoints[$key] = sprintf('data/wow/profession/%d/skill-tier/%d', $profession['id'], $tier['id']);
                 $tierMeta[$key] = [
                     'profession_id' => $profession['id'],
-                    'expansion_id' => ExpansionTierMatcher::match($tier['name']) ?? 0,
+                    'matched_expansion_id' => ExpansionTierMatcher::match($tier['name']),
                 ];
             }
         }
@@ -141,16 +173,27 @@ final readonly class ProfessionImporter
         $tierDetails = $this->fetchBatchAsync($endpoints);
 
         $recipes = [];
+        $incomplete = [];
+        $skillLevels = [];
         foreach ($tierDetails as $key => $tierDetail) {
-            if ($tierDetail === null) {
-                continue;
-            }
-
             if (! isset($tierMeta[$key])) {
                 continue;
             }
 
             $meta = $tierMeta[$key];
+
+            if ($tierDetail === null) {
+                $incomplete[$meta['profession_id']] = $meta['profession_id'];
+
+                continue;
+            }
+
+            $maximumSkillLevel = $tierDetail->optionalInt('maximum_skill_level');
+            if ($meta['matched_expansion_id'] !== null && $maximumSkillLevel !== null) {
+                $skillLevels[$meta['profession_id']][$meta['matched_expansion_id']] = $maximumSkillLevel;
+            }
+
+            $expansionId = $meta['matched_expansion_id'] ?? 0;
 
             foreach ($tierDetail->objectList('categories') as $category) {
                 $categoryName = trim($category->optionalString('name') ?? '');
@@ -169,7 +212,7 @@ final readonly class ProfessionImporter
                         'id' => $recipeId,
                         'name_fr' => $recipeName,
                         'profession_id' => $meta['profession_id'],
-                        'expansion_id' => $meta['expansion_id'],
+                        'expansion_id' => $expansionId,
                         'category_name' => $categoryName,
                         'faction' => $recipeFactionMap[$recipeId] ?? null,
                         'is_active' => true,
@@ -178,13 +221,15 @@ final readonly class ProfessionImporter
             }
         }
 
-        return array_values($recipes);
+        return ['recipes' => array_values($recipes), 'incomplete' => array_values($incomplete), 'skill_levels' => $skillLevels];
     }
 
     /**
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
+     * @param  array<int, array<int, int>>  $skillLevels
+     * @param  list<int>  $incomplete
      */
-    private function saveProfessions(array $professions): void
+    private function saveProfessions(array $professions, array $skillLevels, array $incomplete): void
     {
         /** @var Collection<int, WowProfession> $stored */
         $stored = WowProfession::query()
@@ -198,9 +243,14 @@ final readonly class ProfessionImporter
             /** @var WowProfession|null $existing */
             $existing = $stored->get($profession['id']);
 
+            // A tier that failed to answer keeps the ceiling already known for its expansion.
+            $knownLevels = in_array($profession['id'], $incomplete, true) ? ($existing->max_skill_levels ?? []) : [];
+            $maxSkillLevels = $this->sortedByExpansion(array_replace($knownLevels, $skillLevels[$profession['id']] ?? []));
+
             if ($existing instanceof WowProfession
                 && $existing->name_fr === $profession['name_fr']
                 && $existing->type === $profession['type']
+                && $this->sortedByExpansion($existing->max_skill_levels ?? []) === $maxSkillLevels
                 && $existing->is_active) {
                 continue;
             }
@@ -209,7 +259,7 @@ final readonly class ProfessionImporter
                 'id' => $profession['id'],
                 'name_fr' => $profession['name_fr'],
                 'type' => $profession['type'],
-                'max_skill_levels' => json_encode([]),
+                'max_skill_levels' => json_encode($maxSkillLevels, JSON_THROW_ON_ERROR),
                 'is_active' => true,
             ];
         }
@@ -218,11 +268,42 @@ final readonly class ProfessionImporter
             WowProfession::query()->upsert(
                 $rows,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'type', 'is_active'],
+                update: ['name_fr', 'type', 'max_skill_levels', 'is_active'],
             );
         }
 
         $this->info(sprintf('%d professions, %d written.', count($professions), count($rows)));
+    }
+
+    /**
+     * @param  array<int, int>  $levels
+     * @return array<int, int>
+     */
+    private function sortedByExpansion(array $levels): array
+    {
+        ksort($levels);
+
+        return $levels;
+    }
+
+    /**
+     * @param  list<int>  $retainedIds
+     * @param  list<int>  $unresolvedIds
+     */
+    private function deactivateProfessionsNotRetained(array $retainedIds, array $unresolvedIds): void
+    {
+        /** @var list<int> $staleIds */
+        $staleIds = WowProfession::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', [...$retainedIds, ...$unresolvedIds])
+            ->pluck('id')
+            ->all();
+
+        if ($staleIds !== []) {
+            WowProfession::query()->whereIn('id', $staleIds)->update(['is_active' => false]);
+        }
+
+        $this->info(sprintf('%d professions deactivated.', count($staleIds)));
     }
 
     /**
@@ -275,6 +356,33 @@ final readonly class ProfessionImporter
         }
 
         $this->info(sprintf('  %d recipes written.', $written));
+    }
+
+    /**
+     * Les recettes héritées d'une source antérieure à l'API ne disparaissent qu'ainsi.
+     * Un métier dont un appel a échoué est épargné : son lot est partiel.
+     *
+     * @param  list<int>  $returnedIds
+     * @param  list<int>  $uncertainProfessionIds
+     */
+    private function deactivateRecipesNotReturned(array $returnedIds, array $uncertainProfessionIds): void
+    {
+        $returned = array_flip($returnedIds);
+
+        /** @var list<int> $staleIds */
+        $staleIds = WowRecipe::query()
+            ->where('is_active', true)
+            ->whereNotIn('profession_id', $uncertainProfessionIds)
+            ->pluck('id')
+            ->reject(fn (int $id): bool => isset($returned[$id]))
+            ->values()
+            ->all();
+
+        foreach (array_chunk($staleIds, self::DEACTIVATION_CHUNK) as $chunk) {
+            WowRecipe::query()->whereIn('id', $chunk)->update(['is_active' => false]);
+        }
+
+        $this->info(sprintf('  %d recipes deactivated.', count($staleIds)));
     }
 
     /**

@@ -6,8 +6,10 @@ namespace App\Models;
 
 use Database\Factories\WowProfessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property array<int, int>|null $max_skill_levels
  * @property bool $is_active
+ * @property-read int $active_recipes_count Only present when loaded through `withCount()`.
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> query()
  * @method static int count(string $columns = '*')
@@ -53,5 +56,18 @@ class WowProfession extends Model
     public function recipes(): HasMany
     {
         return $this->hasMany(WowRecipe::class, 'profession_id');
+    }
+
+    /**
+     * Métiers consultables dans la base publique : l'Archéologie reste active pour la
+     * fiche personnage, mais l'API ne lui donne aucune recette à présenter.
+     *
+     * @param  Builder<static>  $builder
+     */
+    #[Scope]
+    protected function withActiveRecipes(Builder $builder): void
+    {
+        $builder->where('is_active', true)
+            ->whereHas('recipes', fn (Builder $builder) => $builder->where('is_active', true));
     }
 }

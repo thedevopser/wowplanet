@@ -188,10 +188,12 @@ Métier WoW. ID Blizzard comme clé primaire.
 | `id` | `int` (PK) | ID Blizzard |
 | `name_fr` | `string` | Nom en français |
 | `type` | `string` | `primary` ou `secondary` |
-| `max_skill_levels` | `array?` | Niveaux max par extension `{expansion_id: max}` |
-| `is_active` | `bool` | Toujours disponible |
+| `max_skill_levels` | `array?` | Niveaux max par extension `{expansion_id: max}`, relevés dans le détail de chaque palier |
+| `is_active` | `bool` | Métier retenu par le dernier import |
 
 **Relation** : `recipes()` → `HasMany<WowRecipe>` (via `profession_id`)
+
+**Scope** : `withActiveRecipes()` restreint aux métiers actifs ayant au moins une recette active. C'est le filtre de la base publique : l'Archéologie reste active pour la fiche personnage, mais l'API ne lui donne aucune recette à présenter.
 
 ---
 

@@ -101,3 +101,44 @@ test('forgetting the sidebar makes both its counts and its subcategories read th
     expect($this->service->cachedCounts()['mounts'])->toBe(2)
         ->and($this->service->cachedSubcategories()['mounts'][0]['count'])->toBe(2);
 });
+
+// ─── Métiers sans recette ────────────────────────────────────
+
+function professionsWithAndWithoutRecipes(): void
+{
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->count(2)->create(['profession_id' => 164, 'is_active' => true]);
+    WowRecipe::factory()->create(['profession_id' => 164, 'is_active' => false]);
+
+    WowProfession::factory()->create(['id' => 794, 'name_fr' => 'Archeologie', 'type' => 'secondary']);
+    WowRecipe::factory()->create(['profession_id' => 794, 'is_active' => false]);
+}
+
+test('the profession list leaves out a profession without any active recipe', function (): void {
+    professionsWithAndWithoutRecipes();
+
+    $professions = $this->service->professions();
+
+    expect(array_column($professions['professions'], 'recipe_count', 'name_fr'))->toBe(['Forge' => 2])
+        ->and($professions['total_professions'])->toBe(1);
+});
+
+test('the profession sidebar leaves out a profession without any active recipe', function (): void {
+    professionsWithAndWithoutRecipes();
+
+    expect($this->service->subcategories('professions'))->toBe([
+        ['name' => 'Forge', 'slug' => 'forge', 'count' => 2, 'type' => 'primary'],
+    ]);
+});
+
+test('the database counts leave out a profession without any active recipe', function (): void {
+    professionsWithAndWithoutRecipes();
+
+    expect($this->service->counts()['professions'])->toBe(1);
+});
+
+test('a profession without any active recipe has no recipe page', function (): void {
+    professionsWithAndWithoutRecipes();
+
+    expect($this->service->professionRecipes('archeologie'))->toBe(['items' => [], 'expansions' => []]);
+});
