@@ -29,6 +29,9 @@ final readonly class ProfessionImporter
     // @pest-mutate-ignore
     private const string TYPE_SECONDARY = 'SECONDARY';
 
+    // @pest-mutate-ignore
+    private const int DEACTIVATION_CHUNK = 1000;
+
     public function __construct(
         BlizzardApiClient $blizzardApiClient,
     ) {
@@ -59,12 +62,13 @@ final readonly class ProfessionImporter
 
         $this->info(sprintf('Found %d professions. Fetching skill tiers...', count($professions)));
 
-        $recipes = $this->fetchRecipes($professions, $recipeFactionMap);
+        ['recipes' => $recipes, 'incomplete' => $incomplete] = $this->fetchRecipes($professions, $recipeFactionMap);
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
         $this->saveProfessions($professions);
         $this->deactivateProfessionsNotRetained(array_keys($professions), $unresolved);
         $this->saveRecipes($recipes);
+        $this->deactivateRecipesNotReturned(array_column($recipes, 'id'), [...$unresolved, ...$incomplete]);
 
         $this->info(sprintf('Profession import complete: %d professions, %d recipes.', count($professions), count($recipes)));
     }
@@ -144,10 +148,11 @@ final readonly class ProfessionImporter
 
     /**
      * Recettes par tier : catégories → recettes, extension déduite du nom du tier.
+     * Un métier dont un palier n'a pas répondu est rendu dans `incomplete`.
      *
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
      * @param  array<int, string>  $recipeFactionMap
-     * @return list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>
+     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, is_active: bool}>, incomplete: list<int>}
      */
     private function fetchRecipes(array $professions, array $recipeFactionMap): array
     {
@@ -167,16 +172,19 @@ final readonly class ProfessionImporter
         $tierDetails = $this->fetchBatchAsync($endpoints);
 
         $recipes = [];
+        $incomplete = [];
         foreach ($tierDetails as $key => $tierDetail) {
-            if ($tierDetail === null) {
-                continue;
-            }
-
             if (! isset($tierMeta[$key])) {
                 continue;
             }
 
             $meta = $tierMeta[$key];
+
+            if ($tierDetail === null) {
+                $incomplete[$meta['profession_id']] = $meta['profession_id'];
+
+                continue;
+            }
 
             foreach ($tierDetail->objectList('categories') as $category) {
                 $categoryName = trim($category->optionalString('name') ?? '');
@@ -204,7 +212,7 @@ final readonly class ProfessionImporter
             }
         }
 
-        return array_values($recipes);
+        return ['recipes' => array_values($recipes), 'incomplete' => array_values($incomplete)];
     }
 
     /**
@@ -321,6 +329,33 @@ final readonly class ProfessionImporter
         }
 
         $this->info(sprintf('  %d recipes written.', $written));
+    }
+
+    /**
+     * Les recettes héritées d'une source antérieure à l'API ne disparaissent qu'ainsi.
+     * Un métier dont un appel a échoué est épargné : son lot est partiel.
+     *
+     * @param  list<int>  $returnedIds
+     * @param  list<int>  $uncertainProfessionIds
+     */
+    private function deactivateRecipesNotReturned(array $returnedIds, array $uncertainProfessionIds): void
+    {
+        $returned = array_flip($returnedIds);
+
+        /** @var list<int> $staleIds */
+        $staleIds = WowRecipe::query()
+            ->where('is_active', true)
+            ->whereNotIn('profession_id', $uncertainProfessionIds)
+            ->pluck('id')
+            ->reject(fn (int $id): bool => isset($returned[$id]))
+            ->values()
+            ->all();
+
+        foreach (array_chunk($staleIds, self::DEACTIVATION_CHUNK) as $chunk) {
+            WowRecipe::query()->whereIn('id', $chunk)->update(['is_active' => false]);
+        }
+
+        $this->info(sprintf('  %d recipes deactivated.', count($staleIds)));
     }
 
     /**

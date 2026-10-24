@@ -392,3 +392,117 @@ test('a faction resolved by the mirror tagger survives the next import', functio
 
     expect(WowRecipe::query()->find(5001)->faction)->toBe('Alliance');
 });
+
+// ─── Recettes que l'API ne renvoie plus ─────────────────────
+
+test('it deactivates a stored recipe the API no longer returns', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 4999, 'profession_id' => 164, 'is_active' => true]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(4999)->is_active)->toBeFalse()
+        ->and(WowRecipe::query()->find(5001)->is_active)->toBeTrue();
+});
+
+test('a deactivated recipe carries the import time, so the step report counts it', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 4999, 'profession_id' => 164, 'is_active' => true, 'updated_at' => '2026-01-01 00:00:00']);
+    $this->travelTo('2026-10-24 12:00:00');
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(4999)->updated_at->toDateTimeString())->toBe('2026-10-24 12:00:00');
+});
+
+test('it reactivates a recipe the API returns again', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->create([
+        'id' => 5001,
+        'name_fr' => 'Plastron en acier',
+        'profession_id' => 164,
+        'expansion_id' => 10,
+        'category_name' => 'Armures',
+        'faction' => null,
+        'is_active' => false,
+    ]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(5001)->is_active)->toBeTrue();
+});
+
+test('it deactivates the recipes of a profession it no longer retains', function (): void {
+    WowProfession::factory()->create(['id' => 2787, 'name_fr' => 'Suture abominable', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 7001, 'profession_id' => 2787, 'is_active' => true]);
+
+    professionApiReturning([['id' => 5001, 'name' => 'Plastron en acier']]);
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(7001)->is_active)->toBeFalse();
+});
+
+test('it deactivates the recipes of a secondary profession without skill tiers', function (): void {
+    WowProfession::factory()->create(['id' => 794, 'name_fr' => 'Archéologie', 'type' => 'secondary']);
+    WowRecipe::factory()->create(['id' => 8001, 'profession_id' => 794, 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 794, 'name' => 'Archéologie']]);
+    mockProfessionDetail($client, 794, 'Archéologie', 'SECONDARY', []);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(8001)->is_active)->toBeFalse()
+        ->and(WowProfession::query()->find(794)->is_active)->toBeTrue();
+});
+
+test('it keeps the recipes of a profession whose skill tier could not be fetched', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 4999, 'profession_id' => 164, 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [
+        ['id' => 2820, 'name' => 'Forge de Khaz Algar'],
+        ['id' => 2821, 'name' => 'Forge de Midnight'],
+    ]);
+    mockSkillTierDetail($client, 164, 2820, [
+        ['name' => 'Armures', 'recipes' => [['id' => 5001, 'name' => 'Plastron en acier']]],
+    ]);
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/profession/164/skill-tier/2821', Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(404)));
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(4999)->is_active)->toBeTrue();
+});
+
+test('it keeps the recipes of a profession whose detail could not be fetched', function (): void {
+    WowProfession::factory()->create(['id' => 171, 'name_fr' => 'Alchimie', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 6001, 'profession_id' => 171, 'is_active' => true]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+
+    mockProfessionIndex($client, [
+        ['id' => 164, 'name' => 'Forge'],
+        ['id' => 171, 'name' => 'Alchimie'],
+    ]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, []);
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/profession/171', Mockery::any())
+        ->andReturnUsing(fn (): PromiseInterface => Create::promiseFor(new Response(404)));
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowRecipe::query()->find(6001)->is_active)->toBeTrue();
+});
