@@ -127,6 +127,8 @@ make worker-stop   # Stops the worker
 make down          # Stops the application
 ```
 
+> **npm dependencies**: `node_modules` is shared between the host (glibc) and the Vite container (Alpine, musl), and npm only installs the native binaries of the platform it runs on. After an `npm install`, `npm ci` or `npm audit fix` on the host, the container no longer starts: `make npm-ci` reinstalls from the lockfile and puts the musl binaries back, `make musl-binaries` only does the second step. Both restart Vite when it is running.
+
 > **Worker**: FrankenPHP keeps the code in memory. After changing a job or an Artisan command,
 > restart the worker for the change to be picked up: `docker compose restart worker`.
 
