@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import axios from 'axios';
 import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
+
+vi.mock('axios');
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
@@ -168,6 +171,7 @@ describe('CharacterCard', () => {
 
         it('explains what to remove once three favourites are pinned', async () => {
             const favorites = [1, 2, 3].map((id) => ({ realm_slug: 'hyjal', character_name: `alt${id}` }));
+            axios.get.mockResolvedValue({ data: favorites });
             await mountCard({ isOwner: true, favorites, stubActions: false });
 
             await button('Favori').trigger('click');
