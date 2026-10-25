@@ -128,6 +128,8 @@ make worker-stop   # Stoppe le worker
 make down          # Stoppe l'application
 ```
 
+> **Dépendances npm** : `node_modules` est partagé entre la machine (glibc) et le conteneur Vite (Alpine, musl), et npm n'installe que les binaires natifs de la plateforme qui le lance. Après un `npm install`, `npm ci` ou `npm audit fix` sur la machine, le conteneur ne démarre plus : `make npm-ci` réinstalle depuis le lockfile et remet les binaires musl, `make musl-binaries` ne fait que la seconde étape. Les deux redémarrent Vite s'il tourne.
+
 > **Worker** : FrankenPHP garde le code en mémoire. Après une modification d'un job ou d'une
 > commande Artisan, redémarre le worker pour prendre en compte les changements :
 > `docker compose restart worker`.

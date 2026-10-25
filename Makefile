@@ -1,4 +1,4 @@
-.PHONY: help build up down install install-hooks check-db drop-test-disks build-assets dev dev-stop worker worker-stop psql psql-test redis-cli clean test test-js tokens-check temp-paths-check lint lint-check static refactor refactor-check quality coverage coverage-php coverage-php-ci coverage-js crap mutate mutate-changed build-prod build-prod-ssr build-prod-all push push-ssr push-all deploy redeploy prod-up prod-down
+.PHONY: help build up down install npm-ci musl-binaries install-hooks check-db drop-test-disks build-assets dev dev-stop worker worker-stop psql psql-test redis-cli clean test test-js tokens-check temp-paths-check lint lint-check static refactor refactor-check quality coverage coverage-php coverage-php-ci coverage-js crap mutate mutate-changed build-prod build-prod-ssr build-prod-all push push-ssr push-all deploy redeploy prod-up prod-down
 
 # Development database coordinates. Not read from .env on purpose: make would
 # parse the whole file as makefile syntax and choke on the first '#' inside a
@@ -24,6 +24,16 @@ down: ## Stop the application
 install: ## Install dependencies (Composer & NPM)
 	composer install
 	npm install
+	@$(MAKE) --no-print-directory musl-binaries
+
+npm-ci: ## Reinstall node_modules from the lockfile, musl binaries of the vite container included
+	npm ci
+	@$(MAKE) --no-print-directory musl-binaries
+
+# node_modules is shared with the Alpine vite container: npm on the host drops its musl binaries.
+musl-binaries: ## Put back the musl binaries of the vite container, then restart it when running
+	node scripts/restore-musl-binaries.mjs
+	@if docker compose ps --status running --services 2>/dev/null | grep -qx vite; then docker compose --profile dev restart vite; fi
 
 install-hooks: ## Install git pre-commit hook
 	@sh scripts/install-hooks.sh
