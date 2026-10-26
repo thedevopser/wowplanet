@@ -46,6 +46,15 @@ describe('AppFooterInertia', () => {
         expect(discord.attributes('rel')).toBe('noopener noreferrer');
     });
 
+    it('keeps every link a 44 pixel touch target up to the desktop width', () => {
+        const links = mount(AppFooterInertia).findAll('a');
+
+        links.forEach((link) => {
+            expect(link.classes()).toEqual(expect.arrayContaining(['min-h-11', 'min-w-11', 'lg:min-h-9']));
+            expect(link.classes()).not.toContain('sm:min-h-9');
+        });
+    });
+
     it('adds no heading to the outline of the page', () => {
         expect(mount(AppFooterInertia).find('h1, h2, h3, h4').exists()).toBe(false);
     });

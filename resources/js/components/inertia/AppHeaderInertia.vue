@@ -2,7 +2,7 @@
     <header class="sticky top-0 z-header shrink-0 border-b border-default bg-surface">
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6">
             <Link href="/" class="flex shrink-0 items-center gap-2 rounded-ui-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                <img src="/images/logo.png" alt="WowPlanet" width="40" height="40" class="size-10 rounded-ui-md object-cover">
+                <img src="/images/logo.png" alt="WowPlanet" width="44" height="44" class="size-11 rounded-ui-md object-cover">
                 <span aria-hidden="true" class="hidden font-display text-xl font-semibold text-default sm:inline">WowPlanet</span>
             </Link>
 
