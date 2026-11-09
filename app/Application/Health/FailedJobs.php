@@ -37,7 +37,6 @@ final readonly class FailedJobs
     {
         $failed = [];
         foreach ($this->failedJobProvider->all() as $row) {
-            throw_unless(is_object($row), \UnexpectedValueException::class, 'A failed job row is not a record.');
             $failed[] = $this->describe($row);
         }
 

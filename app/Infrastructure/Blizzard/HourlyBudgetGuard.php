@@ -122,11 +122,7 @@ final class HourlyBudgetGuard
      */
     private function connection(): PhpRedisConnection
     {
-        $connection = Redis::connection('budget');
-
-        throw_unless($connection instanceof PhpRedisConnection, \RuntimeException::class, 'The Blizzard budget counter needs the phpredis client.');
-
-        return $connection;
+        return Redis::connection('budget');
     }
 
     private function currentMinute(): int
