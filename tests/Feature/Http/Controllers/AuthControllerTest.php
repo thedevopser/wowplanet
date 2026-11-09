@@ -125,7 +125,7 @@ test('a login refused by battle.net tells the user to retry', function (PromiseI
 ]);
 
 test('an unexpected login error tells the user to retry', function (): void {
-    Http::fake(['*.battle.net/oauth/token' => fn () => throw new RuntimeException('network down')]);
+    Http::fake(['*.battle.net/oauth/token' => fn (): never => throw new RuntimeException('network down')]);
 
     $this->withSession(['blizzard_oauth_state' => 'state-1'])
         ->get('/auth/blizzard/callback?code=valid-code&state=state-1')

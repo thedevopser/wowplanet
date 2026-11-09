@@ -83,7 +83,7 @@ class DatabaseSeoService
 
             $title = sprintf('Montures WoW %s — %d montures | WowPlanet', $category, $count);
             $description = sprintf(
-                '%d montures %s WoW en français. Source d\'obtention, icône et lien Wowhead pour chaque monture.',
+                "%d montures %s WoW en français. Source d'obtention, icône et lien Wowhead pour chaque monture.",
                 $count,
                 $category,
             );
@@ -260,7 +260,7 @@ class DatabaseSeoService
             $count = $builder->count();
             $title = sprintf('Mascottes WoW — %s mascottes | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
             $description = sprintf(
-                'Toutes les %d mascottes de combat de World of Warcraft en français. Triées par catégorie avec source d\'obtention et lien Wowhead.',
+                "Toutes les %d mascottes de combat de World of Warcraft en français. Triées par catégorie avec source d'obtention et lien Wowhead.",
                 $count,
             );
             $canonicalUrl = $appUrl.'/base-de-donnees/mascottes';
@@ -313,7 +313,7 @@ class DatabaseSeoService
             $count = $builder->count();
             $title = sprintf('Décorations WoW — %s décorations | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
             $description = sprintf(
-                'Toutes les %d décorations de World of Warcraft en français. Triées par catégorie avec source d\'obtention et lien Wowhead.',
+                "Toutes les %d décorations de World of Warcraft en français. Triées par catégorie avec source d'obtention et lien Wowhead.",
                 $count,
             );
             $canonicalUrl = $appUrl.'/base-de-donnees/decorations';
@@ -352,7 +352,7 @@ class DatabaseSeoService
 
             $title = sprintf('Transmogrification WoW %s — %d apparences | WowPlanet', $slot, $count);
             $description = sprintf(
-                '%d apparences d\'équipement %s WoW en français. Icône et lien Wowhead pour chaque apparence transmog.',
+                "%d apparences d'équipement %s WoW en français. Icône et lien Wowhead pour chaque apparence transmog.",
                 $count,
                 $slot,
             );
@@ -366,7 +366,7 @@ class DatabaseSeoService
             $count = $builder->count();
             $title = sprintf('Transmogrification WoW — %s apparences | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
             $description = sprintf(
-                'Toutes les %d apparences d\'équipement (transmog) de World of Warcraft en français. Classées par emplacement avec lien Wowhead.',
+                "Toutes les %d apparences d'équipement (transmog) de World of Warcraft en français. Classées par emplacement avec lien Wowhead.",
                 $count,
             );
             $canonicalUrl = $appUrl.'/base-de-donnees/garde-robe';

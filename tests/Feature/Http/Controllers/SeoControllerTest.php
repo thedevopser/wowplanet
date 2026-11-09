@@ -83,7 +83,7 @@ test('cgu page renders CguPage via inertia with unique meta', function (): void 
         ->assertOk()
         ->assertInertia(fn (Assert $assert): Assert => $assert
             ->component('CguPage')
-            ->where('meta.title', 'Conditions générales d\'utilisation | WowPlanet')
+            ->where('meta.title', "Conditions générales d'utilisation | WowPlanet")
             ->where('meta.jsonLd', null)
         );
 });

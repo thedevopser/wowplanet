@@ -7,6 +7,7 @@ use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomySnapshotMalformedException;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     $this->snapshotPath = testTempPath('taxonomy-snapshot').'/collection_taxonomy.csv';
@@ -14,7 +15,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     if (file_exists($this->snapshotPath)) {
-        unlink($this->snapshotPath);
+        File::delete($this->snapshotPath);
         rmdir(dirname($this->snapshotPath));
     }
 });

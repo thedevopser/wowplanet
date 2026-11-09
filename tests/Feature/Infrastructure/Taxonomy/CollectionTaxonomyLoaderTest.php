@@ -8,6 +8,7 @@ use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Infrastructure\Taxonomy\Exceptions\TaxonomySourceUnavailableException;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     $this->loaderSnapshotPath = testTempPath('taxonomy-loader').'/collection_taxonomy.csv';
@@ -15,7 +16,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     if (file_exists($this->loaderSnapshotPath)) {
-        unlink($this->loaderSnapshotPath);
+        File::delete($this->loaderSnapshotPath);
         rmdir(dirname($this->loaderSnapshotPath));
     }
 });

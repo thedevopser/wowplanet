@@ -61,7 +61,7 @@ describe('pondération', function (): void {
         expect(array_keys(ScoreWeights::LABELS))->toBe(array_keys(ScoreWeights::WEIGHTS));
     });
 
-    it('expose les neuf dimensions dans l\'ordre de la pondération', function (): void {
+    it("expose les neuf dimensions dans l'ordre de la pondération", function (): void {
         $score = $this->calculator->compute(new ScoreInput);
 
         expect(array_map(fn ($dimension): string => $dimension->key, $score->dimensions))
@@ -103,7 +103,7 @@ describe('dimensions de collection', function (): void {
             ->and(scoreDimension($score, 'quests')->score)->toBe(20.0);
     });
 
-    it('compte pour zéro un décompte absent d\'une extension', function (): void {
+    it("compte pour zéro un décompte absent d'une extension", function (): void {
         $score = $this->calculator->compute(new ScoreInput(collections: [
             9 => ['quests' => ['total' => 10]],
             10 => ['quests' => ['completed' => 5]],
@@ -121,7 +121,7 @@ describe('dimensions de collection', function (): void {
             ->and(scoreDimension($score, 'mounts')->score)->toBe(100.0);
     });
 
-    it('ne compte pas un item dont l\'état de complétion est inconnu', function (): void {
+    it("ne compte pas un item dont l'état de complétion est inconnu", function (): void {
         $score = $this->calculator->compute(new ScoreInput(mounts: [['is_completed' => true], []]));
 
         expect(scoreDimension($score, 'mounts')->completed)->toBe(1.0)
@@ -141,7 +141,7 @@ describe('garde-robe', function (): void {
             ->and(scoreDimension($score, 'transmog')->score)->toBe(25.0);
     });
 
-    it('compte pour zéro un décompte absent d\'un slot', function (): void {
+    it("compte pour zéro un décompte absent d'un slot", function (): void {
         $score = $this->calculator->compute(new ScoreInput(appearances: [
             ['slot' => 'HEAD', 'total' => 10],
             ['slot' => 'CHEST', 'completed' => 4],
@@ -319,7 +319,7 @@ describe('métiers', function (): void {
         expect(scoreDimension($score, 'professions')->score)->toBe(25.0);
     });
 
-    it('retombe sur les points de compétence quand aucune recette n\'est connue', function (): void {
+    it("retombe sur les points de compétence quand aucune recette n'est connue", function (): void {
         $score = $this->calculator->compute(new ScoreInput(professions: [
             ['profession_id' => 164, 'expansions' => [
                 10 => ['completed' => 0, 'total' => 0, 'skill_points' => 75, 'max_skill_points' => 100],
@@ -353,7 +353,7 @@ describe('métiers', function (): void {
         expect(scoreDimension($score, 'professions')->total)->toBe(1);
     });
 
-    it('compte pour zéro un décompte absent d\'une extension de métier', function (): void {
+    it("compte pour zéro un décompte absent d'une extension de métier", function (): void {
         $recipes = $this->calculator->compute(new ScoreInput(professions: [
             ['profession_id' => 164, 'expansions' => [9 => ['total' => 10], 10 => ['completed' => 3]]],
         ]));
@@ -393,7 +393,7 @@ describe('score global', function (): void {
         expect($score->global)->toBe(40.0);
     });
 
-    it('pondère deux dimensions applicables l\'une par rapport à l\'autre', function (): void {
+    it("pondère deux dimensions applicables l'une par rapport à l'autre", function (): void {
         $score = $this->calculator->compute(new ScoreInput(
             collections: scoreCollections('achievements', 100, 100),
             mounts: scoreItems(0, 100),

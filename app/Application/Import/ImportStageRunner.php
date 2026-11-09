@@ -137,7 +137,7 @@ final readonly class ImportStageRunner
 
         if ($inserted > 0) {
             $this->importLog->note($jobId, sprintf(
-                '%s — %d %s depuis l\'instantané versionné.',
+                "%s — %d %s depuis l'instantané versionné.",
                 $importStage->label(),
                 $inserted,
                 $inserted > 1 ? 'entrées de taxonomie chargées' : 'entrée de taxonomie chargée',
@@ -148,7 +148,7 @@ final readonly class ImportStageRunner
             WowCollectionTaxonomy::query()->where('entity', $collectionEntity)->exists(),
             \RuntimeException::class,
             sprintf(
-                'Taxonomie des %s vide : import refusé pour ne pas effacer le rangement du catalogue. Rechargez l\'instantané depuis /admin/taxonomy.',
+                "Taxonomie des %s vide : import refusé pour ne pas effacer le rangement du catalogue. Rechargez l'instantané depuis /admin/taxonomy.",
                 mb_strtolower($importStage->label()),
             ),
         );

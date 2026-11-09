@@ -6,6 +6,7 @@ use App\Infrastructure\Taxonomy\CollectionEntity;
 use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Symfony\Component\Console\Command\Command;
 
 beforeEach(function (): void {
@@ -14,7 +15,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     if (file_exists($this->exportPath)) {
-        unlink($this->exportPath);
+        File::delete($this->exportPath);
         rmdir(dirname($this->exportPath));
     }
 });

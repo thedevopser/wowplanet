@@ -14,6 +14,7 @@ use App\Models\WowCollectionTaxonomy;
 use App\Models\WowDecor;
 use App\Models\WowMount;
 use App\Models\WowPet;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Monolog\Handler\TestHandler;
 
@@ -261,7 +262,7 @@ test('an export that cannot write keeps the arbitration and says the snapshot dr
     $handler = Log::channel('captured')->getLogger()->getHandlers()[0];
     expect($handler instanceof TestHandler && $handler->hasWarningThatContains('Collection taxonomy snapshot could not be exported'))->toBeTrue();
 
-    unlink($directory);
+    File::delete($directory);
 });
 
 test('arbitrating a decor clears the category its tags suggested', function (): void {

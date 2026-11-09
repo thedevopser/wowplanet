@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     $this->originalPublicPath = app()->publicPath();
@@ -55,7 +56,7 @@ test('it sizes each PNG variant to its target dimensions', function (): void {
 });
 
 test('it fails when the source logo is missing', function (): void {
-    unlink($this->publicTmpDir.'/images/logo.png');
+    File::delete($this->publicTmpDir.'/images/logo.png');
 
     $this->artisan('app:generate-favicons')->assertExitCode(1);
 });

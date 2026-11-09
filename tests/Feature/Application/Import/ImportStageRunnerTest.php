@@ -21,6 +21,7 @@ use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use App\Models\WowMount;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     $this->importerMock = $this->mock(BlizzardBatchImporter::class);
@@ -241,17 +242,17 @@ test('the merge never rewrites what the base already holds', function (): void {
 });
 
 test('a collection stage refuses to import against an empty taxonomy, rather than stripping the catalogue', function (): void {
-    unlink(resolve(CollectionTaxonomySnapshot::class)->path());
+    File::delete(resolve(CollectionTaxonomySnapshot::class)->path());
     $this->importerMock->shouldNotReceive('importDecor');
 
     $importStep = runStage(ImportStage::Decor);
 
     expect($importStep->status)->toBe(ImportStepStatus::Failed)
-        ->and($importStep->error)->toBe('Taxonomie des décorations vide : import refusé pour ne pas effacer le rangement du catalogue. Rechargez l\'instantané depuis /admin/taxonomy.');
+        ->and($importStep->error)->toBe("Taxonomie des décorations vide : import refusé pour ne pas effacer le rangement du catalogue. Rechargez l'instantané depuis /admin/taxonomy.");
 });
 
 test('a missing snapshot does not stop a collection whose taxonomy is already in the base', function (): void {
-    unlink(resolve(CollectionTaxonomySnapshot::class)->path());
+    File::delete(resolve(CollectionTaxonomySnapshot::class)->path());
     WowCollectionTaxonomy::query()->create(['entity' => 'mount', 'entry_id' => 7, 'category' => 'Racial', 'source' => 'Human', 'obtainable' => true]);
     $this->importerMock->shouldReceive('importMounts')->once();
 
@@ -272,7 +273,7 @@ test('the journal says how many curated entries the merge brought in', function 
     runStage(ImportStage::Mounts);
 
     expect(implode(PHP_EOL, resolve(ImportLog::class)->since('job-1', 0)->lines))
-        ->toContain('Montures — 2 entrées de taxonomie chargées depuis l\'instantané versionné.');
+        ->toContain("Montures — 2 entrées de taxonomie chargées depuis l'instantané versionné.");
 });
 
 test('a merge that brings nothing new stays out of the journal', function (): void {

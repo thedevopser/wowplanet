@@ -264,6 +264,6 @@ test('aggregate names a profession missing from the catalogue', function (int $i
 })->with([
     'nom français connu' => [164, 'Blacksmithing', 'Forge', 'primary'],
     'métier secondaire' => [356, 'Fishing', 'Pêche', 'secondary'],
-    'nom de l\'API à défaut' => [999, 'Tinkering', 'Tinkering', 'primary'],
+    "nom de l'API à défaut" => [999, 'Tinkering', 'Tinkering', 'primary'],
     'aucun nom' => [998, null, '', 'primary'],
 ]);

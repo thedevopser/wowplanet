@@ -87,7 +87,7 @@ final readonly class ImportPipeline
 
     public function resume(ImportRun $importRun): ImportRun
     {
-        $this->note($importRun->jobId, 'Import repris, reprise à l\'étape en cours.');
+        $this->note($importRun->jobId, "Import repris, reprise à l'étape en cours.");
 
         return $this->publish($importRun->resumed());
     }

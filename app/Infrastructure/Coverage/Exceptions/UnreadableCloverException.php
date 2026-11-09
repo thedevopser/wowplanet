@@ -20,6 +20,6 @@ final class UnreadableCloverException extends RuntimeException
 
     public static function missingAttribute(string $fileName, string $attribute): self
     {
-        return new self(sprintf('Une méthode de %s n\'a pas d\'attribut %s.', $fileName, $attribute));
+        return new self(sprintf("Une méthode de %s n'a pas d'attribut %s.", $fileName, $attribute));
     }
 }
