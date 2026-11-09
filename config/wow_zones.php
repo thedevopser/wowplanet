@@ -62,7 +62,7 @@ return [
     'Tol Barad' => 3, 'Les Serres-Rocheuses' => 3, 'Les Hinterlands' => 3,
     'Profondeurs Abyssales' => 3, 'Rivages de Tranchevent' => 3,
     "Contreforts de Hautebrande d'antan" => 3, 'Grim Batol' => 3,
-    'Cité perdue des Tol\'vir' => 3, 'Trône des marées' => 3,
+    "Cité perdue des Tol'vir" => 3, 'Trône des marées' => 3,
     'La Fin des temps' => 3, "L'Heure du Crépuscule" => 3,
     "Puits d'éternité" => 3, 'Sombrevallon' => 3,
     'La cime du Vortex' => 3, "Citadelle d'Obsidienne" => 3,
@@ -102,7 +102,7 @@ return [
     'Hall du Gardien' => 6, 'Le Vindicaar' => 6,
     'Sanctum de la Lumière' => 6, 'Marges des Éons' => 6,
     "Achérus : le fort d'Ébène" => 6, 'Bastion du Freux' => 6,
-    'Flèche d\'Aubétoile' => 6, 'La Mugambala' => 6,
+    "Flèche d'Aubétoile" => 6, 'La Mugambala' => 6,
 
     // === Battle for Azeroth (7) ===
     "Confins de l'Exil" => 7,

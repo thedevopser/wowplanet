@@ -338,7 +338,7 @@ describe('métiers', function (): void {
         expect($progress->buildResult()['bestProfessionStats'])->toBe(['completed' => 1, 'total' => 1]);
     });
 
-    it('se replie sur les points de compétence quand aucune recette n\'est connue', function (): void {
+    it("se replie sur les points de compétence quand aucune recette n'est connue", function (): void {
         $progress = new AccountScoreProgress([]);
         $progress->mergeProfile(accountProfile(professions: [accountProfession(30, 100), accountProfession(20, 75, [], 1)]));
 

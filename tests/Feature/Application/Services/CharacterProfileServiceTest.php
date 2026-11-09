@@ -47,7 +47,7 @@ test('get profile returns correct dto', function (): void {
         'id' => 100,
         'name_fr' => 'Quête Test',
         'expansion_id' => 0,
-        'zone_name' => 'Forêt d\'Elwynn',
+        'zone_name' => "Forêt d'Elwynn",
         'is_active' => true,
     ]);
 

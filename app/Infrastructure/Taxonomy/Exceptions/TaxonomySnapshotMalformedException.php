@@ -31,7 +31,7 @@ final class TaxonomySnapshotMalformedException extends RuntimeException
     public static function columnCount(int $line, int $expected, int $found): self
     {
         return new self(sprintf(
-            'Ligne %d de l\'instantané : %d colonnes attendues, %d trouvées.',
+            "Ligne %d de l'instantané : %d colonnes attendues, %d trouvées.",
             $line,
             $expected,
             $found,
@@ -40,18 +40,18 @@ final class TaxonomySnapshotMalformedException extends RuntimeException
 
     public static function entity(int $line, string $entity): self
     {
-        return new self(sprintf('Ligne %d de l\'instantané : entité inconnue « %s ».', $line, $entity));
+        return new self(sprintf("Ligne %d de l'instantané : entité inconnue « %s ».", $line, $entity));
     }
 
     public static function entryId(int $line, string $entryId): self
     {
-        return new self(sprintf('Ligne %d de l\'instantané : identifiant non entier « %s ».', $line, $entryId));
+        return new self(sprintf("Ligne %d de l'instantané : identifiant non entier « %s ».", $line, $entryId));
     }
 
     public static function obtainable(int $line, string $obtainable): self
     {
         return new self(sprintf(
-            'Ligne %d de l\'instantané : « %s » n\'est ni true ni false.',
+            "Ligne %d de l'instantané : « %s » n'est ni true ni false.",
             $line,
             $obtainable,
         ));
@@ -59,6 +59,6 @@ final class TaxonomySnapshotMalformedException extends RuntimeException
 
     public static function writtenEntity(string $entity): self
     {
-        return new self(sprintf('Entité inconnue à écrire dans l\'instantané : « %s ».', $entity));
+        return new self(sprintf("Entité inconnue à écrire dans l'instantané : « %s ».", $entity));
     }
 }

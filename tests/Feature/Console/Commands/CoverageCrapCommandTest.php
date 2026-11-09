@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
     $this->cloverPath = testTempPath('coverage-crap').'.xml';
 });
 
 afterEach(function (): void {
-    @unlink($this->cloverPath);
+    File::delete($this->cloverPath);
 });
 
 function writeClover(string $path, string $methodLines): void

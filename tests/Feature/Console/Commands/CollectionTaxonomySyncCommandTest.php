@@ -8,6 +8,7 @@ use App\Infrastructure\Taxonomy\CollectionTaxonomySnapshot;
 use App\Infrastructure\Taxonomy\TaxonomyEntry;
 use App\Models\WowCollectionTaxonomy;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 
@@ -24,7 +25,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     if (file_exists($this->syncSnapshotPath)) {
-        unlink($this->syncSnapshotPath);
+        File::delete($this->syncSnapshotPath);
         rmdir(dirname($this->syncSnapshotPath));
     }
 });

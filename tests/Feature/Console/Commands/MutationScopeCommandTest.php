@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 beforeEach(function (): void {
@@ -70,7 +71,7 @@ test('an entry that no longer exists fails and is named', function (): void {
 });
 
 test('a missing perimeter file fails with a message', function (): void {
-    unlink($this->scopeRoot.'/mutation-perimeter.txt');
+    File::delete($this->scopeRoot.'/mutation-perimeter.txt');
 
     $this->artisan('mutation:scope')
         ->expectsOutputToContain('No mutation perimeter at')

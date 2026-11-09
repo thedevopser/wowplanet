@@ -8,6 +8,6 @@ final class MalformedSourceException extends ReferenceSyncException
 {
     public static function withoutHeader(string $source): self
     {
-        return new self(sprintf('La table DB2 %s a été servie sans ligne d\'en-tête.', $source));
+        return new self(sprintf("La table DB2 %s a été servie sans ligne d'en-tête.", $source));
     }
 }

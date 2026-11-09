@@ -24,7 +24,7 @@ class WowQuestFactory extends Factory
             'name_fr' => fake()->sentence(3),
             'expansion_id' => fake()->numberBetween(0, 11),
             'zone_name' => fake()->randomElement([
-                'Forêt d\'Elwynn',
+                "Forêt d'Elwynn",
                 'Durotar',
                 'Les Carmines',
                 'Nagrand',

@@ -43,7 +43,7 @@ test('an unreachable wago leaves the page without a comparison, never without a 
 test('wago unreachable is a failure like any other, not a five hundred on the panel', function (): void {
     // Une panne de résolution ou un délai dépassé lève une ConnectionException avant
     // toute réponse : ce n'est pas la même exception qu'un 503, et c'est le cas réel.
-    Http::fake(fn () => throw new ConnectionException('Could not resolve host: wago.tools'));
+    Http::fake(fn (): never => throw new ConnectionException('Could not resolve host: wago.tools'));
 
     expect(resolve(LiveReferenceBuild::class)->current())->toBeNull();
 });

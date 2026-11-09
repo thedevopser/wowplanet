@@ -27,7 +27,7 @@ function makeAggregator(
 test('aggregate groups reputations by expansion', function (): void {
     $reputationProgressAggregator = makeAggregator(
         buildMap: [72 => 0, 1037 => 2],
-        namesMap: [72 => 'Hurlevent', 1037 => 'Chevaliers de la Lame d\'ébène'],
+        namesMap: [72 => 'Hurlevent', 1037 => "Chevaliers de la Lame d'ébène"],
     );
 
     $result = reputationProgress($reputationProgressAggregator, [
@@ -37,7 +37,7 @@ test('aggregate groups reputations by expansion', function (): void {
                 'standing' => ['name' => 'Exalté', 'tier' => 7, 'value' => 0, 'max' => 0, 'raw' => 42999],
             ],
             [
-                'faction' => ['id' => 1037, 'name' => 'Chevaliers de la Lame d\'ébène'],
+                'faction' => ['id' => 1037, 'name' => "Chevaliers de la Lame d'ébène"],
                 'standing' => ['name' => 'Honoré', 'tier' => 5, 'value' => 5000, 'max' => 12000, 'raw' => 14000],
             ],
         ],
@@ -52,7 +52,7 @@ test('aggregate groups reputations by expansion', function (): void {
 
     expect($result[2]['total'])->toBe(1)
         ->and($result[2]['completed'])->toBe(0)
-        ->and($result[2]['factions'][0]['name'])->toBe('Chevaliers de la Lame d\'ébène')
+        ->and($result[2]['factions'][0]['name'])->toBe("Chevaliers de la Lame d'ébène")
         ->and($result[2]['factions'][0]['value'])->toBe(5000)
         ->and($result[2]['factions'][0]['max'])->toBe(12000)
         ->and($result[2]['factions'][0]['started'])->toBeTrue();
@@ -442,7 +442,7 @@ test('the reputation payload is unchanged', function (): void {
     $reputationProgressAggregator = makeAggregator(
         buildMap: [72 => 0, 76 => 0, 1037 => 2, 2590 => 10, 2594 => 10, 2600 => 10, 2601 => 10, 2602 => 10, 9999 => 11],
         maxRenownMap: [2590 => 20, 2594 => 25],
-        namesMap: [72 => 'Hurlevent', 76 => 'Orgrimmar', 1037 => 'Lame d\'ébène', 2590 => 'Conseil de Dornogal', 2594 => 'Assemblée', 2600 => 'Tisse-nuit', 2601 => 'Doublon', 2602 => 'Doublon', 9999 => 'Doublon'],
+        namesMap: [72 => 'Hurlevent', 76 => 'Orgrimmar', 1037 => "Lame d'ébène", 2590 => 'Conseil de Dornogal', 2594 => 'Assemblée', 2600 => 'Tisse-nuit', 2601 => 'Doublon', 2602 => 'Doublon', 9999 => 'Doublon'],
         factionMap: [72 => 'Alliance', 76 => 'Horde'],
         accountWideFactionIds: [2600 => true],
     );
@@ -450,7 +450,7 @@ test('the reputation payload is unchanged', function (): void {
     $result = reputationProgress($reputationProgressAggregator, [
         'reputations' => [
             ['faction' => ['id' => 72, 'name' => 'Hurlevent'], 'standing' => ['name' => 'Exalté', 'tier' => 7, 'value' => 0, 'max' => 0, 'raw' => 42999]],
-            ['faction' => ['id' => 1037, 'name' => 'Lame d\'ébène'], 'standing' => ['name' => 'Honoré', 'tier' => 5, 'value' => 5000, 'max' => 12000, 'raw' => 14000]],
+            ['faction' => ['id' => 1037, 'name' => "Lame d'ébène"], 'standing' => ['name' => 'Honoré', 'tier' => 5, 'value' => 5000, 'max' => 12000, 'raw' => 14000]],
             ['faction' => ['id' => 2590, 'name' => 'Conseil de Dornogal'], 'standing' => ['name' => 'Renom 20', 'tier' => 0, 'value' => 0, 'max' => 2500, 'raw' => 50000, 'renown_level' => 20]],
             ['faction' => ['id' => 2594, 'name' => 'Assemblée'], 'standing' => ['name' => 'Renom 3', 'tier' => 0, 'value' => 10, 'max' => 2500, 'raw' => 7510, 'renown_level' => 3]],
             ['faction' => ['id' => 2601, 'name' => 'Doublon'], 'standing' => ['tier' => 2]],

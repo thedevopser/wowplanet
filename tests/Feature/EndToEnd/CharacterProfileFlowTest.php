@@ -19,13 +19,13 @@ test('full character profile flow', function (): void {
         'id' => 100,
         'name_fr' => 'La menace Murloc',
         'expansion_id' => 0,
-        'zone_name' => 'Forêt d\'Elwynn',
+        'zone_name' => "Forêt d'Elwynn",
     ]);
     WowQuest::factory()->create([
         'id' => 101,
         'name_fr' => 'Patte de loup',
         'expansion_id' => 0,
-        'zone_name' => 'Forêt d\'Elwynn',
+        'zone_name' => "Forêt d'Elwynn",
     ]);
 
     WowAchievement::factory()->create([

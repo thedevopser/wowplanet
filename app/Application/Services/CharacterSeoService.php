@@ -67,8 +67,8 @@ class CharacterSeoService
                 'Réponses aux questions fréquentes sur WowPlanet : import de personnages, score compte, tâches quotidiennes et base de données WoW.',
             ],
             'cgu' => [
-                'Conditions générales d\'utilisation | WowPlanet',
-                'Conditions générales d\'utilisation du site WowPlanet.',
+                "Conditions générales d'utilisation | WowPlanet",
+                "Conditions générales d'utilisation du site WowPlanet.",
             ],
             'privacy' => [
                 'Politique de confidentialité | WowPlanet',
@@ -393,7 +393,7 @@ class CharacterSeoService
                     'name' => "Qu'est-ce que le score compte ?",
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'Le score compte est une note globale sur 100 qui évalue votre progression sur l\'ensemble de vos personnages : quêtes, hauts-faits, montures, mascottes, métiers, décorations et réputations.',
+                        'text' => "Le score compte est une note globale sur 100 qui évalue votre progression sur l'ensemble de vos personnages : quêtes, hauts-faits, montures, mascottes, métiers, décorations et réputations.",
                     ],
                 ],
                 [

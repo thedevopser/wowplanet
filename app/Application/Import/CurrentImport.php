@@ -122,10 +122,6 @@ final readonly class CurrentImport
      */
     private function connection(): PhpRedisConnection
     {
-        $connection = Redis::connection('imports');
-
-        throw_unless($connection instanceof PhpRedisConnection, \RuntimeException::class, 'The import lock needs the phpredis client.');
-
-        return $connection;
+        return Redis::connection('imports');
     }
 }

@@ -9,7 +9,7 @@ beforeEach(function (): void {
 });
 
 describe('mode de jeu', function (): void {
-    it('déduit le mode du slug renvoyé par l\'API', function (string $slug, string $group): void {
+    it("déduit le mode du slug renvoyé par l'API", function (string $slug, string $group): void {
         expect($this->classifier->groupFor($slug))->toBe($group);
     })->with([
         ['2v2', 'arena'],
@@ -48,7 +48,7 @@ describe('libellé court', function (): void {
         ['rbg', 'Champs de bataille cotés'],
     ]);
 
-    it('reprend la spécialisation fournie par l\'API', function (): void {
+    it("reprend la spécialisation fournie par l'API", function (): void {
         expect($this->classifier->shortLabelFor('shuffle-priest-shadow', 'Ombre'))->toBe('Ombre');
     });
 
@@ -71,7 +71,7 @@ describe('libellé complet', function (): void {
             ->and($this->classifier->labelFor('blitz-overall'))->toBe('Blitz — Toutes spés');
     });
 
-    it('ne répète pas le mode dans le libellé d\'un bracket fixe', function (string $slug, string $label): void {
+    it("ne répète pas le mode dans le libellé d'un bracket fixe", function (string $slug, string $label): void {
         expect($this->classifier->labelFor($slug))->toBe($label);
     })->with([
         ['2v2', 'Arène 2c2'],
@@ -88,7 +88,7 @@ describe('spécialisation', function (): void {
         expect($this->classifier->specSlugsFor($slug))->toBe(['deathknight', 'blood']);
     })->with(['shuffle-deathknight-blood', 'blitz-deathknight-blood']);
 
-    it('ne décompose pas un bracket qui n\'est pas par spécialisation', function (string $slug): void {
+    it("ne décompose pas un bracket qui n'est pas par spécialisation", function (string $slug): void {
         expect($this->classifier->specSlugsFor($slug))->toBeNull();
     })->with([
         '2v2',

@@ -12,6 +12,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
@@ -235,7 +236,7 @@ function removeDirectory(string $directory): void
     );
 
     foreach ($iterator as $file) {
-        $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
+        $file->isDir() ? rmdir($file->getPathname()) : File::delete($file->getPathname());
     }
 
     rmdir($directory);
