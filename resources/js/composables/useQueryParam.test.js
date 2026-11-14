@@ -8,7 +8,7 @@ vi.mock('@inertiajs/vue3', async () => {
 });
 
 import { __page, router } from '@inertiajs/vue3';
-import { useQueryParam } from './useQueryParam';
+import { useQueryParam, useQueryParamsUpdate } from './useQueryParam';
 
 beforeEach(() => {
     __page.url = '/character/hyjal/arthas/progression/quetes';
@@ -62,5 +62,24 @@ describe('useQueryParam', () => {
         extension.value = 'all';
 
         expect(router.replace.mock.calls[0][0].url).toBe('/character/hyjal/arthas/progression/quetes');
+    });
+});
+
+describe('useQueryParamsUpdate', () => {
+    it('writes several parameters in one visit, dropping those back at their default', () => {
+        __page.url = '/mon-compte/a-faire?dimension=quests&extension=10&personnage=Apery';
+        const update = useQueryParamsUpdate();
+
+        update([
+            { name: 'dimension', value: 'mounts', fallback: 'tout' },
+            { name: 'extension', value: 'tout', fallback: 'tout' },
+        ]);
+
+        expect(router.replace).toHaveBeenCalledOnce();
+        expect(router.replace).toHaveBeenCalledWith({
+            url: '/mon-compte/a-faire?dimension=mounts&personnage=Apery',
+            preserveState: true,
+            preserveScroll: true,
+        });
     });
 });

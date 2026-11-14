@@ -21,9 +21,9 @@ class AccountController extends Controller
      * @var array<string, string>
      */
     private const array VIEWS_BY_SEGMENT = [
+        'a-faire' => 'a-faire',
         'score' => 'score',
         'classes' => 'classes',
-        'a-faire' => 'a-faire',
     ];
 
     public function __construct(
