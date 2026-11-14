@@ -353,6 +353,7 @@ Un objet par endpoint que la fiche personnage consomme, construit sur `ResponseP
 | `RaidEncounterProgress` | un boss vaincu | `id`, `name`, `lastKillTimestamp` |
 | `JournalInstanceResponse` | `data/wow/journal-instance/{id}` | `name`, `encounterNames` (identifiant → nom français) |
 | `MythicKeystoneSeasonResponse` | `…/mythic-keystone-profile/season/{id}` | `seasonId`, `rating`, `ratingColor`, `bestRuns` |
+| `MythicKeystoneProfileResponse` | `…/mythic-keystone-profile` | `periodId`, `currentPeriodRuns` : la meilleure clé par donjon de la semaine en cours, vide quand Blizzard omet la liste (aucune clé dans la semaine) |
 | `MythicRun` | une entrée de `best_runs` | donjon, niveau, durée, horodatage, dans les temps, cote et cote de donjon avec leurs couleurs. Les membres du groupe ne sont pas lus. |
 | `RatingColor` | la `color` d'une cote | `r`, `g`, `b`, `a`, et `toArray()` pour la prop transmise au front |
 

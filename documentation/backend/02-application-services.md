@@ -256,16 +256,19 @@ Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, ce
 
 Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`, `quests`, `reputations`, `recipes`) et la portée de `doers` (`account` pour n'importe quel personnage du compte, `characters` pour les personnages nommés).
 
----|---|---|
-| `build(array $accountProfile)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. |
 
-- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune), hauts-faits par catégorie et par extension. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
-- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
-- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=` pour une monture, `npc=` pour une mascotte, `item=` pour une décoration, `achievement=` pour un haut-fait, une recherche sur le nom à défaut d'identifiant) et `doers`, qui dit qui peut le faire.
+### `WeeklyActivityBuilder`
 
-### `TodoDimension` et `TodoScope`
+Ce qu'il reste à faire à chaque personnage avant la remise à zéro, pour la page `/mon-compte/semaine`. Classe pure : elle reçoit, par personnage, son nom, son royaume, son niveau, sa classe et ses deux réponses Blizzard (`CharacterRaidsResponse`, `MythicKeystoneProfileResponse`, nulles s'il n'a rien fait), le journal des raids de la saison (tous les boss de chaque raid, en français), les donjons de la saison et l'instant présent.
 
-Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`) et la portée de `doers` (`account` pour une collection ou un haut-fait commun au compte).
+| Méthode | Retour | Description |
+|---|---|---|
+| `build(array $characters, array $raidJournal, array $seasonDungeons, DateTimeImmutable $now)` | `WeeklyActivity` | `characters`, les personnages au niveau maximum, triés ; `belowMaxLevel`, le nombre de personnages écartés ; `maxLevel`, le plus haut niveau du compte. |
+
+- **Niveau maximum** : le plus haut niveau parmi les personnages reçus. En dessous, ni Grande Chambre forte ni contenu de la saison : le personnage est écarté et compté.
+- **Raid** : les victoires de la pseudo-extension 505 postérieures à la dernière remise à zéro (`WeeklyReset`) donnent les paliers (`GreatVault::raid()`). `remaining` liste, raid par raid du journal et difficulté par difficulté, les boss encore à battre cette semaine ; une difficulté où tout est battu disparaît, et un raid battu dans toutes ses difficultés aussi. La réponse de Blizzard ne liste que les boss déjà battus : la liste complète vient du journal. Une difficulté inconnue du site est laissée de côté plutôt que de faire échouer la page.
+- **Mythique+** : les clés de la semaine (`current_period`) donnent les paliers (`GreatVault::mythicPlus()`) ; `missingDungeons` nomme les donjons de la saison sans clé cette semaine. Une clé sans niveau ou sans donjon est ignorée.
+- **Tri** : `nextSlotGap`, le plus petit nombre de boss ou de donjons manquant pour un prochain palier, raid et Mythique+ confondus, du plus petit au plus grand ; à égalité, le plus de paliers atteints d'abord, puis le nom. Un personnage à la chambre forte remplie (`nextSlotGap` nul) passe en dernier.
 
 ---
 

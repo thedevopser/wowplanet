@@ -19,6 +19,7 @@ app/Domain/Services/ResilientKeystone.php
 app/Domain/Services/WeeklyReset.php
 app/Domain/Services/GreatVault.php
 app/Domain/ValueObjects/RaidDifficulty.php
+app/Application/Services/Week/WeeklyActivityBuilder.php
 
 # Account-wide rules: which character's progress wins when several know the same thing.
 app/Application/DTOs/AccountScoreProgress.php
