@@ -65,7 +65,7 @@ function stubCrossCharacterMerge(?Closure $observe = null): void
                 questIds: [100],
                 achievementIds: [200],
                 reputations: CharacterReputationsResponse::fromPayload(ResponsePayload::forEndpoint('reputations', ['reputations' => [['faction' => ['id' => 2600], 'standing' => ['raw' => 500, 'tier' => 5, 'name' => 'Honoré', 'max' => 3000]]]])),
-                professions: CharacterProfessionsResponse::fromPayload(ResponsePayload::forEndpoint('professions', ['primaries' => [['profession' => ['id' => 164], 'tiers' => [['tier' => ['id' => 2822], 'skill_points' => 50, 'max_skill_points' => 100, 'known_recipes' => [['id' => 900]]]]]]])),
+                professions: CharacterProfessionsResponse::fromPayload(ResponsePayload::forEndpoint('professions', ['primaries' => [['profession' => ['id' => 164], 'tiers' => [['tier' => ['id' => 2822, 'name' => 'Forge de Khaz Algar'], 'skill_points' => 50, 'max_skill_points' => 100, 'known_recipes' => [['id' => 900]]]]]]])),
             ));
         });
 }
@@ -134,7 +134,7 @@ test('it stores the account data and publishes its completion', function (): voi
         ->and($crossCharacterData->data['achievementOwners'])->toBe([200 => 'Thrall'])
         ->and($crossCharacterData->data['recipeOwners'])->toBe([900 => 'Thrall'])
         ->and($crossCharacterData->data['bestFactionStandings'][2600]['character_name'])->toBe('Thrall')
-        ->and($crossCharacterData->data['skillPointOwners'][164][2822]['skill_points'])->toBe(50);
+        ->and($crossCharacterData->data['skillPointOwners'][164][10]['skill_points'])->toBe(50);
 });
 
 test('a new computation replaces the stored account data', function (): void {

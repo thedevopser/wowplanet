@@ -60,7 +60,7 @@ function crossCharacterPayloads(int $questId, int $achievementId, int $factionId
         ]],
         'professions' => ['primaries' => [[
             'profession' => ['id' => 164],
-            'tiers' => [['tier' => ['id' => 2822], 'skill_points' => 50, 'max_skill_points' => 100, 'known_recipes' => [['id' => $recipeId]]]],
+            'tiers' => [['tier' => ['id' => 2822, 'name' => 'Forge de Khaz Algar'], 'skill_points' => 50, 'max_skill_points' => 100, 'known_recipes' => [['id' => $recipeId]]]],
         ]]],
     ];
 }
@@ -291,7 +291,7 @@ test('it merges the progress of every character with its owner', function (): vo
         ->and($result['recipeOwners'])->toBe([900 => 'Thrall', 901 => 'Jaina'])
         ->and(array_keys($result['bestFactionStandings']))->toBe([2600, 2601])
         ->and($result['bestFactionStandings'][2601]['character_name'])->toBe('Jaina')
-        ->and($result['skillPointOwners'][164][2822]['skill_points'])->toBe(50);
+        ->and($result['skillPointOwners'][164][10]['skill_points'])->toBe(50);
 });
 
 test('it asks Blizzard for the lowercased character in the profile namespace', function (): void {
@@ -536,10 +536,10 @@ test('the account data round trip is unchanged', function (): void {
     $jaina['professions'] = ['primaries' => [[
         'profession' => ['id' => 164],
         'tiers' => [
-            ['tier' => ['id' => 2822], 'skill_points' => 80, 'max_skill_points' => 100, 'known_recipes' => [['id' => 900], ['id' => 902]]],
-            ['tier' => ['id' => 2823], 'skill_points' => 0, 'known_recipes' => []],
+            ['tier' => ['id' => 2822, 'name' => 'Forge de Khaz Algar'], 'skill_points' => 80, 'max_skill_points' => 100, 'known_recipes' => [['id' => 900], ['id' => 902]]],
+            ['tier' => ['id' => 2823, 'name' => 'Forge des Îles aux Dragons'], 'skill_points' => 0, 'known_recipes' => []],
         ],
-    ]], 'secondaries' => [['profession' => ['id' => 356], 'tiers' => [['tier' => ['id' => 1], 'skill_points' => 10, 'max_skill_points' => 300]]]]];
+    ]], 'secondaries' => [['profession' => ['id' => 356], 'tiers' => [['tier' => ['id' => 1, 'name' => 'Pêche de Khaz Algar'], 'skill_points' => 10, 'max_skill_points' => 300]]]]];
     Http::fake([
         ...fakeCrossCharacter('hyjal', 'thrall', crossCharacterPayloads(100, 200, 2600, 900)),
         ...fakeCrossCharacter('ysondre', 'jaina', $jaina),

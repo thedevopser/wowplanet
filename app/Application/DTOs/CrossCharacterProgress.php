@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\DTOs;
 
+use App\Infrastructure\Blizzard\ExpansionTierMatcher;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfessionsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterReputationsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\ProfessionTier;
@@ -224,7 +225,7 @@ class CrossCharacterProgress
         $this->keepBestSkillPoints(
             $characterName,
             $professionId,
-            $professionTier->id ?? 0,
+            ExpansionTierMatcher::match($professionTier->name ?? '') ?? 0,
             $professionTier->skillPoints ?? 0,
             $professionTier->maxSkillPoints ?? 0,
         );
