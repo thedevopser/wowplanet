@@ -219,6 +219,28 @@ L'index des classements est mis en cache un jour sous `pvp_leaderboard_index:{sa
 
 ---
 
+## La page « À faire » (`app/Application/Services/Todo/`)
+
+Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.
+
+### `TodoListBuilder`
+
+Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et rend une liste de catégories, sans lire de cache ni appeler l'API.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `build(array $accountProfile)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. |
+
+- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune), hauts-faits par catégorie et par extension. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
+- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
+- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=` pour une monture, `npc=` pour une mascotte, `item=` pour une décoration, `achievement=` pour un haut-fait, une recherche sur le nom à défaut d'identifiant) et `doers`, qui dit qui peut le faire.
+
+### `TodoDimension` et `TodoScope`
+
+Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`) et la portée de `doers` (`account` pour une collection ou un haut-fait commun au compte).
+
+---
+
 ## La santé vue du panneau (`app/Application/Health/`)
 
 Ce que `/admin/health` affiche, section par section. C'est un outil de diagnostic, pas un tableau de bord de métriques : tout est lu à l'ouverture de la page, rien n'est historisé.

@@ -22,6 +22,9 @@ app/Application/Services/AccountScoreService.php
 app/Application/Services/CrossCharacterService.php
 app/Jobs/ComputeCrossCharacterJob.php
 
+# What is left to do on the account: which categories are worth showing, in which order, and who can do each item.
+app/Application/Services/Todo/TodoListBuilder.php
+
 # The progress figures that feed the score: what counts as done, earned or known per dimension.
 app/Application/Services/Progress/AchievementProgressAggregator.php
 app/Application/Services/Progress/CollectionProgressAggregator.php
