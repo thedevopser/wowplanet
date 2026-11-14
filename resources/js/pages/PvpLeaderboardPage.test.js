@@ -74,6 +74,14 @@ function mountPage(props = {}) {
 }
 
 describe('PvpLeaderboardPage', () => {
+    it('opens the sheet of a player from anywhere on its row', async () => {
+        const wrapper = await mountPage();
+        const link = wrapper.find('tbody tr a');
+
+        expect(link.attributes('href')).toMatch(/^\/character\//);
+        expect(link.classes()).toEqual(expect.arrayContaining(['after:absolute', 'after:inset-0']));
+    });
+
     beforeEach(() => {
         routerGet.mockClear();
         routerReload.mockClear();

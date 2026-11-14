@@ -26,7 +26,7 @@
                     <summary class="flex min-h-11 cursor-pointer items-center px-4 font-medium text-default">Sommaire</summary>
                     <ol class="space-y-1 border-t border-default px-4 py-3">
                         <li v-for="section in sections" :key="section.id">
-                            <a :href="`#${section.id}`" class="flex min-h-9 items-center text-sm text-muted hover:text-default">{{ section.title }}</a>
+                            <a :href="`#${section.id}`" class="flex min-h-11 items-center text-sm text-muted hover:text-default">{{ section.title }}</a>
                         </li>
                     </ol>
                 </details>

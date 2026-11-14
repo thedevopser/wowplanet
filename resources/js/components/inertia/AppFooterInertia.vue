@@ -49,7 +49,7 @@ const ABOUT_LINKS = Object.freeze([
     { label: 'CGU', href: '/cgu' },
 ]);
 
-const LINK = 'inline-flex min-h-11 items-center sm:min-h-9 rounded-ui-sm text-muted transition-colors duration-fast hover:text-default '
+const LINK = 'inline-flex min-h-11 min-w-11 items-center lg:min-h-9 rounded-ui-sm text-muted transition-colors duration-fast hover:text-default '
     + 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 </script>
 

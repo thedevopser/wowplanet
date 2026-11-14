@@ -28,7 +28,7 @@
             <p>
                 Les donn&eacute;es sont issues de l&rsquo;API officielle Blizzard et couvrent&nbsp;:
             </p>
-            <ul class="columns-2 sm:columns-3">
+            <ul class="sm:columns-3">
                 <li>
                     Montures (1&nbsp;500+)
                 </li>
@@ -77,7 +77,7 @@
                 sur l&rsquo;ensemble de vos personnages. Depuis la <strong>formule v2</strong>, il est calcul&eacute;
                 sur <strong>9&nbsp;dimensions</strong>&nbsp;:
             </p>
-            <ul class="columns-2 sm:columns-3">
+            <ul class="sm:columns-3">
                 <li>Qu&ecirc;tes</li>
                 <li>Hauts-faits</li>
                 <li>R&eacute;putations</li>

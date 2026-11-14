@@ -30,7 +30,7 @@ export const BUTTON_VARIANTS = Object.freeze({
 });
 
 export const BUTTON_SIZES = Object.freeze({
-    sm: 'h-9 px-3 text-sm',
+    sm: 'h-11 px-3 text-sm lg:h-9',
     md: 'h-11 px-4 text-base',
 });
 </script>

@@ -84,6 +84,16 @@ describe('AppHeaderInertia', () => {
         expect(wrapper.find('h1').exists()).toBe(false);
     });
 
+    it('gives the logo a 44 pixel touch target', async () => {
+        await mountHeader();
+
+        const logo = wrapper.find('a[href="/"] img');
+
+        expect(logo.classes()).toContain('size-11');
+        expect(logo.attributes('width')).toBe('44');
+        expect(logo.attributes('height')).toBe('44');
+    });
+
     it('names its main navigation', async () => {
         await mountHeader();
 

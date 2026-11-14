@@ -40,12 +40,13 @@
 
         <CatalogTable v-if="items.length" caption="Liste des apparences" :columns="COLUMNS" :rows="items" :busy="busy">
             <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="?" size="sm" class="text-muted" /></template>
-            <template #cell-name="{ row }">
+            <template #cell-name="{ row, linkClass }">
                 <a
                     :href="row.item_id ? `https://www.wowhead.com/fr/item=${row.item_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`"
                     target="_blank"
                     rel="noopener"
                     class="text-default hover:underline"
+                    :class="linkClass"
                 >{{ row.name_fr }}</a>
             </template>
             <template #cell-slot="{ row }"><span class="text-muted">{{ slotLabel(row.slot) }}</span></template>

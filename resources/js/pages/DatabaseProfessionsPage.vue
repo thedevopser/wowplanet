@@ -85,12 +85,13 @@
             />
 
             <CatalogTable v-if="recipeList.length" :caption="`Recettes : ${professionName}`" :columns="COLUMNS" :rows="recipeList" :busy="busy">
-                <template #cell-name="{ row }">
+                <template #cell-name="{ row, linkClass }">
                     <a
                         :href="row.wowhead_spell_id ? `https://www.wowhead.com/fr/spell=${row.wowhead_spell_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`"
                         target="_blank"
                         rel="noopener"
                         class="text-default hover:underline"
+                        :class="linkClass"
                     >{{ row.name_fr }}</a>
                 </template>
                 <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
