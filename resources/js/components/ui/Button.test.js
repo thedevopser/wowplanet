@@ -52,8 +52,15 @@ describe('Button', () => {
         expect(mountButton({ variant: 'primary' }).find('button').classes()).toEqual(expect.arrayContaining(['bg-accent', 'text-on-accent']));
     });
 
-    it.each([['sm', 'h-9'], ['md', 'h-11']])('gives the %s size a %s height', (size, height) => {
-        expect(mountButton({ size }).find('button').classes()).toContain(height);
+    it('gives the default size a 44 pixel height at every width', () => {
+        expect(mountButton({ size: 'md' }).find('button').classes()).toContain('h-11');
+    });
+
+    it('keeps the small size a 44 pixel touch target up to the desktop width', () => {
+        const classes = mountButton({ size: 'sm' }).classes();
+
+        expect(classes).toEqual(expect.arrayContaining(['h-11', 'lg:h-9']));
+        expect(classes).not.toContain('h-9');
     });
 
     it('shows a visible focus ring for keyboard users', () => {

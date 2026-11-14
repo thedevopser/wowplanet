@@ -114,6 +114,18 @@ describe('ToastStack', () => {
         expect(action.textContent.trim()).toBe('Se reconnecter');
     });
 
+    it('keeps the action of a notification a 44 pixel touch target up to the desktop width', async () => {
+        const { store } = await mountStack();
+
+        store.show({ title: 'Session expirée', tone: 'warning', action: { label: 'Se reconnecter', href: '/auth/blizzard/redirect' } });
+        await flushPromises();
+
+        const action = toasts()[0].querySelector('a[href="/auth/blizzard/redirect"]');
+
+        expect([...action.classList]).toEqual(expect.arrayContaining(['h-11', 'lg:h-9']));
+        expect([...action.classList]).not.toContain('h-9');
+    });
+
     it('keeps a notification with an action until it is closed', async () => {
         vi.useFakeTimers();
         const { store } = await mountStack();

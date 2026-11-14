@@ -20,7 +20,7 @@
                 <ToastAction v-if="toast.action" as-child :alt-text="toast.action.label">
                     <a
                         :href="toast.action.href"
-                        class="mt-3 inline-flex h-9 items-center rounded-ui-md border border-strong bg-surface-raised px-3 text-sm font-medium text-default
+                        class="mt-3 inline-flex h-11 items-center rounded-ui-md lg:h-9 border border-strong bg-surface-raised px-3 text-sm font-medium text-default
                             hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >{{ toast.action.label }}</a>
                 </ToastAction>

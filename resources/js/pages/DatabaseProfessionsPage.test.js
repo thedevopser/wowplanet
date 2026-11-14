@@ -55,6 +55,13 @@ function mountDetail(props = {}) {
 }
 
 describe('DatabaseProfessionsPage', () => {
+    it('opens a profession from anywhere on its card', async () => {
+        const wrapper = await mountList();
+        const link = wrapper.find('li a[href^="/base-de-donnees/professions/"]');
+
+        expect(link.classes()).toEqual(expect.arrayContaining(['after:absolute', 'after:inset-0']));
+    });
+
     it('opens the Wowhead page of an entry from anywhere on its row, in a new tab', async () => {
         const wrapper = await mountDetail();
         const link = wrapper.find('tbody tr a');
