@@ -15,6 +15,7 @@ Calcule et met en cache le score de compte multi-personnages d'un utilisateur co
 | `BATCH_SIZE` | `1` | Nombre de personnages traités par batch |
 | `CACHE_TTL` | `86400` | Durée de cache du résultat (24 h) |
 | `PROGRESS_TTL` | `3600` | Durée de cache de la progression en cours (1 h) |
+| `RESULT_SHAPE` | `r2` | Forme du résultat en cache, dans la clé avec la version de la formule : un résultat d'une forme antérieure n'est jamais relu |
 
 **Dépendances injectées** : `CharacterProfileService`, `UserCharacterService`
 
@@ -22,7 +23,7 @@ Calcule et met en cache le score de compte multi-personnages d'un utilisateur co
 
 | Méthode | Retour | Description |
 |---|---|---|
-| `getOrCompute()` | `array{status, data?, progress?}` | Retourne le score depuis le cache ou le recalcule. `status` peut être `ready`, `computing` ou `unauthenticated` ; `data` est un `AccountScoreResult` avec son `score`. |
+| `getOrCompute()` | `array{status, data?, progress?}` | Retourne le score depuis le cache ou le recalcule. `status` peut être `ready`, `computing` ou `unauthenticated` ; `data` est un `AccountScoreResult` avec son `score`, et la liste `characters` des personnages chargés avec leur faction. |
 | `invalidate()` | `void` | Supprime le cache du score pour l'utilisateur courant. |
 
 ---
@@ -128,6 +129,8 @@ Orchestre le calcul de progression agrégée sur tous les personnages d'un compt
 | `compute(string $battleTag)` | `array{status, data?, characterCount?, jobId?}` | Déclenche ou retourne le calcul cross-personnage. Si déjà calculé, retourne `ready`. Sinon, dispatche un `ComputeCrossCharacterJob` et retourne `computing` + `jobId`. Le BattleTag, lu en session par le contrôleur, est l'étiquette du calcul dans la page Santé : une chaîne vide lève `MissingBattleTagException` au lieu de mettre en file un calcul anonyme. |
 | `getJobStatus` | `array{status}` | Lit l'état d'un job cross-personnage depuis le cache. |
 | `getStoredData` | `?array{data, character_count}` | Retourne les données déjà calculées, **telles qu'elles sont stockées** — ancien format compris. |
+| `getStoredResult` | `?array{result: CrossCharacterResult, fetchedAt}` | Les mêmes données fraîches (moins de `CACHE_TTL_HOURS`), relues par `CrossCharacterProgress::fromStored()` comme un résultat fusionné, avec l'heure de leur calcul. |
+| `invalidate` | `void` | Force le prochain appel à recalculer le compte en vidant `fetched_at` : les données sont gardées, ce que les fiches y ont fusionné reste acquis jusqu'au recalcul. |
 | `mergeCurrentCharacter` | `CharacterProfileDTO` | Fusionne les données du personnage courant dans une progression cross-personnage. |
 | `fetchAndMergeCharacters` | `list<array<string, scalar\|null>>, CrossCharacterProgress, ?string` | Récupère et fusionne tous les personnages (utilisé depuis le job). Un personnage sans royaume ou sans nom textuel est passé. |
 
@@ -216,6 +219,53 @@ Les classements PvP officiels de la saison, servis en direct par l'API.
 | `leaderboard(string $bracket, int $page = 1, ?string $search = null)` | `LeaderboardPage` | Une page de cinquante lignes, filtrée sur le nom ou le royaume. Un bracket inconnu retombe sur `3v3`. |
 
 L'index des classements est mis en cache un jour sous `pvp_leaderboard_index:{saison}`. Un classement complet pèse plusieurs Mo : seules les colonnes affichées (`LeaderboardRow`) sont gardées, une heure, sous `pvp_leaderboard:{saison}:{bracket}`.
+
+---
+
+## `AccountTodoService`
+
+La page « À faire » du compte : fait avancer les deux calculs dont elle dépend, puis confie la liste à `TodoListBuilder`.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `getOrCompute(string $battleTag)` | `AccountTodoStatus` | `unauthenticated` ; `computing` à l'étape `account`, avec l'avancement du score du compte (un personnage de plus par appel) ; `computing` à l'étape `characters`, avec le `jobId` du calcul inter-personnages ; `failed` quand ce job a échoué ; `ready` avec `{categories, characters, updatedAt}`. |
+| `refresh()` | `void` | Invalide le score du compte et le calcul inter-personnages, et oublie le job attendu : les deux repartent au prochain appel. |
+
+Le calcul inter-personnages n'est lancé qu'une fois : son `jobId` est retenu une heure sous `account_todo:cross_character_job:{bnet_user_id}`, et les appels suivants suivent ce job au lieu d'en relancer un. Un job en échec est oublié, pour que le suivant en relance un. Les références que les deux calculs ne portent pas sont lues à chaque appel : la faction des quêtes dans `wow_quests`, les réputations suivies dans `FactionReference`. `updatedAt` est la plus ancienne des deux dates de calcul.
+
+---
+
+## La page « À faire » (`app/Application/Services/Todo/`)
+
+Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.
+
+### `TodoListBuilder`
+
+Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et le résultat du calcul inter-personnages (`CrossCharacterResult`), plus les références qu'ils ne portent pas, et rend une liste de catégories, sans lire de cache ni appeler l'API.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `build(array $accountProfile, array $crossCharacter, array $characters, array $questFactions, array $trackedFactions)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. `$characters` donne le nom et la faction de chaque personnage, `$questFactions` la faction des quêtes qui en ont une, `$trackedFactions` les réputations suivies avec leur extension. |
+
+- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune) ; hauts-faits par catégorie, quêtes par zone, réputations et recettes par extension, chacune avec son `expansionId`. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
+- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
+- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=`, `npc=`, `item=`, `achievement=`, `quest=`, `faction=`, une recherche sur le nom à défaut d'identifiant), un `detail` (statut d'une réputation, niveau du métier) et `doers`, qui dit qui peut le faire.
+- **Qui peut le faire** : tout le compte pour une collection, un haut-fait ou une réputation jamais rencontrée ; les personnages de la faction pour une quête (une quête qu'aucun personnage ne peut faire sort de la liste) ; le personnage le plus avancé pour une réputation ; le personnage le plus avancé dans le métier pour l'extension d'une recette (sans lui, les recettes de cette extension ne sont pas proposées).
+
+### `TodoDimension` et `TodoScope`
+
+Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`, `quests`, `reputations`, `recipes`) et la portée de `doers` (`account` pour n'importe quel personnage du compte, `characters` pour les personnages nommés).
+
+---|---|---|
+| `build(array $accountProfile)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. |
+
+- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune), hauts-faits par catégorie et par extension. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
+- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
+- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=` pour une monture, `npc=` pour une mascotte, `item=` pour une décoration, `achievement=` pour un haut-fait, une recherche sur le nom à défaut d'identifiant) et `doers`, qui dit qui peut le faire.
+
+### `TodoDimension` et `TodoScope`
+
+Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`) et la portée de `doers` (`account` pour une collection ou un haut-fait commun au compte).
 
 ---
 

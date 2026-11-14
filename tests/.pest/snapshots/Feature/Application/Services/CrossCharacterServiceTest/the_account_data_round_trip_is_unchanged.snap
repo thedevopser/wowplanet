@@ -48,14 +48,14 @@
         },
         "skillPointOwners": {
             "164": {
-                "2822": {
+                "10": {
                     "character_name": "Jaina",
                     "skill_points": 80,
                     "max_skill_points": 100
                 }
             },
             "356": {
-                "1": {
+                "10": {
                     "character_name": "Jaina",
                     "skill_points": 10,
                     "max_skill_points": 300
@@ -114,14 +114,14 @@
             },
             "skillPointOwners": {
                 "164": {
-                    "2822": {
+                    "10": {
                         "character_name": "Jaina",
                         "max_skill_points": 100,
                         "skill_points": 80
                     }
                 },
                 "356": {
-                    "1": {
+                    "10": {
                         "character_name": "Jaina",
                         "max_skill_points": 300,
                         "skill_points": 10
@@ -187,15 +187,10 @@
                     "character_name": "Sylvanas",
                     "max_skill_points": 100,
                     "skill_points": 95
-                },
-                "2822": {
-                    "character_name": "Jaina",
-                    "max_skill_points": 100,
-                    "skill_points": 80
                 }
             },
             "356": {
-                "1": {
+                "10": {
                     "character_name": "Jaina",
                     "max_skill_points": 300,
                     "skill_points": 10

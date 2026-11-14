@@ -8,6 +8,7 @@ dataset('hub views', [
     'characters' => ['/mon-compte', 'personnages'],
     'score' => ['/mon-compte/score', 'score'],
     'classes' => ['/mon-compte/classes', 'classes'],
+    'todo' => ['/mon-compte/a-faire', 'a-faire'],
 ]);
 
 test('renders the account hub on the requested view when authenticated', function (string $url, string $view): void {

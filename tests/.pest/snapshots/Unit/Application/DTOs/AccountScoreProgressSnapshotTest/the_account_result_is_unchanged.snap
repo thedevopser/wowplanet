@@ -226,6 +226,16 @@
         }
     ],
     "characterCount": 2,
+    "characters": [
+        {
+            "name": "Thrall",
+            "faction": "Horde"
+        },
+        {
+            "name": "Jaina",
+            "faction": "Horde"
+        }
+    ],
     "errors": [
         "Arthas"
     ],

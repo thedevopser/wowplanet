@@ -121,6 +121,16 @@ describe('ScoreView', () => {
         expect(wrapper.text()).toContain('Non applicable');
     });
 
+    it('sends to the « À faire » page of the whole account', async () => {
+        axios.get.mockResolvedValueOnce({ data: { status: 'ready', data: virtualProfile } });
+
+        const wrapper = await mountPage();
+        await flushPromises();
+
+        expect(wrapper.find('[data-todo-link] a').attributes('href')).toBe('/mon-compte/a-faire');
+        expect(wrapper.find('[data-recommendation]').exists()).toBe(false);
+    });
+
     it('shows error state on API error', async () => {
         axios.get.mockRejectedValueOnce({
             response: { status: 500, data: { message: 'Server error' } },

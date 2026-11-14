@@ -134,10 +134,10 @@ function professionEntry(int $professionId, array $tiers): array
  * @param  list<int>  $recipeIds
  * @return array<string, mixed>
  */
-function professionTierEntry(?int $tierId, int $skillPoints, int $maxSkillPoints, array $recipeIds = []): array
+function professionTierEntry(?int $tierId, int $skillPoints, int $maxSkillPoints, array $recipeIds = [], string $tierName = 'Couture de Khaz Algar'): array
 {
     return array_filter([
-        'tier' => $tierId === null ? null : ['id' => $tierId, 'name' => 'Couture de Khaz Algar'],
+        'tier' => $tierId === null ? null : ['id' => $tierId, 'name' => $tierName],
         'skill_points' => $skillPoints,
         'max_skill_points' => $maxSkillPoints,
         'known_recipes' => array_map(fn (int $id): array => ['id' => $id], $recipeIds),
@@ -301,7 +301,7 @@ test('the character with the most skill points in a profession tier owns it, wit
     $progress->mergeCharacter('Jaina', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 80, 90)])]));
     $progress->mergeCharacter('Varian', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 60, 175)])]));
 
-    expect($progress->buildResult()['skillPointOwners'])->toBe([197 => [2883 => [
+    expect($progress->buildResult()['skillPointOwners'])->toBe([197 => [10 => [
         'character_name' => 'Jaina',
         'skill_points' => 80,
         'max_skill_points' => 100,
@@ -320,7 +320,7 @@ test('equal skill points keep the first owner', function (): void {
     $progress->mergeCharacter('Thrall', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 50, 100)])]));
     $progress->mergeCharacter('Jaina', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 50, 100)])]));
 
-    expect($progress->skillPointOwners[197][2883]['character_name'])->toBe('Thrall');
+    expect($progress->skillPointOwners[197][10]['character_name'])->toBe('Thrall');
 });
 
 test('a profession tier without tier id is filed under expansion zero', function (): void {
@@ -333,12 +333,23 @@ test('a profession tier without tier id is filed under expansion zero', function
 test('every tier of every profession is merged', function (): void {
     $progress = new CrossCharacterProgress;
     $progress->mergeCharacter('Thrall', fetchedProgress(primaries: [
-        professionEntry(197, [professionTierEntry(2883, 50, 100), professionTierEntry(2822, 20, 100)]),
+        professionEntry(197, [professionTierEntry(2883, 50, 100), professionTierEntry(2822, 20, 100, tierName: 'Couture des Îles aux Dragons')]),
         professionEntry(164, [professionTierEntry(2872, 10, 100)]),
     ]));
 
     expect(array_keys($progress->skillPointOwners))->toBe([197, 164])
-        ->and(array_keys($progress->skillPointOwners[197]))->toBe([2883, 2822]);
+        ->and(array_keys($progress->skillPointOwners[197]))->toBe([10, 9]);
+});
+
+test('files the best skill of a profession tier under the expansion of the tier, as the professions tab reads it', function (): void {
+    $progress = new CrossCharacterProgress;
+    $progress->mergeCharacter('Thrall', fetchedProgress(primaries: [professionEntry(197, [
+        professionTierEntry(2883, 50, 100, tierName: 'Couture de Khaz Algar'),
+        professionTierEntry(2822, 20, 100, tierName: 'Couture des Îles aux Dragons'),
+        professionTierEntry(2533, 10, 100, tierName: 'Couture inconnue'),
+    ])]));
+
+    expect(array_keys($progress->skillPointOwners[197]))->toBe([10, 9, 0]);
 });
 
 test('a known recipe is completed and owned by the first character that knows it', function (): void {
@@ -398,11 +409,11 @@ test('a profile merge takes skill points and completed recipes, not unknown ones
     $progress = new CrossCharacterProgress;
     $progress->mergeCharacter('Jaina', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 40, 100, [501])])]));
     $progress->mergeFromProfile('Thrall', crossProfileWith(professions: [
-        profileProfession(197, 2883, 90, 100, [['id' => 501, 'is_completed' => true], ['id' => 502, 'is_completed' => true], ['id' => 503, 'is_completed' => false]]),
-        profileProfession(0, 2883, 90, 100, [['id' => 700, 'is_completed' => true]]),
+        profileProfession(197, 10, 90, 100, [['id' => 501, 'is_completed' => true], ['id' => 502, 'is_completed' => true], ['id' => 503, 'is_completed' => false]]),
+        profileProfession(0, 10, 90, 100, [['id' => 700, 'is_completed' => true]]),
     ]));
 
-    expect($progress->skillPointOwners)->toBe([197 => [2883 => ['character_name' => 'Thrall', 'skill_points' => 90, 'max_skill_points' => 100]]])
+    expect($progress->skillPointOwners)->toBe([197 => [10 => ['character_name' => 'Thrall', 'skill_points' => 90, 'max_skill_points' => 100]]])
         ->and($progress->recipeOwners)->toBe([501 => 'Jaina', 502 => 'Thrall'])
         ->and(array_keys($progress->completedRecipeIds))->toBe([501, 502]);
 });
@@ -498,17 +509,17 @@ test('a single skill point is enough to own a profession tier', function (): voi
     $progress = new CrossCharacterProgress;
     $progress->mergeCharacter('Thrall', fetchedProgress(primaries: [professionEntry(197, [professionTierEntry(2883, 1, 100)])]));
 
-    expect($progress->skillPointOwners[197][2883]['skill_points'])->toBe(1);
+    expect($progress->skillPointOwners[197][10]['skill_points'])->toBe(1);
 });
 
 test('a profession tier without skill values has no owner, and an unknown cap counts as zero', function (): void {
     $progress = new CrossCharacterProgress;
     $progress->mergeCharacter('Thrall', fetchedProgress(primaries: [professionEntry(197, [
         ['tier' => ['id' => 2883, 'name' => 'Couture de Khaz Algar']],
-        ['tier' => ['id' => 2822, 'name' => 'Couture des Îles'], 'skill_points' => 5],
+        ['tier' => ['id' => 2822, 'name' => 'Couture des Îles aux Dragons'], 'skill_points' => 5],
     ])]));
 
-    expect($progress->skillPointOwners)->toBe([197 => [2822 => [
+    expect($progress->skillPointOwners)->toBe([197 => [9 => [
         'character_name' => 'Thrall',
         'skill_points' => 5,
         'max_skill_points' => 0,

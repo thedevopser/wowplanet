@@ -9,7 +9,7 @@ use App\Application\DTOs\CharacterProfileDTO;
  * @param  list<array{slot: string, category: string|null, total: int, completed: int}>  $appearances
  * @param  list<array<string, mixed>>|null  $raids
  */
-function profileWith(string $name, array $appearances = [], ?array $raids = null): CharacterProfileDTO
+function profileWith(string $name, array $appearances = [], ?array $raids = null, string $faction = 'Horde'): CharacterProfileDTO
 {
     return new CharacterProfileDTO(
         name: $name,
@@ -19,7 +19,7 @@ function profileWith(string $name, array $appearances = [], ?array $raids = null
         classId: 7,
         level: 80,
         ilvl: 600,
-        faction: 'Horde',
+        faction: $faction,
         avatarUrl: '',
         classIconUrl: '',
         collections: [],
@@ -49,6 +49,23 @@ function raidWith(int $instanceId, int $totalBosses, array $killsByDifficulty): 
 
     return [['instance_id' => $instanceId, 'instance_name' => 'Raid '.$instanceId, 'modes' => $modes]];
 }
+
+describe('personnages', function (): void {
+    it('rend chaque personnage chargé avec sa faction', function (): void {
+        $progress = new AccountScoreProgress([]);
+        $progress->mergeProfile(profileWith('Thrall'));
+        $progress->mergeProfile(profileWith('Jaina', faction: 'Alliance'));
+
+        expect($progress->buildResult()['characters'])->toBe([
+            ['name' => 'Thrall', 'faction' => 'Horde'],
+            ['name' => 'Jaina', 'faction' => 'Alliance'],
+        ]);
+    });
+
+    it('ne rend aucun personnage sans profil chargé', function (): void {
+        expect(new AccountScoreProgress([])->buildResult()['characters'])->toBe([]);
+    });
+});
 
 describe('apparences', function (): void {
     it("retient le meilleur nombre d'apparences par slot", function (): void {

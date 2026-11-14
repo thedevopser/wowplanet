@@ -35,9 +35,9 @@ const CHARACTER = {
 
 let wrapper;
 
-function mountOverview(character = CHARACTER) {
+function mountOverview(character = CHARACTER, props = {}) {
     wrapper = mount(CharacterOverview, {
-        props: { character, realm: 'hyjal', name: 'arthas' },
+        props: { character, realm: 'hyjal', name: 'arthas', ...props },
         global: { plugins: [createTestingPinia({ createSpy: vi.fn })], stubs: { ScorePanel: true } },
     });
 
@@ -83,15 +83,26 @@ describe('CharacterOverview', () => {
         expect(wrapper.text()).not.toContain('Cote Mythique+');
     });
 
-    it('hands the score, its recommendations and the share data to the panel', () => {
+    it('hands the score and the share data to the panel', () => {
         mountOverview();
 
         const panel = wrapper.findComponent({ name: 'ScorePanel' });
 
         expect(panel.props('score')).toEqual(SCORE);
         expect(panel.props('title')).toBe('Score de complétion');
-        expect(panel.props('recommendations').map((rec) => rec.key)).toEqual(['mount:Raid']);
         expect(panel.props('shareData')).toEqual(expect.objectContaining({ variant: 'personal', characterName: 'Arthas', globalScore: 42.5, rank: 'Rare' }));
+    });
+
+    it('sends the owner of the character to what is left for him on the account', () => {
+        mountOverview(CHARACTER, { isOwner: true });
+
+        expect(wrapper.findComponent({ name: 'ScorePanel' }).props('todoUrl')).toBe('/mon-compte/a-faire?personnage=Arthas');
+    });
+
+    it('offers no such link to a visitor or on a character of someone else', () => {
+        mountOverview();
+
+        expect(wrapper.findComponent({ name: 'ScorePanel' }).props('todoUrl')).toBe('');
     });
 
     it('links each dimension to the sub-tab that details it', () => {

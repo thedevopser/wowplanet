@@ -11,7 +11,7 @@
 
 <script setup>
 import { useCharacterStore } from '../stores/character';
-import { wowheadUrl } from '../utils/scoreRecommendations';
+import { wowheadUrl } from '../utils/wowhead';
 import ExpansionChecklistTab from './sheet/ExpansionChecklistTab.vue';
 
 const LABELS = Object.freeze({

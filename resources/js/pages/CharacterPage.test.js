@@ -201,6 +201,15 @@ describe('CharacterPage', () => {
         expect(owned.findComponent({ name: 'CrossDataBanner' }).props('isOwner')).toBe(true);
     });
 
+    it('tells the overview whether the character belongs to the viewer', async () => {
+        const owned = await mountCharacterPage(characterData, { isOwner: true });
+        expect(owned.findComponent({ name: 'CharacterOverview' }).props('isOwner')).toBe(true);
+        owned.unmount();
+
+        const other = await mountCharacterPage(characterData);
+        expect(other.findComponent({ name: 'CharacterOverview' }).props('isOwner')).toBe(false);
+    });
+
     it('shows no accessibility violation that axe can detect', async () => {
         const wrapper = await mountCharacterPage(characterData);
 

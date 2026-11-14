@@ -52,7 +52,7 @@ test('it returns cached result when available', function (): void {
         'cachedAt' => now()->toISOString(),
     ];
 
-    Cache::put('account_score:v'.ScoreWeights::VERSION.':test-session-id', $cachedData, 86400);
+    Cache::put('account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id', $cachedData, 86400);
 
     $accountScoreService = resolve(AccountScoreService::class);
     $result = $accountScoreService->getOrCompute();
@@ -111,14 +111,14 @@ test('it invalidates cache', function (): void {
 
     Session::shouldReceive('getId')->andReturn('test-session-id');
 
-    Cache::put('account_score:v'.ScoreWeights::VERSION.':test-session-id', ['some' => 'data'], 86400);
-    Cache::put('account_score:v'.ScoreWeights::VERSION.':test-session-id:progress', ['some' => 'progress'], 3600);
+    Cache::put('account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id', ['some' => 'data'], 86400);
+    Cache::put('account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id:progress', ['some' => 'progress'], 3600);
 
     $accountScoreService = resolve(AccountScoreService::class);
     $accountScoreService->invalidate();
 
-    expect(Cache::get('account_score:v'.ScoreWeights::VERSION.':test-session-id'))->toBeNull()
-        ->and(Cache::get('account_score:v'.ScoreWeights::VERSION.':test-session-id:progress'))->toBeNull();
+    expect(Cache::get('account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id'))->toBeNull()
+        ->and(Cache::get('account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id:progress'))->toBeNull();
 });
 
 test('it attaches the computed score to the finalized payload', function (): void {
@@ -211,8 +211,18 @@ function accountScoreServiceFor(array $characters, array $profilesByName): Accou
 
 function accountScoreCacheKey(): string
 {
-    return 'account_score:v'.ScoreWeights::VERSION.':test-session-id';
+    return 'account_score:v'.ScoreWeights::VERSION.':'.AccountScoreService::RESULT_SHAPE.':test-session-id';
 }
+
+test('a result cached before the characters were kept is computed again, not read back', function (): void {
+    $accountScoreService = accountScoreServiceFor([['realmSlug' => 'hyjal', 'name' => 'Thrall']], ['thrall' => accountScoreProfile('Thrall', 1)]);
+    Cache::put('account_score:v'.ScoreWeights::VERSION.':test-session-id', ['mountsCount' => 99], 86400);
+
+    $result = $accountScoreService->getOrCompute();
+
+    expect($result['status'])->toBe('ready')
+        ->and($result['data']['characters'] ?? null)->toBe([['name' => 'Thrall', 'faction' => 'Horde']]);
+});
 
 test('an account without character is ready with no data', function (): void {
     $result = accountScoreServiceFor([], [])->getOrCompute();
