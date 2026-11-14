@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowCollectionTaxonomyFactory extends Factory
 {
+    #[\Override]
     protected $model = WowCollectionTaxonomy::class;
 
     /**

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ApplicationErrorFactory extends Factory
 {
+    #[\Override]
     protected $model = ApplicationError::class;
 
     /**

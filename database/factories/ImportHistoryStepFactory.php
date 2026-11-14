@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ImportHistoryStepFactory extends Factory
 {
+    #[\Override]
     protected $model = ImportHistoryStep::class;
 
     /**

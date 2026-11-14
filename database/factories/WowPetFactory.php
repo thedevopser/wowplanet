@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowPetFactory extends Factory
 {
+    #[\Override]
     protected $model = WowPet::class;
 
     /**

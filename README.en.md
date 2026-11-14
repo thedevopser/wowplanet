@@ -19,7 +19,7 @@ To run the project in development you need, on your own machine:
 | Tool | Purpose |
 | --- | --- |
 | **Docker** + **Docker Compose** | Runs app, worker, Vite, PostgreSQL and Redis. |
-| **PHP 8.4** + **Composer** | PHP tooling: Pest, Pint, Larastan, Rector, Artisan. The `pdo_pgsql` and `redis` extensions are required — the local tooling talks to the stack directly. |
+| **PHP 8.5** + **Composer** | PHP tooling: Pest, Pint, Larastan, Rector, Artisan. The `pdo_pgsql` and `redis` extensions are required — the local tooling talks to the stack directly. |
 | **Node 26** + **npm** | JS tooling: Vitest, asset builds. |
 | **Traefik** (local reverse proxy) | Serves the project over HTTPS at `wowplanet.dev.local`. It is a shared proxy, **not part of this repository** — it must already be running on the `dev-network` Docker network. |
 

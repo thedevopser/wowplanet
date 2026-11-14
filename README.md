@@ -19,7 +19,7 @@ Pour lancer le projet en dev, il te faut sur ton PC :
 | Outil | Rôle |
 | --- | --- |
 | **Docker** + **Docker Compose** | Exécute app, worker, Vite, PostgreSQL et Redis. |
-| **PHP 8.4** + **Composer** | Outillage PHP : Pest, Pint, Larastan, Rector, Artisan. Les extensions `pdo_pgsql` et `redis` sont requises : l'outillage local attaque la stack sans intermédiaire. |
+| **PHP 8.5** + **Composer** | Outillage PHP : Pest, Pint, Larastan, Rector, Artisan. Les extensions `pdo_pgsql` et `redis` sont requises : l'outillage local attaque la stack sans intermédiaire. |
 | **Node 26** + **npm** | Outillage JS : Vitest, build des assets. |
 | **Traefik** (reverse-proxy local) | Sert le projet en HTTPS sur `wowplanet.dev.local`. Proxy partagé, **non inclus dans ce repo** — il doit déjà tourner sur le réseau Docker `dev-network`. |
 
