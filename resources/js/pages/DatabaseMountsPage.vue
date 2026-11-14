@@ -34,7 +34,7 @@
 
         <CatalogTable v-if="filteredItems.length" caption="Liste des montures" :columns="COLUMNS" :rows="visibleItems">
             <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="M" size="sm" class="text-muted" /></template>
-            <template #cell-name="{ row }"><a :href="row.source_spell_id ? `https://www.wowhead.com/fr/spell=${row.source_spell_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a></template>
+            <template #cell-name="{ row, linkClass }"><a :class="linkClass" :href="row.source_spell_id ? `https://www.wowhead.com/fr/spell=${row.source_spell_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a></template>
             <template #cell-source="{ row }"><span class="text-muted">{{ row.source ? translateSource(COLLECTION, row.source) : 'Inconnu' }}</span></template>
         </CatalogTable>
         <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune entrée ne correspond à cette recherche." />

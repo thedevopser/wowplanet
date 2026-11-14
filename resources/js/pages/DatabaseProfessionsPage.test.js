@@ -55,6 +55,15 @@ function mountDetail(props = {}) {
 }
 
 describe('DatabaseProfessionsPage', () => {
+    it('opens the Wowhead page of an entry from anywhere on its row, in a new tab', async () => {
+        const wrapper = await mountDetail();
+        const link = wrapper.find('tbody tr a');
+
+        expect(link.attributes('href')).toContain('https://www.wowhead.com/fr/');
+        expect(link.attributes('target')).toBe('_blank');
+        expect(link.classes()).toEqual(expect.arrayContaining(['after:absolute', 'after:inset-0']));
+    });
+
     beforeEach(() => vi.clearAllMocks());
 
     it('lists primary and secondary professions with links', async () => {

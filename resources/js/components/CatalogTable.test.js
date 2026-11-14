@@ -69,6 +69,24 @@ describe('CatalogTable', () => {
         expect(busy.find('table').attributes('aria-busy')).toBe('true');
     });
 
+    it('stretches the link of a row over the whole row, with a visible keyboard focus', () => {
+        const wrapper = mountTable({}, {
+            'cell-name': ({ row, linkClass }) => h('a', { href: `#${row.id}`, class: linkClass }, row.name),
+        });
+        const row = wrapper.find('tbody tr');
+
+        expect(row.classes()).toContain('relative');
+        expect(row.find('a').classes()).toEqual(expect.arrayContaining([
+            'after:absolute', 'after:inset-0', 'focus-visible:outline-none', 'focus-visible:after:outline-2', 'focus-visible:after:outline-accent',
+        ]));
+    });
+
+    it('keeps every row a 44 pixel touch target up to the desktop width', () => {
+        mountTable().findAll('tbody tr').forEach((row) => {
+            expect(row.classes()).toEqual(expect.arrayContaining(['h-11', 'lg:h-auto']));
+        });
+    });
+
     it('passes extra attributes to each row', () => {
         const wrapper = mountTable({ rowAttrs: (row) => ({ 'data-testid': `row-${row.id}` }) });
 

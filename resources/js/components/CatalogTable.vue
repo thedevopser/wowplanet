@@ -24,11 +24,11 @@
                 <tr
                     v-for="(row, index) in rows"
                     :key="keyOf(row, index)"
-                    class="border-b border-default last:border-b-0 hover:bg-surface-raised"
+                    class="relative h-11 border-b border-default last:border-b-0 hover:bg-surface-raised lg:h-auto"
                     v-bind="rowAttrs(row)"
                 >
                     <td v-for="column in columns" :key="column.key" class="px-3 py-2" :class="cellClasses(column)">
-                        <slot :name="`cell-${column.key}`" :row="row">{{ column.visuallyHidden ? '' : row[column.key] }}</slot>
+                        <slot :name="`cell-${column.key}`" :row="row" :link-class="ROW_LINK">{{ column.visuallyHidden ? '' : row[column.key] }}</slot>
                     </td>
                 </tr>
             </tbody>
@@ -38,6 +38,8 @@
 
 <script setup>
 const HIDDEN_BELOW = Object.freeze({ sm: 'hidden sm:table-cell', md: 'hidden md:table-cell' });
+const ROW_LINK = 'focus-visible:outline-none after:absolute after:inset-0 '
+    + 'focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-accent';
 
 const props = defineProps({
     caption: { type: String, required: true },

@@ -32,6 +32,15 @@ function mountPage(props = {}) {
 }
 
 describe('DatabasePetsPage', () => {
+    it('opens the Wowhead page of an entry from anywhere on its row, in a new tab', async () => {
+        const wrapper = await mountPage();
+        const link = wrapper.find('tbody tr a');
+
+        expect(link.attributes('href')).toContain('https://www.wowhead.com/fr/');
+        expect(link.attributes('target')).toBe('_blank');
+        expect(link.classes()).toEqual(expect.arrayContaining(['after:absolute', 'after:inset-0']));
+    });
+
     it('renders heading and displays items from props', async () => {
         const wrapper = await mountPage();
         expect(wrapper.text()).toContain('Mascottes');

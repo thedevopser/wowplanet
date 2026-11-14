@@ -88,10 +88,11 @@
                 :busy="busy"
             >
                 <template #cell-rank="{ row }"><span class="tabular-nums text-muted">{{ row.rank }}</span></template>
-                <template #cell-player="{ row }">
+                <template #cell-player="{ row, linkClass }">
                     <Link
                         :href="`/character/${row.realm_slug}/${row.name.toLowerCase()}`"
                         class="font-medium hover:underline"
+                        :class="linkClass"
                         :style="factionStyle(row.faction)"
                     >{{ row.name }}</Link>
                     <span class="ml-1 text-xs text-muted sm:hidden">{{ row.realm }}</span>

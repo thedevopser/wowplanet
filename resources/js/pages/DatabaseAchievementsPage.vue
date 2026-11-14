@@ -40,8 +40,8 @@
 
         <CatalogTable v-if="items.length" caption="Liste des hauts-faits" :columns="COLUMNS" :rows="items" :busy="busy">
             <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="HF" size="sm" class="text-muted" /></template>
-            <template #cell-name="{ row }">
-                <a :href="`https://www.wowhead.com/fr/achievement=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
+            <template #cell-name="{ row, linkClass }">
+                <a :class="linkClass" :href="`https://www.wowhead.com/fr/achievement=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
             </template>
             <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
             <template #cell-points="{ row }"><span class="tabular-nums text-muted">{{ row.points }} pts</span></template>

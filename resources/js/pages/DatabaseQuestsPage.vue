@@ -39,8 +39,8 @@
         />
 
         <CatalogTable v-if="items.length" caption="Liste des quêtes" :columns="COLUMNS" :rows="items" :busy="busy">
-            <template #cell-name="{ row }">
-                <a :href="`https://www.wowhead.com/fr/quest=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
+            <template #cell-name="{ row, linkClass }">
+                <a :class="linkClass" :href="`https://www.wowhead.com/fr/quest=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
             </template>
             <template #cell-zone="{ row }"><span class="text-muted">{{ row.zone_name }}</span></template>
             <template #cell-faction="{ row }">
