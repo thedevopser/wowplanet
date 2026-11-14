@@ -141,15 +141,18 @@
             </p>
             <ul>
                 <li>
-                    <strong>Quotidiennes</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement chaque jour &agrave; 5h du matin
+                    <strong>Quotidiennes</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement chaque jour &agrave; 4 h UTC
                 </li>
                 <li>
-                    <strong>Hebdomadaires</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement chaque mercredi &agrave; 5h du matin
+                    <strong>Hebdomadaires</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement chaque mercredi &agrave; 4 h UTC
                 </li>
                 <li>
-                    <strong>Mensuelles</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement le 1er de chaque mois &agrave; 5h du matin
+                    <strong>Mensuelles</strong>&nbsp;: R&eacute;initialis&eacute;es automatiquement le 1er de chaque mois &agrave; 4 h UTC
                 </li>
             </ul>
+            <p>
+                C&rsquo;est l&rsquo;heure de la remise &agrave; z&eacute;ro de Blizzard en Europe, toute l&rsquo;ann&eacute;e&nbsp;: 5 h &agrave; Paris en hiver, 6 h en &eacute;t&eacute;.
+            </p>
             <p>
                 Acc&eacute;dez &agrave; vos t&acirc;ches via le <strong>bouton en bas &agrave; droite</strong> de l&rsquo;&eacute;cran.
                 Un compteur vous indique le nombre de t&acirc;ches en attente.

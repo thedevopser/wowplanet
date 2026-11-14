@@ -76,6 +76,17 @@ describe('FaqPage', () => {
         expect(text).toContain('le 1er de chaque mois');
     });
 
+    it('announces the task resets at 4am UTC, as Blizzard resets Europe, with the hour in Paris', async () => {
+        const wrapper = await mountFaqPage();
+        const text = wrapper.text();
+
+        expect(text).toContain('chaque jour à 4 h UTC');
+        expect(text).toContain('chaque mercredi à 4 h UTC');
+        expect(text).toContain('le 1er de chaque mois à 4 h UTC');
+        expect(text).toContain('5 h à Paris en hiver, 6 h en été');
+        expect(text).not.toContain('5h du matin');
+    });
+
     it('lays its lists out on a single column on a phone', async () => {
         const wrapper = await mountFaqPage();
         const lists = wrapper.findAll('ul').filter((list) => list.classes().some((name) => name.includes('columns-')));
