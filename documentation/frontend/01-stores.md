@@ -127,9 +127,11 @@ Gère les tâches récurrentes associées aux personnages (suivi des resets quot
 
 | Type | Réinitialisation |
 |---|---|
-| `daily` | Chaque jour à 5h00 (heure locale) |
-| `weekly` | Chaque mercredi à 5h00 |
-| `monthly` | Le 1er de chaque mois à 5h00 |
+| `daily` | Chaque jour à 4 h UTC |
+| `weekly` | Chaque mercredi à 4 h UTC |
+| `monthly` | Le 1er de chaque mois à 4 h UTC |
+
+Les trois seuils suivent la remise à zéro européenne de Blizzard, à 4 h UTC toute l'année : 5 h à Paris en hiver, 6 h en été. Ils sont calculés en UTC et ne dépendent pas du fuseau du navigateur.
 
 ---
 

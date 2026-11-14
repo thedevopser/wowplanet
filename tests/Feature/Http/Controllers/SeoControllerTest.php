@@ -118,14 +118,16 @@ test('faq json-ld no longer promises a character search', function (): void {
         ->toContain('fiches publiques des personnages');
 });
 
-test('faq json-ld lists the three task reset frequencies', function (): void {
+test('faq json-ld announces the three task resets at 4am UTC, with the hour in Paris', function (): void {
     /** @var array{props: array{meta: array{jsonLd: string}}} $page */
     $page = $this->get('/faq')->viewData('page');
 
     expect($page['props']['meta']['jsonLd'])
-        ->toContain('quotidiennes se réinitialisent chaque jour à 5h')
-        ->toContain('hebdomadaires chaque mercredi à 5h')
-        ->toContain('mensuelles le 1er de chaque mois à 5h');
+        ->toContain('quotidiennes se réinitialisent chaque jour à 4 h UTC')
+        ->toContain('hebdomadaires chaque mercredi à 4 h UTC')
+        ->toContain('mensuelles le 1er de chaque mois à 4 h UTC')
+        ->toContain('5 h à Paris en hiver, 6 h en été')
+        ->not->toContain('à 5h');
 });
 
 test('home serves the real catalogue counts instead of written figures', function (): void {

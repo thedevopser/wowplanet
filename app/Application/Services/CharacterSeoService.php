@@ -409,7 +409,7 @@ class CharacterSeoService
                     'name' => 'Comment fonctionnent les tâches quotidiennes ?',
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'WowPlanet permet de créer des tâches personnalisées pour chacun de vos personnages. Les tâches quotidiennes se réinitialisent chaque jour à 5h, les hebdomadaires chaque mercredi à 5h et les mensuelles le 1er de chaque mois à 5h.',
+                        'text' => 'WowPlanet permet de créer des tâches personnalisées pour chacun de vos personnages. Les tâches quotidiennes se réinitialisent chaque jour à 4 h UTC, les hebdomadaires chaque mercredi à 4 h UTC et les mensuelles le 1er de chaque mois à 4 h UTC, comme la remise à zéro de Blizzard en Europe : 5 h à Paris en hiver, 6 h en été.',
                     ],
                 ],
             ],

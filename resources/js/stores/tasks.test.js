@@ -159,7 +159,9 @@ describe('tasks store', () => {
 
     // ─── Reset logic ────────────────────────────────────
 
-    describe('applyResets', () => {
+    describe.each(['Europe/Paris', 'America/New_York', 'Asia/Tokyo'])('applyResets, browser set to %s', (timezone) => {
+        const utc = (year, month, day, hour, minute = 0) => new Date(Date.UTC(year, month - 1, day, hour, minute));
+
         const completedTask = (resetType, completedAt) => ({
             id: 1,
             reset_type: resetType,
@@ -167,18 +169,36 @@ describe('tasks store', () => {
             completed_at: completedAt.toISOString(),
         });
 
+        let browserTimezone;
+
         beforeEach(() => {
+            browserTimezone = process.env.TZ;
+            process.env.TZ = timezone;
             vi.useFakeTimers();
         });
 
         afterEach(() => {
             vi.useRealTimers();
+            if (browserTimezone === undefined) {
+                delete process.env.TZ;
+            } else {
+                process.env.TZ = browserTimezone;
+            }
         });
 
-        it('resets a daily task completed before the 5am reset of the day', () => {
-            vi.setSystemTime(new Date(2026, 9, 5, 10, 0));
+        it.each([
+            ['a daily task done just before 4am UTC, in summer', 'daily', utc(2026, 7, 1, 4), utc(2026, 7, 1, 3, 59)],
+            ['a daily task done just before 4am UTC, in winter', 'daily', utc(2026, 1, 15, 4), utc(2026, 1, 15, 3, 59)],
+            ['a daily task older than the previous reset, read before 4am UTC', 'daily', utc(2026, 7, 1, 3, 30), utc(2026, 6, 30, 3, 59)],
+            ['a weekly task done just before Wednesday 4am UTC, in summer', 'weekly', utc(2026, 6, 24, 4), utc(2026, 6, 24, 3, 59)],
+            ['a weekly task done just before Wednesday 4am UTC, in winter', 'weekly', utc(2026, 11, 20, 12), utc(2026, 11, 18, 3, 59)],
+            ['a weekly task older than the previous Wednesday, read on Wednesday before 4am UTC', 'weekly', utc(2026, 11, 18, 3), utc(2026, 11, 11, 3, 59)],
+            ['a monthly task done just before 4am UTC on the 1st, in summer', 'monthly', utc(2026, 7, 1, 4), utc(2026, 7, 1, 3, 59)],
+            ['a monthly task of the previous month, in winter', 'monthly', utc(2026, 1, 20, 10), utc(2025, 12, 31, 23)],
+        ])('resets %s', (_case, resetType, now, completedAt) => {
+            vi.setSystemTime(now);
             const store = useTaskStore();
-            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 22, 0))];
+            store.tasks = [completedTask(resetType, completedAt)];
 
             store.applyResets();
 
@@ -187,10 +207,19 @@ describe('tasks store', () => {
             expect(axios.put).toHaveBeenCalledWith('/api/character-tasks/1');
         });
 
-        it('keeps a daily task completed since the 5am reset of the day', () => {
-            vi.setSystemTime(new Date(2026, 9, 5, 12, 0));
+        it.each([
+            ['a daily task done at 4am UTC, in summer', 'daily', utc(2026, 7, 1, 12), utc(2026, 7, 1, 4)],
+            ['a daily task done the day before while 4am UTC has not come', 'daily', utc(2026, 7, 1, 3, 59), utc(2026, 6, 30, 4)],
+            ['a weekly task done at Wednesday 4am UTC, in summer', 'weekly', utc(2026, 6, 24, 4), utc(2026, 6, 24, 4)],
+            ['a weekly task done since Wednesday 4am UTC, in winter', 'weekly', utc(2026, 11, 20, 12), utc(2026, 11, 18, 4)],
+            ['a weekly task of the previous week while Wednesday 4am UTC has not come', 'weekly', utc(2026, 11, 18, 3), utc(2026, 11, 11, 4)],
+            ['a weekly task read on Tuesday evening UTC', 'weekly', utc(2026, 11, 17, 23), utc(2026, 11, 11, 5)],
+            ['a monthly task done since 4am UTC on the 1st, in winter', 'monthly', utc(2026, 1, 20, 10), utc(2026, 1, 1, 4)],
+            ['a monthly task of the previous month while 4am UTC on the 1st has not come', 'monthly', utc(2026, 7, 1, 3, 59), utc(2026, 6, 1, 4)],
+        ])('keeps %s', (_case, resetType, now, completedAt) => {
+            vi.setSystemTime(now);
             const store = useTaskStore();
-            store.tasks = [completedTask('daily', new Date(2026, 9, 5, 10, 0))];
+            store.tasks = [completedTask(resetType, completedAt)];
 
             store.applyResets();
 
@@ -198,28 +227,8 @@ describe('tasks store', () => {
             expect(axios.put).not.toHaveBeenCalled();
         });
 
-        it('keeps a daily task completed the evening before while the 5am reset has not come', () => {
-            vi.setSystemTime(new Date(2026, 9, 5, 4, 45));
-            const store = useTaskStore();
-            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 22, 0))];
-
-            store.applyResets();
-
-            expect(store.tasks[0].is_completed).toBe(true);
-        });
-
-        it('resets a daily task older than the previous 5am reset when read before 5am', () => {
-            vi.setSystemTime(new Date(2026, 9, 5, 4, 45));
-            const store = useTaskStore();
-            store.tasks = [completedTask('daily', new Date(2026, 9, 4, 4, 0))];
-
-            store.applyResets();
-
-            expect(store.tasks[0].is_completed).toBe(false);
-        });
-
         it('leaves an incomplete task untouched', () => {
-            vi.setSystemTime(new Date(2026, 9, 5, 10, 0));
+            vi.setSystemTime(utc(2026, 7, 1, 12));
             const store = useTaskStore();
             store.tasks = [{ id: 1, reset_type: 'daily', is_completed: false, completed_at: null }];
 
@@ -227,37 +236,6 @@ describe('tasks store', () => {
 
             expect(store.tasks[0].is_completed).toBe(false);
             expect(axios.put).not.toHaveBeenCalled();
-        });
-
-        it('resets a monthly task completed before the 5am reset of the 1st', () => {
-            vi.setSystemTime(new Date(2026, 9, 20, 10, 0));
-            const store = useTaskStore();
-            store.tasks = [completedTask('monthly', new Date(2026, 8, 15, 10, 0))];
-
-            store.applyResets();
-
-            expect(store.tasks[0].is_completed).toBe(false);
-            expect(store.tasks[0].completed_at).toBeNull();
-        });
-
-        it('keeps a monthly task completed since the 5am reset of the 1st', () => {
-            vi.setSystemTime(new Date(2026, 9, 20, 10, 0));
-            const store = useTaskStore();
-            store.tasks = [completedTask('monthly', new Date(2026, 9, 2, 10, 0))];
-
-            store.applyResets();
-
-            expect(store.tasks[0].is_completed).toBe(true);
-        });
-
-        it('keeps a monthly task of the previous month while the 5am reset of the 1st has not come', () => {
-            vi.setSystemTime(new Date(2026, 9, 1, 4, 45));
-            const store = useTaskStore();
-            store.tasks = [completedTask('monthly', new Date(2026, 8, 15, 10, 0))];
-
-            store.applyResets();
-
-            expect(store.tasks[0].is_completed).toBe(true);
         });
     });
 
