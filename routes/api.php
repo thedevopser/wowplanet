@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccountTodoController;
+use App\Http\Controllers\AccountWeekController;
 use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CharacterController;
@@ -30,6 +31,8 @@ Route::middleware('throttle:authenticated')->group(function (): void {
     Route::get('/account/cross-character-data', [UserCharacterController::class, 'crossCharacterData']);
     Route::get('/account/todo', [AccountTodoController::class, 'show']);
     Route::post('/account/todo/refresh', [AccountTodoController::class, 'refresh']);
+    Route::get('/account/week', [AccountWeekController::class, 'show']);
+    Route::post('/account/week/refresh', [AccountWeekController::class, 'refresh']);
 
     Route::get('/character-tasks', [CharacterTaskController::class, 'index']);
     Route::post('/character-tasks', [CharacterTaskController::class, 'store']);

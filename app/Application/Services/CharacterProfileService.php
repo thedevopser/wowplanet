@@ -18,6 +18,7 @@ use App\Domain\ValueObjects\ExpansionId;
 use App\Domain\ValueObjects\ScoreInput;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Concerns\FetchesProfileEndpoints;
+use App\Infrastructure\Blizzard\RaidJournal;
 use App\Infrastructure\Blizzard\Responses\MediaIconResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterAchievementsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterDecorResponse;
@@ -31,11 +32,9 @@ use App\Infrastructure\Blizzard\Responses\Profile\CharacterReputationsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterSummaryResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterTransmogsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CompletedQuestsResponse;
-use App\Infrastructure\Blizzard\Responses\Profile\JournalInstanceResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\MythicKeystoneSeasonResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\MythicRun;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -52,8 +51,6 @@ class CharacterProfileService
 {
     use FetchesProfileEndpoints;
 
-    private const int RAID_NAMES_TTL_S = 604800;
-
     public function __construct(
         private readonly BlizzardApiClient $blizzardApiClient,
         private readonly QuestProgressAggregator $questProgressAggregator,
@@ -66,6 +63,7 @@ class CharacterProfileService
         private readonly UserCharacterService $userCharacterService,
         private readonly ScoreCalculator $scoreCalculator,
         private readonly ResilientKeystone $resilientKeystone,
+        private readonly RaidJournal $raidJournal,
     ) {}
 
     public function getProfile(string $realm, string $name): CharacterProfileDTO
@@ -240,46 +238,7 @@ class CharacterProfileService
      */
     private function fetchRaidNames(CharacterRaidsResponse $characterRaidsResponse): array
     {
-        $instanceIds = $characterRaidsResponse->instanceIdsOf(RaidProgressAggregator::CURRENT_SEASON_EXPANSION_ID);
-        if ($instanceIds === []) {
-            return [];
-        }
-
-        $region = $this->blizzardApiClient->getRegion();
-        $nameMap = [];
-
-        foreach ($instanceIds as $instanceId) {
-            try {
-                $journalInstance = $this->fetchJournalInstance($instanceId, $region);
-            } catch (\Throwable $throwable) {
-                Log::debug('Raid journal-instance fetch failed: '.$throwable->getMessage());
-
-                continue;
-            }
-
-            $nameMap[$instanceId] = [
-                'name' => $journalInstance->name ?? '',
-                'encounters' => $journalInstance->encounterNames,
-            ];
-        }
-
-        return $nameMap;
-    }
-
-    /**
-     * Le cache garde la réponse décodée, pas l'objet : son contenu survit ainsi à un changement de classe.
-     */
-    private function fetchJournalInstance(int $instanceId, string $region): JournalInstanceResponse
-    {
-        $endpoint = 'data/wow/journal-instance/'.$instanceId;
-
-        $decoded = Cache::remember(
-            'raid_journal_instance:'.$instanceId,
-            self::RAID_NAMES_TTL_S,
-            fn (): array => $this->blizzardApiClient->get($endpoint, ['namespace' => 'static-'.$region]),
-        );
-
-        return JournalInstanceResponse::fromPayload(ResponsePayload::forEndpoint($endpoint, $decoded));
+        return $this->raidJournal->forInstances($characterRaidsResponse->instanceIdsOf(RaidProgressAggregator::CURRENT_SEASON_EXPANSION_ID));
     }
 
     private function fetchCurrentMythicSeason(string $base): ?MythicKeystoneSeasonResponse

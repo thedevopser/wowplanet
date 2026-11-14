@@ -22,6 +22,7 @@ class AccountController extends Controller
      */
     private const array VIEWS_BY_SEGMENT = [
         'a-faire' => 'a-faire',
+        'semaine' => 'semaine',
         'score' => 'score',
         'classes' => 'classes',
     ];

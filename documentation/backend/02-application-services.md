@@ -235,6 +235,24 @@ Le calcul inter-personnages n'est lancé qu'une fois : son `jobId` est retenu un
 
 ---
 
+## `WeeklyActivityService`
+
+La page « Semaine » du compte : ce qu'il reste à chaque personnage avant la remise à zéro. Le calcul tourne dans `ComputeWeeklyActivityJob`, et sa mise en forme revient à `WeeklyActivityBuilder`.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `getOrCompute(string $battleTag)` | `AccountWeekStatus` | `unauthenticated` ; `ready` avec `{characters, belowMaxLevel, maxLevel, updatedAt}` quand la semaine est en cache, ou vide pour un compte sans personnage ; `computing` avec le `jobId` du calcul ; `failed` quand ce job a échoué. Un compte sans BattleTag en session lève `MissingBattleTagException`. |
+| `refresh()` | `void` | Oublie la semaine calculée et le job attendu : le prochain appel relance un calcul. |
+| `computeAndStore(string $bnetUserId, array $characters, DateTimeImmutable $now)` | `void` | Le travail du job. |
+| `markJob(string $jobId, string $status)` | `void` | L'état du job, gardé une heure sous `weekly_activity_job:{jobId}`. |
+
+- **Un seul job** : son `jobId` est retenu une heure sous `weekly_activity:pending:{bnet_user_id}`, et les appels suivants le suivent. Un job en échec est oublié, et l'appel suivant en relance un.
+- **Appels Blizzard** : deux réponses de profil par personnage au niveau maximum (`encounters/raids`, `mythic-keystone-profile`), par `BlizzardApiClient`, donc sous `RateLimitingMiddleware` et `HourlyBudgetGuard`. Les personnages plus bas ne sont pas lus. Un personnage qui répond 404 reste à zéro ; toute autre erreur fait échouer le job plutôt que d'afficher une semaine fausse.
+- **Raids et donjons de la saison** : le journal (`RaidJournal`) des raids où au moins un personnage du compte est entré, Blizzard ne listant les raids de la saison nulle part ailleurs ; les donjons de `BlizzardApiClient::getCurrentMythicDungeons()`.
+- **Fraîcheur** : la semaine est gardée sous `weekly_activity:{bnet_user_id}` quinze minutes, jamais au-delà de la prochaine remise à zéro (`WeeklyReset::nextResetAt()`). `updatedAt` est l'heure du calcul.
+
+---
+
 ## La page « À faire » (`app/Application/Services/Todo/`)
 
 Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.

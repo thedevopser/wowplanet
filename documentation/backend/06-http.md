@@ -114,7 +114,7 @@ Les endpoints JSON liés au compte connecté, sous le limiteur `authenticated`.
 
 ### `AccountController`
 
-Le hub « Mon compte », une seule page Inertia `AccountPage` à quatre vues : `GET /mon-compte` (personnages), `/mon-compte/score`, `/mon-compte/classes` et `/mon-compte/a-faire`, passées en prop `view` (`personnages`, `score`, `classes`, `a-faire`). Une vue inconnue rend la 404. Sans connexion, la page retient l'URL demandée en session sous `url.intended`, que le callback OAuth rouvrira, et redirige vers l'accueil avec le flash `auth_required`. Les données de chaque vue arrivent ensuite par les endpoints de `UserCharacterController`, et celles de « À faire » par `AccountTodoController`.
+Le hub « Mon compte », une seule page Inertia `AccountPage` à cinq vues : `GET /mon-compte` (personnages), `/mon-compte/score`, `/mon-compte/classes`, `/mon-compte/a-faire` et `/mon-compte/semaine`, passées en prop `view` (`personnages`, `score`, `classes`, `a-faire`, `semaine`). Une vue inconnue rend la 404. Sans connexion, la page retient l'URL demandée en session sous `url.intended`, que le callback OAuth rouvrira, et redirige vers l'accueil avec le flash `auth_required`. Les données de chaque vue arrivent ensuite par les endpoints de `UserCharacterController`, celles de « À faire » par `AccountTodoController`, et celles de « Semaine » par `AccountWeekController`.
 
 Les anciennes adresses `/my-characters`, `/my-score` et `/class-stats` redirigent en 301 vers leur vue ; elles restent exclues par `robots.txt`, comme `/mon-compte`.
 
@@ -126,6 +126,15 @@ L'API de la page « À faire » du compte, sous le limiteur `authenticated`.
 |---|---|
 | `GET /api/account/todo` | Ce que rend `AccountTodoService::getOrCompute()`, sous le BattleTag de la session : 401 pour un visiteur, 502 quand le calcul inter-personnages a échoué, 200 sinon. |
 | `POST /api/account/todo/refresh` | Relance les deux calculs du compte connecté ; 401 pour un visiteur. |
+
+### `AccountWeekController`
+
+L'API de la page « Semaine » du compte, sous le limiteur `authenticated`.
+
+| Route | Réponse |
+|---|---|
+| `GET /api/account/week` | Ce que rend `WeeklyActivityService::getOrCompute()`, sous le BattleTag de la session : 401 pour un visiteur, 502 quand le calcul de la semaine a échoué, 200 sinon. |
+| `POST /api/account/week/refresh` | Oublie la semaine calculée du compte connecté et le job attendu ; 401 pour un visiteur. |
 
 ### `CharacterController`
 

@@ -12,6 +12,7 @@ La page lit la file sans jamais ouvrir `data` : l'étiquette est la seule chose 
 |---|---|---|
 | `RunImportJob` | Import du catalogue | aucun |
 | `ComputeCrossCharacterJob` | Données des autres personnages | BattleTag reçu au lancement |
+| `ComputeWeeklyActivityJob` | Semaine de jeu du compte | BattleTag reçu au lancement |
 
 ---
 
@@ -73,5 +74,15 @@ Récupère les données de tous les personnages d'un compte et calcule la progre
 > La limite mémoire est portée à 256 Mo via `ini_set('memory_limit', '256M')` car le calcul cross-personnage peut traiter des dizaines de personnages en parallèle.
 
 **Consulter l'état** : `CrossCharacterService::getJobStatus(string $jobId)`
+
+---
+
+## `ComputeWeeklyActivityJob`
+
+Calcule la semaine du compte : ce qu'il reste à chaque personnage au niveau maximum avant la remise à zéro. Sur la queue `imports`, `timeout` de 300 secondes, `tries = 1`.
+
+**Propriétés** : `$jobId`, `$bnetUserId`, `$characters` (nom, royaume, slug, niveau et classe de chaque personnage, rien d'autre) et `$battleTag`, son étiquette dans la page Santé. Aucun jeton : le client Blizzard porte le sien. La charge utile est chiffrée (`ShouldBeEncrypted`), comme celle du calcul inter-personnages.
+
+**Cycle de vie** : `WeeklyActivityService::markJob()` pose `running`, `computeAndStore()` lit Blizzard et garde la semaine, puis `completed`. Une exception laisse le worker appeler `failed()`, qui journalise « Weekly activity job failed » et pose `failed` : la page le signale, et l'appel suivant relance un job.
 
 ---

@@ -361,6 +361,10 @@ Un personnage supprimé, renommé ou jamais joué rend des réponses lacunaires,
 
 Les agrégateurs de progression reçoivent ces objets, jamais la réponse décodée.
 
+### `RaidJournal`
+
+Le journal des raids : `forInstances(list<int> $instanceIds)` rend, pour chaque raid, son nom français et tous ses boss (identifiant → nom), lus dans `data/wow/journal-instance/{id}` et gardés une semaine en cache sous `raid_journal_instance:{id}`. Les réponses de profil ne localisent pas ces noms et ne listent que les boss déjà battus : la fiche y lit les noms, la semaine du compte la liste complète des boss. Un raid dont les données statiques ne se lisent pas est laissé de côté, les autres restent.
+
 ### Media d'un objet ou d'un sort
 
 `MediaIconResponse` lit `data/wow/media/item/{id}` et `data/wow/media/spell/{id}`, qui ont la même forme, et n'en garde que `iconUrl` : la valeur du premier asset `icon` qui en porte une. Il sert aux icônes d'équipement de la fiche et aux icônes de sorts de l'onglet talents.
