@@ -13,4 +13,7 @@ enum TodoDimension: string
     case Pets = 'pets';
     case Decor = 'decor';
     case Achievements = 'achievements';
+    case Quests = 'quests';
+    case Reputations = 'reputations';
+    case Recipes = 'recipes';
 }

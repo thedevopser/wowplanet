@@ -225,10 +225,22 @@ Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.
 
 ### `TodoListBuilder`
 
-Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et rend une liste de catégories, sans lire de cache ni appeler l'API.
+Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et le résultat du calcul inter-personnages (`CrossCharacterResult`), plus les références qu'ils ne portent pas, et rend une liste de catégories, sans lire de cache ni appeler l'API.
 
 | Méthode | Retour | Description |
 |---|---|---|
+| `build(array $accountProfile, array $crossCharacter, array $characters, array $questFactions, array $trackedFactions)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. `$characters` donne le nom et la faction de chaque personnage, `$questFactions` la faction des quêtes qui en ont une, `$trackedFactions` les réputations suivies avec leur extension. |
+
+- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune) ; hauts-faits par catégorie, quêtes par zone, réputations et recettes par extension, chacune avec son `expansionId`. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
+- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
+- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=`, `npc=`, `item=`, `achievement=`, `quest=`, `faction=`, une recherche sur le nom à défaut d'identifiant), un `detail` (statut d'une réputation, niveau du métier) et `doers`, qui dit qui peut le faire.
+- **Qui peut le faire** : tout le compte pour une collection, un haut-fait ou une réputation jamais rencontrée ; les personnages de la faction pour une quête (une quête qu'aucun personnage ne peut faire sort de la liste) ; le personnage le plus avancé pour une réputation ; le personnage le plus avancé dans le métier pour l'extension d'une recette (sans lui, les recettes de cette extension ne sont pas proposées).
+
+### `TodoDimension` et `TodoScope`
+
+Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`, `quests`, `reputations`, `recipes`) et la portée de `doers` (`account` pour n'importe quel personnage du compte, `characters` pour les personnages nommés).
+
+---|---|---|
 | `build(array $accountProfile)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. |
 
 - **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune), hauts-faits par catégorie et par extension. Une catégorie sans élément obtenu ou sans élément manquant est écartée.

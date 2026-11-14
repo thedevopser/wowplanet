@@ -56,8 +56,8 @@ function todoAchievementCategory(string $name, array $completions, int $firstId 
 /**
  * The account profile with nothing in it, so that a test only spells out the part it is about.
  *
- * @param  array{mounts?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor?: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, collections?: array<int, array{quests: array{total: int, completed: int, zones: list<never>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>}  $overrides
- * @return array{collections: array<int, array{quests: array{total: int, completed: int, zones: list<never>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>, mounts: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, professions: list<never>, mountsCount: int, petsCount: int, decorCount: int, bestProfessionStats: null, appearances: list<never>, raids: null, characterCount: int, errors: list<string>, cachedAt: null}
+ * @param  array{mounts?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor?: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, professions?: list<array{profession_id: int, profession_name: string, type: string, is_archaeology: bool, global_skill_points: int, global_max_skill_points: int, expansions: array<int, array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool, wowhead_spell_id: int|null}>}>, has_tier: bool, tier_exists: bool, skill_points: int, max_skill_points: int}>}>, collections?: array<int, array{quests: array{total: int, completed: int, zones: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>}  $overrides
+ * @return array{collections: array<int, array{quests: array{total: int, completed: int, zones: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>, mounts: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, professions: list<array{profession_id: int, profession_name: string, type: string, is_archaeology: bool, global_skill_points: int, global_max_skill_points: int, expansions: array<int, array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool, wowhead_spell_id: int|null}>}>, has_tier: bool, tier_exists: bool, skill_points: int, max_skill_points: int}>}>, mountsCount: int, petsCount: int, decorCount: int, bestProfessionStats: null, appearances: list<never>, raids: null, characterCount: int, errors: list<string>, cachedAt: null}
  */
 function todoAccountProfile(array $overrides = []): array
 {
@@ -82,24 +82,97 @@ function todoAccountProfile(array $overrides = []): array
 
 /**
  * @param  list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>  $categories
- * @return array{quests: array{total: int, completed: int, zones: list<never>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}
+ * @param  list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}>  $zones
+ * @return array{quests: array{total: int, completed: int, zones: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}
  */
-function todoExpansion(array $categories): array
+function todoExpansion(array $categories = [], array $zones = []): array
 {
     return [
-        'quests' => ['total' => 0, 'completed' => 0, 'zones' => []],
+        'quests' => ['total' => 0, 'completed' => 0, 'zones' => $zones],
         'achievements' => ['total' => 0, 'completed' => 0, 'categories' => $categories],
         'reputations' => ['completed' => 0, 'total' => 0],
     ];
 }
 
 /**
- * @param  array{mounts?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor?: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, collections?: array<int, array{quests: array{total: int, completed: int, zones: list<never>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>}  $overrides
- * @return list<array{key: string, name: string, dimension: string, completed: int, total: int, missing: int, percent: float, missingItems: list<array{id: int, name: string, wowheadUrl: string, doers: array{scope: string, characters: list<string>}}>, missingMore: int}>
+ * @param  array{mounts?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, pets?: list<array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}>, decor?: list<array{id: int, name: string, is_completed: bool, item_id: int|null, icon_url: string|null, category: string|null, source: string|null}>, professions?: list<array{profession_id: int, profession_name: string, type: string, is_archaeology: bool, global_skill_points: int, global_max_skill_points: int, expansions: array<int, array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool, wowhead_spell_id: int|null}>}>, has_tier: bool, tier_exists: bool, skill_points: int, max_skill_points: int}>}>, collections?: array<int, array{quests: array{total: int, completed: int, zones: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}>}, achievements: array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, icon_url: string|null, is_completed: bool}>}>}, reputations: array{completed: int, total: int}}>}  $overrides
+ * @param  array{characters?: list<array{name: string, faction: string}>, questFactions?: array<int, string>, trackedFactions?: list<array{id: int, name: string, expansion_id: int}>, bestFactionStandings?: array<int, array{character_name: string, tier: int, raw: int, renown_level: int, standing_name: string, completed: bool}>, skillPointOwners?: array<int, array<int, array{character_name: string, skill_points: int, max_skill_points: int}>>}  $context
+ * @return list<array{key: string, name: string, dimension: string, expansionId: int|null, completed: int, total: int, missing: int, percent: float, missingItems: list<array{id: int, name: string, wowheadUrl: string, detail: string|null, doers: array{scope: string, characters: list<string>}}>, missingMore: int}>
  */
-function buildTodo(array $overrides): array
+function buildTodo(array $overrides, array $context = []): array
 {
-    return (new TodoListBuilder)->build(todoAccountProfile($overrides));
+    return (new TodoListBuilder)->build(
+        todoAccountProfile($overrides),
+        [
+            'completedQuestIds' => [],
+            'completedAchievementIds' => [],
+            'completedRecipeIds' => [],
+            'questOwners' => [],
+            'achievementOwners' => [],
+            'bestFactionStandings' => $context['bestFactionStandings'] ?? [],
+            'recipeOwners' => [],
+            'skillPointOwners' => $context['skillPointOwners'] ?? [],
+        ],
+        $context['characters'] ?? [['name' => 'Apery', 'faction' => 'Horde']],
+        $context['questFactions'] ?? [],
+        $context['trackedFactions'] ?? [],
+    );
+}
+
+/**
+ * @param  list<bool>  $completions
+ * @return array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool}>}
+ */
+function todoQuestZone(string $name, array $completions, int $firstId = 1): array
+{
+    $items = [];
+
+    foreach ($completions as $offset => $completed) {
+        $items[] = ['id' => $firstId + $offset, 'name' => 'Quest '.($firstId + $offset), 'is_completed' => $completed];
+    }
+
+    return ['name' => $name, 'total' => count($items), 'completed' => count(array_filter($completions)), 'items' => $items];
+}
+
+/**
+ * @param  list<bool>  $completions
+ * @return array{profession_id: int, profession_name: string, type: string, is_archaeology: bool, global_skill_points: int, global_max_skill_points: int, expansions: array<int, array{total: int, completed: int, categories: list<array{name: string, total: int, completed: int, items: list<array{id: int, name: string, is_completed: bool, wowhead_spell_id: int|null}>}>, has_tier: bool, tier_exists: bool, skill_points: int, max_skill_points: int}>}
+ */
+function todoProfession(int $professionId, string $professionName, int $expansionId, string $categoryName, array $completions, ?int $spellId = null): array
+{
+    $items = [];
+
+    foreach ($completions as $offset => $completed) {
+        $items[] = ['id' => 500 + $offset, 'name' => 'Recipe '.(500 + $offset), 'is_completed' => $completed, 'wowhead_spell_id' => $spellId];
+    }
+
+    $category = ['name' => $categoryName, 'total' => count($items), 'completed' => count(array_filter($completions)), 'items' => $items];
+
+    return [
+        'profession_id' => $professionId,
+        'profession_name' => $professionName,
+        'type' => 'primary',
+        'is_archaeology' => false,
+        'global_skill_points' => 0,
+        'global_max_skill_points' => 0,
+        'expansions' => [$expansionId => [
+            'total' => $category['total'],
+            'completed' => $category['completed'],
+            'categories' => [$category],
+            'has_tier' => true,
+            'tier_exists' => true,
+            'skill_points' => 0,
+            'max_skill_points' => 0,
+        ]],
+    ];
+}
+
+/**
+ * @return array{character_name: string, tier: int, raw: int, renown_level: int, standing_name: string, completed: bool}
+ */
+function todoStanding(string $characterName, bool $completed, string $standingName = 'Honoré'): array
+{
+    return ['character_name' => $characterName, 'tier' => 5, 'raw' => 0, 'renown_level' => 0, 'standing_name' => $standingName, 'completed' => $completed];
 }
 
 it('lists each source of a collection that is started and not complete', function (): void {
@@ -276,6 +349,174 @@ it('lets the whole account earn a collectible or an achievement', function (): v
     ]);
 
     foreach ($todo as $category) {
-        expect($category['missingItems'][0]['doers'])->toBe(['scope' => TodoScope::Account->value, 'characters' => []]);
+        expect($category['missingItems'][0]['doers'])->toBe(['scope' => TodoScope::Account->value, 'characters' => []])
+            ->and($category['missingItems'][0]['detail'])->toBeNull();
     }
+});
+
+it('places a collection outside any expansion and an achievement category in its own', function (): void {
+    $todo = buildTodo([
+        'mounts' => [todoCollectible(1, true), todoCollectible(2, false)],
+        'collections' => [10 => todoExpansion([todoAchievementCategory('Exploration', [true, false])])],
+    ]);
+
+    expect(array_column($todo, 'expansionId', 'key'))->toBe(['mounts:Vendor' => null, 'achievements:10:Exploration' => 10]);
+});
+
+it('lists the quest zones of every expansion that are started and not complete', function (): void {
+    $todo = buildTodo(['collections' => [10 => todoExpansion(zones: [todoQuestZone('Comté-du-Nord', [true, false])])]]);
+
+    expect($todo[0])->toMatchArray([
+        'key' => 'quests:10:Comté-du-Nord',
+        'name' => 'Comté-du-Nord',
+        'dimension' => TodoDimension::Quests->value,
+        'expansionId' => 10,
+    ])->and($todo[0]['missingItems'][0]['wowheadUrl'])->toBe('https://www.wowhead.com/fr/quest=2');
+});
+
+it('lets every character do a missing neutral quest', function (): void {
+    $todo = buildTodo(
+        ['collections' => [10 => todoExpansion(zones: [todoQuestZone('Comté-du-Nord', [true, false])])]],
+        ['characters' => [['name' => 'Apery', 'faction' => 'Horde'], ['name' => 'Jaina', 'faction' => 'Alliance']]],
+    );
+
+    expect($todo[0]['missingItems'][0]['doers'])->toBe(['scope' => TodoScope::Characters->value, 'characters' => ['Apery', 'Jaina']]);
+});
+
+it('lets only the characters of its faction do a faction quest', function (): void {
+    $todo = buildTodo(
+        ['collections' => [10 => todoExpansion(zones: [todoQuestZone('Comté-du-Nord', [true, false])])]],
+        [
+            'characters' => [['name' => 'Apery', 'faction' => 'Horde'], ['name' => 'Jaina', 'faction' => 'Alliance']],
+            'questFactions' => [2 => 'Alliance'],
+        ],
+    );
+
+    expect($todo[0]['missingItems'][0]['doers']['characters'])->toBe(['Jaina']);
+});
+
+it('leaves out a quest that no character of the account can do', function (): void {
+    $todo = buildTodo(
+        ['collections' => [10 => todoExpansion(zones: [todoQuestZone('Comté-du-Nord', [true, false, false])])]],
+        ['characters' => [['name' => 'Apery', 'faction' => 'Horde']], 'questFactions' => [2 => 'Alliance']],
+    );
+
+    expect($todo[0]['missingItems'])->toHaveCount(1)
+        ->and($todo[0]['missingItems'][0]['id'])->toBe(3)
+        ->and($todo[0])->toMatchArray(['total' => 2, 'missing' => 1]);
+});
+
+it('lists the tracked reputations of an expansion that are started and not complete', function (): void {
+    $todo = buildTodo([], [
+        'trackedFactions' => [
+            ['id' => 2590, 'name' => 'Conseil de Dornogal', 'expansion_id' => 10],
+            ['id' => 2594, 'name' => "L'Assemblée des abysses", 'expansion_id' => 10],
+        ],
+        'bestFactionStandings' => [2590 => todoStanding('Apery', true), 2594 => todoStanding('Jaina', false, 'Renom 12')],
+    ]);
+
+    expect($todo[0])->toMatchArray([
+        'key' => 'reputations:10',
+        'name' => 'The War Within',
+        'dimension' => TodoDimension::Reputations->value,
+        'expansionId' => 10,
+        'completed' => 1,
+        'total' => 2,
+    ])->and($todo[0]['missingItems'][0])->toMatchArray([
+        'id' => 2594,
+        'name' => "L'Assemblée des abysses",
+        'wowheadUrl' => 'https://www.wowhead.com/fr/faction=2594',
+        'detail' => 'Renom 12',
+        'doers' => ['scope' => TodoScope::Characters->value, 'characters' => ['Jaina']],
+    ]);
+});
+
+it('lets the whole account start a tracked reputation that no character has met', function (): void {
+    $todo = buildTodo([], [
+        'trackedFactions' => [
+            ['id' => 2590, 'name' => 'Conseil de Dornogal', 'expansion_id' => 10],
+            ['id' => 2594, 'name' => "L'Assemblée des abysses", 'expansion_id' => 10],
+        ],
+        'bestFactionStandings' => [2590 => todoStanding('Apery', true)],
+    ]);
+
+    expect($todo[0]['missingItems'][0])->toMatchArray([
+        'id' => 2594,
+        'detail' => null,
+        'doers' => ['scope' => TodoScope::Account->value, 'characters' => []],
+    ]);
+});
+
+it('lists the recipe categories of a profession and gives them to its best character for that expansion', function (): void {
+    $todo = buildTodo(
+        ['professions' => [todoProfession(171, 'Alchimie', 10, 'Potions', [true, false], 3000)]],
+        ['skillPointOwners' => [171 => [10 => ['character_name' => 'Gothdroid', 'skill_points' => 95, 'max_skill_points' => 100]]]],
+    );
+
+    expect($todo[0])->toMatchArray([
+        'key' => 'recipes:171:10:Potions',
+        'name' => 'Alchimie · Potions',
+        'dimension' => TodoDimension::Recipes->value,
+        'expansionId' => 10,
+    ])->and($todo[0]['missingItems'][0])->toMatchArray([
+        'wowheadUrl' => 'https://www.wowhead.com/fr/spell=3000',
+        'detail' => '95 / 100',
+        'doers' => ['scope' => TodoScope::Characters->value, 'characters' => ['Gothdroid']],
+    ]);
+});
+
+it('proposes no recipe of a profession that no character knows for that expansion', function (): void {
+    $todo = buildTodo(
+        ['professions' => [todoProfession(171, 'Alchimie', 10, 'Potions', [true, false])]],
+        ['skillPointOwners' => [171 => [9 => ['character_name' => 'Gothdroid', 'skill_points' => 95, 'max_skill_points' => 100]]]],
+    );
+
+    expect($todo)->toBe([]);
+});
+
+it('gathers the tracked reputations of an expansion into a single category, apart from the other expansions', function (): void {
+    $todo = buildTodo([], [
+        'trackedFactions' => [
+            ['id' => 2590, 'name' => 'Conseil de Dornogal', 'expansion_id' => 10],
+            ['id' => 2594, 'name' => "L'Assemblée des abysses", 'expansion_id' => 10],
+            ['id' => 2507, 'name' => 'Expédition dragonnante', 'expansion_id' => 9],
+            ['id' => 2510, 'name' => 'Valdrakken', 'expansion_id' => 9],
+        ],
+        'bestFactionStandings' => [
+            2590 => todoStanding('Apery', true),
+            2594 => todoStanding('Apery', false),
+            2507 => todoStanding('Apery', true),
+            2510 => todoStanding('Apery', false),
+        ],
+    ]);
+
+    expect(array_column($todo, 'key'))->toEqualCanonicalizing(['reputations:10', 'reputations:9'])
+        ->and(array_column($todo, 'total'))->toBe([2, 2]);
+});
+
+it('lists the recipes of every profession and every expansion its best characters know', function (): void {
+    $alchemy = todoProfession(171, 'Alchimie', 10, 'Potions', [true, false]);
+    $alchemy['expansions'] += todoProfession(171, 'Alchimie', 9, 'Élixirs', [true, false])['expansions'];
+
+    $todo = buildTodo(
+        ['professions' => [$alchemy, todoProfession(164, 'Forge', 10, 'Armes', [true, false])]],
+        ['skillPointOwners' => [
+            171 => [10 => ['character_name' => 'Gothdroid', 'skill_points' => 95, 'max_skill_points' => 100], 9 => ['character_name' => 'Apery', 'skill_points' => 50, 'max_skill_points' => 100]],
+            164 => [10 => ['character_name' => 'Apery', 'skill_points' => 10, 'max_skill_points' => 100]],
+        ]],
+    );
+
+    expect(array_column($todo, 'key'))->toEqualCanonicalizing(['recipes:171:10:Potions', 'recipes:171:9:Élixirs', 'recipes:164:10:Armes']);
+});
+
+it('hands the page each missing item in the shape of its contract, and nothing more', function (): void {
+    $todo = buildTodo(['mounts' => [todoCollectible(1, true), todoCollectible(2, false, 'Vendor', 5000)]]);
+
+    expect($todo[0]['missingItems'])->toBe([[
+        'id' => 2,
+        'name' => 'Collectible 2',
+        'wowheadUrl' => 'https://www.wowhead.com/fr/spell=5000',
+        'detail' => null,
+        'doers' => ['scope' => TodoScope::Account->value, 'characters' => []],
+    ]]);
 });

@@ -11,4 +11,7 @@ enum TodoScope: string
 {
     /** Une collection ou un haut-fait commun au compte : n'importe quel personnage. */
     case Account = 'account';
+
+    /** Une quête, une réputation ou une recette : les personnages nommés. */
+    case Characters = 'characters';
 }
