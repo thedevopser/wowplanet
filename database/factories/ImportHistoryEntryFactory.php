@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
  */
 class ImportHistoryEntryFactory extends Factory
 {
+    #[\Override]
     protected $model = ImportHistoryEntry::class;
 
     /**

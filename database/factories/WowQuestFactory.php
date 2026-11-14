@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowQuestFactory extends Factory
 {
+    #[\Override]
     protected $model = WowQuest::class;
 
     /**

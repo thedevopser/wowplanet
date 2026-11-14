@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CharacterVisitFactory extends Factory
 {
+    #[\Override]
     protected $model = CharacterVisit::class;
 
     /**

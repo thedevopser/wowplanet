@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowAchievementFactory extends Factory
 {
+    #[\Override]
     protected $model = WowAchievement::class;
 
     /**

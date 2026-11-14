@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowAppearanceFactory extends Factory
 {
+    #[\Override]
     protected $model = WowAppearance::class;
 
     /**

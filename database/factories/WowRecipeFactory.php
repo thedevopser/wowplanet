@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowRecipeFactory extends Factory
 {
+    #[\Override]
     protected $model = WowRecipe::class;
 
     /**

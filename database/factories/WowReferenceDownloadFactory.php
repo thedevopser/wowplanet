@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowReferenceDownloadFactory extends Factory
 {
+    #[\Override]
     protected $model = WowReferenceDownload::class;
 
     /**

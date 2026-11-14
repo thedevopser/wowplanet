@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowImportStateFactory extends Factory
 {
+    #[\Override]
     protected $model = WowImportState::class;
 
     /**

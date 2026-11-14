@@ -13,6 +13,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Le template Blade racine chargé au premier rendu (contient @inertia / @inertiaHead).
      */
+    #[\Override]
     protected $rootView = 'app';
 
     /**

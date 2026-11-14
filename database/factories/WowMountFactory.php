@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowMountFactory extends Factory
 {
+    #[\Override]
     protected $model = WowMount::class;
 
     /**

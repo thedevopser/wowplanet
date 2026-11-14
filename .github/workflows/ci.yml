@@ -26,11 +26,11 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v7
 
-      # 8.4 is the FrankenPHP version, the one composer.json requires.
+      # 8.5 is the FrankenPHP version, the one composer.json requires.
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: pdo_pgsql, redis, gd, intl, zip, pcntl
           coverage: none
 
@@ -134,7 +134,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: pdo_pgsql, redis, gd, intl, zip, pcntl
           coverage: pcov
 
@@ -315,7 +315,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: pdo_pgsql, redis, gd, intl, zip, pcntl
           coverage: pcov
 

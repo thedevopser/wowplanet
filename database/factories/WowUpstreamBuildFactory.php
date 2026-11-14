@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WowUpstreamBuildFactory extends Factory
 {
+    #[\Override]
     protected $model = WowUpstreamBuild::class;
 
     /**
