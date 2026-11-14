@@ -27,24 +27,11 @@ const SCORE = {
     ],
 };
 
-const RECOMMENDATIONS = [{
-    key: 'mount:Raid',
-    name: 'Raid',
-    dimension: 'Montures',
-    dimensionKey: 'mounts',
-    completed: 3,
-    total: 4,
-    missing: 1,
-    percent: 75,
-    missingItems: [{ id: 9, name: 'Invincible', wowheadUrl: 'https://www.wowhead.com/fr/spell=72286' }],
-    missingMore: 2,
-}];
-
 let wrapper;
 
 function mountPanel(props = {}) {
     wrapper = mount(ScorePanel, {
-        props: { score: SCORE, title: 'Score de complétion', recommendations: RECOMMENDATIONS, shareData: {}, ...props },
+        props: { score: SCORE, title: 'Score de complétion', shareData: {}, ...props },
         global: { plugins: [createTestingPinia({ createSpy: vi.fn })], stubs: { ShareScoreModal: true } },
         attachTo: document.body,
     });
@@ -62,7 +49,7 @@ describe('ScorePanel', () => {
         mountPanel();
 
         expect(wrapper.find('h2').text()).toBe('Score de complétion');
-        expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual(['Détail par dimension', 'Il vous reste…']);
+        expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual(['Détail par dimension']);
     });
 
     it('says how many dimensions count and which formula applies', () => {
@@ -117,24 +104,19 @@ describe('ScorePanel', () => {
         expect(wrapper.emitted('navigate')).toBeUndefined();
     });
 
-    it('expands a recommendation from a real button', async () => {
-        mountPanel();
-        const toggle = wrapper.find('[data-recommendation] button');
+    it('sends to the « À faire » page when given its address', () => {
+        mountPanel({ todoUrl: '/mon-compte/a-faire?personnage=Arthas' });
 
-        expect(toggle.attributes('aria-expanded')).toBe('false');
-        expect(wrapper.text()).not.toContain('Invincible');
-
-        await toggle.trigger('click');
-
-        expect(toggle.attributes('aria-expanded')).toBe('true');
-        expect(wrapper.find(`#${toggle.attributes('aria-controls')}`).text()).toContain('Invincible');
-        expect(wrapper.text()).toContain('et 2 autres');
+        const link = wrapper.find('[data-todo-link] a');
+        expect(link.attributes('href')).toBe('/mon-compte/a-faire?personnage=Arthas');
+        expect(wrapper.find('[data-todo-link]').text()).toContain('Ce qu’il vous reste à faire');
     });
 
-    it('hides the recommendations when there are none', () => {
-        mountPanel({ recommendations: [] });
+    it('offers no link to the « À faire » page without its address', () => {
+        mountPanel();
 
-        expect(wrapper.text()).not.toContain('Il vous reste');
+        expect(wrapper.find('[data-todo-link]').exists()).toBe(false);
+        expect(wrapper.find('[data-recommendation]').exists()).toBe(false);
     });
 
     it('opens the share dialog from « Partager ce score »', async () => {

@@ -132,11 +132,13 @@ Sections et sous-onglets de la fiche personnage, miroir de `App\Http\Character\C
 
 ---
 
-## `scoreRecommendations.js`
+## `wowhead.js`
 
-Le bloc « Il vous reste… » du score, commun au personnage et au compte. `buildRecommendations(profile)` regroupe les montures, mascottes et décorations par source, les hauts-faits par catégorie et les quêtes par zone, ne garde que les groupes commencés et inachevés, et rend les douze plus proches de la complétion (`MAX_RECOMMENDATIONS`), chacun avec ses vingt premiers manquants (`MAX_ITEMS_SHOWN`) liés à Wowhead par `wowheadUrl(type, item)`. Chaque recommandation porte la clé de sa dimension (`dimensionKey`), qui donne sa couleur.
+`wowheadUrl(type, item)` lie un objet du jeu à sa page Wowhead en français : monture par son sort, mascotte par sa créature, décoration par son objet, quête et haut-fait par leur identifiant, et une recherche par nom quand l'identifiant manque. Utilisé par les onglets Quêtes et Hauts-faits de la fiche.
 
----
+## `accountTodo.js`
+
+La page « À faire » du compte, dont la liste arrive déjà triée du serveur. `filterTodo(categories, { dimension, character, expansion })` la restreint ; pour un personnage, il garde ce qu'il peut faire et ce que tout le compte peut faire. `nearlyDone`, `dimensionSummaries` et `expansionOptions` construisent la vue d'ensemble et les filtres, `doersLabel` dit qui peut faire un élément, `todoColor` donne la couleur d'une dimension (les recettes prennent celle des métiers).
 
 ## `formatScore.js`
 

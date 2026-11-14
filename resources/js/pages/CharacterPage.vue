@@ -24,7 +24,7 @@
 
             <Tabs v-model="activeSection" :tabs="SECTIONS" label="Sections de la fiche">
                 <template #[OVERVIEW]>
-                    <CharacterOverview :character="store.character" :realm="realm" :name="name" />
+                    <CharacterOverview :character="store.character" :realm="realm" :name="name" :is-owner="isOwner" />
                 </template>
                 <template v-for="section in ROUTED_SECTIONS" :key="section.value" #[section.value]>
                     <Tabs v-model="activeSub" :tabs="section.subs" :label="section.label" variant="secondary">

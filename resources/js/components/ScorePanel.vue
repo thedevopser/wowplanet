@@ -65,45 +65,20 @@
             </ul>
         </section>
 
-        <section v-if="recommendations.length" class="space-y-4">
-            <SectionHeader
-                title="Il vous reste…"
-                :level="3"
-                description="Les catégories les plus proches de la complétion. Dépliez-en une pour voir ce qu’il manque."
-            />
-            <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <Card v-for="(rec, index) in recommendations" :key="rec.key" as="li" data-recommendation class="overflow-hidden">
-                    <button
-                        type="button"
-                        :aria-expanded="String(expanded === rec.key)"
-                        :aria-controls="`${titleId}-rec-${index}`"
-                        class="flex min-h-11 w-full items-center gap-3 p-4 text-left transition-colors duration-fast hover:bg-surface-raised
-                            focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-                        @click="expanded = expanded === rec.key ? null : rec.key"
-                    >
-                        <span
-                            class="flex size-9 shrink-0 items-center justify-center rounded-ui-sm bg-surface-raised text-sm font-bold tabular-nums"
-                            :style="{ color: readable(colorOf(rec.dimensionKey)) }"
-                        >{{ rec.missing }}</span>
-                        <span class="min-w-0 flex-1">
-                            <span class="block truncate text-sm font-semibold text-default">{{ rec.name }}</span>
-                            <span class="block text-xs tabular-nums text-subtle">{{ rec.completed }} / {{ rec.total }} — {{ rec.dimension }}</span>
-                        </span>
-                        <Icon :icon="ChevronDown" size="sm" class="shrink-0 text-subtle transition-transform duration-fast" :class="{ 'rotate-180': expanded === rec.key }" />
-                    </button>
-                    <div v-if="expanded === rec.key" :id="`${titleId}-rec-${index}`" class="border-t border-default px-4 pb-4">
-                        <ul class="mt-3 max-h-64 space-y-1 overflow-y-auto">
-                            <li v-for="item in rec.missingItems" :key="item.id ?? item.name" class="text-sm">
-                                <a :href="item.wowheadUrl" target="_blank" rel="noopener" class="block truncate py-1 text-muted hover:text-default hover:underline">{{ item.name }}</a>
-                            </li>
-                        </ul>
-                        <p v-if="rec.missingMore > 0" class="pt-1 text-xs text-subtle">
-                            … et {{ rec.missingMore }} autre{{ rec.missingMore > 1 ? 's' : '' }}
-                        </p>
-                    </div>
-                </Card>
-            </ul>
-        </section>
+        <Card v-if="todoUrl" variant="interactive" data-todo-link class="flex items-center gap-4 p-4 sm:p-5">
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-ui-sm bg-surface-raised text-accent">
+                <Icon :icon="ListChecks" />
+            </span>
+            <span class="min-w-0 flex-1">
+                <Link
+                    :href="todoUrl"
+                    class="text-base font-semibold text-default outline-none after:absolute after:inset-0
+                        focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-accent"
+                >Ce qu’il vous reste à faire</Link>
+                <span class="block text-sm text-muted">Collections, quêtes, réputations et recettes entamées, et quel personnage peut les faire.</span>
+            </span>
+            <Icon :icon="ChevronRight" size="sm" class="shrink-0 text-subtle" />
+        </Card>
 
         <ShareScoreModal :show="shareOpen" :variant="shareVariant" :score-data="shareData" @close="shareOpen = false" />
     </section>
@@ -111,7 +86,8 @@
 
 <script setup>
 import { computed, ref, useId } from 'vue';
-import { ChevronDown, Share2 } from 'lucide-vue-next';
+import { ChevronRight, ListChecks, Share2 } from 'lucide-vue-next';
+import { Link } from '@inertiajs/vue3';
 import { formatScore } from '../utils/formatScore';
 import { dimensionColor, rankColor } from '../utils/wowColors';
 import { useWowColor } from '../composables/useWowColor';
@@ -128,7 +104,7 @@ const props = defineProps({
     score: { type: Object, required: true },
     title: { type: String, required: true },
     subtitle: { type: String, default: '' },
-    recommendations: { type: Array, default: () => [] },
+    todoUrl: { type: String, default: '' },
     dimensionLinks: { type: Object, default: () => ({}) },
     shareData: { type: Object, default: () => ({}) },
     shareVariant: { type: String, default: 'personal' },
@@ -137,7 +113,6 @@ const props = defineProps({
 const emit = defineEmits(['navigate']);
 
 const titleId = useId();
-const expanded = ref(null);
 const shareOpen = ref(false);
 const { readable, safe } = useWowColor();
 

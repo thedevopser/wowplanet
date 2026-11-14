@@ -25,7 +25,7 @@
                 :score="score"
                 title="Score du compte"
                 :subtitle="panelSubtitle"
-                :recommendations="recommendations"
+                todo-url="/mon-compte/a-faire"
                 :share-data="shareData"
                 share-variant="account"
             />
@@ -51,7 +51,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { Gauge, RotateCw } from 'lucide-vue-next';
-import { buildRecommendations } from '../../utils/scoreRecommendations';
 import CardGridSkeleton from '../CardGridSkeleton.vue';
 import ScorePanel from '../ScorePanel.vue';
 import Button from '../ui/Button.vue';
@@ -87,8 +86,6 @@ const panelSubtitle = computed(() => {
 
     return cachedAtFormatted.value ? `${aggregated} · mis à jour le ${cachedAtFormatted.value}` : aggregated;
 });
-
-const recommendations = computed(() => buildRecommendations(virtualProfile.value));
 
 async function poll() {
     try {

@@ -17,7 +17,7 @@
             v-if="character.score"
             :score="character.score"
             title="Score de complétion"
-            :recommendations="recommendations"
+            :todo-url="todoUrl"
             :dimension-links="dimensionLinks"
             :share-data="shareData"
             share-variant="personal"
@@ -35,7 +35,6 @@
 <script setup>
 import { computed } from 'vue';
 import { Gauge } from 'lucide-vue-next';
-import { buildRecommendations } from '../utils/scoreRecommendations';
 import { dimensionColor, readableVariants, rgbToHex } from '../utils/wowColors';
 import { useWowColor } from '../composables/useWowColor';
 import { DIMENSION_VIEWS, useSheetNavigation } from '../composables/useSheetNavigation';
@@ -47,7 +46,10 @@ const props = defineProps({
     character: { type: Object, required: true },
     realm: { type: String, required: true },
     name: { type: String, required: true },
+    isOwner: { type: Boolean, default: false },
 });
+
+const TODO_PAGE = '/mon-compte/a-faire';
 
 const { urlOf, show } = useSheetNavigation(() => props.realm, () => props.name);
 
@@ -77,7 +79,8 @@ const counters = computed(() => {
     return list;
 });
 
-const recommendations = computed(() => buildRecommendations(props.character));
+// The list of what is left belongs to the account: only its owner is sent there, on this character.
+const todoUrl = computed(() => (props.isOwner ? `${TODO_PAGE}?${new URLSearchParams({ personnage: props.character.name })}` : ''));
 
 const dimensionLinks = computed(() => Object.fromEntries(
     Object.entries(DIMENSION_VIEWS).map(([key, view]) => [key, urlOf(view.section, view.sub)]),
