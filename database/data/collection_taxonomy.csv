@@ -1898,7 +1898,7 @@ pet,343,"World Event","Darkmoon Faire",true
 pet,346,Promotional,"Diablo III",true
 pet,347,Promotional,"Blizzard Store",true
 pet,348,Promotional,"Trading Card Game / Auction House",true
-pet,374,Classic,"Pet Battle",true
+pet,374,,,true
 pet,378,,,true
 pet,379,,,true
 pet,380,,,true
@@ -6154,6 +6154,7 @@ decor,26886,"Battle for Azeroth",Vendor,true
 decor,26887,"Battle for Azeroth",Vendor,true
 decor,26888,"Battle for Azeroth",Vendor,true
 decor,26889,"Battle for Azeroth",Vendor,true
+decor,26890,Midnight,Promotion,true
 decor,26935,Neighbourhoods,"Neighbourhood Vendor",true
 decor,26936,Neighbourhoods,"Kobold Endeavors",true
 decor,26937,Neighbourhoods,"Kobold Endeavors",true
