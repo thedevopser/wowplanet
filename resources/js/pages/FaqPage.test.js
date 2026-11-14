@@ -76,6 +76,17 @@ describe('FaqPage', () => {
         expect(text).toContain('le 1er de chaque mois');
     });
 
+    it('lays its lists out on a single column on a phone', async () => {
+        const wrapper = await mountFaqPage();
+        const lists = wrapper.findAll('ul').filter((list) => list.classes().some((name) => name.includes('columns-')));
+
+        expect(lists.length).toBeGreaterThan(0);
+        lists.forEach((list) => {
+            expect(list.classes()).not.toContain('columns-2');
+            expect(list.classes()).toContain('sm:columns-3');
+        });
+    });
+
     it('shows no accessibility violation that axe can detect', async () => {
         const wrapper = await mountFaqPage();
 
