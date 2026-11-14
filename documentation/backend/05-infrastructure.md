@@ -353,12 +353,17 @@ Un objet par endpoint que la fiche personnage consomme, construit sur `ResponseP
 | `RaidEncounterProgress` | un boss vaincu | `id`, `name`, `lastKillTimestamp` |
 | `JournalInstanceResponse` | `data/wow/journal-instance/{id}` | `name`, `encounterNames` (identifiant → nom français) |
 | `MythicKeystoneSeasonResponse` | `…/mythic-keystone-profile/season/{id}` | `seasonId`, `rating`, `ratingColor`, `bestRuns` |
+| `MythicKeystoneProfileResponse` | `…/mythic-keystone-profile` | `periodId`, `currentPeriodRuns` : la meilleure clé par donjon de la semaine en cours, vide quand Blizzard omet la liste (aucune clé dans la semaine) |
 | `MythicRun` | une entrée de `best_runs` | donjon, niveau, durée, horodatage, dans les temps, cote et cote de donjon avec leurs couleurs. Les membres du groupe ne sont pas lus. |
 | `RatingColor` | la `color` d'une cote | `r`, `g`, `b`, `a`, et `toArray()` pour la prop transmise au front |
 
 Un personnage supprimé, renommé ou jamais joué rend des réponses lacunaires, et un endpoint en 404 rend une réponse vide : presque tout y est donc optionnel, et les valeurs de repli (`''`, `0`) sont posées par le service. Seules les références qui structurent une entrée sont obligatoires — la `mount` d'une monture collectée, les quatre canaux d'une couleur, le `profession` d'un métier et l'identifiant d'une recette connue. Un champ présent mais du mauvais type lève `UnexpectedFieldTypeException`, sauf l'identifiant d'une apparence, lu par `lenientInt()` qui accepte aussi une chaîne numérique comme le faisait le code d'origine.
 
 Les agrégateurs de progression reçoivent ces objets, jamais la réponse décodée.
+
+### `RaidJournal`
+
+Le journal des raids : `forInstances(list<int> $instanceIds)` rend, pour chaque raid, son nom français et tous ses boss (identifiant → nom), lus dans `data/wow/journal-instance/{id}` et gardés une semaine en cache sous `raid_journal_instance:{id}`. Les réponses de profil ne localisent pas ces noms et ne listent que les boss déjà battus : la fiche y lit les noms, la semaine du compte la liste complète des boss. Un raid dont les données statiques ne se lisent pas est laissé de côté, les autres restent.
 
 ### Media d'un objet ou d'un sort
 

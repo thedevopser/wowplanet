@@ -95,6 +95,10 @@ Le JcJ n'y figure pas. Son onglet est chargé à la demande, après la fiche : a
 
 ---
 
+### `RaidDifficulty`
+
+Énumération des difficultés de raid, dans les termes que Blizzard envoie (`LFR`, `NORMAL`, `HEROIC`, `MYTHIC`). `fromBlizzard()` refuse une difficulté inconnue par `InvalidWeeklyActivityException` ; `rank()` les ordonne de la plus facile (0) à la plus dure (3).
+
 ## Services (`app/Domain/Services/`)
 
 ### `ScoreCalculator`
@@ -135,6 +139,14 @@ Une clé dans les temps vaut pour tous les niveaux inférieurs ou égaux au sien
 
 Une saison sans donjon ou une clé de niveau négatif lèvent `InvalidKeystoneDataException`.
 
+### `WeeklyReset`
+
+La remise à zéro hebdomadaire des serveurs européens : chaque mercredi à 4 h UTC toute l'année, comme les bornes des périodes Mythique+ que rend Blizzard, soit 5 h à Paris en hiver et 6 h en été. `lastResetAt()` et `nextResetAt()` la calculent à partir de l'instant donné, quel que soit son fuseau. `isThisWeek()` dit si une victoire, datée en millisecondes comme Blizzard la rend, est postérieure à la dernière remise à zéro ; zéro, une victoire jamais enregistrée, ne compte pas.
+
+### `GreatVault`
+
+Les paliers de la Grande Chambre forte, calculés comme le jeu. `raid()` reçoit les boss battus dans la semaine avec leur difficulté : un boss battu dans plusieurs difficultés compte une fois, à la plus haute ; les paliers tombent à 2, 4 et 6 boss distincts (`RAID_THRESHOLDS`), et chacun vaut la difficulté de son n-ième boss, les boss rangés de la plus dure à la plus facile. `mythicPlus()` reçoit le niveau de chaque clé de la semaine : paliers à 1, 4 et 8 clés (`MYTHIC_PLUS_THRESHOLDS`), chacun valant le niveau de sa n-ième meilleure clé. Les deux rendent le nombre compté et, par palier, `threshold`, `reached` et `reward` (`null` tant qu'il n'est pas atteint). Une clé sous +2 lève `InvalidWeeklyActivityException`.
+
 ---
 
 ## Exceptions (`app/Domain/Exceptions/`)
@@ -146,3 +158,7 @@ Levée par `CharacterFavoriteService` quand un utilisateur ajoute un favori alor
 ### `InvalidKeystoneDataException`
 
 Levée par `ResilientKeystone` quand ses entrées ne décrivent pas une saison : aucun donjon, ou une clé de niveau négatif. `CharacterProfileService` n'appelle la règle que si Blizzard a rendu la rotation de la saison.
+
+### `InvalidWeeklyActivityException`
+
+Levée par `RaidDifficulty` pour une difficulté que Blizzard enverrait sans qu'elle soit connue, et par `GreatVault` pour une clé sous +2.

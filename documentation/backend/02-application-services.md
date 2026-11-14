@@ -235,6 +235,24 @@ Le calcul inter-personnages n'est lancé qu'une fois : son `jobId` est retenu un
 
 ---
 
+## `WeeklyActivityService`
+
+La page « Semaine » du compte : ce qu'il reste à chaque personnage avant la remise à zéro. Le calcul tourne dans `ComputeWeeklyActivityJob`, et sa mise en forme revient à `WeeklyActivityBuilder`.
+
+| Méthode | Retour | Description |
+|---|---|---|
+| `getOrCompute(string $battleTag)` | `AccountWeekStatus` | `unauthenticated` ; `ready` avec `{characters, belowMaxLevel, maxLevel, updatedAt}` quand la semaine est en cache, ou vide pour un compte sans personnage ; `computing` avec le `jobId` du calcul ; `failed` quand ce job a échoué. Un compte sans BattleTag en session lève `MissingBattleTagException`. |
+| `refresh()` | `void` | Oublie la semaine calculée et le job attendu : le prochain appel relance un calcul. |
+| `computeAndStore(string $bnetUserId, array $characters, DateTimeImmutable $now)` | `void` | Le travail du job. |
+| `markJob(string $jobId, string $status)` | `void` | L'état du job, gardé une heure sous `weekly_activity_job:{jobId}`. |
+
+- **Un seul job** : son `jobId` est retenu une heure sous `weekly_activity:pending:{bnet_user_id}`, et les appels suivants le suivent. Un job en échec est oublié, et l'appel suivant en relance un.
+- **Appels Blizzard** : deux réponses de profil par personnage au niveau maximum (`encounters/raids`, `mythic-keystone-profile`), par `BlizzardApiClient`, donc sous `RateLimitingMiddleware` et `HourlyBudgetGuard`. Les personnages plus bas ne sont pas lus. Un personnage qui répond 404 reste à zéro ; toute autre erreur fait échouer le job plutôt que d'afficher une semaine fausse.
+- **Raids et donjons de la saison** : le journal (`RaidJournal`) des raids où au moins un personnage du compte est entré, Blizzard ne listant les raids de la saison nulle part ailleurs ; les donjons de `BlizzardApiClient::getCurrentMythicDungeons()`.
+- **Fraîcheur** : la semaine est gardée sous `weekly_activity:{bnet_user_id}` quinze minutes, jamais au-delà de la prochaine remise à zéro (`WeeklyReset::nextResetAt()`). `updatedAt` est l'heure du calcul.
+
+---
+
 ## La page « À faire » (`app/Application/Services/Todo/`)
 
 Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.
@@ -256,16 +274,19 @@ Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, ce
 
 Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`, `quests`, `reputations`, `recipes`) et la portée de `doers` (`account` pour n'importe quel personnage du compte, `characters` pour les personnages nommés).
 
----|---|---|
-| `build(array $accountProfile)` | `list<TodoCategory>` | Les catégories entamées et incomplètes, toutes, sans plafond : le filtrage se fait dans le navigateur. |
 
-- **Catégories** : montures, mascottes et décorations par source (un élément sans source n'entre dans aucune), hauts-faits par catégorie et par extension. Une catégorie sans élément obtenu ou sans élément manquant est écartée.
-- **Ordre** : le moins d'éléments manquants d'abord, puis le pourcentage d'avancement le plus haut.
-- **Éléments** : au plus `MAX_ITEMS_SHOWN` (20) éléments manquants par catégorie, avec `missingMore` pour le reste. Chacun porte son lien Wowhead (`spell=` pour une monture, `npc=` pour une mascotte, `item=` pour une décoration, `achievement=` pour un haut-fait, une recherche sur le nom à défaut d'identifiant) et `doers`, qui dit qui peut le faire.
+### `WeeklyActivityBuilder`
 
-### `TodoDimension` et `TodoScope`
+Ce qu'il reste à faire à chaque personnage avant la remise à zéro, pour la page `/mon-compte/semaine`. Classe pure : elle reçoit, par personnage, son nom, son royaume, son niveau, sa classe et ses deux réponses Blizzard (`CharacterRaidsResponse`, `MythicKeystoneProfileResponse`, nulles s'il n'a rien fait), le journal des raids de la saison (tous les boss de chaque raid, en français), les donjons de la saison et l'instant présent.
 
-Énumérations du contrat avec le front : la dimension d'une catégorie (`mounts`, `pets`, `decor`, `achievements`) et la portée de `doers` (`account` pour une collection ou un haut-fait commun au compte).
+| Méthode | Retour | Description |
+|---|---|---|
+| `build(array $characters, array $raidJournal, array $seasonDungeons, DateTimeImmutable $now)` | `WeeklyActivity` | `characters`, les personnages au niveau maximum, triés ; `belowMaxLevel`, le nombre de personnages écartés ; `maxLevel`, le plus haut niveau du compte. |
+
+- **Niveau maximum** : le plus haut niveau parmi les personnages reçus. En dessous, ni Grande Chambre forte ni contenu de la saison : le personnage est écarté et compté.
+- **Raid** : les victoires de la pseudo-extension 505 postérieures à la dernière remise à zéro (`WeeklyReset`) donnent les paliers (`GreatVault::raid()`). `remaining` liste, raid par raid du journal et difficulté par difficulté, les boss encore à battre cette semaine ; une difficulté où tout est battu disparaît, et un raid battu dans toutes ses difficultés aussi. La réponse de Blizzard ne liste que les boss déjà battus : la liste complète vient du journal. Une difficulté inconnue du site est laissée de côté plutôt que de faire échouer la page.
+- **Mythique+** : les clés de la semaine (`current_period`) donnent les paliers (`GreatVault::mythicPlus()`) ; `missingDungeons` nomme les donjons de la saison sans clé cette semaine. Une clé sans niveau ou sans donjon est ignorée.
+- **Tri** : `nextSlotGap`, le plus petit nombre de boss ou de donjons manquant pour un prochain palier, raid et Mythique+ confondus, du plus petit au plus grand ; à égalité, le plus de paliers atteints d'abord, puis le nom. Un personnage à la chambre forte remplie (`nextSlotGap` nul) passe en dernier.
 
 ---
 

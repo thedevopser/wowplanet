@@ -136,6 +136,10 @@ Sections et sous-onglets de la fiche personnage, miroir de `App\Http\Character\C
 
 `wowheadUrl(type, item)` lie un objet du jeu à sa page Wowhead en français : monture par son sort, mascotte par sa créature, décoration par son objet, quête et haut-fait par leur identifiant, et une recherche par nom quand l'identifiant manque. Utilisé par les onglets Quêtes et Hauts-faits de la fiche.
 
+## `accountWeek.js`
+
+La page « Semaine », dont la semaine arrive calculée et triée du serveur. `difficultyLabel` nomme une difficulté de raid (`LFR`, `Normal`, `Héroïque`, `Mythique`, ou telle que Blizzard l'envoie si elle est inconnue), `hardestFirst` range les difficultés de la plus dure à la plus facile, `slotLabel` dit ce que vaut un emplacement de la Grande Chambre forte (sa difficulté ou son niveau de clé) ou ce qu'il demande (`4 boss`, `8 donjons`), `nextSlot` ce qu'il manque pour le prochain, et `unitOf` compte boss et donjons en français.
+
 ## `accountTodo.js`
 
 La page « À faire » du compte, dont la liste arrive déjà triée du serveur. `filterTodo(categories, { dimension, character, expansion })` la restreint ; pour un personnage, il garde ce qu'il peut faire et ce que tout le compte peut faire. `nearlyDone`, `dimensionSummaries` et `expansionOptions` construisent la vue d'ensemble et les filtres, `doersLabel` dit qui peut faire un élément, `todoColor` donne la couleur d'une dimension (les recettes prennent celle des métiers).

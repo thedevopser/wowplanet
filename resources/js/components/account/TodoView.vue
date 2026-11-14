@@ -21,7 +21,7 @@
 
         <CardGridSkeleton v-else-if="status === 'loading'" label="Chargement de votre liste" :count="3" />
 
-        <ErrorState v-else-if="status === 'error'" title="Liste indisponible" :message="errorMessage" @retry="startPolling" />
+        <ErrorState v-else-if="status === 'error'" title="Liste indisponible" :message="errorMessage" @retry="start" />
 
         <EmptyState
             v-else-if="todo.categories.length === 0"
@@ -117,9 +117,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import axios from 'axios';
+import { computed } from 'vue';
 import { ChevronLeft, ChevronRight, Filter, PartyPopper, RotateCw } from 'lucide-vue-next';
+import { useAccountComputation } from '../../composables/useAccountComputation';
 import { useClientPaging } from '../../composables/useClientPaging';
 import { useQueryParam, useQueryParamsUpdate } from '../../composables/useQueryParam';
 import { useWowColor } from '../../composables/useWowColor';
@@ -138,10 +138,6 @@ import Select from '../ui/Select.vue';
 import Spinner from '../ui/Spinner.vue';
 import TodoCategoryCard from './TodoCategoryCard.vue';
 
-const POLL_INTERVAL = 2500;
-const THROTTLED_RETRY_DELAY = 10000;
-const FAILED_COMPUTATION = 502;
-const TOO_MANY_REQUESTS = 429;
 const NEARLY_DONE_COUNT = 6;
 const PER_PAGE = 12;
 
@@ -152,13 +148,18 @@ const store = useCharacterStore();
 const { readable } = useWowColor();
 const updateQuery = useQueryParamsUpdate();
 
-const status = ref('loading');
-const step = ref('account');
-const progress = ref({ loaded: 0, errors: 0, total: 0, current: '' });
-const todo = ref({ categories: [], characters: [], updatedAt: null });
-const errorMessage = ref('');
-const refreshing = ref(false);
-let pollTimer = null;
+const EMPTY_PROGRESS = Object.freeze({ loaded: 0, errors: 0, total: 0, current: '' });
+const EMPTY_TODO = Object.freeze({ categories: [], characters: [], updatedAt: null });
+
+const { status, computing, data, errorMessage, refreshing, start, refresh } = useAccountComputation({
+    endpoint: '/api/account/todo',
+    refreshEndpoint: '/api/account/todo/refresh',
+    messages: { failed: 'Le calcul de vos personnages a échoué. Réessayez dans un instant.', unavailable: 'La liste n’a pas pu être chargée.' },
+});
+
+const step = computed(() => computing.value?.step ?? 'account');
+const progress = computed(() => computing.value?.progress ?? EMPTY_PROGRESS);
+const todo = computed(() => data.value ?? EMPTY_TODO);
 
 const processed = computed(() => Math.min(progress.value.loaded + progress.value.errors, progress.value.total));
 
@@ -215,66 +216,4 @@ function subtitleOf(category) {
     return expansionName ? `${label} · ${expansionName}` : label;
 }
 
-function stopPolling() {
-    clearTimeout(pollTimer);
-    pollTimer = null;
-}
-
-function show(data) {
-    if (data.status === 'computing') {
-        status.value = 'computing';
-        step.value = data.step;
-        progress.value = data.progress ?? progress.value;
-        pollTimer = setTimeout(poll, POLL_INTERVAL);
-
-        return;
-    }
-
-    todo.value = data.data;
-    status.value = 'ready';
-}
-
-function fail(error) {
-    status.value = 'error';
-    errorMessage.value = error.response?.status === FAILED_COMPUTATION
-        ? 'Le calcul de vos personnages a échoué. Réessayez dans un instant.'
-        : 'La liste n’a pas pu être chargée.';
-}
-
-async function poll() {
-    try {
-        const response = await axios.get('/api/account/todo');
-        show(response.data);
-    } catch (error) {
-        stopPolling();
-        if (error.response?.status === TOO_MANY_REQUESTS) {
-            // The session limiter counts every call of the site: wait for it rather than give up.
-            pollTimer = setTimeout(poll, THROTTLED_RETRY_DELAY);
-
-            return;
-        }
-        fail(error);
-    }
-}
-
-function startPolling() {
-    stopPolling();
-    status.value = 'loading';
-    poll();
-}
-
-async function refresh() {
-    refreshing.value = true;
-    try {
-        await axios.post('/api/account/todo/refresh');
-    } catch {
-        // The next request recomputes or reports the error itself.
-    } finally {
-        refreshing.value = false;
-    }
-    startPolling();
-}
-
-onMounted(startPolling);
-onUnmounted(stopPolling);
 </script>

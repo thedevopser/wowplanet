@@ -18,7 +18,7 @@ let wrapper;
 async function mountPage(view = 'personnages') {
     wrapper = await mountWithPlugins(AccountPage, {
         props: { view },
-        stubs: { CharactersView: true, TodoView: true, ScoreView: true, ClassesView: true },
+        stubs: { CharactersView: true, TodoView: true, WeekView: true, ScoreView: true, ClassesView: true },
         attachTo: document.body,
     });
     await flushPromises();
@@ -42,16 +42,17 @@ describe('AccountPage', () => {
         expect(wrapper.find('h1').text()).toBe('Mon compte');
     });
 
-    it('offers its four views as tabs', async () => {
+    it('offers its five views as tabs', async () => {
         await mountPage();
 
         expect(wrapper.find('[role="tablist"]').attributes('aria-label')).toBe('Vues du compte');
-        expect(tabs().map((tab) => tab.text())).toEqual(['Personnages', 'À faire', 'Score du compte', 'Classes']);
+        expect(tabs().map((tab) => tab.text())).toEqual(['Personnages', 'À faire', 'Semaine', 'Score du compte', 'Classes']);
     });
 
     it.each([
         ['personnages', 'Personnages', 'CharactersView', 'Mes personnages - WowPlanet'],
         ['a-faire', 'À faire', 'TodoView', 'À faire sur le compte - WowPlanet'],
+        ['semaine', 'Semaine', 'WeekView', 'Ma semaine de jeu - WowPlanet'],
         ['score', 'Score du compte', 'ScoreView', 'Score du compte - WowPlanet'],
         ['classes', 'Classes', 'ClassesView', 'Mes classes - WowPlanet'],
     ])('opens the %s view given by the address', async (view, label, component, title) => {

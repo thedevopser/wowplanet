@@ -37,6 +37,20 @@ const stop = watchFlashMessages(usePage(), useToastStore());
 
 ---
 
+## `useAccountComputation` (`composables/useAccountComputation.js`)
+
+Une vue du compte dont le serveur calcule les données en arrière-plan (« À faire », « Semaine ») : elle interroge `endpoint` dès le montage, toutes les 2,5 s tant que la réponse dit `computing`, et garde cette réponse dans `computing` (étape, avancement, `jobId`). Une réponse 429 du limiteur de session est attendue dix secondes au lieu d'être affichée ; une réponse 502 donne `messages.failed`, toute autre erreur `messages.unavailable`.
+
+```js
+const { status, computing, data, errorMessage, refreshing, start, refresh } = useAccountComputation({
+    endpoint: '/api/account/week',
+    refreshEndpoint: '/api/account/week/refresh',
+    messages: { failed: 'Le calcul a échoué.', unavailable: 'La semaine n’a pas pu être chargée.' },
+});
+```
+
+`status` vaut `loading`, `computing`, `ready` (avec `data`) ou `error`. `start()` repart de zéro, `refresh()` poste sur `refreshEndpoint` puis repart, même si ce POST échoue. Le minuteur est arrêté au démontage.
+
 ## `useQueryParam` (`composables/useQueryParam.js`)
 
 Un filtre d'onglet (extension, catégorie, zone) lu et écrit dans la chaîne de requête, pour qu'il se partage par lien.

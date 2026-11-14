@@ -14,6 +14,9 @@
             <template #a-faire>
                 <TodoView />
             </template>
+            <template #semaine>
+                <WeekView />
+            </template>
             <template #score>
                 <ScoreView />
             </template>
@@ -40,11 +43,13 @@ import CharactersView from '../components/account/CharactersView.vue';
 import ClassesView from '../components/account/ClassesView.vue';
 import ScoreView from '../components/account/ScoreView.vue';
 import TodoView from '../components/account/TodoView.vue';
+import WeekView from '../components/account/WeekView.vue';
 
 // Mirror of AccountController::VIEWS_BY_SEGMENT: the characters are the base address.
 const VIEWS = Object.freeze([
     { value: 'personnages', label: 'Personnages', url: '/mon-compte', title: 'Mes personnages - WowPlanet' },
     { value: 'a-faire', label: 'À faire', url: '/mon-compte/a-faire', title: 'À faire sur le compte - WowPlanet' },
+    { value: 'semaine', label: 'Semaine', url: '/mon-compte/semaine', title: 'Ma semaine de jeu - WowPlanet' },
     { value: 'score', label: 'Score du compte', url: '/mon-compte/score', title: 'Score du compte - WowPlanet' },
     { value: 'classes', label: 'Classes', url: '/mon-compte/classes', title: 'Mes classes - WowPlanet' },
 ]);
