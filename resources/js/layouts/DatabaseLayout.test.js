@@ -189,6 +189,18 @@ describe('DatabaseLayout', () => {
         expect(wrapper.find('[data-mobile-subcategories]').exists()).toBe(true);
     });
 
+    it('offers sub-categories below the desktop width only as 44 pixel touch targets', async () => {
+        __page.url = '/base-de-donnees/montures';
+        __page.props = { subCategories: { mounts: [{ slug: 'draconique', name: 'Draconique', count: 42 }] } };
+
+        const wrapper = await mountLayout();
+
+        expect(wrapper.find('aside').classes()).toEqual(expect.arrayContaining(['hidden', 'lg:flex']));
+        wrapper.findAll('[data-mobile-subcategories] a').forEach((link) => {
+            expect(link.classes()).toContain('min-h-11');
+        });
+    });
+
     it('spells out every section in the mobile bar', async () => {
         const wrapper = await mountLayout();
 

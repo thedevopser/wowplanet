@@ -60,6 +60,15 @@ describe('EditorialPage', () => {
         expect(wrapper.find('details').findAll('a')).toHaveLength(2);
     });
 
+    it('keeps every entry of the folded table of contents a 44 pixel touch target', () => {
+        const entries = mountPage({ sections }).find('details').findAll('a');
+
+        entries.forEach((entry) => {
+            expect(entry.classes()).toContain('min-h-11');
+            expect(entry.classes()).not.toContain('min-h-9');
+        });
+    });
+
     it('marks the first section as the one being read before any scroll', () => {
         const current = mountPage({ sections }).findAll('nav[aria-label="Sommaire"] [aria-current="location"]');
 
