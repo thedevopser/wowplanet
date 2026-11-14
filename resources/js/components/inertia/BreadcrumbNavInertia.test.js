@@ -35,6 +35,15 @@ describe('BreadcrumbNavInertia', () => {
         expect(hrefs).toEqual(['/', '/base-de-donnees']);
     });
 
+    it('gives every link a touch target of 44 px high', () => {
+        const wrapper = mountCrumbs([
+            { label: 'Base de données', to: '/base-de-donnees' },
+            { label: 'Montures', to: '/base-de-donnees/montures' },
+        ]);
+
+        wrapper.findAll('a').forEach((link) => expect(link.classes()).toEqual(expect.arrayContaining(['inline-flex', 'min-h-11', 'items-center'])));
+    });
+
     it('marks the last crumb as the current page', () => {
         const wrapper = mountCrumbs([
             { label: 'Base de données', to: '/base-de-donnees' },
