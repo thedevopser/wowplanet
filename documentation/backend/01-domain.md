@@ -141,7 +141,7 @@ Une saison sans donjon ou une clé de niveau négatif lèvent `InvalidKeystoneDa
 
 ### `WeeklyReset`
 
-La remise à zéro hebdomadaire des serveurs européens : chaque mercredi à 5 h, heure de Paris, la règle déjà appliquée aux tâches hebdomadaires. `lastResetAt()` et `nextResetAt()` la calculent à partir de l'instant donné, quel que soit son fuseau ; l'heure reste 5 h aux changements d'heure. `isThisWeek()` dit si une victoire, datée en millisecondes comme Blizzard la rend, est postérieure à la dernière remise à zéro ; zéro, une victoire jamais enregistrée, ne compte pas.
+La remise à zéro hebdomadaire des serveurs européens : chaque mercredi à 4 h UTC toute l'année, comme les bornes des périodes Mythique+ que rend Blizzard, soit 5 h à Paris en hiver et 6 h en été. `lastResetAt()` et `nextResetAt()` la calculent à partir de l'instant donné, quel que soit son fuseau. `isThisWeek()` dit si une victoire, datée en millisecondes comme Blizzard la rend, est postérieure à la dernière remise à zéro ; zéro, une victoire jamais enregistrée, ne compte pas.
 
 ### `GreatVault`
 

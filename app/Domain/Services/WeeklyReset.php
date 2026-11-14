@@ -8,16 +8,16 @@ use DateTimeImmutable;
 use DateTimeZone;
 
 /**
- * La remise à zéro hebdomadaire des serveurs européens : chaque mercredi à 5 h, heure de Paris,
- * la règle que le site applique déjà aux tâches hebdomadaires.
+ * La remise à zéro hebdomadaire des serveurs européens : chaque mercredi à 4 h UTC toute l'année,
+ * comme les périodes Mythique+ de Blizzard, soit 5 h à Paris en hiver et 6 h en été.
  */
 final readonly class WeeklyReset
 {
-    private const string TIMEZONE = 'Europe/Paris'; // @pest-mutate-ignore
+    private const string TIMEZONE = 'UTC'; // @pest-mutate-ignore
 
     private const int RESET_WEEKDAY = 3; // @pest-mutate-ignore
 
-    private const int RESET_HOUR = 5; // @pest-mutate-ignore
+    private const int RESET_HOUR = 4; // @pest-mutate-ignore
 
     private const int DAYS_PER_WEEK = 7; // @pest-mutate-ignore
 
@@ -49,7 +49,6 @@ final readonly class WeeklyReset
         return intdiv($milliseconds, self::MILLISECONDS_PER_SECOND) >= $this->lastResetAt($now)->getTimestamp();
     }
 
-    // The day is moved first and the hour set after: across a clock change, the hour stays 5 am.
     private function atResetHour(DateTimeImmutable $day): DateTimeImmutable
     {
         return $day->setTime(self::RESET_HOUR, 0);

@@ -14,7 +14,7 @@ function milliseconds(DateTimeImmutable $moment): int
     return $moment->getTimestamp() * 1000;
 }
 
-test('the last reset is the latest Wednesday at 5 am in Paris', function (string $now, string $expected): void {
+test('in winter, the last reset is the latest Wednesday at 5 am in Paris', function (string $now, string $expected): void {
     expect((new WeeklyReset)->lastResetAt(parisTime($now)))->toEqual(parisTime($expected));
 })->with([
     'on a Saturday' => ['2026-11-14 20:00', '2026-11-11 05:00'],
@@ -23,18 +23,21 @@ test('the last reset is the latest Wednesday at 5 am in Paris', function (string
     'on the Tuesday evening' => ['2026-11-10 23:30', '2026-11-04 05:00'],
 ]);
 
-test('the reset stays at 5 am in Paris across the clock changes', function (string $now, string $expected): void {
+test('the reset follows Blizzard at 4 am UTC all year, 5 am in Paris in winter and 6 am in summer', function (string $now, string $expected, string $parisHour): void {
     $lastReset = (new WeeklyReset)->lastResetAt(parisTime($now));
 
     expect($lastReset)->toEqual(parisTime($expected))
-        ->and($lastReset->setTimezone(new DateTimeZone('Europe/Paris'))->format('H:i'))->toBe('05:00');
+        ->and($lastReset->setTimezone(new DateTimeZone('Europe/Paris'))->format('H:i'))->toBe($parisHour)
+        ->and($lastReset->setTimezone(new DateTimeZone('UTC'))->format('D H:i'))->toBe('Wed 04:00');
 })->with([
-    'the week after winter time starts' => ['2026-10-29 12:00', '2026-10-28 05:00'],
-    'the week winter time starts' => ['2026-10-26 12:00', '2026-10-21 05:00'],
-    'the week after summer time starts' => ['2026-04-01 12:00', '2026-04-01 05:00'],
+    'in summer, as period 1069 of June 24, 2026' => ['2026-06-26 12:00', '2026-06-24 06:00', '06:00'],
+    'in summer, on the Wednesday at 5:30 in Paris' => ['2026-06-24 05:30', '2026-06-17 06:00', '06:00'],
+    'the week after winter time starts' => ['2026-10-29 12:00', '2026-10-28 05:00', '05:00'],
+    'the week winter time starts' => ['2026-10-26 12:00', '2026-10-21 06:00', '06:00'],
+    'the week after summer time starts' => ['2026-04-01 12:00', '2026-04-01 06:00', '06:00'],
 ]);
 
-test('it reads the reset in Paris whatever the zone of the given moment', function (): void {
+test('it reads the reset whatever the zone of the given moment', function (): void {
     $now = new DateTimeImmutable('2026-11-11 04:30', new DateTimeZone('UTC'));
 
     expect((new WeeklyReset)->lastResetAt($now))->toEqual(parisTime('2026-11-11 05:00'));
