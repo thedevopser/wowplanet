@@ -26,6 +26,9 @@ class AccountScoreService
     // @pest-mutate-ignore
     private const int PROGRESS_TTL = 3600;
 
+    /** Forme du résultat en cache : à faire monter quand une clé s'y ajoute, pour ne jamais relire un ancien résultat incomplet. */
+    public const string RESULT_SHAPE = 'r2'; // @pest-mutate-ignore
+
     public function __construct(
         private readonly CharacterProfileService $characterProfileService,
         private readonly UserCharacterService $userCharacterService,
@@ -33,7 +36,7 @@ class AccountScoreService
     ) {}
 
     /**
-     * @return array{status: string, data?: AccountScoreResult|null, progress?: array{loaded: int, errors: int, total: int, current: string}}
+     * @return array{status: 'unauthenticated'}|array{status: 'ready', data: AccountScoreResult|null}|array{status: 'computing', progress: array{loaded: int, errors: int, total: int, current: string}}
      */
     public function getOrCompute(): array
     {
@@ -122,7 +125,7 @@ class AccountScoreService
     }
 
     /**
-     * @return array{status: string, data: AccountScoreResult}
+     * @return array{status: 'ready', data: AccountScoreResult}
      */
     private function finalize(AccountScoreProgress $accountScoreProgress, string $cacheKey, string $progressKey): array
     {
@@ -152,9 +155,9 @@ class AccountScoreService
         );
     }
 
-    /** La version de la formule est dans la clé : un changement de barème purge le cache. */
+    /** La version de la formule et la forme du résultat sont dans la clé : un changement de l'une ou de l'autre purge le cache. */
     private function getCacheKey(): string
     {
-        return 'account_score:v'.ScoreWeights::VERSION.':'.Session::getId();
+        return 'account_score:v'.ScoreWeights::VERSION.':'.self::RESULT_SHAPE.':'.Session::getId();
     }
 }

@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
 
 /**
  * @phpstan-import-type StoredCrossCharacterData from CrossCharacterData
+ * @phpstan-import-type CrossCharacterResult from CrossCharacterProgress
  */
 class CrossCharacterService
 {
@@ -46,7 +47,7 @@ class CrossCharacterService
      * Dispatch cross-character computation as a background job.
      * Returns cached data if fresh, otherwise queues the computation.
      *
-     * @return array{status: string, data?: StoredCrossCharacterData|null, characterCount?: int, jobId?: string}
+     * @return array{status: 'unauthenticated'}|array{status: 'ready', data: StoredCrossCharacterData, characterCount: int}|array{status: 'ready', data: null}|array{status: 'computing', jobId: string}
      *
      * @throws MissingBattleTagException
      */
@@ -108,6 +109,48 @@ class CrossCharacterService
      */
     public function getStoredData(): ?array
     {
+        $record = $this->freshRecord();
+
+        if (! $record instanceof CrossCharacterData) {
+            return null;
+        }
+
+        return ['data' => $record->data, 'character_count' => $record->character_count];
+    }
+
+    /**
+     * Les données encore fraîches, relues comme un résultat fusionné, avec l'heure de leur calcul.
+     *
+     * @return array{result: CrossCharacterResult, fetchedAt: string}|null
+     */
+    public function getStoredResult(): ?array
+    {
+        $record = $this->freshRecord();
+
+        if (! $record instanceof CrossCharacterData || $record->fetched_at === null) {
+            return null;
+        }
+
+        return ['result' => $this->storedProgress($record)->buildResult(), 'fetchedAt' => $record->fetched_at->toIso8601ZuluString()];
+    }
+
+    /**
+     * Force le prochain appel à recalculer le compte. Les données sont gardées : ce que les fiches
+     * y ont fusionné en passant reste acquis jusqu'au recalcul.
+     */
+    public function invalidate(): void
+    {
+        $bnetUserId = $this->getBnetUserId();
+
+        if ($bnetUserId === '') {
+            return;
+        }
+
+        CrossCharacterData::query()->whereKey($bnetUserId)->update(['fetched_at' => null]);
+    }
+
+    private function freshRecord(): ?CrossCharacterData
+    {
         $bnetUserId = $this->getBnetUserId();
         if ($bnetUserId === '') {
             return null;
@@ -124,7 +167,7 @@ class CrossCharacterService
             return null;
         }
 
-        return ['data' => $record->data, 'character_count' => $record->character_count];
+        return $record;
     }
 
     /**

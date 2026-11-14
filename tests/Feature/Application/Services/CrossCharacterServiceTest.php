@@ -273,6 +273,57 @@ test('getStoredData treats data computed a day ago as stale', function (): void 
     expect(resolve(CrossCharacterService::class)->getStoredData())->toBeNull();
 });
 
+test('getStoredResult reads fresh data back as a merged result, with the time it was computed', function (): void {
+    $this->freezeSecond();
+    signInCrossCharacterUser();
+    CrossCharacterData::query()->create([
+        'bnet_user_id' => '42',
+        'data' => ['questOwners' => [100 => 'Thrall'], 'skillPointOwners' => [171 => [10 => ['character_name' => 'Jaina', 'skill_points' => 95, 'max_skill_points' => 100]]]],
+        'character_count' => 2,
+        'fetched_at' => now()->subHour(),
+    ]);
+
+    $stored = resolve(CrossCharacterService::class)->getStoredResult();
+
+    expect($stored['fetchedAt'] ?? null)->toBe(now()->subHour()->toIso8601ZuluString())
+        ->and($stored['result']['questOwners'] ?? null)->toBe([100 => 'Thrall'])
+        ->and($stored['result']['skillPointOwners'][171][10]['character_name'] ?? null)->toBe('Jaina')
+        ->and($stored['result']['bestFactionStandings'] ?? null)->toBe([]);
+});
+
+test('getStoredResult returns nothing for stale or never computed data', function (?int $hoursAgo): void {
+    $this->freezeSecond();
+    signInCrossCharacterUser();
+    CrossCharacterData::query()->create([
+        'bnet_user_id' => '42',
+        'data' => ['questOwners' => [100 => 'Thrall']],
+        'character_count' => 1,
+        'fetched_at' => $hoursAgo === null ? null : now()->subHours($hoursAgo),
+    ]);
+
+    expect(resolve(CrossCharacterService::class)->getStoredResult())->toBeNull();
+})->with(['computed a day ago' => [24], 'merged from a profile only' => [null]]);
+
+test('invalidate forces the next call to compute again, without losing what the sheets merged', function (): void {
+    signInCrossCharacterUser();
+    CrossCharacterData::query()->create(['bnet_user_id' => '42', 'data' => ['questOwners' => [100 => 'Thrall']], 'character_count' => 2, 'fetched_at' => now()]);
+
+    resolve(CrossCharacterService::class)->invalidate();
+
+    $record = CrossCharacterData::query()->find('42');
+    expect(resolve(CrossCharacterService::class)->getStoredData())->toBeNull()
+        ->and($record?->data)->toBe(['questOwners' => [100 => 'Thrall']]);
+});
+
+test('invalidate touches no other account', function (): void {
+    signInCrossCharacterUser();
+    CrossCharacterData::query()->create(['bnet_user_id' => '7', 'data' => ['a' => 1], 'character_count' => 1, 'fetched_at' => now()]);
+
+    resolve(CrossCharacterService::class)->invalidate();
+
+    expect(CrossCharacterData::query()->find('7')?->fetched_at)->not->toBeNull();
+});
+
 // ─── fetchAndMergeCharacters ────────────────────────────────
 
 test('it merges the progress of every character with its owner', function (): void {

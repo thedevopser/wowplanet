@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountTodoController;
 use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CharacterController;
@@ -27,6 +28,8 @@ Route::middleware('throttle:authenticated')->group(function (): void {
     Route::get('/account/cross-character', [UserCharacterController::class, 'crossCharacter']);
     Route::get('/account/cross-character/{jobId}', [UserCharacterController::class, 'crossCharacterStatus']);
     Route::get('/account/cross-character-data', [UserCharacterController::class, 'crossCharacterData']);
+    Route::get('/account/todo', [AccountTodoController::class, 'show']);
+    Route::post('/account/todo/refresh', [AccountTodoController::class, 'refresh']);
 
     Route::get('/character-tasks', [CharacterTaskController::class, 'index']);
     Route::post('/character-tasks', [CharacterTaskController::class, 'store']);

@@ -23,6 +23,7 @@ class AccountController extends Controller
     private const array VIEWS_BY_SEGMENT = [
         'score' => 'score',
         'classes' => 'classes',
+        'a-faire' => 'a-faire',
     ];
 
     public function __construct(

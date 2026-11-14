@@ -35,7 +35,8 @@ use App\Domain\ValueObjects\CompletionScore;
  * @phpstan-type AccountRaid array{instance_id: int, instance_name: string, modes: array<string, AccountRaidMode>}
  * @phpstan-type AccountExpansionCollection array{quests: array{total: int, completed: int, zones: list<QuestZone>}, achievements: array{total: int, completed: int, categories: list<AchievementCategory>}, reputations: array{completed: int, total: int}}
  * @phpstan-type CompletionStats array{completed: int, total: int}
- * @phpstan-type AccountScoreResult array{collections: array<int, AccountExpansionCollection>, mounts: list<CollectibleProgress>, pets: list<CollectibleProgress>, decor: list<DecorProgress>, professions: list<ProfessionProgress>, mountsCount: int, petsCount: int, decorCount: int, bestProfessionStats: CompletionStats|null, appearances: list<AppearanceProgress>, raids: list<RaidProgress>|null, characterCount: int, errors: list<string>, cachedAt: string|null, score?: CompletionScore}
+ * @phpstan-type AccountRosterEntry array{name: string, faction: string}
+ * @phpstan-type AccountScoreResult array{collections: array<int, AccountExpansionCollection>, mounts: list<CollectibleProgress>, pets: list<CollectibleProgress>, decor: list<DecorProgress>, professions: list<ProfessionProgress>, mountsCount: int, petsCount: int, decorCount: int, bestProfessionStats: CompletionStats|null, appearances: list<AppearanceProgress>, raids: list<RaidProgress>|null, characterCount: int, characters: list<AccountRosterEntry>, errors: list<string>, cachedAt: string|null, score?: CompletionScore}
  */
 class AccountScoreProgress
 {
@@ -44,6 +45,9 @@ class AccountScoreProgress
 
     /** @var list<string> */
     public array $errors = [];
+
+    /** @var list<AccountRosterEntry> */
+    private array $loadedCharacters = [];
 
     /** @var array<int, true> */
     public array $completedQuestIds = [];
@@ -94,6 +98,7 @@ class AccountScoreProgress
     public function mergeProfile(CharacterProfileDTO $characterProfileDTO): void
     {
         $this->processed++;
+        $this->loadedCharacters[] = ['name' => $characterProfileDTO->name, 'faction' => $characterProfileDTO->faction];
 
         $this->accountMounts ??= $characterProfileDTO->mounts;
         $this->accountPets ??= $characterProfileDTO->pets;
@@ -128,6 +133,7 @@ class AccountScoreProgress
             'appearances' => array_values($this->bestAppearances),
             'raids' => $this->rebuildRaids(),
             'characterCount' => $this->processed,
+            'characters' => $this->loadedCharacters,
             'errors' => $this->errors,
             'cachedAt' => now()->toISOString(),
         ];

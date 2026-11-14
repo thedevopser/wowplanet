@@ -20,6 +20,7 @@ app/Application/DTOs/AccountScoreProgress.php
 app/Application/DTOs/CrossCharacterProgress.php
 app/Application/Services/AccountScoreService.php
 app/Application/Services/CrossCharacterService.php
+app/Application/Services/AccountTodoService.php
 app/Jobs/ComputeCrossCharacterJob.php
 
 # What is left to do on the account: which categories are worth showing, in which order, and who can do each item.
