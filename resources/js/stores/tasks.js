@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const SIDEBAR_KEY = 'wowplanet-tasks-sidebar';
 
+// Blizzard resets the European region at 4am UTC all year round, Wednesday for the weekly reset.
+const RESET_HOUR_UTC = 4;
+const WEEKLY_RESET_DAY = 3;
+const DAYS_PER_WEEK = 7;
+
 function persistSidebar(open) {
     if (typeof localStorage !== 'undefined') {
         localStorage.setItem(SIDEBAR_KEY, String(open));
@@ -136,31 +141,23 @@ export const useTaskStore = defineStore('tasks', {
 
         _getDailyThreshold(now) {
             const threshold = new Date(now);
-            threshold.setHours(5, 0, 0, 0);
+            threshold.setUTCHours(RESET_HOUR_UTC, 0, 0, 0);
             if (now < threshold) {
-                threshold.setDate(threshold.getDate() - 1);
+                threshold.setUTCDate(threshold.getUTCDate() - 1);
             }
             return threshold;
         },
 
         _getWeeklyThreshold(now) {
-            const threshold = new Date(now);
-            threshold.setHours(5, 0, 0, 0);
-            // Go back to last Wednesday
-            const day = threshold.getDay(); // 0=Sun, 3=Wed
-            const daysBack = (day + 4) % 7; // days since last Wednesday
-            threshold.setDate(threshold.getDate() - daysBack);
-            if (now < threshold) {
-                threshold.setDate(threshold.getDate() - 7);
-            }
+            const threshold = this._getDailyThreshold(now);
+            const daysSinceResetDay = (threshold.getUTCDay() - WEEKLY_RESET_DAY + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+            threshold.setUTCDate(threshold.getUTCDate() - daysSinceResetDay);
             return threshold;
         },
 
         _getMonthlyThreshold(now) {
-            const threshold = new Date(now.getFullYear(), now.getMonth(), 1, 5, 0, 0, 0);
-            if (now < threshold) {
-                threshold.setMonth(threshold.getMonth() - 1);
-            }
+            const threshold = this._getDailyThreshold(now);
+            threshold.setUTCDate(1);
             return threshold;
         },
     },
