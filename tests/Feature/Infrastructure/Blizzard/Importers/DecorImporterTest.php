@@ -324,3 +324,29 @@ test('a suggestion that has not changed leaves the row untouched', function (): 
 
     expect($output)->toContain('Saving 0 decors');
 });
+
+test('it stores the english name the search documents carry', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
+    mockDecorSearch($client, [['id' => 80, 'name' => ['fr_FR' => 'Foyer orné en pierre', 'en_US' => 'Ornate Stone Hearth'], 'item' => ['id' => 235994]]]);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    expect(WowDecor::query()->findOrFail(80)->name_en)->toBe('Ornate Stone Hearth');
+});
+
+test('it keeps the english name a decor already had when its search window fails', function (): void {
+    WowDecor::factory()->create(['id' => 80, 'name_fr' => 'Foyer orné en pierre', 'name_en' => 'Ornate Stone Hearth']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockDecorIndex($client, [['id' => 80, 'name' => 'Foyer orné en pierre']]);
+    mockDecorSearch($client, []);
+    mockDecorItemMedia($client, []);
+
+    resolve(DecorImporter::class)->import();
+
+    expect(WowDecor::query()->findOrFail(80)->name_en)->toBe('Ornate Stone Hearth');
+});

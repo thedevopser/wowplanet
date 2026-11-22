@@ -247,7 +247,7 @@ final readonly class AppearanceImporter
      */
     private function sweepItemWindows(array $windows, array $slotByAppearance): void
     {
-        /** @var array<int, array{item_id: int, quality: int, name: string, category: string|null}> $candidates */
+        /** @var array<int, array{item_id: int, quality: int, name: string, name_en: string|null, category: string|null}> $candidates */
         $candidates = [];
 
         $this->itemSearchSweep->sweepItems($windows, function (ItemSearchDocument $itemSearchDocument) use (&$candidates, $slotByAppearance): void {
@@ -269,6 +269,7 @@ final readonly class AppearanceImporter
                     'item_id' => $itemSearchDocument->id,
                     'quality' => $itemSearchDocument->quality,
                     'name' => $itemSearchDocument->nameFr,
+                    'name_en' => $itemSearchDocument->nameEn,
                     'category' => $itemSearchDocument->categoryFr,
                 ];
             }
@@ -290,7 +291,7 @@ final readonly class AppearanceImporter
     }
 
     /**
-     * @param  array<int, array{item_id: int, quality: int, name: string, category: string|null}>  $candidates
+     * @param  array<int, array{item_id: int, quality: int, name: string, name_en: string|null, category: string|null}>  $candidates
      * @param  array<int, string>  $slotByAppearance
      */
     private function saveCandidates(array $candidates, array $slotByAppearance): void
@@ -317,6 +318,7 @@ final readonly class AppearanceImporter
             $row = [
                 'id' => $appearanceId,
                 'name_fr' => $candidate['name'],
+                'name_en' => $candidate['name_en'] ?? $existing?->name_en,
                 'slot' => $slotByAppearance[$appearanceId] ?? null,
                 'category' => $candidate['category'],
                 'quality' => $candidate['quality'],
@@ -335,7 +337,7 @@ final readonly class AppearanceImporter
             $rows[] = $row;
         }
 
-        $this->upsertRows($rows, ['name_fr', 'slot', 'category', 'quality', 'item_id', 'icon_file_data_id', 'icon_url', 'expansion_id', 'source', 'is_active']);
+        $this->upsertRows($rows, ['name_fr', 'name_en', 'slot', 'category', 'quality', 'item_id', 'icon_file_data_id', 'icon_url', 'expansion_id', 'source', 'is_active']);
     }
 
     /**
@@ -369,11 +371,12 @@ final readonly class AppearanceImporter
      * Une ligne identique n'est pas réécrite : sans ça chaque passe toucherait les
      * 22 000 lignes et le mode incrémental ne voudrait plus rien dire.
      *
-     * @param  array{id: int, name_fr: string, slot: string|null, category: string|null, quality: int|null, item_id: int|null, icon_file_data_id: int|null, icon_url: string|null, expansion_id: int|null, source: string|null, is_active: bool}  $row
+     * @param  array{id: int, name_fr: string, name_en: string|null, slot: string|null, category: string|null, quality: int|null, item_id: int|null, icon_file_data_id: int|null, icon_url: string|null, expansion_id: int|null, source: string|null, is_active: bool}  $row
      */
     private function isUnchanged(WowAppearance $wowAppearance, array $row): bool
     {
         return $wowAppearance->name_fr === $row['name_fr']
+            && $wowAppearance->name_en === $row['name_en']
             && $wowAppearance->slot === $row['slot']
             && $wowAppearance->category === $row['category']
             && $wowAppearance->quality === $row['quality']
@@ -467,6 +470,7 @@ final readonly class AppearanceImporter
                 $rows[] = [
                     'id' => $wowAppearance->id,
                     'name_fr' => $wowAppearance->name_fr,
+                    'name_en' => $wowAppearance->name_en,
                     'slot' => $wowAppearance->slot,
                     'category' => $wowAppearance->category,
                     'quality' => $wowAppearance->quality,
@@ -484,7 +488,7 @@ final readonly class AppearanceImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, slot: string|null, category: string|null, quality: int|null, item_id: int|null, icon_file_data_id: int|null, icon_url: string|null, expansion_id: int|null, source: string|null, is_active: bool}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, slot: string|null, category: string|null, quality: int|null, item_id: int|null, icon_file_data_id: int|null, icon_url: string|null, expansion_id: int|null, source: string|null, is_active: bool}>  $rows
      * @param  list<string>  $update
      */
     private function upsertRows(array $rows, array $update): void

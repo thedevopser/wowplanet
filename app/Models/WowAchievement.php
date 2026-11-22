@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $name_fr
+ * @property string|null $name_en
  * @property int $expansion_id
  * @property string $category_name
  * @property string|null $icon_url
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'id',
     'name_fr',
+    'name_en',
     'expansion_id',
     'category_name',
     'icon_url',

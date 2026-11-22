@@ -399,3 +399,55 @@ test('the verdict of a judged quest survives the next import untouched', functio
     expect($writes)->toBe(0)
         ->and(mirrorVerdict(100))->toBe('2026-10-01 08:00:00');
 });
+
+test('it stores the english names of the quests and of their zone', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->with('data/wow/quest/area/index', Mockery::any())
+        ->andReturn(['areas' => [['id' => 10, 'name' => 'Durotar']]]);
+    $client->shouldReceive('getAsync')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/quest/area/10' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(Create::promiseFor(new Response(200, [], (string) json_encode([
+            'area' => ['name' => 'Durotar (EN)'],
+            'quests' => [['id' => 100, 'name' => 'Durotar Quest']],
+        ]))));
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/quest/area/10', Mockery::any())
+        ->andReturn(Create::promiseFor(new Response(200, [], (string) json_encode([
+            'area' => ['name' => 'Durotar'],
+            'quests' => [['id' => 100, 'name' => 'Quête de Durotar']],
+        ]))));
+
+    resolve(QuestImporter::class)->import([]);
+
+    $wowQuest = WowQuest::query()->findOrFail(100);
+
+    expect($wowQuest->name_fr)->toBe('Quête de Durotar')
+        ->and($wowQuest->name_en)->toBe('Durotar Quest')
+        ->and($wowQuest->zone_name_en)->toBe('Durotar (EN)');
+});
+
+test('it keeps the english names a quest already had when the english detail fails', function (): void {
+    WowQuest::factory()->create(['id' => 100, 'name_fr' => 'Quête de Durotar', 'name_en' => 'Durotar Quest', 'zone_name' => 'Durotar', 'zone_name_en' => 'Durotar (EN)']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->with('data/wow/quest/area/index', Mockery::any())
+        ->andReturn(['areas' => [['id' => 10, 'name' => 'Durotar']]]);
+    $client->shouldReceive('getAsync')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/quest/area/10' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(Create::promiseFor(new Response(404, [], '')));
+    $client->shouldReceive('getAsync')
+        ->with('data/wow/quest/area/10', Mockery::any())
+        ->andReturn(Create::promiseFor(new Response(200, [], (string) json_encode([
+            'area' => ['name' => 'Durotar'],
+            'quests' => [['id' => 100, 'name' => 'Quête de Durotar']],
+        ]))));
+
+    resolve(QuestImporter::class)->import([]);
+
+    expect(WowQuest::query()->findOrFail(100)->name_en)->toBe('Durotar Quest')
+        ->and(WowQuest::query()->findOrFail(100)->zone_name_en)->toBe('Durotar (EN)');
+});

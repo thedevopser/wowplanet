@@ -43,3 +43,11 @@ test('it reads a mount the API ranks under no source at all', function (): void 
 test('it refuses a document without an identifier rather than importing it as zero', function (): void {
     mountSearchDocument(['name' => ['fr_FR' => 'Loup des bois']]);
 })->throws(MissingFieldException::class);
+
+test('it carries the english name beside the french one', function (): void {
+    expect(mountSearchDocument(['id' => 14, 'name' => ['fr_FR' => 'Loup des bois', 'en_US' => 'Timber Wolf']])->nameEn)->toBe('Timber Wolf');
+});
+
+test('it has no english name when the document carries none', function (): void {
+    expect(mountSearchDocument(['id' => 14, 'name' => ['fr_FR' => 'Loup des bois']])->nameEn)->toBeNull();
+});

@@ -34,6 +34,8 @@ final readonly class AchievementImporter
 
     private const string DETAIL_ENDPOINT = 'data/wow/achievement/';
 
+    private const string INDEX_ENDPOINT = 'data/wow/achievement/index';
+
     /** Les détails sont petits, mais huit mille corps décodés gardés ensemble ne le sont pas. */
     private const int DETAIL_BATCH = 1000;
 
@@ -68,6 +70,7 @@ final readonly class AchievementImporter
 
         $rows = $this->buildRows(
             $placements,
+            $this->fetchEnglishIndexNames(self::INDEX_ENDPOINT, 'achievements'),
             $this->fetchDetails($placements),
             $this->fetchIcons($placements),
             $this->existingRows(),
@@ -146,15 +149,16 @@ final readonly class AchievementImporter
     }
 
     /**
-     * @return array<int, array{name_fr: string, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>
+     * @return array<int, array{name_fr: string, name_en: string|null, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>
      */
     private function existingRows(): array
     {
         $rows = [];
 
-        foreach (WowAchievement::query()->get(['id', 'name_fr', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction', 'is_active']) as $achievement) {
+        foreach (WowAchievement::query()->get(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction', 'is_active']) as $achievement) {
             $rows[$achievement->id] = [
                 'name_fr' => $achievement->name_fr,
+                'name_en' => $achievement->name_en,
                 'expansion_id' => $achievement->expansion_id,
                 'category_name' => $achievement->category_name,
                 'icon_url' => $achievement->icon_url,
@@ -173,12 +177,13 @@ final readonly class AchievementImporter
      * dire.
      *
      * @param  list<AchievementPlacement>  $placements
+     * @param  array<int, string>  $englishNames
      * @param  array<int, AchievementDocument>  $details
      * @param  array<int, string>  $icons
-     * @param  array<int, array{name_fr: string, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>  $existing
-     * @return list<array{id: int, name_fr: string, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>
+     * @param  array<int, array{name_fr: string, name_en: string|null, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>  $existing
+     * @return list<array{id: int, name_fr: string, name_en: string|null, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>
      */
-    private function buildRows(array $placements, array $details, array $icons, array $existing): array
+    private function buildRows(array $placements, array $englishNames, array $details, array $icons, array $existing): array
     {
         $rows = [];
         $unchanged = 0;
@@ -189,6 +194,7 @@ final readonly class AchievementImporter
 
             $row = [
                 'name_fr' => $placement->name,
+                'name_en' => $englishNames[$placement->id] ?? $previous['name_en'] ?? null,
                 'expansion_id' => $placement->expansionId,
                 'category_name' => $placement->categoryName,
                 'icon_url' => $icons[$placement->id] ?? $previous['icon_url'] ?? null,
@@ -214,7 +220,7 @@ final readonly class AchievementImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, expansion_id: int, category_name: string, icon_url: string|null, points: int, faction: string|null, is_active: bool}>  $rows
      * @param  list<int>  $catalogIds
      */
     private function saveRows(array $rows, array $catalogIds): void
@@ -225,7 +231,7 @@ final readonly class AchievementImporter
             WowAchievement::query()->upsert(
                 $chunk,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction', 'is_active'],
+                update: ['name_fr', 'name_en', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction', 'is_active'],
             );
         }
 

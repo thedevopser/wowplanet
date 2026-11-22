@@ -34,9 +34,15 @@ trait ImportsFromBlizzardApi
     /** Max retries for server errors (504/500/timeout) — Blizzard is broken, no point insisting. */
     private const MAX_SERVER_ERROR_RETRIES = 1;
 
+    /** Overrides the French locale the client asks by default. */
+    private const array ENGLISH_QUERY = ['locale' => 'en_US'];
+
     private readonly BlizzardApiClient $blizzardApiClient;
 
-    protected function fetchWithRetry(string $endpoint, int $attempt = 1): ?ResponsePayload
+    /**
+     * @param  array<string, string>  $query
+     */
+    protected function fetchWithRetry(string $endpoint, int $attempt = 1, array $query = []): ?ResponsePayload
     {
         try {
             /** @var string $region */
@@ -44,6 +50,7 @@ trait ImportsFromBlizzardApi
 
             return ResponsePayload::forEndpoint($endpoint, $this->blizzardApiClient->get($endpoint, [
                 'namespace' => 'static-'.$region,
+                ...$query,
             ]));
         } catch (\Exception $exception) {
             $message = $exception->getMessage();
@@ -57,13 +64,38 @@ trait ImportsFromBlizzardApi
                 $this->info(sprintf('Retryable error, waiting %ds (attempt %d/%d)...', $delay, $attempt, self::MAX_RETRIES));
                 $this->pause(ImportWait::rateLimitBackoff($delay), $delay);
 
-                return $this->fetchWithRetry($endpoint, $attempt + 1);
+                return $this->fetchWithRetry($endpoint, $attempt + 1, $query);
             }
 
             Log::warning(sprintf('API error [%s]: ', $endpoint).$message);
 
             return null;
         }
+    }
+
+    /**
+     * English names of an index, by a second call in `en_US`. A failed call costs the English
+     * names only: the import keeps the ones already stored.
+     *
+     * @return array<int, string>
+     */
+    protected function fetchEnglishIndexNames(string $endpoint, string $listKey): array
+    {
+        $index = $this->fetchWithRetry($endpoint, query: self::ENGLISH_QUERY);
+        if (! $index instanceof ResponsePayload) {
+            return [];
+        }
+
+        $names = [];
+        foreach ($index->objectList($listKey) as $entry) {
+            $id = $entry->optionalInt('id') ?? 0;
+            $name = trim($entry->optionalString('name') ?? '');
+            if ($id > 0 && $name !== '') {
+                $names[$id] = $name;
+            }
+        }
+
+        return $names;
     }
 
     /**
@@ -74,9 +106,10 @@ trait ImportsFromBlizzardApi
      *
      * @param  array<string|int, string>  $endpoints  [key => endpoint_url]
      * @param  positive-int|null  $concurrency  Requêtes en vol, par défaut celle de la configuration
+     * @param  array<string, string>  $query
      * @return array<string|int, ResponsePayload|null> [key => response|null]
      */
-    protected function fetchBatchAsync(array $endpoints, ?int $concurrency = null): array
+    protected function fetchBatchAsync(array $endpoints, ?int $concurrency = null, array $query = []): array
     {
         /** @var string $region */
         $region = config('services.blizzard.region', 'eu');
@@ -106,7 +139,7 @@ trait ImportsFromBlizzardApi
 
             $failed = [];
 
-            $settled = $this->inFlight(count($pending), fn (): array => $this->settlePool($pending, $namespace, $currentConcurrency));
+            $settled = $this->inFlight(count($pending), fn (): array => $this->settlePool($pending, $namespace, $currentConcurrency, $query));
 
             foreach ($settled as $key => $result) {
                 if ($result['state'] === 'fulfilled' && isset($result['value'])) {
@@ -209,14 +242,16 @@ trait ImportsFromBlizzardApi
      *
      * @param  array<string|int, string>  $endpoints
      * @param  positive-int  $concurrency
+     * @param  array<string, string>  $query
      * @return array<string|int, SettledRequest>
      */
-    private function settlePool(array $endpoints, string $namespace, int $concurrency): array
+    private function settlePool(array $endpoints, string $namespace, int $concurrency, array $query): array
     {
-        $promises = function () use ($endpoints, $namespace): \Generator {
+        $promises = function () use ($endpoints, $namespace, $query): \Generator {
             foreach ($endpoints as $key => $endpoint) {
                 yield $key => $this->blizzardApiClient->getAsync($endpoint, [
                     'namespace' => $namespace,
+                    ...$query,
                 ]);
             }
         };

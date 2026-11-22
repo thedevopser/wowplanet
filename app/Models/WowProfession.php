@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name_fr
+ * @property string|null $name_en
  * @property string $type
  * @property array<int, int>|null $max_skill_levels
  * @property bool $is_active
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'id',
     'name_fr',
+    'name_en',
     'type',
     'max_skill_levels',
     'is_active',

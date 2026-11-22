@@ -59,7 +59,9 @@ final readonly class QuestImporter
         $areaDetails = $this->fetchAreaDetailsConcurrently($areas);
         $this->info(sprintf('Fetched %d area details. Building quest rows...', count(array_filter($areaDetails))));
 
-        $builtRows = $this->buildQuestRows($areas, $areaDetails, $areaExpansionMap, $questExpansionMap, $questFactionMap, $zoneFactionMap);
+        $englishNames = $this->englishNames($this->fetchAreaDetailsConcurrently($areas, self::ENGLISH_QUERY));
+
+        $builtRows = $this->buildQuestRows($areas, $areaDetails, $englishNames, $areaExpansionMap, $questExpansionMap, $questFactionMap, $zoneFactionMap);
         $rows = array_values(array_filter($builtRows, static fn (array $row): bool => ! BlizzardInternalName::isInternal($row['name_fr'])));
         $this->info(sprintf('Built %d quest rows. Saving to database...', count($rows)));
 
@@ -83,30 +85,65 @@ final readonly class QuestImporter
 
     /**
      * @param  list<array{id: int, name: string}>  $areas
+     * @param  array<string, string>  $query
      * @return array<int|string, ResponsePayload|null>
      */
-    private function fetchAreaDetailsConcurrently(array $areas): array
+    private function fetchAreaDetailsConcurrently(array $areas, array $query = []): array
     {
         $endpoints = [];
         foreach ($areas as $area) {
             $endpoints[$area['id']] = 'data/wow/quest/area/'.$area['id'];
         }
 
-        return $this->fetchBatchAsync($endpoints);
+        return $this->fetchBatchAsync($endpoints, query: $query);
+    }
+
+    /**
+     * Noms anglais des quêtes et des zones, lus dans le détail des zones demandé en anglais.
+     * Une zone dont le détail anglais manque laisse à ses quêtes les noms déjà stockés.
+     *
+     * @param  array<int|string, ResponsePayload|null>  $englishDetails
+     * @return array{quests: array<int, string>, zones: array<int|string, string>}
+     */
+    private function englishNames(array $englishDetails): array
+    {
+        $names = ['quests' => [], 'zones' => []];
+
+        foreach ($englishDetails as $areaId => $detail) {
+            if ($detail === null) {
+                continue;
+            }
+
+            $zoneName = $this->resolveAreaName($detail, '');
+            if ($zoneName !== '') {
+                $names['zones'][$areaId] = $zoneName;
+            }
+
+            foreach ($detail->objectList('quests') as $quest) {
+                $questName = $quest->optionalString('name') ?? '';
+                if ($questName !== '') {
+                    $names['quests'][$quest->requiredInt('id')] = $questName;
+                }
+            }
+        }
+
+        return $names;
     }
 
     /**
      * @param  list<array{id: int, name: string}>  $areas
      * @param  array<int|string, ResponsePayload|null>  $areaDetails
+     * @param  array{quests: array<int, string>, zones: array<int|string, string>}  $englishNames
      * @param  array<int, int>  $areaExpansionMap
      * @param  array<int, int>  $questExpansionMap
      * @param  array<int, string>  $questFactionMap
      * @param  array<int, string>  $zoneFactionMap
-     * @return list<array{id: int, name_fr: string, expansion_id: int, zone_name: string|null, faction: string|null}>
+     * @return list<array{id: int, name_fr: string, name_en: string|null, expansion_id: int, zone_name: string|null, zone_name_en: string|null, faction: string|null}>
      */
     private function buildQuestRows(
         array $areas,
         array $areaDetails,
+        array $englishNames,
         array $areaExpansionMap,
         array $questExpansionMap,
         array $questFactionMap,
@@ -151,8 +188,10 @@ final readonly class QuestImporter
                 $rows[] = [
                     'id' => $questId,
                     'name_fr' => $questName,
+                    'name_en' => $englishNames['quests'][$questId] ?? null,
                     'expansion_id' => $expansionId,
                     'zone_name' => $areaName !== '' ? $areaName : null,
+                    'zone_name_en' => $englishNames['zones'][$areaId] ?? null,
                     'faction' => $faction,
                 ];
             }
@@ -164,7 +203,7 @@ final readonly class QuestImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, expansion_id: int, zone_name: string|null, faction: string|null}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, expansion_id: int, zone_name: string|null, zone_name_en: string|null, faction: string|null}>  $rows
      */
     private function saveQuests(array $rows): void
     {
@@ -196,7 +235,7 @@ final readonly class QuestImporter
             }
 
             WowQuest::query()->upsert($upsertData, uniqueBy: ['id'], update: [
-                'name_fr', 'expansion_id', 'zone_name', 'faction', 'is_active',
+                'name_fr', 'name_en', 'expansion_id', 'zone_name', 'zone_name_en', 'faction', 'is_active',
             ]);
 
             $written += count($upsertData);
@@ -215,29 +254,33 @@ final readonly class QuestImporter
      * que parmi les quêtes sans faction, donc il repayait ses appels de détail à
      * chaque import.
      *
-     * @param  array{id: int, name_fr: string, expansion_id: int, zone_name: string|null, faction: string|null}  $row
-     * @return array{id: int, name_fr: string, expansion_id: int, zone_name: string|null, faction: string|null, is_active: bool}
+     * @param  array{id: int, name_fr: string, name_en: string|null, expansion_id: int, zone_name: string|null, zone_name_en: string|null, faction: string|null}  $row
+     * @return array{id: int, name_fr: string, name_en: string|null, expansion_id: int, zone_name: string|null, zone_name_en: string|null, faction: string|null, is_active: bool}
      */
     private function questRow(array $row, ?WowQuest $wowQuest): array
     {
         return [
             'id' => $row['id'],
             'name_fr' => $row['name_fr'],
+            'name_en' => $row['name_en'] ?? $wowQuest?->name_en,
             'expansion_id' => $row['expansion_id'],
             'zone_name' => $row['zone_name'],
+            'zone_name_en' => $row['zone_name_en'] ?? $wowQuest?->zone_name_en,
             'faction' => $row['faction'] ?? $wowQuest?->faction,
             'is_active' => true,
         ];
     }
 
     /**
-     * @param  array{id: int, name_fr: string, expansion_id: int, zone_name: string|null, faction: string|null, is_active: bool}  $row
+     * @param  array{id: int, name_fr: string, name_en: string|null, expansion_id: int, zone_name: string|null, zone_name_en: string|null, faction: string|null, is_active: bool}  $row
      */
     private function isUnchanged(WowQuest $wowQuest, array $row): bool
     {
         return $wowQuest->name_fr === $row['name_fr']
+            && $wowQuest->name_en === $row['name_en']
             && $wowQuest->expansion_id === $row['expansion_id']
             && $wowQuest->zone_name === $row['zone_name']
+            && $wowQuest->zone_name_en === $row['zone_name_en']
             && $wowQuest->faction === $row['faction']
             && $wowQuest->is_active === $row['is_active'];
     }

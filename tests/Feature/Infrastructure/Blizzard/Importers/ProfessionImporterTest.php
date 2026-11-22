@@ -657,3 +657,48 @@ test('a second pass with the same recipe spells writes nothing', function (): vo
 
     expect($writes)->toBe(0);
 });
+
+test('it stores the english names of the professions and of their recipes', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/profession/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(['professions' => [['id' => 164, 'name' => 'Blacksmithing']]]);
+    $client->shouldReceive('getAsync')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/profession/164/skill-tier/2820' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(Create::promiseFor(new Response(200, [], (string) json_encode([
+            'id' => 2820,
+            'categories' => [['name' => 'Armor', 'recipes' => [['id' => 5001, 'name' => 'Steel Breastplate']]]],
+        ]))));
+    mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, [['name' => 'Armures', 'recipes' => [['id' => 5001, 'name' => 'Plastron en acier']]]]);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->findOrFail(164)->name_en)->toBe('Blacksmithing')
+        ->and(WowRecipe::query()->findOrFail(5001)->name_en)->toBe('Steel Breastplate')
+        ->and(WowRecipe::query()->findOrFail(5001)->name_fr)->toBe('Plastron en acier');
+});
+
+test('it keeps the english names already stored when the english calls fail', function (): void {
+    WowProfession::factory()->create(['id' => 164, 'name_fr' => 'Forge', 'name_en' => 'Blacksmithing', 'type' => 'primary']);
+    WowRecipe::factory()->create(['id' => 5001, 'name_fr' => 'Plastron en acier', 'name_en' => 'Steel Breastplate', 'profession_id' => 164, 'expansion_id' => 10]);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/profession/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andThrow(new RuntimeException('API error 404'));
+    $client->shouldReceive('getAsync')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/profession/164/skill-tier/2820' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(Create::promiseFor(new Response(404, [], '')));
+    mockProfessionIndex($client, [['id' => 164, 'name' => 'Forge']]);
+    mockProfessionDetail($client, 164, 'Forge', 'PRIMARY', [['id' => 2820, 'name' => 'Forge de Khaz Algar']]);
+    mockSkillTierDetail($client, 164, 2820, [['name' => 'Armures', 'recipes' => [['id' => 5001, 'name' => 'Plastron en acier']]]]);
+
+    resolve(ProfessionImporter::class)->import();
+
+    expect(WowProfession::query()->findOrFail(164)->name_en)->toBe('Blacksmithing')
+        ->and(WowRecipe::query()->findOrFail(5001)->name_en)->toBe('Steel Breastplate');
+});

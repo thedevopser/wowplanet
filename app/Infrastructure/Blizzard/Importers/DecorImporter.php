@@ -9,6 +9,7 @@ use App\Infrastructure\Blizzard\CollectionSearchSweep;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\MediaSearchSweep;
 use App\Infrastructure\Blizzard\MediaSearchTag;
+use App\Infrastructure\Blizzard\Responses\DecorSearchDocument;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\SearchIdWindow;
 use App\Infrastructure\Reference\ReferenceMaps;
@@ -61,10 +62,15 @@ final readonly class DecorImporter
             return;
         }
 
-        $itemIds = $this->fetchItemIds(array_keys($names));
+        $searchDocuments = $this->sweepSearchDocuments(array_keys($names));
+        $itemIds = array_filter(array_map(
+            static fn (DecorSearchDocument $decorSearchDocument): ?int => $decorSearchDocument->itemId,
+            $searchDocuments,
+        ), is_int(...));
 
         $rows = $this->buildRows(
             $names,
+            $searchDocuments,
             $itemIds,
             $this->fetchItemIcons($itemIds),
             $this->collectionTaxonomyReader->for(CollectionEntity::Decor),
@@ -113,12 +119,13 @@ final readonly class DecorImporter
     }
 
     /**
-     * Items liés par balayage de recherche, seule porte vers l'icône d'une décoration.
+     * Documents de recherche, seule porte vers l'item lié, donc vers l'icône d'une décoration,
+     * et vers son nom anglais.
      *
      * @param  list<int>  $ids
-     * @return array<int, int> [decor_id => item_id]
+     * @return array<int, DecorSearchDocument>
      */
-    private function fetchItemIds(array $ids): array
+    private function sweepSearchDocuments(array $ids): array
     {
         $windows = [];
         foreach ($ids as $id) {
@@ -130,14 +137,12 @@ final readonly class DecorImporter
 
         $this->info(sprintf('Sweeping %d decor search windows...', count($windows)));
 
-        $itemIds = [];
+        $documents = [];
         foreach ($this->collectionSearchSweep->sweepDecors($windows) as $id => $decorSearchDocument) {
-            if ($decorSearchDocument->itemId !== null) {
-                $itemIds[$id] = $decorSearchDocument->itemId;
-            }
+            $documents[$id] = $decorSearchDocument;
         }
 
-        return $itemIds;
+        return $documents;
     }
 
     /**
@@ -169,15 +174,16 @@ final readonly class DecorImporter
     }
 
     /**
-     * @return array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
+     * @return array<int, array{name_fr: string, name_en: string|null, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
      */
     private function existingRows(): array
     {
         $rows = [];
 
-        foreach (WowDecor::query()->get(['id', 'name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category']) as $decor) {
+        foreach (WowDecor::query()->get(['id', 'name_fr', 'name_en', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category']) as $decor) {
             $rows[$decor->id] = [
                 'name_fr' => $decor->name_fr,
+                'name_en' => $decor->name_en,
                 'category' => $decor->category,
                 'source' => $decor->source,
                 'item_id' => $decor->item_id,
@@ -192,14 +198,15 @@ final readonly class DecorImporter
 
     /**
      * @param  array<int, string>  $names
+     * @param  array<int, DecorSearchDocument>  $searchDocuments
      * @param  array<int, int>  $itemIds
      * @param  array<int, string>  $icons
      * @param  array<int, TaxonomyEntry>  $taxonomy
      * @param  array<int, string>  $expansions  Extension suggérée par les étiquettes du socle
-     * @param  array<int, array{name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $existing
-     * @return list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
+     * @param  array<int, array{name_fr: string, name_en: string|null, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $existing
+     * @return list<array{id: int, name_fr: string, name_en: string|null, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>
      */
-    private function buildRows(array $names, array $itemIds, array $icons, array $taxonomy, array $expansions, array $existing): array
+    private function buildRows(array $names, array $searchDocuments, array $itemIds, array $icons, array $taxonomy, array $expansions, array $existing): array
     {
         $rows = [];
         $awaitingArbitration = 0;
@@ -218,6 +225,7 @@ final readonly class DecorImporter
 
             $row = [
                 'name_fr' => $nameFr,
+                'name_en' => $searchDocuments[$id]->nameEn ?? $previous['name_en'] ?? null,
                 'category' => $entry?->category,
                 'source' => $entry?->source,
                 'item_id' => $itemId,
@@ -251,7 +259,7 @@ final readonly class DecorImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, category: string|null, source: string|null, item_id: int|null, icon_url: string|null, is_active: bool, suggested_category: string|null}>  $rows
      * @param  list<int>  $catalogIds
      */
     private function saveRows(array $rows, array $catalogIds): void
@@ -262,7 +270,7 @@ final readonly class DecorImporter
             WowDecor::query()->upsert(
                 $chunk,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category'],
+                update: ['name_fr', 'name_en', 'category', 'source', 'item_id', 'icon_url', 'is_active', 'suggested_category'],
             );
         }
 
