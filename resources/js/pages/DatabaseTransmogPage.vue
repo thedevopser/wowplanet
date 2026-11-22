@@ -10,20 +10,20 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <DatabasePageHeader
-            title="Garde-robe"
-            :subtitle="activeSlotName || 'Tous les emplacements'"
+            :title="$t('database.sections.appearances.label')"
+            :subtitle="activeSlotName || $t('database.all_slots')"
             :count="total"
-            count-label="apparences"
+            :count-label="$t('database.appearances.count_label')"
             dimension="transmog"
         />
 
         <SearchFilter
             v-model:search="search"
-            placeholder="Rechercher une apparence…"
+            :placeholder="$t('database.appearances.search')"
             :show-hide-toggle="false"
             :debounce-ms="300"
             @search-debounced="searchFor"
@@ -34,31 +34,31 @@
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des apparences"
+            :label="$t('database.appearances.pages')"
             @page-change="goToPage"
         />
 
-        <CatalogTable v-if="items.length" caption="Liste des apparences" :columns="COLUMNS" :rows="items" :busy="busy">
-            <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="?" size="sm" class="text-muted" /></template>
+        <CatalogTable v-if="items.length" :caption="$t('database.appearances.caption')" :columns="COLUMNS" :rows="items" :busy="busy">
+            <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="nameOf(row)" fallback="?" size="sm" class="text-muted" /></template>
             <template #cell-name="{ row, linkClass }">
                 <a
-                    :href="row.item_id ? `https://www.wowhead.com/fr/item=${row.item_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`"
+                    :href="row.item_id ? wowheadLink(`item=${row.item_id}`) : wowheadLink(`search?q=${encodeURIComponent(nameOf(row))}`)"
                     target="_blank"
                     rel="noopener"
                     class="text-default hover:underline"
                     :class="linkClass"
-                >{{ row.name_fr }}</a>
+                >{{ nameOf(row) }}</a>
             </template>
             <template #cell-slot="{ row }"><span class="text-muted">{{ slotLabel(row.slot) }}</span></template>
             <template #cell-category="{ row }"><span class="text-muted">{{ row.category }}</span></template>
         </CatalogTable>
-        <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune entrée ne correspond à cette recherche." />
+        <EmptyState v-else :icon="SearchX" :title="$t('database.empty.title')" :message="$t('database.empty.message')" />
 
         <DatabasePagination
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des apparences"
+            :label="$t('database.appearances.pages')"
             @page-change="goToPage"
         />
     </div>
@@ -84,20 +84,18 @@ import DatabasePageHeader from '../components/DatabasePageHeader.vue';
 import DatabasePagination from '../components/DatabasePagination.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import { useCatalogPaging } from '../composables/useCatalogPaging';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useTranslate } from '../composables/useTranslate';
 
-const COLUMNS = [
-    { key: 'icon', label: 'Icône', visuallyHidden: true, class: 'w-12' },
-    { key: 'name', label: 'Nom' },
-    { key: 'slot', label: 'Emplacement', hideBelow: 'sm' },
-    { key: 'category', label: 'Catégorie' },
-];
+const t = useTranslate();
+const { nameOf, wowheadLink } = useCatalogLocale();
 
-const SLOT_FR = {
-    HEAD: 'Tête', SHOULDER: 'Épaules', SHIRT: 'Chemise', CHEST: 'Torse', WAIST: 'Ceinture',
-    LEGS: 'Jambes', FEET: 'Pieds', WRIST: 'Poignets', HAND: 'Mains', CLOAK: 'Cape', TABARD: 'Tabard',
-    WEAPON: 'Arme', SHIELD: 'Bouclier', RANGED: 'Distance', TWOHWEAPON: 'Arme à deux mains',
-    WEAPONOFFHAND: 'Arme en main gauche', HOLDABLE: 'Tenu en main gauche',
-};
+const COLUMNS = computed(() => [
+    { key: 'icon', label: t('database.columns.icon'), visuallyHidden: true, class: 'w-12' },
+    { key: 'name', label: t('database.columns.name') },
+    { key: 'slot', label: t('database.columns.slot'), hideBelow: 'sm' },
+    { key: 'category', label: t('database.columns.category') },
+]);
 
 const props = defineProps({
     meta: { type: Object, required: true },
@@ -113,7 +111,10 @@ const props = defineProps({
 const search = ref(props.search ?? '');
 
 function slotLabel(slot) {
-    return SLOT_FR[slot] || slot;
+    const key = `database.slots.${slot}`;
+    const label = t(key);
+
+    return label === key ? slot : label;
 }
 
 const activeSlotName = computed(() => {

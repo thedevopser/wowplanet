@@ -1,18 +1,18 @@
 <template>
     <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
         <div class="relative flex-1">
-            <label :for="inputId" class="sr-only">{{ placeholder }}</label>
+            <label :for="inputId" class="sr-only">{{ placeholder ?? $t('common.search.placeholder') }}</label>
             <Icon :icon="Search" size="sm" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
             <input
                 :id="inputId"
                 type="search"
                 :value="search"
-                :placeholder="placeholder"
+                :placeholder="placeholder ?? $t('common.search.placeholder')"
                 class="h-11 w-full rounded-ui-md border border-strong bg-surface pl-10 pr-12 text-sm text-default placeholder:text-subtle
                     focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-search-cancel-button]:hidden"
                 @input="onInput"
             >
-            <IconButton v-if="search" :icon="X" icon-size="sm" label="Effacer la recherche" class="absolute right-0 top-0" @click="clear" />
+            <IconButton v-if="search" :icon="X" icon-size="sm" :label="$t('common.search.clear')" class="absolute right-0 top-0" @click="clear" />
         </div>
         <div v-if="showHideToggle || $slots['extra-toggles']" class="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <Button
@@ -23,7 +23,7 @@
                 @click="$emit('update:hideCompleted', !hideCompleted)"
             >
                 <Icon :icon="hideCompleted ? EyeOff : Eye" size="sm" />
-                {{ hideLabel }}
+                {{ hideLabel ?? $t('common.search.hide_completed') }}
             </Button>
             <slot name="extra-toggles"></slot>
         </div>
@@ -41,8 +41,8 @@ const props = defineProps({
     search: { type: String, default: '' },
     hideCompleted: { type: Boolean, default: false },
     showHideToggle: { type: Boolean, default: true },
-    placeholder: { type: String, default: 'Rechercher...' },
-    hideLabel: { type: String, default: 'Masquer complétés' },
+    placeholder: { type: String, default: null },
+    hideLabel: { type: String, default: null },
     debounceMs: { type: Number, default: 0 },
 });
 

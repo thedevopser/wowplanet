@@ -8,7 +8,7 @@ const ShowsLocaleName = { render() { return h('span', this.$t('locale.name')); }
 
 describe('eagerI18nOptions', () => {
     it.each([['fr', 'Français'], ['en', 'English']])('renders the %s texts', async (locale, text) => {
-        const wrapper = mount(ShowsLocaleName, { global: { plugins: [[i18nVue, eagerI18nOptions(locale)]] } });
+        const wrapper = mount(ShowsLocaleName, { global: { plugins: [{ install: (app) => i18nVue.install(app, eagerI18nOptions(locale)) }] } });
         await flushPromises();
 
         expect(wrapper.text()).toBe(text);

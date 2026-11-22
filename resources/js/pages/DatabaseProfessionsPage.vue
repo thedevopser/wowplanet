@@ -10,15 +10,15 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <template v-if="!profession">
             <DatabasePageHeader
-                title="Professions"
-                subtitle="Toutes les professions de World of Warcraft"
+                :title="$t('database.sections.professions.label')"
+                :subtitle="$t('database.professions.subtitle')"
                 :count="total_recipes"
-                count-label="recettes"
+                :count-label="$t('database.professions.count_label')"
                 dimension="professions"
             />
 
@@ -30,13 +30,13 @@
                             aria-hidden="true"
                             class="flex size-12 shrink-0 items-center justify-center rounded-ui-md border border-default bg-surface-raised text-lg font-bold"
                             :style="{ color: readable(PROFESSION_COLOR) }"
-                        >{{ prof.name_fr.charAt(0) }}</span>
+                        >{{ professionLabel(prof).charAt(0) }}</span>
                         <div class="min-w-0 flex-1">
                             <Link
-                                :href="`/base-de-donnees/professions/${prof.slug}`"
+                                :href="localizedUrl(`/base-de-donnees/professions/${prof.slug}`)"
                                 class="block truncate font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0"
-                            >{{ prof.name_fr }}</Link>
-                            <p class="text-sm tabular-nums text-muted">{{ prof.recipe_count.toLocaleString('fr-FR') }} recettes</p>
+                            >{{ professionLabel(prof) }}</Link>
+                            <p class="text-sm tabular-nums text-muted">{{ $t('database.professions.recipe_count', { count: prof.recipe_count.toLocaleString(locale) }) }}</p>
                         </div>
                     </Card>
                 </ul>
@@ -46,9 +46,9 @@
         <template v-else>
             <DatabasePageHeader
                 :title="professionName"
-                :subtitle="activeExpansionName || 'Toutes les extensions'"
+                :subtitle="activeExpansionName || $t('database.all_expansions')"
                 :count="recipeTotal"
-                count-label="recettes"
+                :count-label="$t('database.professions.count_label')"
                 dimension="professions"
             />
 
@@ -69,7 +69,7 @@
 
             <SearchFilter
                 v-model:search="search"
-                placeholder="Rechercher une recette…"
+                :placeholder="$t('database.professions.search')"
                 :show-hide-toggle="false"
                 :debounce-ms="300"
                 @search-debounced="searchFor"
@@ -80,19 +80,19 @@
                 :current-page="currentPage"
                 :last-page="lastPage"
                 :total="recipeTotal"
-                :label="`Pages des recettes : ${professionName}`"
+                :label="$t('database.professions.pages', { profession: professionName })"
                 @page-change="goToPage"
             />
 
             <CatalogTable v-if="recipeList.length" :caption="`Recettes : ${professionName}`" :columns="COLUMNS" :rows="recipeList" :busy="busy">
                 <template #cell-name="{ row, linkClass }">
                     <a
-                        :href="row.wowhead_spell_id ? `https://www.wowhead.com/fr/spell=${row.wowhead_spell_id}` : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(row.name_fr)}`"
+                        :href="row.wowhead_spell_id ? wowheadLink(`spell=${row.wowhead_spell_id}`) : wowheadLink(`search?q=${encodeURIComponent(nameOf(row))}`)"
                         target="_blank"
                         rel="noopener"
                         class="text-default hover:underline"
                         :class="linkClass"
-                    >{{ row.name_fr }}</a>
+                    >{{ nameOf(row) }}</a>
                 </template>
                 <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
                 <template #cell-faction="{ row }">
@@ -102,13 +102,13 @@
                     </template>
                 </template>
             </CatalogTable>
-            <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune recette ne correspond à cette recherche." />
+            <EmptyState v-else :icon="SearchX" :title="$t('database.empty.title')" :message="$t('database.professions.empty')" />
 
             <DatabasePagination
                 :current-page="currentPage"
                 :last-page="lastPage"
                 :total="recipeTotal"
-                :label="`Pages des recettes : ${professionName}`"
+                :label="$t('database.professions.pages', { profession: professionName })"
                 @page-change="goToPage"
             />
         </template>
@@ -126,6 +126,10 @@ export default {
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useActiveLocale } from '../composables/useActiveLocale';
+import { useTranslate } from '../composables/useTranslate';
 import { Head, Link } from '@inertiajs/vue3';
 import { SearchX } from 'lucide-vue-next';
 import CatalogTable from '../components/CatalogTable.vue';
@@ -140,11 +144,17 @@ import { useCatalogPaging } from '../composables/useCatalogPaging';
 import { useWowColor } from '../composables/useWowColor';
 import { dimensionColor, factionColor } from '../utils/wowColors';
 
-const COLUMNS = [
-    { key: 'name', label: 'Nom' },
-    { key: 'category', label: 'Catégorie', hideBelow: 'sm' },
-    { key: 'faction', label: 'Faction', align: 'end', hideBelow: 'sm', class: 'w-28' },
-];
+const t = useTranslate();
+const { nameOf, wowheadLink } = useCatalogLocale();
+const { localizedUrl } = useLocalizedUrl();
+const locale = useActiveLocale();
+const professionLabel = (profession) => profession.name ?? profession.name_fr;
+
+const COLUMNS = computed(() => [
+    { key: 'name', label: t('database.columns.name') },
+    { key: 'category', label: t('database.columns.category'), hideBelow: 'sm' },
+    { key: 'faction', label: t('database.columns.faction'), align: 'end', hideBelow: 'sm', class: 'w-28' },
+]);
 
 const PROFESSION_COLOR = dimensionColor('professions');
 
@@ -163,13 +173,13 @@ const { readable, safe } = useWowColor();
 const search = ref(props.search ?? '');
 
 const professionGroups = computed(() => [
-    { title: 'Professions principales', professions: props.professions.filter((prof) => prof.type === 'primary') },
-    { title: 'Professions secondaires', professions: props.professions.filter((prof) => prof.type === 'secondary') },
+    { title: t('database.professions.primary'), professions: props.professions.filter((prof) => prof.type === 'primary') },
+    { title: t('database.professions.secondary'), professions: props.professions.filter((prof) => prof.type === 'secondary') },
 ].filter((group) => group.professions.length > 0));
 
 const recipeList = computed(() => props.recipes?.items ?? []);
 const recipeExpansions = computed(() => props.recipes?.expansions ?? []);
-const professionName = computed(() => props.recipes?.profession?.name_fr ?? '');
+const professionName = computed(() => props.recipes?.profession?.name ?? props.recipes?.profession?.name_fr ?? '');
 const recipeTotal = computed(() => props.recipes?.total ?? 0);
 const currentPage = computed(() => props.recipes?.current_page ?? 1);
 const lastPage = computed(() => props.recipes?.last_page ?? 1);

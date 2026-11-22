@@ -186,3 +186,14 @@ const { queue, interrupted, now } = useQueuePolling(() => props.health.queue);
 - Onglet masqué (`visibilitychange`) : plus aucune mesure ni aucun tic d'horloge ; au retour, une mesure immédiate.
 - Suit la source qu'on lui donne : quand la page recharge `health` (bouton « Rafraîchir », action sur un job échoué), la section rechargée remplace la mesure et règle le rythme.
 - S'arrête avec la portée qui l'a créé (`onScopeDispose`), donc au démontage de la page.
+
+## Langues : `useLocalizedUrl`, `useActiveLocale`, `useTranslate`, `useCatalogLocale`
+
+Les textes vivent dans `resources/lang/fr.json` et `resources/lang/en.json`, partagés avec Laravel, et s'affichent par `$t('clé')` dans les gabarits. `laravel-vue-i18n` est installé dans `inertia.js`, qui ne télécharge que la langue de la page et monte l'application une fois ses textes chargés, et dans `ssr.js`, de façon synchrone. La langue de la page vient de la prop partagée `locale` ; la table `resources/js/i18n/localizedRoutes.json`, lue aussi par le serveur, donne les chemins anglais.
+
+- `useLocalizedUrl()` rend `locale` et `localizedUrl(chemin)` : un lien interne s'écrit avec son chemin français, le chemin de référence, et suit la langue de la page (`/base-de-donnees/montures` devient `/en/database/mounts`). Un chemin hors de la table (administration, authentification, lien externe) reste tel quel.
+- `useActiveLocale()` rend la langue dans laquelle les textes sont rendus, lue sur l'instance de traduction, pour le formatage des nombres et des dates ; il ne dépend pas d'Inertia.
+- `useTranslate()` rend la fonction de traduction pour les textes construits dans un script, comme les colonnes d'un tableau.
+- `useCatalogLocale()` rend ce qu'une page du catalogue affiche dans la langue de la page : `nameOf(entrée)` (`name_en`, à défaut `name_fr`), `categoryLabel()` et `sourceLabel()` (la taxonomie curée, écrite en anglais, n'est traduite que pour les pages françaises) et `wowheadLink(chemin)` (`wowhead.com/fr` ou `wowhead.com`).
+
+En test, `tests/setup.js` installe la traduction en français pour tout montage ; `mountWithPlugins(composant, { locale: 'en' })` monte en anglais.

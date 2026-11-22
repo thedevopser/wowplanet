@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 
+const page = vi.hoisted(() => ({ url: '/base-de-donnees', props: {} }));
+
 vi.mock('@inertiajs/vue3', () => ({
     Head: { name: 'Head', render: () => null },
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
-    usePage: () => ({ url: '/base-de-donnees', props: {} }),
+    usePage: () => page,
     router: { get: vi.fn(), visit: vi.fn(), on: vi.fn() },
 }));
 
@@ -89,5 +91,18 @@ describe('DatabaseIndexPage', () => {
         const wrapper = await mountPage();
 
         await expectNoAxeViolations(wrapper.element);
+    });
+});
+
+describe('DatabaseIndexPage in english', () => {
+    it('shows the sections in english, linked to the english pages', async () => {
+        page.props = { locale: 'en' };
+        const wrapper = await mountWithPlugins(DatabaseIndexPage, { locale: 'en', props: { meta, counts } });
+        page.props = {};
+
+        expect(wrapper.get('h1').text()).toBe('WoW Database');
+        expect(wrapper.get('h2 a').attributes('href')).toBe('/en/database/mounts');
+        expect(wrapper.get('h2 a').text()).toBe('Mounts');
+        expect(wrapper.text()).toContain('1,800');
     });
 });

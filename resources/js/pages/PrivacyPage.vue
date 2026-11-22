@@ -10,7 +10,7 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
             <meta name="twitter:card" content="summary_large_image">
             <meta name="twitter:title" :content="meta.ogTitle">
             <meta name="twitter:description" :content="meta.ogDescription">

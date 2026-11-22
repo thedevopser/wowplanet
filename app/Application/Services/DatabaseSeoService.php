@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Services;
 
 use App\Domain\ValueObjects\ExpansionId;
+use App\Http\Localization\AppLocale;
 use App\Http\Localization\LocalizedUrls;
 use App\Models\WowAchievement;
 use App\Models\WowAppearance;
@@ -15,6 +16,7 @@ use App\Models\WowProfession;
 use App\Models\WowQuest;
 use App\Models\WowRecipe;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Number;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 
@@ -41,28 +43,19 @@ class DatabaseSeoService
         $professionCount = WowProfession::query()->withActiveRecipes()->count();
         $recipeCount = WowRecipe::query()->where('is_active', true)->count();
 
-        $title = 'Base de données WoW complète | WowPlanet';
-        $description = sprintf(
-            'Explorez la base de données complète de World of Warcraft entièrement en français : %s montures, %s hauts-faits, %s quêtes, %s mascottes, %s décorations et %d professions (%s recettes). La référence francophone WoW.',
-            number_format($mountCount, 0, ',', ' '),
-            number_format($achievementCount, 0, ',', ' '),
-            number_format($questCount, 0, ',', ' '),
-            number_format($petCount, 0, ',', ' '),
-            number_format($decorCount, 0, ',', ' '),
-            $professionCount,
-            number_format($recipeCount, 0, ',', ' '),
-        );
+        $title = __('seo.database.index.title');
+        $description = __('seo.database.index.description', ['a' => $this->formatCount($mountCount), 'b' => $this->formatCount($achievementCount), 'c' => $this->formatCount($questCount), 'd' => $this->formatCount($petCount), 'e' => $this->formatCount($decorCount), 'f' => (string) $professionCount, 'g' => $this->formatCount($recipeCount)]);
 
-        $canonicalUrl = $appUrl.'/base-de-donnees';
+        $canonicalUrl = $this->localizedUrls->current('/base-de-donnees');
 
         return $this->buildSeoArray($title, $description, $canonicalUrl, $appUrl, 'website', $this->buildJsonLd([
             '@type' => 'CollectionPage',
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, [
-                ['Base de données', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $canonicalUrl],
             ]),
         ], $appUrl));
     }
@@ -84,29 +77,22 @@ class DatabaseSeoService
                 return null;
             }
 
-            $title = sprintf('Montures WoW %s — %d montures | WowPlanet', $category, $count);
-            $description = sprintf(
-                "%d montures %s WoW en français. Source d'obtention, icône et lien Wowhead pour chaque monture.",
-                $count,
-                $category,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/montures/'.$categorySlug;
+            $title = __('seo.database.mounts.category.title', ['a' => $category, 'b' => (string) $count]);
+            $description = __('seo.database.mounts.category.description', ['a' => (string) $count, 'b' => $category]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/montures/'.$categorySlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Montures', $appUrl.'/base-de-donnees/montures'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.mounts'), $this->localizedUrls->current('/base-de-donnees/montures')],
                 [$category, $canonicalUrl],
             ];
         } else {
             $count = $builder->count();
-            $title = sprintf('Montures WoW — %s montures | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                '%d montures WoW classées par catégorie : terrestres, volantes, aquatiques et plus. Trouvez comment obtenir chaque monture.',
-                $count,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/montures';
+            $title = __('seo.database.mounts.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.mounts.all.description', ['a' => (string) $count]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/montures');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Montures', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.mounts'), $canonicalUrl],
             ];
         }
 
@@ -115,7 +101,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -139,29 +125,22 @@ class DatabaseSeoService
                 ->count();
 
             $expansionName = $expansion->toString();
-            $title = sprintf('Hauts-faits WoW %s — %d | WowPlanet', $expansionName, $count);
-            $description = sprintf(
-                'Tous les %d hauts-faits de %s dans World of Warcraft en français. Classés par catégorie avec points et faction.',
-                $count,
-                $expansionName,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/hauts-faits/'.$expansionSlug;
+            $title = __('seo.database.achievements.expansion.title', ['a' => $expansionName, 'b' => (string) $count]);
+            $description = __('seo.database.achievements.expansion.description', ['a' => (string) $count, 'b' => $expansionName]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/hauts-faits/'.$expansionSlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Hauts-faits', $appUrl.'/base-de-donnees/hauts-faits'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.achievements'), $this->localizedUrls->current('/base-de-donnees/hauts-faits')],
                 [$expansionName, $canonicalUrl],
             ];
         } else {
             $count = WowAchievement::query()->where('is_active', true)->count();
-            $title = sprintf('Hauts-faits WoW — %s hauts-faits | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                'Tous les %d hauts-faits de World of Warcraft en français. Classés par extension et catégorie avec points. La référence francophone.',
-                $count,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/hauts-faits';
+            $title = __('seo.database.achievements.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.achievements.all.description', ['a' => (string) $count]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/hauts-faits');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Hauts-faits', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.achievements'), $canonicalUrl],
             ];
         }
 
@@ -170,7 +149,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -194,29 +173,22 @@ class DatabaseSeoService
                 ->where('expansion_id', $expansion->value)
                 ->count();
 
-            $title = sprintf('Quêtes WoW %s — %d quêtes | WowPlanet', $expansionName, $count);
-            $description = sprintf(
-                'Toutes les %d quêtes de %s dans World of Warcraft en français. Triées par zone avec liens Wowhead.',
-                $count,
-                $expansionName,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/quetes/'.$expansionSlug;
+            $title = __('seo.database.quests.expansion.title', ['a' => $expansionName, 'b' => (string) $count]);
+            $description = __('seo.database.quests.expansion.description', ['a' => (string) $count, 'b' => $expansionName]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/quetes/'.$expansionSlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Quêtes', $appUrl.'/base-de-donnees/quetes'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.quests'), $this->localizedUrls->current('/base-de-donnees/quetes')],
                 [$expansionName, $canonicalUrl],
             ];
         } else {
             $count = WowQuest::query()->where('is_active', true)->count();
-            $title = sprintf('Quêtes WoW — %s quêtes | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                'Toutes les %s quêtes de World of Warcraft en français. Triées par extension. La référence francophone.',
-                number_format($count, 0, ',', ' '),
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/quetes';
+            $title = __('seo.database.quests.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.quests.all.description', ['a' => $this->formatCount($count)]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/quetes');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Quêtes', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.quests'), $canonicalUrl],
             ];
         }
 
@@ -225,7 +197,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -247,29 +219,22 @@ class DatabaseSeoService
                 return null;
             }
 
-            $title = sprintf('Mascottes WoW %s — %d mascottes | WowPlanet', $category, $count);
-            $description = sprintf(
-                'Découvrez les %d mascottes de combat %s dans World of Warcraft en français. Liste complète avec source et lien Wowhead.',
-                $count,
-                $category,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/mascottes/'.$categorySlug;
+            $title = __('seo.database.pets.category.title', ['a' => $category, 'b' => (string) $count]);
+            $description = __('seo.database.pets.category.description', ['a' => (string) $count, 'b' => $category]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/mascottes/'.$categorySlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Mascottes', $appUrl.'/base-de-donnees/mascottes'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.pets'), $this->localizedUrls->current('/base-de-donnees/mascottes')],
                 [$category, $canonicalUrl],
             ];
         } else {
             $count = $builder->count();
-            $title = sprintf('Mascottes WoW — %s mascottes | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                "Toutes les %d mascottes de combat de World of Warcraft en français. Triées par catégorie avec source d'obtention et lien Wowhead.",
-                $count,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/mascottes';
+            $title = __('seo.database.pets.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.pets.all.description', ['a' => (string) $count]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/mascottes');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Mascottes', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.pets'), $canonicalUrl],
             ];
         }
 
@@ -278,7 +243,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -300,29 +265,22 @@ class DatabaseSeoService
                 return null;
             }
 
-            $title = sprintf('Décorations WoW %s — %d | WowPlanet', $category, $count);
-            $description = sprintf(
-                'Découvrez les %d décorations %s dans World of Warcraft en français. Liste complète avec source et lien Wowhead.',
-                $count,
-                $category,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/decorations/'.$categorySlug;
+            $title = __('seo.database.decors.category.title', ['a' => $category, 'b' => (string) $count]);
+            $description = __('seo.database.decors.category.description', ['a' => (string) $count, 'b' => $category]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/decorations/'.$categorySlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Décorations', $appUrl.'/base-de-donnees/decorations'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.decors'), $this->localizedUrls->current('/base-de-donnees/decorations')],
                 [$category, $canonicalUrl],
             ];
         } else {
             $count = $builder->count();
-            $title = sprintf('Décorations WoW — %s décorations | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                "Toutes les %d décorations de World of Warcraft en français. Triées par catégorie avec source d'obtention et lien Wowhead.",
-                $count,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/decorations';
+            $title = __('seo.database.decors.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.decors.all.description', ['a' => (string) $count]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/decorations');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Décorations', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.decors'), $canonicalUrl],
             ];
         }
 
@@ -331,7 +289,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -353,29 +311,22 @@ class DatabaseSeoService
                 return null;
             }
 
-            $title = sprintf('Transmogrification WoW %s — %d apparences | WowPlanet', $slot, $count);
-            $description = sprintf(
-                "%d apparences d'équipement %s WoW en français. Icône et lien Wowhead pour chaque apparence transmog.",
-                $count,
-                $slot,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/garde-robe/'.$slotSlug;
+            $title = __('seo.database.appearances.slot.title', ['a' => $slot, 'b' => (string) $count]);
+            $description = __('seo.database.appearances.slot.description', ['a' => (string) $count, 'b' => $slot]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/garde-robe/'.$slotSlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Garde-robe', $appUrl.'/base-de-donnees/garde-robe'],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.appearances'), $this->localizedUrls->current('/base-de-donnees/garde-robe')],
                 [$slot, $canonicalUrl],
             ];
         } else {
             $count = $builder->count();
-            $title = sprintf('Transmogrification WoW — %s apparences | WowPlanet', number_format($count, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                "Toutes les %d apparences d'équipement (transmog) de World of Warcraft en français. Classées par emplacement avec lien Wowhead.",
-                $count,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/garde-robe';
+            $title = __('seo.database.appearances.all.title', ['a' => $this->formatCount($count)]);
+            $description = __('seo.database.appearances.all.description', ['a' => (string) $count]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/garde-robe');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Garde-robe', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.appearances'), $canonicalUrl],
             ];
         }
 
@@ -384,7 +335,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -410,31 +361,24 @@ class DatabaseSeoService
                 ->where('profession_id', $profession->id)
                 ->count();
 
-            $title = sprintf('%s WoW - %d recettes en français | WowPlanet', $professionName, $recipeCount);
-            $description = sprintf(
-                '%d recettes de %s WoW en français. Classées par extension avec liens Wowhead.',
-                $recipeCount,
-                $professionName,
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/professions/'.$professionSlug;
+            $displayedName = AppLocale::current() === AppLocale::English ? $profession->name_en ?? $profession->name_fr : $profession->name_fr;
+            $title = __('seo.database.professions.profession.title', ['a' => $displayedName, 'b' => (string) $recipeCount]);
+            $description = __('seo.database.professions.profession.description', ['a' => (string) $recipeCount, 'b' => $displayedName]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/professions/'.$professionSlug);
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Professions', $appUrl.'/base-de-donnees/professions'],
-                [$professionName, $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.professions'), $this->localizedUrls->current('/base-de-donnees/professions')],
+                [$displayedName, $canonicalUrl],
             ];
         } else {
             $professionCount = WowProfession::query()->withActiveRecipes()->count();
             $recipeCount = WowRecipe::query()->where('is_active', true)->count();
-            $title = sprintf('Professions WoW — %d métiers, %s recettes | WowPlanet', $professionCount, number_format($recipeCount, 0, ',', "\u{202f}"));
-            $description = sprintf(
-                'Toutes les %d professions de World of Warcraft en français avec %s recettes. Classées par type et extension. La référence francophone.',
-                $professionCount,
-                number_format($recipeCount, 0, ',', ' '),
-            );
-            $canonicalUrl = $appUrl.'/base-de-donnees/professions';
+            $title = __('seo.database.professions.all.title', ['a' => (string) $professionCount, 'b' => $this->formatCount($recipeCount)]);
+            $description = __('seo.database.professions.all.description', ['a' => (string) $professionCount, 'b' => $this->formatCount($recipeCount)]);
+            $canonicalUrl = $this->localizedUrls->current('/base-de-donnees/professions');
             $breadcrumbs = [
-                ['Base de données', $appUrl.'/base-de-donnees'],
-                ['Professions', $canonicalUrl],
+                [__('seo.database.breadcrumb.index'), $this->localizedUrls->current('/base-de-donnees')],
+                [__('seo.database.breadcrumb.professions'), $canonicalUrl],
             ];
         }
 
@@ -443,7 +387,7 @@ class DatabaseSeoService
             'name' => $title,
             'url' => $canonicalUrl,
             'description' => $description,
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'breadcrumb' => $this->buildBreadcrumbJsonLd($appUrl, $breadcrumbs),
         ], $appUrl));
     }
@@ -605,6 +549,11 @@ class DatabaseSeoService
         $text = str_replace('-', ' ', $slug);
 
         return mb_convert_case($text, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    private function formatCount(int $count): string
+    {
+        return (string) Number::format($count, locale: AppLocale::current()->value);
     }
 
     private function appUrl(): string

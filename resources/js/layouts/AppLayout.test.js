@@ -171,8 +171,8 @@ describe('AppLayout', () => {
         expect(wrapper.findComponent({ name: 'SessionExpiredBanner' }).exists()).toBe(false);
     });
 
-    it('drops the centered container on the database pages', async () => {
-        __page.url = '/base-de-donnees/montures?page=2';
+    it.each(['/base-de-donnees/montures?page=2', '/en/database/mounts?page=2'])('drops the centered container on the database page %s', async (url) => {
+        __page.url = url;
 
         const wrapper = await mountLayout();
 

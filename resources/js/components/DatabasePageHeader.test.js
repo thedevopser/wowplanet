@@ -50,3 +50,12 @@ describe('DatabasePageHeader', () => {
         expect(wrapper.find('[data-count]').classes()).toContain('tabular-nums');
     });
 });
+
+describe('DatabasePageHeader in english', () => {
+    it('formats the count the english way', async () => {
+        const { mountWithPlugins } = await import('../tests/helpers');
+        const wrapper = await mountWithPlugins(DatabasePageHeader, { locale: 'en', props: { title: 'Mounts', count: 1673 } });
+
+        expect(wrapper.get('[data-count]').text()).toBe('1,673');
+    });
+});

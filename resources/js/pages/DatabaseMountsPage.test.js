@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 
+const page = vi.hoisted(() => ({ url: '/base-de-donnees/montures', props: {} }));
+
 vi.mock('@inertiajs/vue3', () => ({
     Head: { name: 'Head', render: () => null },
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
-    usePage: () => ({ url: '/base-de-donnees/montures', props: {} }),
+    usePage: () => page,
     router: { get: vi.fn(), visit: vi.fn(), on: vi.fn() },
 }));
 
@@ -147,5 +149,25 @@ describe('DatabaseMountsPage', () => {
         const wrapper = await mountPage({ category: 'past-limited-time', categories: [{ slug: 'past-limited-time', name: 'Past Limited Time', count: 1 }] });
 
         expect(wrapper.find('header').text()).toContain('Ancien durée limitée');
+    });
+});
+
+describe('DatabaseMountsPage in english', () => {
+    it('shows the english names, the curated sources as is and the english Wowhead links', async () => {
+        page.props = { locale: 'en' };
+        const wrapper = await mountWithPlugins(DatabaseMountsPage, {
+            locale: 'en',
+            props: { meta, category: 'flying', items: [{ id: 1, name_fr: 'Destrier noir', name_en: 'Black Stallion', source: 'Vendor', icon_url: '', source_spell_id: 100 }], categories: [{ slug: 'flying', name: 'Flying', count: 1 }], total: 1 },
+            stubs: { SearchFilter: true, CollectionIcon: true },
+        });
+        page.props = {};
+
+        const link = wrapper.get('tbody a');
+
+        expect(link.text()).toBe('Black Stallion');
+        expect(link.attributes('href')).toBe('https://www.wowhead.com/spell=100');
+        expect(wrapper.text()).toContain('Vendor');
+        expect(wrapper.get('h1').text()).toBe('Mounts');
+        expect(wrapper.text()).toContain('Flying');
     });
 });

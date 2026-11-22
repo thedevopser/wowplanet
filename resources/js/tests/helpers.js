@@ -16,7 +16,7 @@ export async function mountWithPlugins(component, options = {}) {
     resetLoadedLanguages();
     const wrapper = mount(component, {
         global: {
-            plugins: [pinia, [i18nVue, eagerI18nOptions(options.locale)]],
+            plugins: [pinia, { install: (app) => i18nVue.install(app, eagerI18nOptions(options.locale)) }],
             stubs: options.stubs || {},
             ...options.global,
         },

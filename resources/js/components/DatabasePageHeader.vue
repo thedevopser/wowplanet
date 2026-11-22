@@ -9,7 +9,7 @@
             <p v-if="subtitle" class="mt-1 text-sm text-muted sm:text-base">{{ subtitle }}</p>
         </div>
         <p class="text-right">
-            <span data-count class="block text-2xl font-bold tabular-nums text-default sm:text-3xl">{{ count.toLocaleString('fr-FR') }}</span>
+            <span data-count class="block text-2xl font-bold tabular-nums text-default sm:text-3xl">{{ count.toLocaleString(locale) }}</span>
             <span class="text-sm text-muted">{{ countLabel }}</span>
         </p>
     </header>
@@ -18,6 +18,9 @@
 <script setup>
 import { computed } from 'vue';
 import { dimensionColor, UnknownWowColorError } from '../utils/wowColors';
+import { useActiveLocale } from '../composables/useActiveLocale';
+
+const locale = useActiveLocale();
 
 const props = defineProps({
     title: { type: String, required: true },

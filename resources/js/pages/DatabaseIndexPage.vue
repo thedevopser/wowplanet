@@ -10,7 +10,7 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
             <meta name="twitter:card" content="summary_large_image">
             <meta name="twitter:title" :content="meta.ogTitle">
             <meta name="twitter:description" :content="meta.ogDescription">
@@ -18,17 +18,16 @@
         </Head>
 
         <div class="mx-auto max-w-3xl text-center">
-            <h1 class="mb-4 font-display text-3xl font-bold text-default sm:text-4xl md:text-5xl">Base de données WoW</h1>
+            <h1 class="mb-4 font-display text-3xl font-bold text-default sm:text-4xl md:text-5xl">{{ $t('database.index.title') }}</h1>
             <p class="text-base leading-relaxed text-muted sm:text-lg">
-                Explorez la base de données complète de World of Warcraft entièrement en français.
-                Montures, hauts-faits, quêtes, mascottes, décorations, garde-robe et professions.
+                {{ $t('database.index.intro') }}
             </p>
         </div>
 
         <ul class="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card
                 v-for="section in SECTIONS"
-                :key="section.path"
+                :key="section.key"
                 as="li"
                 variant="interactive"
                 class="flex flex-col items-center gap-2 border-t-4 p-6 text-center"
@@ -38,17 +37,17 @@
                     <CategoryIcon :category="section.icon" />
                 </span>
                 <h2 class="text-xl font-semibold text-default">
-                    <Link :href="section.path" class="hover:underline focus-visible:outline-none after:absolute after:inset-0">{{ section.label }}</Link>
+                    <Link :href="localizedUrl(section.path)" class="hover:underline focus-visible:outline-none after:absolute after:inset-0">{{ $t(`database.sections.${section.key}.label`) }}</Link>
                 </h2>
-                <p class="text-sm text-muted">{{ section.description }}</p>
+                <p class="text-sm text-muted">{{ $t(`database.sections.${section.key}.description`) }}</p>
                 <p class="text-2xl font-bold tabular-nums text-default">{{ formatCount(counts[section.countKey]) }}</p>
-                <p v-if="section.countKey === 'recipes' && counts.professions" class="text-xs text-subtle">{{ counts.professions }} professions</p>
+                <p v-if="section.countKey === 'recipes' && counts.professions" class="text-xs text-subtle">{{ $t('database.index.professions_count', { count: String(counts.professions) }) }}</p>
             </Card>
         </ul>
 
         <p class="mx-auto max-w-lg text-center text-sm text-muted">
-            Données de référence du jeu entièrement en français.
-            <br>Connectez-vous avec Battle.net pour suivre votre progression personnelle.
+            {{ $t('database.index.footer_data') }}
+            <br>{{ $t('database.index.footer_login') }}
         </p>
     </div>
 </template>
@@ -68,15 +67,17 @@ import CategoryIcon from '../components/CategoryIcon.vue';
 import Card from '../components/ui/Card.vue';
 import { useWowColor } from '../composables/useWowColor';
 import { dimensionColor } from '../utils/wowColors';
+import { useActiveLocale } from '../composables/useActiveLocale';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
 
 const SECTIONS = [
-    { path: '/base-de-donnees/montures', label: 'Montures', description: 'Triées par catégorie et source d’obtention', icon: 'mounts', dimension: 'mounts', countKey: 'mounts' },
-    { path: '/base-de-donnees/hauts-faits', label: 'Hauts-faits', description: 'Classés par extension et catégorie', icon: 'achievements', dimension: 'achievements', countKey: 'achievements' },
-    { path: '/base-de-donnees/quetes', label: 'Quêtes', description: 'Triées par extension et zone', icon: 'quests', dimension: 'quests', countKey: 'quests' },
-    { path: '/base-de-donnees/mascottes', label: 'Mascottes', description: 'Triées par catégorie et source', icon: 'pets', dimension: 'pets', countKey: 'pets' },
-    { path: '/base-de-donnees/decorations', label: 'Décorations', description: 'Triées par catégorie et source', icon: 'decor', dimension: 'decor', countKey: 'decors' },
-    { path: '/base-de-donnees/garde-robe', label: 'Garde-robe', description: 'Apparences classées par emplacement', icon: 'transmog', dimension: 'transmog', countKey: 'appearances' },
-    { path: '/base-de-donnees/professions', label: 'Professions', description: 'Recettes classées par extension', icon: 'professions', dimension: 'professions', countKey: 'recipes' },
+    { key: 'mounts', path: '/base-de-donnees/montures', icon: 'mounts', dimension: 'mounts', countKey: 'mounts' },
+    { key: 'achievements', path: '/base-de-donnees/hauts-faits', icon: 'achievements', dimension: 'achievements', countKey: 'achievements' },
+    { key: 'quests', path: '/base-de-donnees/quetes', icon: 'quests', dimension: 'quests', countKey: 'quests' },
+    { key: 'pets', path: '/base-de-donnees/mascottes', icon: 'pets', dimension: 'pets', countKey: 'pets' },
+    { key: 'decors', path: '/base-de-donnees/decorations', icon: 'decor', dimension: 'decor', countKey: 'decors' },
+    { key: 'appearances', path: '/base-de-donnees/garde-robe', icon: 'transmog', dimension: 'transmog', countKey: 'appearances' },
+    { key: 'professions', path: '/base-de-donnees/professions', icon: 'professions', dimension: 'professions', countKey: 'recipes' },
 ];
 
 defineProps({
@@ -87,5 +88,7 @@ defineProps({
 const { readable } = useWowColor();
 
 const colorOf = (section) => dimensionColor(section.dimension);
-const formatCount = (count) => (count ? count.toLocaleString('fr-FR') : '—');
+const locale = useActiveLocale();
+const { localizedUrl } = useLocalizedUrl();
+const formatCount = (count) => (count ? count.toLocaleString(locale.value) : '—');
 </script>

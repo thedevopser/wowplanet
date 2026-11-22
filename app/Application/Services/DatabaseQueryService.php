@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Services;
 
 use App\Domain\ValueObjects\ExpansionId;
+use App\Http\Localization\AppLocale;
 use App\Models\WowAchievement;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
@@ -16,6 +17,7 @@ use App\Models\WowRecipe;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
 
 /**
  * Requêtes de la base de données WoW (montures, hauts-faits, quêtes, mascottes,
@@ -27,31 +29,6 @@ use Illuminate\Support\Facades\Cache;
  */
 class DatabaseQueryService
 {
-    /**
-     * Libellés FR des slots transmog (clé = valeur stockée en base).
-     *
-     * @var array<string, string>
-     */
-    private const array SLOT_LABELS = [
-        'HEAD' => 'Tête',
-        'SHOULDER' => 'Épaules',
-        'SHIRT' => 'Chemise',
-        'CHEST' => 'Torse',
-        'WAIST' => 'Ceinture',
-        'LEGS' => 'Jambes',
-        'FEET' => 'Pieds',
-        'WRIST' => 'Poignets',
-        'HAND' => 'Mains',
-        'CLOAK' => 'Cape',
-        'TABARD' => 'Tabard',
-        'WEAPON' => 'Arme',
-        'SHIELD' => 'Bouclier',
-        'RANGED' => 'Distance',
-        'TWOHWEAPON' => 'Arme à deux mains',
-        'WEAPONOFFHAND' => 'Arme en main gauche',
-        'HOLDABLE' => 'Tenu en main gauche',
-    ];
-
     private const int DEFAULT_PER_PAGE = 50;
 
     private const int MAX_PER_PAGE = 100;
@@ -76,8 +53,8 @@ class DatabaseQueryService
     public function mounts(?string $category = null): array
     {
         $builder = WowMount::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'source', 'category', 'source_spell_id', 'icon_url'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'source', 'category', 'source_spell_id', 'icon_url'])
+            ->orderByRaw($this->localizedName());
 
         if ($category !== null && $category !== '') {
             $builder->where('category', $this->deSlugify($category, 'mounts'));
@@ -96,8 +73,8 @@ class DatabaseQueryService
     public function achievements(?string $expansionSlug = null, ?string $search = null, ?int $page = null, ?int $perPage = null): array
     {
         $builder = WowAchievement::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction'])
+            ->orderByRaw($this->localizedName());
 
         $this->applyExpansion($builder, $expansionSlug);
         $this->applySearch($builder, $search);
@@ -120,8 +97,8 @@ class DatabaseQueryService
     public function quests(?string $expansionSlug = null, ?string $search = null, ?int $page = null, ?int $perPage = null): array
     {
         $builder = WowQuest::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'expansion_id', 'zone_name', 'faction'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'zone_name', 'zone_name_en', 'faction'])
+            ->orderByRaw($this->localizedName());
 
         $this->applyExpansion($builder, $expansionSlug);
         $this->applySearch($builder, $search);
@@ -144,8 +121,8 @@ class DatabaseQueryService
     public function pets(?string $category = null): array
     {
         $builder = WowPet::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'source', 'category', 'creature_id', 'icon_url'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'source', 'category', 'creature_id', 'icon_url'])
+            ->orderByRaw($this->localizedName());
 
         if ($category !== null && $category !== '') {
             $builder->where('category', $this->deSlugify($category, 'pets'));
@@ -164,8 +141,8 @@ class DatabaseQueryService
     public function decors(?string $category = null): array
     {
         $builder = WowDecor::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'source', 'category', 'item_id', 'icon_url'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'source', 'category', 'item_id', 'icon_url'])
+            ->orderByRaw($this->localizedName());
 
         if ($category !== null && $category !== '') {
             $builder->where('category', $this->deSlugify($category, 'decors'));
@@ -184,8 +161,8 @@ class DatabaseQueryService
     public function appearances(?string $slot = null, ?string $quality = null, ?string $search = null, ?int $page = null, ?int $perPage = null): array
     {
         $builder = WowAppearance::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'slot', 'category', 'quality', 'item_id', 'icon_url'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'slot', 'category', 'quality', 'item_id', 'icon_url'])
+            ->orderByRaw($this->localizedName());
 
         if ($slot !== null && $slot !== '') {
             $builder->where('slot', $this->deSlugify($slot, 'appearances'));
@@ -210,7 +187,7 @@ class DatabaseQueryService
     }
 
     /**
-     * @return array{professions: array<int, array{id: int, name_fr: string, type: string, slug: string, recipe_count: int}>, total_professions: int, total_recipes: int}
+     * @return array{professions: array<int, array{id: int, name_fr: string, name: string, type: string, slug: string, recipe_count: int}>, total_professions: int, total_recipes: int}
      */
     public function professions(): array
     {
@@ -218,6 +195,7 @@ class DatabaseQueryService
             ->map(fn (WowProfession $wowProfession): array => [
                 'id' => $wowProfession->id,
                 'name_fr' => $wowProfession->name_fr,
+                'name' => $this->professionName($wowProfession),
                 'type' => $wowProfession->type,
                 'slug' => $this->slugify($wowProfession->name_fr),
                 'recipe_count' => $wowProfession->active_recipes_count,
@@ -234,7 +212,7 @@ class DatabaseQueryService
     /**
      * Une profession inconnue rend une page vide, sans pagination.
      *
-     * @return array{items: array{}, expansions: array{}}|array{items: array<int, WowRecipe>, expansions: list<ExpansionEntry>, profession: array{id: int, name_fr: string, type: string}, total: int, current_page: int, last_page: int, per_page: int}
+     * @return array{items: array{}, expansions: array{}}|array{items: array<int, WowRecipe>, expansions: list<ExpansionEntry>, profession: array{id: int, name_fr: string, name: string, type: string}, total: int, current_page: int, last_page: int, per_page: int}
      */
     public function professionRecipes(?string $professionSlug = null, ?string $expansionSlug = null, ?string $search = null, ?int $page = null, ?int $perPage = null): array
     {
@@ -253,8 +231,8 @@ class DatabaseQueryService
 
         $builder = WowRecipe::query()->where('is_active', true)
             ->where('profession_id', $profession->id)
-            ->select(['id', 'name_fr', 'expansion_id', 'category_name', 'faction', 'wowhead_spell_id'])
-            ->orderBy('name_fr');
+            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'faction', 'wowhead_spell_id'])
+            ->orderByRaw($this->localizedName());
 
         $this->applyExpansion($builder, $expansionSlug);
         $this->applySearch($builder, $search);
@@ -267,6 +245,7 @@ class DatabaseQueryService
             'profession' => [
                 'id' => $profession->id,
                 'name_fr' => $profession->name_fr,
+                'name' => $this->professionName($profession),
                 'type' => $profession->type,
             ],
             'total' => $lengthAwarePaginator->total(),
@@ -300,7 +279,7 @@ class DatabaseQueryService
             ], $this->buildExpansionList(WowQuest::class)),
             'professions' => $this->listedProfessions()
                 ->map(fn (WowProfession $wowProfession): array => [
-                    'name' => $wowProfession->name_fr,
+                    'name' => $this->professionName($wowProfession),
                     'slug' => $this->slugify($wowProfession->name_fr),
                     'count' => $wowProfession->active_recipes_count,
                     'type' => $wowProfession->type,
@@ -323,7 +302,7 @@ class DatabaseQueryService
      */
     public function cachedSubcategories(): array
     {
-        return Cache::remember(self::SUBCATEGORIES_CACHE_KEY, self::COUNTS_CACHE_SECONDS, function (): array {
+        return Cache::remember(self::SUBCATEGORIES_CACHE_KEY.':'.AppLocale::current()->value, self::COUNTS_CACHE_SECONDS, function (): array {
             $map = [];
             foreach (self::SIDEBAR_SECTIONS as $section) {
                 $map[$section] = $this->subcategories($section) ?? [];
@@ -340,7 +319,9 @@ class DatabaseQueryService
     public function forgetSidebar(): void
     {
         Cache::forget(self::COUNTS_CACHE_KEY);
-        Cache::forget(self::SUBCATEGORIES_CACHE_KEY);
+        foreach (AppLocale::cases() as $locale) {
+            Cache::forget(self::SUBCATEGORIES_CACHE_KEY.':'.$locale->value);
+        }
     }
 
     /**
@@ -366,9 +347,9 @@ class DatabaseQueryService
     private function listedProfessions(): Collection
     {
         return WowProfession::query()->withActiveRecipes()
-            ->select(['id', 'name_fr', 'type'])
+            ->select(['id', 'name_fr', 'name_en', 'type'])
             ->withCount(['recipes as active_recipes_count' => fn (Builder $builder) => $builder->where('is_active', true)])
-            ->orderBy('name_fr')
+            ->orderByRaw($this->localizedName())
             ->get();
     }
 
@@ -394,6 +375,33 @@ class DatabaseQueryService
         }
     }
 
+    private function slotLabel(string $slot): string
+    {
+        $key = 'database.slots.'.$slot;
+
+        return Lang::has($key) ? __($key) : $slot;
+    }
+
+    /**
+     * Le slug d'un métier reste celui de son nom français dans les deux langues : il identifie
+     * la page, et les `hreflang` recopient les paramètres d'une langue à l'autre.
+     */
+    private function professionName(WowProfession $wowProfession): string
+    {
+        return AppLocale::current() === AppLocale::English ? $wowProfession->name_en ?? $wowProfession->name_fr : $wowProfession->name_fr;
+    }
+
+    /**
+     * Le nom que lit la page : l'anglais sous `/en`, à défaut le français, pour qu'une
+     * entrée pas encore traduite reste triée et trouvable.
+     *
+     * @return literal-string
+     */
+    private function localizedName(): string
+    {
+        return AppLocale::current() === AppLocale::English ? 'COALESCE(name_en, name_fr)' : 'name_fr';
+    }
+
     /**
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
@@ -404,7 +412,7 @@ class DatabaseQueryService
         if ($search !== null && $search !== '') {
             // PostgreSQL makes LIKE case-sensitive where SQLite did not: without
             // this, searching "bouclier" would stop matching "Bouclier".
-            $builder->whereLike('name_fr', '%'.$search.'%', caseSensitive: false);
+            $builder->whereRaw($this->localizedName().' ILIKE ?', ['%'.$search.'%']);
         }
     }
 
@@ -425,7 +433,7 @@ class DatabaseQueryService
             ->toArray();
 
         return array_values(array_map(fn (array $row): array => [
-            'name' => self::SLOT_LABELS[$row['slot']] ?? $row['slot'],
+            'name' => $this->slotLabel($row['slot']),
             'slug' => $this->slugify($row['slot']),
             'count' => $row['items_count'],
         ], $rawSlots));

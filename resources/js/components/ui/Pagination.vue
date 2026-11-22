@@ -2,7 +2,7 @@
     <nav v-if="pageCount > 1" :aria-label="label">
         <ul class="flex flex-wrap items-center gap-1">
             <li>
-                <button type="button" aria-label="Page précédente" :class="[BUTTON, IDLE]" :disabled="page <= 1" @click="go(page - 1)">
+                <button type="button" :aria-label="$t('common.pagination.previous')" :class="[BUTTON, IDLE]" :disabled="page <= 1" @click="go(page - 1)">
                     <Icon :icon="ChevronLeft" />
                 </button>
             </li>
@@ -11,14 +11,14 @@
                 <button
                     v-else
                     type="button"
-                    :aria-label="`Page ${entry}`"
+                    :aria-label="$t('common.pagination.page', { page: String(entry) })"
                     :aria-current="entry === page ? 'page' : undefined"
                     :class="[BUTTON, entry === page ? CURRENT : IDLE]"
                     @click="go(entry)"
                 >{{ entry }}</button>
             </li>
             <li>
-                <button type="button" aria-label="Page suivante" :class="[BUTTON, IDLE]" :disabled="page >= pageCount" @click="go(page + 1)">
+                <button type="button" :aria-label="$t('common.pagination.next')" :class="[BUTTON, IDLE]" :disabled="page >= pageCount" @click="go(page + 1)">
                     <Icon :icon="ChevronRight" />
                 </button>
             </li>

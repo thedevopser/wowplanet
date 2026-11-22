@@ -29,6 +29,7 @@ import { usePage } from '@inertiajs/vue3';
 import { useCharacterStore } from '../stores/character';
 import { useTaskStore } from '../stores/tasks';
 import { startThemeSync } from '../composables/useTheme';
+import { DEFAULT_LOCALE, localizePath } from '../i18n/localizePath';
 import AppHeaderInertia from '../components/inertia/AppHeaderInertia.vue';
 import LocaleSuggestionBanner from '../components/inertia/LocaleSuggestionBanner.vue';
 import AppFooterInertia from '../components/inertia/AppFooterInertia.vue';
@@ -43,7 +44,7 @@ const store = useCharacterStore();
 const taskStore = useTaskStore();
 const toasts = useToastStore();
 
-const isDatabase = computed(() => page.url.split('?')[0].startsWith('/base-de-donnees'));
+const isDatabase = computed(() => localizePath(page.url.split('?')[0], DEFAULT_LOCALE).startsWith('/base-de-donnees'));
 
 watch(() => page.props.auth, (auth) => store.applySharedAuth(auth), { immediate: true });
 

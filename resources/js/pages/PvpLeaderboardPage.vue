@@ -10,7 +10,7 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <header class="flex flex-wrap items-end justify-between gap-4 rounded-ui-md border border-l-4 border-default border-l-accent bg-surface p-5 sm:p-6">
