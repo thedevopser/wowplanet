@@ -1,7 +1,7 @@
 <template>
     <p class="flex items-center gap-1 text-xs font-medium" :class="timed ? 'text-success' : 'text-warning'">
         <Icon :icon="timed ? CircleCheck : Hourglass" size="sm" />
-        {{ timed ? 'Dans les temps' : 'Hors temps' }}
+        {{ timed ? $t('sheet.mythic.timed') : $t('sheet.mythic.depleted') }}
     </p>
 </template>
 

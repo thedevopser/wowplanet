@@ -15,9 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property string $name_fr
+ * @property string|null $name_en
  * @property int $profession_id
  * @property int $expansion_id
  * @property string|null $category_name
+ * @property string|null $category_name_en
  * @property string|null $faction
  * @property int|null $wowhead_spell_id
  * @property bool $is_active
@@ -28,9 +30,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'id',
     'name_fr',
+    'name_en',
     'profession_id',
     'expansion_id',
     'category_name',
+    'category_name_en',
     'faction',
     'wowhead_spell_id',
     'is_active',

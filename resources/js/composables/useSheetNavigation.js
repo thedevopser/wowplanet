@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/vue3';
 import { OVERVIEW, sheetUrl } from '../utils/characterSheet';
+import { useLocalizedUrl } from './useLocalizedUrl';
 
 // The sub-tab that details each dimension of the score.
 export const DIMENSION_VIEWS = Object.freeze({
@@ -17,7 +18,8 @@ export const DIMENSION_VIEWS = Object.freeze({
 // Moving inside a sheet rewrites the address and the history without a request: the
 // profile is already on the page, and the back button returns to the previous view.
 export function useSheetNavigation(realm, name) {
-    const urlOf = (section, sub) => sheetUrl(realm(), name(), section, sub);
+    const { localizedUrl } = useLocalizedUrl();
+    const urlOf = (section, sub) => localizedUrl(sheetUrl(realm(), name(), section, sub));
 
     function show(section, sub) {
         router.push({

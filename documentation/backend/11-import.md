@@ -59,6 +59,21 @@ Seule la garde-robe rend la main avant d'avoir fini : son offset désigne la fen
 
 ---
 
+## Les noms dans les deux langues
+
+Chaque table du catalogue porte `name_fr` et `name_en` (`wow_quests` porte aussi `zone_name_en`, `wow_achievements` et `wow_recipes` portent `category_name_en`), pour que la base suive la langue de la page. Le client Blizzard demande le français par défaut ; l'anglais vient de la source la moins coûteuse pour chaque étape :
+
+| Étape | Source du nom anglais | Coût |
+|---|---|---|
+| Montures, décorations, garde-robe | les documents de recherche déjà balayés, qui portent la carte de toutes les langues (`nameEn`) | aucun appel |
+| Mascottes, hauts-faits, métiers | l'index de l'étape relu en `en_US` (`fetchEnglishIndexNames()`) ; pour les hauts-faits, aussi l'index des catégories, qui nomme la catégorie racine | un appel (deux pour les hauts-faits) |
+| Quêtes | le détail des zones relu en `en_US` : nom des quêtes et de la zone | un appel par zone |
+| Recettes | le détail des paliers de métier relu en `en_US`, nom et catégorie | un appel par palier |
+
+Ces appels passent par `fetchWithRetry()` et `fetchBatchAsync()`, donc par le limiteur par seconde et le budget horaire, comme les autres. Un appel anglais qui échoue ne coûte que l'anglais : la ligne garde le nom anglais déjà stocké, et le nom français n'en dépend jamais. Les noms anglais entrent dans la comparaison qui évite de réécrire une ligne inchangée.
+
+Une base antérieure aux noms anglais les obtient au premier import forcé : un import incrémental saute les étapes déjà abouties pour le build courant.
+
 ## L'état publié
 
 ### `ImportRun`

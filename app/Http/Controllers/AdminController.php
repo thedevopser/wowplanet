@@ -169,7 +169,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'scope' => ['required', 'string', 'in:all,table'],
-            'table' => ['required_if:scope,table', 'string', 'in:'.implode(',', $referenceCatalog->sources())],
+            'table' => ['required_if:scope,table', 'string', 'in:'.implode(',', $referenceCatalog->names())],
         ]);
 
         /** @var string|null $source */

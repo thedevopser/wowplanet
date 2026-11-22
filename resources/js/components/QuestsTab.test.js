@@ -136,3 +136,19 @@ describe('QuestsTab', () => {
         expect(wrapper.text()).toContain('Aucune quête connue pour cette extension.');
     });
 });
+
+describe('QuestsTab in english', () => {
+    it('speaks english and links to the english Wowhead', async () => {
+        const wrapper = await mountWithPlugins(QuestsTab, {
+            locale: 'en',
+            initialState: { character: { character: characterData, crossCharacter: null } },
+            stubActions: false,
+        });
+
+        expect(wrapper.find('h2').text()).toBe('Quests');
+        expect(wrapper.find('[data-percent]').text()).toBe('50%');
+        expect(wrapper.text()).toContain('Breakdown by zone');
+        expect(wrapper.find('input[type="search"]').attributes('placeholder')).toBe('Search for a quest…');
+        expect(wrapper.text()).not.toMatch(/Quêtes|Masquer/);
+    });
+});

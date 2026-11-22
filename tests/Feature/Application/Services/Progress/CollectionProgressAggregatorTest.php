@@ -186,3 +186,26 @@ test('aggregateDecor hands the front everything it displays for a decor', functi
         'source' => 'Quest',
     ]]);
 });
+
+test('an english page lists the collections under their english names', function (): void {
+    WowMount::factory()->create(['id' => 1, 'name_fr' => 'Loup', 'name_en' => 'Wolf']);
+    WowPet::factory()->create(['id' => 10, 'name_fr' => 'Chat', 'name_en' => 'Cat']);
+    WowDecor::factory()->create(['id' => 100, 'name_fr' => 'Statue', 'name_en' => 'Statue of a hero', 'item_id' => 999]);
+    app()->setLocale('en');
+
+    $aggregator = new CollectionProgressAggregator;
+
+    expect($aggregator->aggregateMounts([])[0]['name'])->toBe('Wolf')
+        ->and($aggregator->aggregatePets([])[0]['name'])->toBe('Cat')
+        ->and($aggregator->aggregateDecor([])[0]['name'])->toBe('Statue of a hero');
+});
+
+test('an english page names the wardrobe categories in english', function (): void {
+    WowAppearance::factory()->create(['id' => 1, 'slot' => 'HEAD', 'is_active' => true]);
+    WowAppearance::factory()->create(['id' => 2, 'slot' => 'WEAPON', 'is_active' => true]);
+    app()->setLocale('en');
+
+    $categories = array_column((new CollectionProgressAggregator)->aggregateAppearances([]), 'category', 'slot');
+
+    expect($categories)->toBe(['HEAD' => 'Armor', 'WEAPON' => 'Weapon']);
+});

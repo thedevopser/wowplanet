@@ -10,20 +10,20 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <DatabasePageHeader
-            title="Quêtes"
-            :subtitle="activeExpansionName || 'Toutes les extensions'"
+            :title="$t('database.sections.quests.label')"
+            :subtitle="activeExpansionName || $t('database.all_expansions')"
             :count="total"
-            count-label="quêtes"
+            :count-label="$t('database.quests.count_label')"
             dimension="quests"
         />
 
         <SearchFilter
             v-model:search="search"
-            placeholder="Rechercher une quête…"
+            :placeholder="$t('database.quests.search')"
             :show-hide-toggle="false"
             :debounce-ms="300"
             @search-debounced="searchFor"
@@ -34,15 +34,15 @@
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des quêtes"
+            :label="$t('database.quests.pages')"
             @page-change="goToPage"
         />
 
-        <CatalogTable v-if="items.length" caption="Liste des quêtes" :columns="COLUMNS" :rows="items" :busy="busy">
+        <CatalogTable v-if="items.length" :caption="$t('database.quests.caption')" :columns="COLUMNS" :rows="items" :busy="busy">
             <template #cell-name="{ row, linkClass }">
-                <a :class="linkClass" :href="`https://www.wowhead.com/fr/quest=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
+                <a :class="linkClass" :href="wowheadLink(`quest=${row.id}`)" target="_blank" rel="noopener" class="text-default hover:underline">{{ nameOf(row) }}</a>
             </template>
-            <template #cell-zone="{ row }"><span class="text-muted">{{ row.zone_name }}</span></template>
+            <template #cell-zone="{ row }"><span class="text-muted">{{ zoneOf(row) }}</span></template>
             <template #cell-faction="{ row }">
                 <template v-if="row.faction">
                     <Badge v-if="hasFactionColor(row.faction)" tone="faction" :value="row.faction">{{ row.faction }}</Badge>
@@ -50,13 +50,13 @@
                 </template>
             </template>
         </CatalogTable>
-        <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune entrée ne correspond à cette recherche." />
+        <EmptyState v-else :icon="SearchX" :title="$t('database.empty.title')" :message="$t('database.empty.message')" />
 
         <DatabasePagination
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des quêtes"
+            :label="$t('database.quests.pages')"
             @page-change="goToPage"
         />
     </div>
@@ -82,14 +82,20 @@ import DatabasePagination from '../components/DatabasePagination.vue';
 import Badge from '../components/ui/Badge.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import { useCatalogPaging } from '../composables/useCatalogPaging';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useTranslate } from '../composables/useTranslate';
 import { useWowColor } from '../composables/useWowColor';
 import { factionColor } from '../utils/wowColors';
 
-const COLUMNS = [
-    { key: 'name', label: 'Nom' },
-    { key: 'zone', label: 'Zone', hideBelow: 'sm' },
-    { key: 'faction', label: 'Faction', align: 'end', hideBelow: 'sm', class: 'w-28' },
-];
+const t = useTranslate();
+const { locale, nameOf, wowheadLink } = useCatalogLocale();
+const zoneOf = (row) => (locale.value === 'en' ? row.zone_name_en ?? row.zone_name : row.zone_name);
+
+const COLUMNS = computed(() => [
+    { key: 'name', label: t('database.columns.name') },
+    { key: 'zone', label: t('database.columns.zone'), hideBelow: 'sm' },
+    { key: 'faction', label: t('database.columns.faction'), align: 'end', hideBelow: 'sm', class: 'w-28' },
+]);
 
 const props = defineProps({
     meta: { type: Object, required: true },

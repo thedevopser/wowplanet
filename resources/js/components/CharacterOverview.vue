@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-8">
-        <section aria-label="Compteurs clés">
+        <section :aria-label="$t('sheet.overview.counters')">
             <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <li v-for="counter in counters" :key="counter.label">
                     <StatTile
@@ -16,7 +16,7 @@
         <ScorePanel
             v-if="character.score"
             :score="character.score"
-            title="Score de complétion"
+            :title="$t('sheet.overview.score_title')"
             :todo-url="todoUrl"
             :dimension-links="dimensionLinks"
             :share-data="shareData"
@@ -26,8 +26,8 @@
         <EmptyState
             v-else
             :icon="Gauge"
-            title="Score indisponible"
-            message="Le score de ce personnage n’a pas pu être calculé. Il apparaîtra au prochain chargement de la fiche."
+            :title="$t('sheet.overview.score_unavailable.title')"
+            :message="$t('sheet.overview.score_unavailable.message')"
         />
     </div>
 </template>
@@ -37,6 +37,9 @@ import { computed } from 'vue';
 import { Gauge } from 'lucide-vue-next';
 import { dimensionColor, readableVariants, rgbToHex } from '../utils/wowColors';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useTranslate } from '../composables/useTranslate';
 import { DIMENSION_VIEWS, useSheetNavigation } from '../composables/useSheetNavigation';
 import EmptyState from './ui/EmptyState.vue';
 import StatTile from './ui/StatTile.vue';
@@ -53,24 +56,26 @@ const TODO_PAGE = '/mon-compte/a-faire';
 
 const { urlOf, show } = useSheetNavigation(() => props.realm, () => props.name);
 
-const formatNumber = (value) => Number(value ?? 0).toLocaleString('fr-FR');
+const t = useTranslate();
+const { formatNumber } = useLocaleFormat();
+const { localizedUrl } = useLocalizedUrl();
 
 const { readable, safe } = useWowColor();
 
 // Each counter takes the colour of its dimension of the score, as in the radar.
 const counters = computed(() => {
     const list = [
-        { label: 'Montures', value: formatNumber(props.character.mountsCount), color: dimensionColor('mounts') },
-        { label: 'Mascottes', value: formatNumber(props.character.petsCount), color: dimensionColor('pets') },
-        { label: 'Décorations', value: formatNumber(props.character.decorCount), color: dimensionColor('decor') },
-        { label: 'Réputations terminées', value: formatNumber(props.character.exaltedCount), color: dimensionColor('reputations') },
-        { label: 'Points de hauts-faits', value: formatNumber(props.character.achievementPoints), color: dimensionColor('achievements') },
+        { label: t('score.dimension.mounts'), value: formatNumber(props.character.mountsCount), color: dimensionColor('mounts') },
+        { label: t('score.dimension.pets'), value: formatNumber(props.character.petsCount), color: dimensionColor('pets') },
+        { label: t('score.dimension.decor'), value: formatNumber(props.character.decorCount), color: dimensionColor('decor') },
+        { label: t('sheet.overview.reputations_done'), value: formatNumber(props.character.exaltedCount), color: dimensionColor('reputations') },
+        { label: t('sheet.overview.achievement_points'), value: formatNumber(props.character.achievementPoints), color: dimensionColor('achievements') },
     ];
 
     const keystone = props.character.mythicKeystone;
     if (keystone?.rating) {
         list.push({
-            label: 'Cote Mythique+',
+            label: t('sheet.overview.mythic_rating'),
             value: formatNumber(Math.round(keystone.rating)),
             color: safe((rgb) => readableVariants(rgbToHex(rgb)), keystone.rating_color),
         });
@@ -80,7 +85,7 @@ const counters = computed(() => {
 });
 
 // The list of what is left belongs to the account: only its owner is sent there, on this character.
-const todoUrl = computed(() => (props.isOwner ? `${TODO_PAGE}?${new URLSearchParams({ personnage: props.character.name })}` : ''));
+const todoUrl = computed(() => (props.isOwner ? `${localizedUrl(TODO_PAGE)}?${new URLSearchParams({ personnage: props.character.name })}` : ''));
 
 const dimensionLinks = computed(() => Object.fromEntries(
     Object.entries(DIMENSION_VIEWS).map(([key, view]) => [key, urlOf(view.section, view.sub)]),

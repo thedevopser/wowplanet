@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 @inject('themeBootScript', 'App\Http\Theme\ThemeBootScript')
-<html lang="fr" @class(['dark' => ($page['props']['theme'] ?? null) === \App\Http\Theme\ThemeChoice::Dark->value])>
+<html lang="{{ app()->getLocale() }}" @class(['dark' => ($page['props']['theme'] ?? null) === \App\Http\Theme\ThemeChoice::Dark->value])>
 
 <head>
     <meta charset="utf-8">
     <script>{!! $themeBootScript->source() !!}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="max-image-preview:large">
-    <meta name="content-language" content="fr">
+    <meta name="content-language" content="{{ app()->getLocale() }}">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -26,6 +26,12 @@
     @endproduction
 
     <script src="https://wow.zamimg.com/js/tooltips.js"></script>
+
+    @if (! empty($page['props']['alternateUrls']))
+    <link rel="alternate" hreflang="fr" href="{{ strtok($page['props']['alternateUrls']['fr'], '?') }}">
+    <link rel="alternate" hreflang="en" href="{{ strtok($page['props']['alternateUrls']['en'], '?') }}">
+    <link rel="alternate" hreflang="x-default" href="{{ strtok($page['props']['alternateUrls']['fr'], '?') }}">
+    @endif
 
     @vite(['resources/css/app.css', 'resources/js/inertia.js'])
     @inertiaHead

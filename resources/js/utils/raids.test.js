@@ -16,10 +16,10 @@ const RAID = {
 describe('DIFFICULTIES', () => {
     it('lists the four difficulties in game order, each with its quality colour', () => {
         expect(DIFFICULTIES.map((difficulty) => [difficulty.type, difficulty.label, difficulty.short, difficulty.quality])).toEqual([
-            ['LFR', 'Outil Raids', 'LFR', 'UNCOMMON'],
-            ['NORMAL', 'Normal', 'N', 'RARE'],
-            ['HEROIC', 'Héroïque', 'H', 'EPIC'],
-            ['MYTHIC', 'Mythique', 'M', 'LEGENDARY'],
+            ['LFR', 'sheet.raids.raid_finder', 'LFR', 'UNCOMMON'],
+            ['NORMAL', 'raid.difficulty.normal', 'N', 'RARE'],
+            ['HEROIC', 'raid.difficulty.heroic', 'H', 'EPIC'],
+            ['MYTHIC', 'raid.difficulty.mythic', 'M', 'LEGENDARY'],
         ]);
     });
 });
@@ -27,10 +27,10 @@ describe('DIFFICULTIES', () => {
 describe('difficultySummaries', () => {
     it('sums up every difficulty, the ones not started included', () => {
         expect(difficultySummaries(RAID)).toEqual([
-            { type: 'LFR', label: 'Outil Raids', short: 'LFR', quality: 'UNCOMMON', started: false, completed: 0, total: 0, cleared: false },
-            { type: 'NORMAL', label: 'Normal', short: 'N', quality: 'RARE', started: true, completed: 4, total: 8, cleared: false },
-            { type: 'HEROIC', label: 'Héroïque', short: 'H', quality: 'EPIC', started: true, completed: 2, total: 8, cleared: false },
-            { type: 'MYTHIC', label: 'Mythique', short: 'M', quality: 'LEGENDARY', started: false, completed: 0, total: 0, cleared: false },
+            { type: 'LFR', label: 'sheet.raids.raid_finder', short: 'LFR', quality: 'UNCOMMON', started: false, completed: 0, total: 0, cleared: false },
+            { type: 'NORMAL', label: 'raid.difficulty.normal', short: 'N', quality: 'RARE', started: true, completed: 4, total: 8, cleared: false },
+            { type: 'HEROIC', label: 'raid.difficulty.heroic', short: 'H', quality: 'EPIC', started: true, completed: 2, total: 8, cleared: false },
+            { type: 'MYTHIC', label: 'raid.difficulty.mythic', short: 'M', quality: 'LEGENDARY', started: false, completed: 0, total: 0, cleared: false },
         ]);
     });
 

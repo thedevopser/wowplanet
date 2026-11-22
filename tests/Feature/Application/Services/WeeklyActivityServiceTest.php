@@ -285,3 +285,18 @@ test('a job whose state is lost is reported failed, and the next call queues a n
     expect(resolve(WeeklyActivityService::class)->getOrCompute('Gothdroid#2855'))->toBe(['status' => 'failed'])
         ->and(resolve(WeeklyActivityService::class)->getOrCompute('Gothdroid#2855')['status'])->toBe('computing');
 });
+
+test('the week is computed and kept in the language of the page that asked for it', function (): void {
+    signedInWith([accountCharacter('Gothdroid', 90)]);
+    blizzardWeek();
+    app()->setLocale('en');
+
+    resolve(WeeklyActivityService::class)->getOrCompute('Gothdroid#2855');
+    Queue::assertPushed(ComputeWeeklyActivityJob::class, fn (ComputeWeeklyActivityJob $computeWeeklyActivityJob): bool => $computeWeeklyActivityJob->locale === 'en');
+    runQueuedWeek();
+    app()->setLocale('fr');
+
+    expect(resolve(WeeklyActivityService::class)->getOrCompute('Gothdroid#2855')['status'])->toBe('computing');
+    app()->setLocale('en');
+    expect(resolve(WeeklyActivityService::class)->getOrCompute('Gothdroid#2855')['status'])->toBe('ready');
+});

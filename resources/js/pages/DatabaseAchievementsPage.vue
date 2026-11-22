@@ -10,20 +10,20 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <DatabasePageHeader
-            title="Hauts-faits"
-            :subtitle="activeExpansionName || 'Toutes les extensions'"
+            :title="$t('database.sections.achievements.label')"
+            :subtitle="activeExpansionName || $t('database.all_expansions')"
             :count="total"
-            count-label="hauts-faits"
+            :count-label="$t('database.achievements.count_label')"
             dimension="achievements"
         />
 
         <SearchFilter
             v-model:search="search"
-            placeholder="Rechercher un haut-fait…"
+            :placeholder="$t('database.achievements.search')"
             :show-hide-toggle="false"
             :debounce-ms="300"
             @search-debounced="searchFor"
@@ -34,25 +34,25 @@
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des hauts-faits"
+            :label="$t('database.achievements.pages')"
             @page-change="goToPage"
         />
 
-        <CatalogTable v-if="items.length" caption="Liste des hauts-faits" :columns="COLUMNS" :rows="items" :busy="busy">
-            <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="row.name_fr" fallback="HF" size="sm" class="text-muted" /></template>
+        <CatalogTable v-if="items.length" :caption="$t('database.achievements.caption')" :columns="COLUMNS" :rows="items" :busy="busy">
+            <template #cell-icon="{ row }"><CollectionIcon :src="row.icon_url" :alt="nameOf(row)" fallback="HF" size="sm" class="text-muted" /></template>
             <template #cell-name="{ row, linkClass }">
-                <a :class="linkClass" :href="`https://www.wowhead.com/fr/achievement=${row.id}`" target="_blank" rel="noopener" class="text-default hover:underline">{{ row.name_fr }}</a>
+                <a :class="linkClass" :href="wowheadLink(`achievement=${row.id}`)" target="_blank" rel="noopener" class="text-default hover:underline">{{ nameOf(row) }}</a>
             </template>
-            <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
-            <template #cell-points="{ row }"><span class="tabular-nums text-muted">{{ row.points }} pts</span></template>
+            <template #cell-category="{ row }"><span class="text-muted">{{ categoryNameOf(row) }}</span></template>
+            <template #cell-points="{ row }"><span class="tabular-nums text-muted">{{ $t('database.points', { points: String(row.points) }) }}</span></template>
         </CatalogTable>
-        <EmptyState v-else :icon="SearchX" title="Aucun résultat trouvé" message="Aucune entrée ne correspond à cette recherche." />
+        <EmptyState v-else :icon="SearchX" :title="$t('database.empty.title')" :message="$t('database.empty.message')" />
 
         <DatabasePagination
             :current-page="current_page"
             :last-page="last_page"
             :total="total"
-            label="Pages des hauts-faits"
+            :label="$t('database.achievements.pages')"
             @page-change="goToPage"
         />
     </div>
@@ -78,13 +78,18 @@ import DatabasePageHeader from '../components/DatabasePageHeader.vue';
 import DatabasePagination from '../components/DatabasePagination.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import { useCatalogPaging } from '../composables/useCatalogPaging';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useTranslate } from '../composables/useTranslate';
 
-const COLUMNS = [
-    { key: 'icon', label: 'Icône', visuallyHidden: true, class: 'w-12' },
-    { key: 'name', label: 'Nom' },
-    { key: 'category', label: 'Catégorie', hideBelow: 'sm' },
-    { key: 'points', label: 'Points', align: 'end', class: 'w-20' },
-];
+const t = useTranslate();
+const { nameOf, wowheadLink, categoryNameOf } = useCatalogLocale();
+
+const COLUMNS = computed(() => [
+    { key: 'icon', label: t('database.columns.icon'), visuallyHidden: true, class: 'w-12' },
+    { key: 'name', label: t('database.columns.name') },
+    { key: 'category', label: t('database.columns.category'), hideBelow: 'sm' },
+    { key: 'points', label: t('database.columns.points'), align: 'end', class: 'w-20' },
+]);
 
 const props = defineProps({
     meta: { type: Object, required: true },

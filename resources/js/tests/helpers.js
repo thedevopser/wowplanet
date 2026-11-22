@@ -1,6 +1,8 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { vi } from 'vitest';
+import { i18nVue } from 'laravel-vue-i18n';
+import { eagerI18nOptions } from '../i18n/translations.js';
 
 export async function mountWithPlugins(component, options = {}) {
     const pinia = createTestingPinia({
@@ -9,9 +11,9 @@ export async function mountWithPlugins(component, options = {}) {
         stubActions: options.stubActions !== false,
     });
 
-    return mount(component, {
+    const wrapper = mount(component, {
         global: {
-            plugins: [pinia],
+            plugins: [pinia, { install: (app) => i18nVue.install(app, eagerI18nOptions(options.locale)) }],
             stubs: options.stubs || {},
             ...options.global,
         },
@@ -19,6 +21,9 @@ export async function mountWithPlugins(component, options = {}) {
         slots: options.slots,
         attachTo: options.attachTo,
     });
+    await flushPromises();
+
+    return wrapper;
 }
 
 // Raw Tailwind palettes and gradients of the old theme: a migrated screen only uses tokens.

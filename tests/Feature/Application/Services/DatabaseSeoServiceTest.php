@@ -294,7 +294,8 @@ test('the rendered sitemap holds every listed page and is served from cache afte
 
     expect($xml)->toContain('<loc>https://wowplanet.test/base-de-donnees/montures/volantes</loc>')
         ->toContain('<changefreq>weekly</changefreq>')
-        ->and(substr_count($xml, '<url>'))->toBe(9)
+        ->toContain('<loc>https://wowplanet.test/en/database/mounts/volantes</loc>')
+        ->and(substr_count($xml, '<url>'))->toBe(18)
         ->and($databaseSeoService->generateSitemap())->toBe($xml);
 });
 

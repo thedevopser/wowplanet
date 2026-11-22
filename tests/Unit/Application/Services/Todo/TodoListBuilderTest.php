@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Services\Todo\TodoDimension;
 use App\Application\Services\Todo\TodoListBuilder;
 use App\Application\Services\Todo\TodoScope;
+use App\Http\Localization\AppLocale;
 
 /**
  * @return array{id: int, name: string, is_completed: bool, source: string|null, category: string|null, wowhead_id: int|null, icon_url: string|null}
@@ -519,4 +520,16 @@ it('hands the page each missing item in the shape of its contract, and nothing m
         'detail' => null,
         'doers' => ['scope' => TodoScope::Account->value, 'characters' => []],
     ]]);
+});
+
+it('links each missing item to the Wowhead page in the language of the page', function (): void {
+    $todo = new TodoListBuilder(AppLocale::English)->build(
+        todoAccountProfile(['mounts' => [todoCollectible(1, true), todoCollectible(2, false, 'Vendor', 5000)]]),
+        ['completedQuestIds' => [], 'completedAchievementIds' => [], 'completedRecipeIds' => [], 'questOwners' => [], 'achievementOwners' => [], 'bestFactionStandings' => [], 'recipeOwners' => [], 'skillPointOwners' => []],
+        [['name' => 'Apery', 'faction' => 'Horde']],
+        [],
+        [],
+    );
+
+    expect($todo[0]['missingItems'][0]['wowheadUrl'])->toBe('https://www.wowhead.com/spell=5000');
 });

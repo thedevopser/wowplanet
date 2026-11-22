@@ -256,3 +256,28 @@ describe('PvpLeaderboardPage', () => {
         await expectNoAxeViolations(wrapper.element);
     });
 });
+
+describe('PvpLeaderboardPage in english', () => {
+    const englishProps = { meta, groups, entries, bracket: '3v3', label: 'Arène 3c3', seasonId: 40, total: 1234, currentPage: 1, lastPage: 1, unavailable: false, search: null };
+
+    it('speaks english and links to the english character sheets', async () => {
+        const wrapper = await mountWithPlugins(PvpLeaderboardPage, { locale: 'en', props: englishProps });
+
+        expect(wrapper.get('h1').text()).toBe('PvP leaderboards');
+        expect(wrapper.text()).toContain('Arena 3v3 — season 40');
+        expect(wrapper.text()).toContain('1,234');
+        expect(wrapper.text()).toContain('ranked players');
+        expect(wrapper.get('[data-testid="pvp-mode-shuffle"]').text()).toBe('Solo Shuffle');
+        expect(wrapper.get('[data-testid="pvp-bracket-option-2v2"]').text()).toBe('Arena 2v2');
+        expect(wrapper.find('a[href="/en/character/hyjal/thrall"]').exists()).toBe(true);
+        expect(wrapper.text()).not.toMatch(/Classements|Arène|joueurs classés/);
+    });
+
+    it('opens another bracket on its english page', async () => {
+        const wrapper = await mountWithPlugins(PvpLeaderboardPage, { locale: 'en', props: englishProps });
+
+        await wrapper.get('[data-testid="pvp-bracket-option-2v2"]').trigger('click');
+
+        expect(routerGet).toHaveBeenLastCalledWith('/en/pvp-leaderboards/2v2', {}, { preserveState: false });
+    });
+});

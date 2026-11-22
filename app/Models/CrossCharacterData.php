@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\WithoutIncrementing;
 use Illuminate\Database\Eloquent\Attributes\WithoutTimestamps;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @phpstan-type StoredCrossCharacterData array<string, mixed>
  *
  * @property string $bnet_user_id
+ * @property string $locale
  * @property StoredCrossCharacterData $data
  * @property int $character_count
  * @property Carbon|null $fetched_at
@@ -28,6 +30,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'bnet_user_id',
+    'locale',
     'data',
     'character_count',
     'fetched_at',
@@ -39,6 +42,18 @@ class CrossCharacterData extends Model
 {
     /** @use HasFactory<Factory<static>> */
     use HasFactory;
+
+    /**
+     * Une ligne par compte et par langue : une sauvegarde ne doit toucher que la sienne.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    #[\Override]
+    protected function setKeysForSaveQuery($query): Builder
+    {
+        return $query->where('bnet_user_id', $this->bnet_user_id)->where('locale', $this->locale);
+    }
 
     /**
      * @return array<string, string>

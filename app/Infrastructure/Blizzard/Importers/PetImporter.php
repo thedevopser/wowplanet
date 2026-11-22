@@ -54,6 +54,7 @@ final readonly class PetImporter
 
         $rows = $this->buildRows(
             $names,
+            $this->fetchEnglishIndexNames(self::INDEX_ENDPOINT, 'pets'),
             $this->fetchDetails(array_keys($names)),
             $this->collectionTaxonomyReader->for(CollectionEntity::Pet),
             $this->existingRows(),
@@ -135,15 +136,16 @@ final readonly class PetImporter
     }
 
     /**
-     * @return array<int, array{name_fr: string, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>
+     * @return array<int, array{name_fr: string, name_en: string|null, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>
      */
     private function existingRows(): array
     {
         $rows = [];
 
-        foreach (WowPet::query()->get(['id', 'name_fr', 'category', 'source', 'creature_id', 'icon_url', 'is_active']) as $pet) {
+        foreach (WowPet::query()->get(['id', 'name_fr', 'name_en', 'category', 'source', 'creature_id', 'icon_url', 'is_active']) as $pet) {
             $rows[$pet->id] = [
                 'name_fr' => $pet->name_fr,
+                'name_en' => $pet->name_en,
                 'category' => $pet->category,
                 'source' => $pet->source,
                 'creature_id' => $pet->creature_id,
@@ -157,12 +159,13 @@ final readonly class PetImporter
 
     /**
      * @param  array<int, string>  $names
+     * @param  array<int, string>  $englishNames
      * @param  array<int, PetDocument>  $details
      * @param  array<int, TaxonomyEntry>  $taxonomy
-     * @param  array<int, array{name_fr: string, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>  $existing
-     * @return list<array{id: int, name_fr: string, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>
+     * @param  array<int, array{name_fr: string, name_en: string|null, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>  $existing
+     * @return list<array{id: int, name_fr: string, name_en: string|null, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>
      */
-    private function buildRows(array $names, array $details, array $taxonomy, array $existing): array
+    private function buildRows(array $names, array $englishNames, array $details, array $taxonomy, array $existing): array
     {
         $rows = [];
         $awaitingArbitration = 0;
@@ -180,6 +183,7 @@ final readonly class PetImporter
 
             $row = [
                 'name_fr' => $nameFr,
+                'name_en' => $englishNames[$id] ?? $previous['name_en'] ?? null,
                 'category' => $entry?->category,
                 'source' => $entry instanceof TaxonomyEntry
                     ? $entry->source
@@ -209,7 +213,7 @@ final readonly class PetImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, category: string|null, source: string|null, creature_id: int|null, icon_url: string|null, is_active: bool}>  $rows
      * @param  list<int>  $catalogIds
      */
     private function saveRows(array $rows, array $catalogIds): void
@@ -220,7 +224,7 @@ final readonly class PetImporter
             WowPet::query()->upsert(
                 $chunk,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'category', 'source', 'creature_id', 'icon_url', 'is_active'],
+                update: ['name_fr', 'name_en', 'category', 'source', 'creature_id', 'icon_url', 'is_active'],
             );
         }
 

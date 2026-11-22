@@ -327,6 +327,23 @@ test('the dungeons of the season are served from the cache on the next call', fu
         ->and($dungeons[1]->name)->toBe('Le val Aveuglant');
 });
 
+test('the dungeons of the season are read again for another language', function (): void {
+    $history = [];
+    $blizzardApiClient = mythicDungeonsClient([
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+        new Response(200, [], connectedRealmIndexBody()),
+        new Response(200, [], mythicLeaderboardIndexBody()),
+    ], $history);
+
+    $blizzardApiClient->getCurrentMythicDungeons();
+
+    app()->setLocale('en');
+    $blizzardApiClient->getCurrentMythicDungeons();
+
+    expect($history)->toHaveCount(4);
+});
+
 test('the dungeons of the season keep their types through the redis cache', function (): void {
     useRedisCache();
     $blizzardApiClient = mythicDungeonsClient([
@@ -495,4 +512,49 @@ test('a pvp season read back from the cache is still an integer', function (): v
     Cache::put('blizzard_current_pvp_season', '40', 3600);
 
     expect(new BlizzardApiClient(new Client)->getCurrentPvpSeasonId())->toBe(40);
+});
+
+test('every call speaks the language of the page', function (string $appLocale, string $blizzardLocale): void {
+    Cache::put('blizzard_access_token', 'my-token', 3600);
+    app()->setLocale($appLocale);
+
+    $history = [];
+    $handlerStack = HandlerStack::create(new MockHandler([
+        new Response(200, [], '{}'),
+        new Response(200, [], '{}'),
+        new Response(200, [], '{}'),
+    ]));
+    $handlerStack->push(Middleware::history($history));
+
+    $client = new BlizzardApiClient(new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']));
+
+    $client->get('profile/wow/character/hyjal/thrall');
+    $client->getAsync('profile/wow/character/hyjal/thrall')->wait();
+    $client->getWithUserToken('profile/user/wow', 'user-token');
+
+    $locales = array_map(function (array $exchange): string {
+        parse_str($exchange['request']->getUri()->getQuery(), $sent);
+
+        return (string) $sent['locale'];
+    }, $history);
+    expect($locales)->toBe([$blizzardLocale, $blizzardLocale, $blizzardLocale]);
+})->with([
+    ['fr', 'fr_FR'],
+    ['en', 'en_US'],
+]);
+
+test('an explicit locale wins over the language of the page', function (): void {
+    Cache::put('blizzard_access_token', 'my-token', 3600);
+    app()->setLocale('fr');
+
+    $history = [];
+    $handlerStack = HandlerStack::create(new MockHandler([new Response(200, [], '{}')]));
+    $handlerStack->push(Middleware::history($history));
+
+    $client = new BlizzardApiClient(new Client(['handler' => $handlerStack, 'base_uri' => 'https://eu.api.blizzard.com/']));
+
+    $client->get('data/wow/pet/index', ['namespace' => 'static-eu', 'locale' => 'en_US']);
+
+    parse_str($history[0]['request']->getUri()->getQuery(), $sent);
+    expect($sent['locale'])->toBe('en_US');
 });

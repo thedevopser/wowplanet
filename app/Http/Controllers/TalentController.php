@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Application\Services\Progress\TalentAggregator;
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\PromiseSettler;
 use App\Infrastructure\Blizzard\Responses\MediaIconResponse;
@@ -96,7 +97,7 @@ class TalentController extends Controller
         $region = $this->blizzardApiClient->getRegion();
 
         $cached = Cache::remember(
-            sprintf('talent_tree:v2:%d:%d', $talentTreeId, $specId),
+            AppLocale::current()->scopedCacheKey(sprintf('talent_tree:v2:%d:%d', $talentTreeId, $specId)),
             self::STATIC_DATA_TTL_S,
             function () use ($endpoint, $region): array {
                 $tree = $this->blizzardApiClient->get($endpoint, ['namespace' => 'static-'.$region]);

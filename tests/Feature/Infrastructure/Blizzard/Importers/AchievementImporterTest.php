@@ -30,6 +30,11 @@ function mockAchievementHierarchy(MockInterface $mock, array $categories): void
     foreach ($categories as $category) {
         mockAchievementCategory($mock, $category);
     }
+
+    $mock->shouldReceive('get')
+        ->with('data/wow/achievement/index', Mockery::any())
+        ->andReturn(['achievements' => []])
+        ->byDefault();
 }
 
 /**
@@ -322,4 +327,35 @@ test('the report names the categories nothing dates and the dating signals going
     expect($reported)->toContain("Quêtes > Voile d'hiver")
         ->and($reported)->toContain('Quêtes > Norfendre: 41999 Bien trop récent')
         ->and($reported)->toContain('going stale');
+});
+
+test('it stores the english name read from the achievement index in english', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/achievement/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(['achievements' => [['id' => 504, 'name' => '100 Quests Completed']]]);
+    mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
+    mockAchievementDetails($client, [504 => ['points' => 10]]);
+    mockAchievementMedia($client, [0 => [504 => null]]);
+
+    resolve(AchievementImporter::class)->import();
+
+    expect(WowAchievement::query()->findOrFail(504)->name_en)->toBe('100 Quests Completed');
+});
+
+test('it stores the english name of the root category read from the category index in english', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/achievement-category/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(['categories' => [['id' => 96, 'name' => 'Quests']]]);
+    mockAchievementHierarchy($client, [['id' => 96, 'name' => 'Quêtes', 'achievements' => [504 => '100 quêtes achevées']]]);
+    mockAchievementDetails($client, [504 => ['points' => 10]]);
+    mockAchievementMedia($client, [0 => [504 => null]]);
+
+    resolve(AchievementImporter::class)->import();
+
+    expect(WowAchievement::query()->findOrFail(504)->category_name)->toBe('Quêtes')
+        ->and(WowAchievement::query()->findOrFail(504)->category_name_en)->toBe('Quests');
 });

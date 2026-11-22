@@ -348,3 +348,38 @@ describe('DatabaseLayout', () => {
         expect(names).toEqual(['The War Within', 'Classic']);
     });
 });
+
+describe('DatabaseLayout in english', () => {
+    it('links the sections to the english pages and keeps the active one open', async () => {
+        __page.url = '/en/database/mounts/flying';
+        __page.props = { locale: 'en', subCategories: { mounts: [{ slug: 'flying', name: 'Flying', count: 42 }] } };
+
+        const wrapper = await mountWithPlugins(DatabaseLayout, { locale: 'en', slots: { default: '<p>Mounts</p>' } });
+        const current = sidebarNav(wrapper).findAll('[aria-current="page"]');
+
+        expect(wrapper.get('aside a').attributes('href')).toBe('/en/database');
+        expect(wrapper.get('aside a').text()).toBe('Database');
+        expect(current.map((link) => link.attributes('href'))).toEqual(['/en/database/mounts/flying']);
+        expect(current[0].text()).toContain('Flying');
+    });
+
+    it('shows a loader during a full navigation inside the english database', async () => {
+        const wrapper = await mountLayout();
+
+        startVisit('/en/database/quests');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.find('[data-navigating][role="status"]').exists()).toBe(true);
+    });
+});
+
+describe('DatabaseLayout touch targets', () => {
+    it('keeps the sub-category pills at least 44 px wide, whatever the length of their label', async () => {
+        __page.url = '/en/database/mounts';
+        __page.props = { locale: 'en', subCategories: { mounts: [{ slug: 'flying', name: 'Flying', count: 1 }] } };
+
+        const wrapper = await mountWithPlugins(DatabaseLayout, { locale: 'en' });
+
+        expect(wrapper.get('[data-mobile-subcategories] a').classes()).toContain('min-w-11');
+    });
+});

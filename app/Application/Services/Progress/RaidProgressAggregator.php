@@ -39,10 +39,10 @@ class RaidProgressAggregator
 
     // @pest-mutate-ignore
     private const array DIFFICULTY_LABELS = [
-        'LFR' => 'LFR',
-        'NORMAL' => 'Normal',
-        'HEROIC' => 'Héroïque',
-        'MYTHIC' => 'Mythique',
+        'LFR' => 'raid.difficulty.lfr',
+        'NORMAL' => 'raid.difficulty.normal',
+        'HEROIC' => 'raid.difficulty.heroic',
+        'MYTHIC' => 'raid.difficulty.mythic',
     ];
 
     /**
@@ -114,7 +114,7 @@ class RaidProgressAggregator
 
         return [
             'difficulty_type' => $type,
-            'difficulty_label' => self::DIFFICULTY_LABELS[$type] ?? $type,
+            'difficulty_label' => isset(self::DIFFICULTY_LABELS[$type]) ? __(self::DIFFICULTY_LABELS[$type]) : $type,
             'completed_count' => $raidMode->completedCount ?? 0,
             'total_count' => $raidMode->totalCount ?? 0,
             'encounters' => array_map(

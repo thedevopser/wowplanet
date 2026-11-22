@@ -1,24 +1,24 @@
 <template>
     <div class="space-y-6">
-        <EmptyState v-if="!mythic" :icon="Timer" title="Mythique+" message="Aucune donnée Mythique+ pour la saison en cours." />
+        <EmptyState v-if="!mythic" :icon="Timer" :title="$t('sheet.sections.mythic_plus')" :message="$t('sheet.mythic.no_data')" />
 
         <template v-else>
             <Card class="grid gap-6 p-5 sm:p-6 md:grid-cols-[auto_1fr] md:items-center">
                 <div class="flex flex-wrap items-center gap-x-5 gap-y-4">
                     <div>
-                        <h2 class="font-display text-2xl font-semibold text-default">Mythique+</h2>
-                        <p class="mt-1 text-sm text-muted">Saison {{ mythic.season_id }}</p>
+                        <h2 class="font-display text-2xl font-semibold text-default">{{ $t('sheet.sections.mythic_plus') }}</h2>
+                        <p class="mt-1 text-sm text-muted">{{ $t('sheet.season', { season: mythic.season_id }) }}</p>
                     </div>
                     <div class="border-l border-default pl-5">
-                        <p class="text-xs font-medium text-subtle">Cote</p>
+                        <p class="text-xs font-medium text-subtle">{{ $t('sheet.mythic.rating') }}</p>
                         <p data-rating class="text-4xl font-bold leading-none tabular-nums" :style="{ color: readable(apiColor(mythic.rating_color)) }">
                             {{ formatNumber(Math.round(mythic.rating)) }}
                         </p>
                     </div>
                     <div v-if="mythic.resilience" data-resilience class="border-l border-default pl-5">
-                        <p class="text-xs font-medium text-subtle">Rési</p>
+                        <p class="text-xs font-medium text-subtle">{{ $t('sheet.mythic.resilience') }}</p>
                         <p v-if="mythic.resilience.level" class="text-4xl font-bold leading-none tabular-nums text-default">+{{ mythic.resilience.level }}</p>
-                        <p v-else class="text-lg font-semibold leading-10 text-muted">Aucune</p>
+                        <p v-else class="text-lg font-semibold leading-10 text-muted">{{ $t('sheet.mythic.none') }}</p>
                     </div>
                 </div>
                 <dl data-season-stats class="grid grid-cols-3 gap-3 md:justify-self-end">
@@ -31,7 +31,7 @@
 
             <ResilienceGoal v-if="mythic.resilience" :resilience="mythic.resilience" />
 
-            <EmptyState v-if="!cards.length" :icon="Timer" title="Aucune course" message="Aucune course enregistrée cette saison." />
+            <EmptyState v-if="!cards.length" :icon="Timer" :title="$t('sheet.mythic.no_run.title')" :message="$t('sheet.mythic.no_run.message')" />
 
             <ul v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <Card v-for="card in cards" :key="card.dungeon_id" as="li" :data-dungeon="card.dungeon_id" class="flex flex-col">
@@ -46,11 +46,11 @@
                             <RunTiming :timed="card.lead.is_timed" />
                             <dl class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                 <div class="flex gap-1">
-                                    <dt class="text-subtle">Score</dt>
+                                    <dt class="text-subtle">{{ $t('sheet.mythic.score') }}</dt>
                                     <dd class="font-semibold tabular-nums" :style="{ color: readable(apiColor(card.lead.map_score_color)) }">{{ Math.round(card.lead.map_score) }}</dd>
                                 </div>
                                 <div class="flex gap-1">
-                                    <dt class="text-subtle">Durée</dt>
+                                    <dt class="text-subtle">{{ $t('sheet.mythic.duration') }}</dt>
                                     <dd class="tabular-nums text-default">{{ formatRunDuration(card.lead.duration_ms) }}</dd>
                                 </div>
                             </dl>
@@ -62,7 +62,7 @@
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                             <span class="font-bold tabular-nums" :style="{ color: readable(apiColor(card.other.map_score_color)) }">+{{ card.other.level }}</span>
                             <RunTiming :timed="card.other.is_timed" />
-                            <span class="text-subtle">Score <span class="font-semibold tabular-nums text-default">{{ Math.round(card.other.map_score) }}</span></span>
+                            <span class="text-subtle">{{ $t('sheet.mythic.score') }} <span class="font-semibold tabular-nums text-default">{{ Math.round(card.other.map_score) }}</span></span>
                             <span class="tabular-nums text-subtle">{{ formatRunDuration(card.other.duration_ms) }}</span>
                             <span class="text-xs text-subtle">{{ formatDate(card.other.completed_at) }}</span>
                         </div>
@@ -78,6 +78,8 @@ import { computed } from 'vue';
 import { Timer } from 'lucide-vue-next';
 import { useCharacterStore } from '../stores/character';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useTranslate } from '../composables/useTranslate';
 import { dungeonCards, formatRunDuration, seasonStats } from '../utils/mythicRuns';
 import { readableVariants, rgbToHex } from '../utils/wowColors';
 import Card from './ui/Card.vue';
@@ -86,6 +88,8 @@ import ResilienceGoal from './sheet/ResilienceGoal.vue';
 import RunTiming from './sheet/RunTiming.vue';
 
 const store = useCharacterStore();
+const t = useTranslate();
+const { formatNumber, formatDate: formatLocaleDate } = useLocaleFormat();
 const { readable, safe } = useWowColor();
 
 const mythic = computed(() => store.character?.mythicKeystone ?? null);
@@ -95,9 +99,9 @@ const statsList = computed(() => {
     const stats = seasonStats(mythic.value?.best_runs);
 
     return [
-        { label: 'Donjons joués', value: String(stats.dungeons) },
-        { label: 'Plus haute clé dans les temps', value: stats.highestTimed === null ? '—' : `+${stats.highestTimed}` },
-        { label: 'Donjons dans les temps', value: `${stats.timedDungeons} / ${stats.dungeons}` },
+        { label: t('sheet.mythic.dungeons_played'), value: String(stats.dungeons) },
+        { label: t('sheet.mythic.highest_timed'), value: stats.highestTimed === null ? '—' : `+${stats.highestTimed}` },
+        { label: t('sheet.mythic.timed_dungeons'), value: `${stats.timedDungeons} / ${stats.dungeons}` },
     ];
 });
 
@@ -110,9 +114,7 @@ function keyStyle(run) {
     return color ? { color: readable(color), borderColor: color.base } : undefined;
 }
 
-const formatNumber = (value) => Number(value).toLocaleString('fr-FR');
-
 function formatDate(timestamp) {
-    return timestamp ? new Date(timestamp).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    return timestamp ? formatLocaleDate(timestamp, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 }
 </script>

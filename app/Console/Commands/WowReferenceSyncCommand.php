@@ -89,7 +89,7 @@ class WowReferenceSyncCommand extends Command
         $table = $referenceCatalog->find($requested);
 
         if (! $table instanceof ReferenceTable) {
-            throw UnknownTableException::named($requested, $referenceCatalog->sources());
+            throw UnknownTableException::named($requested, $referenceCatalog->names());
         }
 
         return [$table];
@@ -104,7 +104,7 @@ class WowReferenceSyncCommand extends Command
         $sizes = [];
 
         foreach ($tables as $table) {
-            $sizes[$table->source] = $referenceStore->put($table, $build, $wagoClient->fetch($table));
+            $sizes[$table->name()] = $referenceStore->put($table, $build, $wagoClient->fetch($table));
         }
 
         return $sizes;
@@ -138,15 +138,15 @@ class WowReferenceSyncCommand extends Command
             WowReferenceDownload::query()->updateOrCreate(
                 ['filename' => $table->filename($build)],
                 [
-                    'source_table' => $table->source,
+                    'source_table' => $table->name(),
                     'build' => $build,
-                    'bytes' => $sizes[$table->source],
+                    'bytes' => $sizes[$table->name()],
                     'row_count' => $loaded,
                     'downloaded_at' => Date::now(),
                 ],
             );
 
-            $results[] = ['source' => $table->source, 'loaded' => $loaded, 'previous' => $previous];
+            $results[] = ['source' => $table->name(), 'loaded' => $loaded, 'previous' => $previous];
         }
 
         return $results;
@@ -155,7 +155,7 @@ class WowReferenceSyncCommand extends Command
     private function previousRowCount(ReferenceTable $referenceTable): ?int
     {
         $download = WowReferenceDownload::query()
-            ->where('source_table', $referenceTable->source)
+            ->where('source_table', $referenceTable->name())
             ->latest('downloaded_at')
             ->first();
 
@@ -172,7 +172,7 @@ class WowReferenceSyncCommand extends Command
             return;
         }
 
-        throw TruncatedSourceException::collapsed($referenceTable->source, $loaded, $previous);
+        throw TruncatedSourceException::collapsed($referenceTable->name(), $loaded, $previous);
     }
 
     /**

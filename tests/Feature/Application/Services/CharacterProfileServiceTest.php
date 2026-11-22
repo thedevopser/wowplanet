@@ -915,3 +915,19 @@ test('get profile falls back to empty values when every endpoint is empty', func
 
     expect(json_encode($characterProfileDTO, PROFILE_SNAPSHOT_FLAGS))->toMatchSnapshot();
 });
+
+test('the score of a character is the same in both languages', function (): void {
+    seedFullProfileCatalog();
+    WowMount::query()->whereKey(200)->update(['name_en' => 'Black Wolf']);
+    $mock = $this->partialMock(BlizzardApiClient::class);
+    configureFullProfileClient($mock);
+    $mock->shouldReceive('getCurrentMythicDungeons')->andReturn([new MythicDungeon(501, 'Faille')]);
+    $this->mock(UserCharacterService::class)->shouldReceive('getClassIcons')->andReturn([]);
+
+    $frenchScore = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall')->score;
+    app()->setLocale('en');
+    $englishProfile = resolve(CharacterProfileService::class)->getProfile('Hyjal', 'Thrall');
+
+    expect($englishProfile->score)->toEqual($frenchScore)
+        ->and(collect($englishProfile->mounts)->firstWhere('id', 200)['name'] ?? null)->toBe('Black Wolf');
+});

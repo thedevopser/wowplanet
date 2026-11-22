@@ -37,12 +37,14 @@ class ComputeCrossCharacterJob implements DescribedJob, ShouldBeEncrypted, Shoul
         public readonly array $characters,
         public readonly string $accessToken,
         public readonly string $battleTag,
+        public readonly string $locale = 'fr',
     ) {
         $this->queue = 'imports';
     }
 
     public function handle(CrossCharacterService $crossCharacterService): void
     {
+        app()->setLocale($this->locale);
         ini_set('memory_limit', '256M');
         Cache::put($this->cacheKey(), ['status' => 'running'], 3600);
 
@@ -52,7 +54,7 @@ class ComputeCrossCharacterJob implements DescribedJob, ShouldBeEncrypted, Shoul
 
         $result = $crossCharacterProgress->buildResult();
 
-        CrossCharacterData::query()->updateOrCreate(['bnet_user_id' => $this->bnetUserId], [
+        CrossCharacterData::query()->updateOrCreate(['bnet_user_id' => $this->bnetUserId, 'locale' => $this->locale], [
             'data' => $result,
             'character_count' => count($this->characters),
             'fetched_at' => now(),

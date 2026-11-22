@@ -87,3 +87,22 @@ describe('AccountPage', () => {
         await expectNoAxeViolations(wrapper.element);
     });
 });
+
+describe('AccountPage in english', () => {
+    it('names the account and its views in english, under /en', async () => {
+        wrapper = await mountWithPlugins(AccountPage, {
+            locale: 'en',
+            props: { view: 'personnages' },
+            stubs: { CharactersView: true, TodoView: true, WeekView: true, ScoreView: true, ClassesView: true },
+            attachTo: document.body,
+        });
+        await flushPromises();
+
+        expect(wrapper.get('h1').text()).toBe('My account');
+        expect(tabs().map((tab) => tab.text())).toEqual(['Characters', 'To do', 'Week', 'Account score', 'Classes']);
+        expect(wrapper.find('[data-head] title').text()).toBe('My characters - WowPlanet');
+
+        await tabs()[1].trigger('mousedown', { button: 0 });
+        expect(router.push.mock.calls.at(-1)[0].url).toBe('/en/my-account/a-faire');
+    });
+});

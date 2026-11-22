@@ -143,3 +143,18 @@ describe('ReputationsTab', () => {
         expect(badge('Valeera').text()).toBe('Niveau 80 · max');
     });
 });
+
+describe('ReputationsTab in english', () => {
+    it('speaks english and links to the english Wowhead', async () => {
+        const wrapper = await mountWithPlugins(ReputationsTab, {
+            locale: 'en',
+            initialState: { character: { character: characterData, crossCharacter: null } },
+            stubActions: false,
+        });
+
+        expect(wrapper.find('h2').text()).toBe('Reputations');
+        expect(wrapper.text()).toContain('Hide unstarted');
+        expect(card(wrapper, 'Council of Dornogal').find('a').attributes('href')).toBe('https://www.wowhead.com/faction=2600');
+        expect(wrapper.text()).not.toMatch(/Masquer|Factions dont/);
+    });
+});

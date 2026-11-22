@@ -44,7 +44,7 @@ export function dungeonCards(runs = []) {
 
             return { dungeon_id: id, name: lead.dungeon_name, lead, other: inTime ? late : null };
         })
-        .toSorted((a, b) => b.lead.level - a.lead.level || a.name.localeCompare(b.name, 'fr'));
+        .toSorted((a, b) => b.lead.level - a.lead.level || a.name.localeCompare(b.name));
 }
 
 export function seasonStats(runs = []) {

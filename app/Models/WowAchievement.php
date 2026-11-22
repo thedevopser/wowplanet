@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $name_fr
+ * @property string|null $name_en
  * @property int $expansion_id
  * @property string $category_name
+ * @property string|null $category_name_en
  * @property string|null $icon_url
  * @property int $points
  * @property string|null $faction
@@ -27,8 +29,10 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'id',
     'name_fr',
+    'name_en',
     'expansion_id',
     'category_name',
+    'category_name_en',
     'icon_url',
     'points',
     'faction',

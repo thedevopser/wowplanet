@@ -4,14 +4,14 @@
             <h1 class="font-display text-3xl font-bold text-default sm:text-4xl">{{ title }}</h1>
             <p v-if="lead" class="max-w-prose text-lg leading-relaxed text-muted">{{ lead }}</p>
             <p v-if="updatedAt" class="text-sm text-subtle">
-                Dernière mise à jour : <time :datetime="updatedAt">{{ formattedUpdate }}</time>
+                {{ $t('editorial.updated') }} <time :datetime="updatedAt">{{ formattedUpdate }}</time>
             </p>
         </header>
 
         <div v-if="$slots.default" class="mx-auto max-w-5xl gap-8" :class="{ 'lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]': sections.length }">
             <template v-if="sections.length">
                 <aside class="hidden lg:block">
-                    <nav aria-label="Sommaire" class="sticky top-[calc(var(--spacing-header)+1.5rem)] space-y-1 border-l border-default">
+                    <nav :aria-label="$t('editorial.contents')" class="sticky top-[calc(var(--spacing-header)+1.5rem)] space-y-1 border-l border-default">
                         <a
                             v-for="section in sections"
                             :key="section.id"
@@ -23,7 +23,7 @@
                     </nav>
                 </aside>
                 <details class="mb-6 rounded-ui-md border border-default bg-surface lg:hidden">
-                    <summary class="flex min-h-11 cursor-pointer items-center px-4 font-medium text-default">Sommaire</summary>
+                    <summary class="flex min-h-11 cursor-pointer items-center px-4 font-medium text-default">{{ $t('editorial.contents') }}</summary>
                     <ol class="space-y-1 border-t border-default px-4 py-3">
                         <li v-for="section in sections" :key="section.id">
                             <a :href="`#${section.id}`" class="flex min-h-11 items-center text-sm text-muted hover:text-default">{{ section.title }}</a>
@@ -46,6 +46,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useScrollSpy } from '../composables/useScrollSpy';
+import { useActiveLocale } from '../composables/useActiveLocale';
 
 const props = defineProps({
     title: { type: String, required: true },
@@ -56,8 +57,9 @@ const props = defineProps({
     sections: { type: Array, default: () => [] },
 });
 
+const locale = useActiveLocale();
 const current = useScrollSpy(() => props.sections.map((section) => section.id));
 
 const formattedUpdate = computed(() => new Date(`${props.updatedAt}T12:00:00Z`)
-    .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }));
+    .toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }));
 </script>

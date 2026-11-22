@@ -50,16 +50,16 @@
                 @keydown.esc="taskStore.closeSidebar()"
             >
                 <div class="flex items-center justify-between border-b border-default px-4 py-3">
-                    <h2 :id="titleId" class="text-lg font-semibold">Mes tâches</h2>
-                    <IconButton :icon="X" label="Fermer le panneau des tâches" class="-mr-2" @click="taskStore.closeSidebar()" />
+                    <h2 :id="titleId" class="text-lg font-semibold">{{ $t('tasks.title') }}</h2>
+                    <IconButton :icon="X" :label="$t('tasks.close')" class="-mr-2" @click="taskStore.closeSidebar()" />
                 </div>
 
                 <div class="flex-1 space-y-2 overflow-y-auto px-3 py-3">
                     <EmptyState
                         v-if="displayedCharacters.length === 0"
                         :icon="ListChecks"
-                        title="Aucune tâche"
-                        message="Ouvrez la fiche d’un de vos personnages pour lui ajouter des tâches."
+                        :title="$t('tasks.none.title')"
+                        :message="$t('tasks.none.message')"
                     />
 
                     <section
@@ -117,13 +117,13 @@
                                         class="min-w-0 flex-1 truncate py-2 text-sm"
                                         :class="task.is_completed ? 'text-subtle line-through' : 'text-default'"
                                     >{{ task.name }}</label>
-                                    <Badge data-testid="task-frequency" tone="neutral">{{ FREQUENCIES[task.reset_type] }}</Badge>
+                                    <Badge data-testid="task-frequency" tone="neutral">{{ $t(FREQUENCIES[task.reset_type]) }}</Badge>
                                     <IconButton
                                         data-testid="delete-task-btn"
                                         :icon="Trash2"
                                         icon-size="sm"
                                         variant="danger"
-                                        :label="`Supprimer la tâche « ${task.name} »`"
+                                        :label="$t('tasks.delete', { name: task.name })"
                                         @click="taskStore.deleteTask(task.id)"
                                     />
                                 </li>
@@ -132,7 +132,7 @@
                             <div v-if="!isComposing(char)" class="px-2 py-1">
                                 <Button data-testid="add-task-btn" variant="ghost" size="sm" @click="openForm(char)">
                                     <Icon :icon="Plus" size="sm" />
-                                    Nouvelle tâche
+                                    {{ $t('tasks.new') }}
                                 </Button>
                             </div>
 
@@ -143,7 +143,7 @@
                                 @submit.prevent="submitForm(char)"
                             >
                                 <div class="space-y-1">
-                                    <label :for="`${listIdOf(char)}-name`" class="block text-sm font-medium text-muted">Nom de la tâche</label>
+                                    <label :for="`${listIdOf(char)}-name`" class="block text-sm font-medium text-muted">{{ $t('tasks.name') }}</label>
                                     <input
                                         :id="`${listIdOf(char)}-name`"
                                         ref="nameInput"
@@ -156,7 +156,7 @@
                                     >
                                 </div>
                                 <div class="space-y-1">
-                                    <label :for="`${listIdOf(char)}-frequency`" class="block text-sm font-medium text-muted">Fréquence</label>
+                                    <label :for="`${listIdOf(char)}-frequency`" class="block text-sm font-medium text-muted">{{ $t('tasks.frequency') }}</label>
                                     <select
                                         :id="`${listIdOf(char)}-frequency`"
                                         v-model="formResetType"
@@ -164,12 +164,12 @@
                                         class="h-11 w-full rounded-ui-sm border border-strong bg-surface px-3 text-sm text-default
                                             focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                                     >
-                                        <option v-for="(label, value) in FREQUENCIES" :key="value" :value="value">{{ label }}</option>
+                                        <option v-for="(label, value) in FREQUENCIES" :key="value" :value="value">{{ $t(label) }}</option>
                                     </select>
                                 </div>
                                 <div class="flex justify-end gap-2">
-                                    <Button variant="ghost" size="sm" @click="closeForm()">Annuler</Button>
-                                    <Button variant="primary" size="sm" type="submit">Ajouter</Button>
+                                    <Button variant="ghost" size="sm" @click="closeForm()">{{ $t('tasks.cancel') }}</Button>
+                                    <Button variant="primary" size="sm" type="submit">{{ $t('tasks.add') }}</Button>
                                 </div>
                             </form>
                         </div>
@@ -186,9 +186,9 @@ import { ChevronRight, ListChecks, Plus, Trash2, X } from 'lucide-vue-next';
 const DAILY = 'daily';
 
 const FREQUENCIES = Object.freeze({
-    [DAILY]: 'Quotidienne',
-    weekly: 'Hebdomadaire',
-    monthly: 'Mensuelle',
+    [DAILY]: 'tasks.frequencies.daily',
+    weekly: 'tasks.frequencies.weekly',
+    monthly: 'tasks.frequencies.monthly',
 });
 
 const CHARACTER_PATH = /^\/character\/([^/]+)\/([^/]+)$/;
@@ -206,6 +206,8 @@ import Button from '../ui/Button.vue';
 import EmptyState from '../ui/EmptyState.vue';
 import Icon from '../ui/Icon.vue';
 import IconButton from '../ui/IconButton.vue';
+import { useTranslate } from '../../composables/useTranslate';
+import { DEFAULT_LOCALE, localizePath } from '../../i18n/localizePath';
 
 const taskStore = useTaskStore();
 const characterStore = useCharacterStore();
@@ -223,9 +225,11 @@ onMounted(() => {
 const keyOf = (char) => `${char.realm_slug}|${char.character_name}`;
 const listIdOf = (char) => `${panelId}-${char.realm_slug}-${char.character_name}`;
 
+const t = useTranslate();
+
 const toggleLabel = computed(() => (taskStore.totalPendingCount > 0
-    ? `Mes tâches, ${taskStore.totalPendingCount} en attente`
-    : 'Mes tâches'));
+    ? t('tasks.toggle_pending', { count: taskStore.totalPendingCount })
+    : t('tasks.title')));
 
 // Only the owner of a sheet may give it tasks: another player's sheet is never offered.
 const ownedSheetCharacter = computed(() => {
@@ -233,7 +237,7 @@ const ownedSheetCharacter = computed(() => {
         return null;
     }
 
-    const match = page.url.split('?')[0].match(CHARACTER_PATH);
+    const match = localizePath(page.url.split('?')[0], DEFAULT_LOCALE).match(CHARACTER_PATH);
     if (!match) {
         return null;
     }

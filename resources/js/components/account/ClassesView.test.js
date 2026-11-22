@@ -141,3 +141,16 @@ describe('ClassesView', () => {
         expect(wrapper.find('a[href="/auth/blizzard/redirect"]').exists()).toBe(false);
     });
 });
+
+describe('ClassesView in english', () => {
+    it('speaks english', async () => {
+        const wrapper = await mountWithPlugins(ClassesView, {
+            locale: 'en',
+            initialState: { character: { userCharacters, loadingCharacters: false, classIcons: {} } },
+        });
+
+        expect(wrapper.text()).toContain('My classes');
+        expect(wrapper.text()).toContain('1st place');
+        expect(wrapper.text()).not.toMatch(/Mes classes|place\b.*1re|personnage/);
+    });
+});

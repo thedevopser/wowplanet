@@ -221,3 +221,17 @@ describe('PvpTab', () => {
         expect(wrapper.findAll('h3')).toHaveLength(2);
     });
 });
+
+describe('PvpTab in english', () => {
+    it('names the groups and the brackets in english', async () => {
+        axios.get.mockResolvedValue({ data: { pvp: payload } });
+        const wrapper = await mountWithPlugins(PvpTab, { locale: 'en', props: { realm: 'hyjal', name: 'thrall' } });
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Player versus player');
+        expect(wrapper.text()).toContain('Arena 2v2');
+        expect(wrapper.text()).toContain('Solo Shuffle — Ombre');
+        expect(wrapper.text()).toContain('wins');
+        expect(wrapper.text()).not.toMatch(/Arène|Mêlée|victoires/);
+    });
+});

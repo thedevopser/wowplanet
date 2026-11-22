@@ -10,7 +10,7 @@
             <img
                 v-if="character.avatarUrl"
                 :src="character.avatarUrl"
-                :alt="`Avatar de ${character.name}`"
+                :alt="$t('sheet.card.avatar', { name: character.name })"
                 width="48"
                 height="48"
                 loading="lazy"
@@ -24,7 +24,7 @@
             >{{ character.name.charAt(0) }}</span>
             <div class="min-w-0 flex-1">
                 <Link
-                    :href="`/character/${character.realmSlug}/${character.name.toLowerCase()}`"
+                    :href="localizedUrl(`/character/${character.realmSlug}/${character.name.toLowerCase()}`)"
                     data-name
                     class="block truncate text-base font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0"
                     :style="nameStyle"
@@ -35,14 +35,14 @@
                 :icon="Star"
                 :label="ariaLabel"
                 :aria-pressed="String(isFavorite)"
-                :title="favoriteDisabled ? `${maxFavorites} favoris maximum` : ariaLabel"
+                :title="favoriteDisabled ? $t('account.characters.favorites_max', { max: maxFavorites }) : ariaLabel"
                 :disabled="favoriteDisabled"
                 :class="['relative z-10 -mr-2 -mt-2', { '[&_svg]:fill-current text-accent': isFavorite }]"
                 @click="$emit('toggle-favorite')"
             />
         </div>
         <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            <span class="tabular-nums">Niveau {{ character.level }}</span>
+            <span class="tabular-nums">{{ $t('sheet.card.level', { level: character.level }) }}</span>
             <span aria-hidden="true">·</span>
             <span>{{ character.raceName }}</span>
             <span aria-hidden="true">·</span>
@@ -60,6 +60,8 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Star } from 'lucide-vue-next';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useTranslate } from '../composables/useTranslate';
 import { MAX_FAVORITES } from '../stores/favorites';
 import { classColor, factionColor } from '../utils/wowColors';
 import Badge from './ui/Badge.vue';
@@ -75,11 +77,13 @@ const props = defineProps({
 defineEmits(['toggle-favorite']);
 
 const maxFavorites = MAX_FAVORITES;
+const t = useTranslate();
+const { localizedUrl } = useLocalizedUrl();
 const { readable, safe } = useWowColor();
 
 const color = computed(() => safe(classColor, props.character.classId));
 const nameStyle = computed(() => (color.value ? { color: readable(color.value) } : undefined));
 const hasFactionColor = computed(() => safe(factionColor, props.character.faction) !== null);
 
-const ariaLabel = computed(() => (props.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'));
+const ariaLabel = computed(() => (props.isFavorite ? t('account.characters.unfavorite') : t('account.characters.favorite')));
 </script>

@@ -104,3 +104,17 @@ describe('standingLabel', () => {
         expect(standingLabel(faction({ started: false, standing_name: 'Neutre' }))).toBe('Non commencée');
     });
 });
+
+describe('reputations in another language', () => {
+    it('names an unstarted faction and a renown with the given labels', () => {
+        const best = { tier: 0, raw: 25000, renown_level: 12, standing_name: 'Renown 12', completed: false };
+        const own = faction({ account_wide: true, renown_level: 3, standing_name: 'Renown 3' });
+
+        expect(effectiveStanding(own, best, (level) => `Renown ${level}`).standing_name).toBe('Renown 12');
+        expect(standingLabel(faction({ started: false }), { notStarted: 'Not started' })).toBe('Not started');
+    });
+
+    it('says that an english companion level is the last one', () => {
+        expect(standingLabel(faction({ tier: 79, standing_name: 'Level 80', completed: true }))).toBe('Level 80 · max');
+    });
+});

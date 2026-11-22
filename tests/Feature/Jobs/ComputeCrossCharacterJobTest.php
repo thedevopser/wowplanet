@@ -254,3 +254,13 @@ test('the account computation is shown under a readable label and the BattleTag 
         ->label()->toBe('Données des autres personnages')
         ->account()->toBe('Thrall#1234');
 });
+
+test('it computes and stores the account data in the language of the page that queued it', function (): void {
+    stubCrossCharacterMerge(function (): void {
+        expect(app()->getLocale())->toBe('en');
+    });
+
+    new ComputeCrossCharacterJob('job-1', '42', crossCharacterJobCharacters(), 'app-token', 'Thrall#1234', 'en')->handle(resolve(CrossCharacterService::class));
+
+    expect(CrossCharacterData::query()->where('bnet_user_id', '42')->sole()->locale)->toBe('en');
+});

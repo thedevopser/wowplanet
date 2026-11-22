@@ -67,7 +67,7 @@ final readonly class ProfessionImporter
         ['recipes' => $recipes, 'incomplete' => $incomplete, 'skill_levels' => $skillLevels] = $this->fetchRecipes($professions, $recipeFactionMap, $recipeSpellMap);
         $this->info(sprintf('Built %d recipes.', count($recipes)));
 
-        $this->saveProfessions($professions, $skillLevels, $incomplete);
+        $this->saveProfessions($professions, $this->fetchEnglishIndexNames('data/wow/profession/index', 'professions'), $skillLevels, $incomplete);
         $this->deactivateProfessionsNotRetained(array_keys($professions), $unresolved);
         $this->saveRecipes($recipes);
         $this->deactivateRecipesNotReturned(array_column($recipes, 'id'), [...$unresolved, ...$incomplete]);
@@ -156,7 +156,7 @@ final readonly class ProfessionImporter
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
      * @param  array<int, string>  $recipeFactionMap
      * @param  array<int, int>  $recipeSpellMap
-     * @return array{recipes: list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
+     * @return array{recipes: list<array{id: int, name_fr: string, name_en: string|null, profession_id: int, expansion_id: int, category_name: string, category_name_en: string|null, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>, incomplete: list<int>, skill_levels: array<int, array<int, int>>}
      */
     private function fetchRecipes(array $professions, array $recipeFactionMap, array $recipeSpellMap): array
     {
@@ -174,6 +174,9 @@ final readonly class ProfessionImporter
         }
 
         $tierDetails = $this->fetchBatchAsync($endpoints);
+        $englishTierDetails = $this->fetchBatchAsync($endpoints, query: self::ENGLISH_QUERY);
+        $englishRecipeNames = $this->englishRecipeNames($englishTierDetails);
+        $englishRecipeCategories = $this->englishRecipeCategories($englishTierDetails);
 
         $recipes = [];
         $incomplete = [];
@@ -214,9 +217,11 @@ final readonly class ProfessionImporter
                     $recipes[$recipeId] = [
                         'id' => $recipeId,
                         'name_fr' => $recipeName,
+                        'name_en' => $englishRecipeNames[$recipeId] ?? null,
                         'profession_id' => $meta['profession_id'],
                         'expansion_id' => $expansionId,
                         'category_name' => $categoryName,
+                        'category_name_en' => $englishRecipeCategories[$recipeId] ?? null,
                         'faction' => $recipeFactionMap[$recipeId] ?? null,
                         'wowhead_spell_id' => $recipeSpellMap[$recipeId] ?? null,
                         'is_active' => true,
@@ -229,11 +234,61 @@ final readonly class ProfessionImporter
     }
 
     /**
+     * Noms anglais des recettes, lus dans les paliers demandés en anglais. Un palier qui n'a
+     * pas répondu laisse à ses recettes le nom anglais déjà stocké.
+     *
+     * @param  array<int|string, ResponsePayload|null>  $englishTierDetails
+     * @return array<int, string>
+     */
+    private function englishRecipeNames(array $englishTierDetails): array
+    {
+        $names = [];
+        foreach (array_filter($englishTierDetails) as $tierDetail) {
+            foreach ($tierDetail->objectList('categories') as $category) {
+                foreach ($category->objectList('recipes') as $recipe) {
+                    $recipeId = $recipe->optionalInt('id') ?? 0;
+                    $recipeName = trim($recipe->optionalString('name') ?? '');
+                    if ($recipeId > 0 && $recipeName !== '') {
+                        $names[$recipeId] = $recipeName;
+                    }
+                }
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Catégorie anglaise de chaque recette, lue dans les mêmes paliers anglais que ses noms.
+     *
+     * @param  array<int|string, ResponsePayload|null>  $englishTierDetails
+     * @return array<int, string>
+     */
+    private function englishRecipeCategories(array $englishTierDetails): array
+    {
+        $categories = [];
+        foreach (array_filter($englishTierDetails) as $tierDetail) {
+            foreach ($tierDetail->objectList('categories') as $category) {
+                $categoryName = trim($category->optionalString('name') ?? '');
+                foreach ($category->objectList('recipes') as $recipe) {
+                    $recipeId = $recipe->optionalInt('id') ?? 0;
+                    if ($recipeId > 0 && $categoryName !== '') {
+                        $categories[$recipeId] = $categoryName;
+                    }
+                }
+            }
+        }
+
+        return $categories;
+    }
+
+    /**
      * @param  array<int, array{id: int, name_fr: string, type: string, tiers: list<array{id: int, name: string}>}>  $professions
+     * @param  array<int, string>  $englishNames
      * @param  array<int, array<int, int>>  $skillLevels
      * @param  list<int>  $incomplete
      */
-    private function saveProfessions(array $professions, array $skillLevels, array $incomplete): void
+    private function saveProfessions(array $professions, array $englishNames, array $skillLevels, array $incomplete): void
     {
         /** @var Collection<int, WowProfession> $stored */
         $stored = WowProfession::query()
@@ -250,9 +305,11 @@ final readonly class ProfessionImporter
             // A tier that failed to answer keeps the ceiling already known for its expansion.
             $knownLevels = in_array($profession['id'], $incomplete, true) ? ($existing->max_skill_levels ?? []) : [];
             $maxSkillLevels = $this->sortedByExpansion(array_replace($knownLevels, $skillLevels[$profession['id']] ?? []));
+            $nameEn = $englishNames[$profession['id']] ?? $existing?->name_en;
 
             if ($existing instanceof WowProfession
                 && $existing->name_fr === $profession['name_fr']
+                && $existing->name_en === $nameEn
                 && $existing->type === $profession['type']
                 && $this->sortedByExpansion($existing->max_skill_levels ?? []) === $maxSkillLevels
                 && $existing->is_active) {
@@ -262,6 +319,7 @@ final readonly class ProfessionImporter
             $rows[] = [
                 'id' => $profession['id'],
                 'name_fr' => $profession['name_fr'],
+                'name_en' => $nameEn,
                 'type' => $profession['type'],
                 'max_skill_levels' => json_encode($maxSkillLevels, JSON_THROW_ON_ERROR),
                 'is_active' => true,
@@ -272,7 +330,7 @@ final readonly class ProfessionImporter
             WowProfession::query()->upsert(
                 $rows,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'type', 'max_skill_levels', 'is_active'],
+                update: ['name_fr', 'name_en', 'type', 'max_skill_levels', 'is_active'],
             );
         }
 
@@ -315,7 +373,7 @@ final readonly class ProfessionImporter
      * (`SkillLineAbility.Spell`). Une recette que le socle ne connaît pas encore garde
      * la valeur déjà en base.
      *
-     * @param  list<array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>  $recipes
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, profession_id: int, expansion_id: int, category_name: string, category_name_en: string|null, faction: string|null, wowhead_spell_id: int|null, is_active: bool}>  $recipes
      */
     private function saveRecipes(array $recipes): void
     {
@@ -339,6 +397,8 @@ final readonly class ProfessionImporter
                 // un nul à chaque passe lui ferait refaire son travail.
                 $recipe['faction'] ??= $existing?->faction;
                 $recipe['wowhead_spell_id'] ??= $existing?->wowhead_spell_id;
+                $recipe['name_en'] ??= $existing?->name_en;
+                $recipe['category_name_en'] ??= $existing?->category_name_en;
 
                 if ($existing instanceof WowRecipe && $this->isRecipeUnchanged($existing, $recipe)) {
                     continue;
@@ -354,7 +414,7 @@ final readonly class ProfessionImporter
             WowRecipe::query()->upsert(
                 $rows,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'profession_id', 'expansion_id', 'category_name', 'faction', 'wowhead_spell_id', 'is_active'],
+                update: ['name_fr', 'name_en', 'profession_id', 'expansion_id', 'category_name', 'category_name_en', 'faction', 'wowhead_spell_id', 'is_active'],
             );
 
             $written += count($rows);
@@ -391,14 +451,16 @@ final readonly class ProfessionImporter
     }
 
     /**
-     * @param  array{id: int, name_fr: string, profession_id: int, expansion_id: int, category_name: string, faction: string|null, wowhead_spell_id: int|null, is_active: bool}  $recipe
+     * @param  array{id: int, name_fr: string, name_en: string|null, profession_id: int, expansion_id: int, category_name: string, category_name_en: string|null, faction: string|null, wowhead_spell_id: int|null, is_active: bool}  $recipe
      */
     private function isRecipeUnchanged(WowRecipe $wowRecipe, array $recipe): bool
     {
         return $wowRecipe->name_fr === $recipe['name_fr']
+            && $wowRecipe->name_en === $recipe['name_en']
             && $wowRecipe->profession_id === $recipe['profession_id']
             && $wowRecipe->expansion_id === $recipe['expansion_id']
             && $wowRecipe->category_name === $recipe['category_name']
+            && $wowRecipe->category_name_en === $recipe['category_name_en']
             && $wowRecipe->faction === $recipe['faction']
             && $wowRecipe->wowhead_spell_id === $recipe['wowhead_spell_id']
             && $wowRecipe->is_active === $recipe['is_active'];

@@ -172,3 +172,14 @@ describe('MythicPlusTab', () => {
         expect(wrapper.text()).not.toContain('Composition du groupe');
     });
 });
+
+describe('MythicPlusTab in english', () => {
+    it('speaks english', async () => {
+        const wrapper = await mountWithPlugins(MythicPlusTab, { locale: 'en', initialState: { character: { character: { mythicKeystone: mythicData } } } });
+
+        expect(wrapper.text()).toContain('Rating');
+        expect(wrapper.text()).toContain('Dungeons played');
+        expect(wrapper.text()).toContain('Duration');
+        expect(wrapper.text()).not.toMatch(/Saison|Donjons|Durée/);
+    });
+});

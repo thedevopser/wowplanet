@@ -8,6 +8,7 @@ use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\CollectionSearchSweep;
 use App\Infrastructure\Blizzard\Concerns\ImportsFromBlizzardApi;
 use App\Infrastructure\Blizzard\RenderedIconProbe;
+use App\Infrastructure\Blizzard\Responses\MountSearchDocument;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use App\Infrastructure\Blizzard\SearchIdWindow;
 use App\Infrastructure\Reference\ReferenceMaps;
@@ -65,9 +66,11 @@ final readonly class MountImporter
 
         $existing = $this->existingRows();
 
+        $searchDocuments = $this->sweepSearchDocuments(array_keys($names));
+
         $rows = $this->buildRows(
             $names,
-            $this->fetchSourceTypes(array_keys($names)),
+            $searchDocuments,
             $this->collectionTaxonomyReader->for(CollectionEntity::Mount),
             $this->referenceIdentity($existing),
             $existing,
@@ -114,13 +117,13 @@ final readonly class MountImporter
     }
 
     /**
-     * Types de source par balayage de recherche : quatre fenêtres couvrent tout le catalogue,
-     * là où le détail unitaire demanderait un appel par monture.
+     * Type de source et nom anglais par balayage de recherche : quatre fenêtres couvrent tout
+     * le catalogue, là où le détail unitaire demanderait un appel par monture et par langue.
      *
      * @param  list<int>  $ids
-     * @return array<int, string>
+     * @return array<int, MountSearchDocument>
      */
-    private function fetchSourceTypes(array $ids): array
+    private function sweepSearchDocuments(array $ids): array
     {
         $windows = [];
         foreach ($ids as $id) {
@@ -132,20 +135,18 @@ final readonly class MountImporter
 
         $this->info(sprintf('Sweeping %d mount search windows...', count($windows)));
 
-        $sourceTypes = [];
+        $documents = [];
         foreach ($this->collectionSearchSweep->sweepMounts($windows) as $id => $mountSearchDocument) {
-            if ($mountSearchDocument->sourceType !== null) {
-                $sourceTypes[$id] = $mountSearchDocument->sourceType;
-            }
+            $documents[$id] = $mountSearchDocument;
         }
 
-        return $sourceTypes;
+        return $documents;
     }
 
     /**
      * Sort source et icône, que seul le socle porte.
      *
-     * @param  array<int, array{name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
+     * @param  array<int, array{name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
      * @return array<int, array{spell_id: int|null, icon_url: string|null}>
      */
     private function referenceIdentity(array $existing): array
@@ -168,7 +169,7 @@ final readonly class MountImporter
      * les nouvelles sont soumises, ce qui laisse une passe suivante sans aucune requête.
      *
      * @param  array<int, string>  $icons
-     * @param  array<int, array{name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
+     * @param  array<int, array{name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
      * @return array<int, string>
      */
     private function probeIcons(array $icons, array $existing): array
@@ -204,15 +205,16 @@ final readonly class MountImporter
     }
 
     /**
-     * @return array<int, array{name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>
+     * @return array<int, array{name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>
      */
     private function existingRows(): array
     {
         $rows = [];
 
-        foreach (WowMount::query()->get(['id', 'name_fr', 'source', 'category', 'source_spell_id', 'icon_url', 'is_active']) as $mount) {
+        foreach (WowMount::query()->get(['id', 'name_fr', 'name_en', 'source', 'category', 'source_spell_id', 'icon_url', 'is_active']) as $mount) {
             $rows[$mount->id] = [
                 'name_fr' => $mount->name_fr,
+                'name_en' => $mount->name_en,
                 'source' => $mount->source,
                 'category' => $mount->category,
                 'source_spell_id' => $mount->source_spell_id,
@@ -229,13 +231,13 @@ final readonly class MountImporter
      * toucherait les seize cents lignes et le mode incrémental ne voudrait plus rien dire.
      *
      * @param  array<int, string>  $names
-     * @param  array<int, string>  $sourceTypes
+     * @param  array<int, MountSearchDocument>  $searchDocuments
      * @param  array<int, TaxonomyEntry>  $taxonomy
      * @param  array<int, array{spell_id: int|null, icon_url: string|null}>  $reference
-     * @param  array<int, array{name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
-     * @return list<array{id: int, name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>
+     * @param  array<int, array{name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $existing
+     * @return list<array{id: int, name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>
      */
-    private function buildRows(array $names, array $sourceTypes, array $taxonomy, array $reference, array $existing): array
+    private function buildRows(array $names, array $searchDocuments, array $taxonomy, array $reference, array $existing): array
     {
         $rows = [];
         $awaitingArbitration = 0;
@@ -249,11 +251,14 @@ final readonly class MountImporter
 
             $previous = $existing[$id] ?? null;
 
+            $searchDocument = $searchDocuments[$id] ?? null;
+
             $row = [
                 'name_fr' => $nameFr,
+                'name_en' => $searchDocument->nameEn ?? $previous['name_en'] ?? null,
                 'source' => $entry instanceof TaxonomyEntry
                     ? $entry->source
-                    : ApiSourceTypeVocabulary::toPendingSource($sourceTypes[$id] ?? null),
+                    : ApiSourceTypeVocabulary::toPendingSource($searchDocument?->sourceType),
                 'category' => $entry?->category,
                 'source_spell_id' => $reference[$id]['spell_id'] ?? $previous['source_spell_id'] ?? null,
                 'icon_url' => $reference[$id]['icon_url'] ?? $previous['icon_url'] ?? null,
@@ -281,7 +286,7 @@ final readonly class MountImporter
     }
 
     /**
-     * @param  list<array{id: int, name_fr: string, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $rows
+     * @param  list<array{id: int, name_fr: string, name_en: string|null, source: string|null, category: string|null, source_spell_id: int|null, icon_url: string|null, is_active: bool}>  $rows
      * @param  list<int>  $catalogIds
      */
     private function saveRows(array $rows, array $catalogIds): void
@@ -292,7 +297,7 @@ final readonly class MountImporter
             WowMount::query()->upsert(
                 $chunk,
                 uniqueBy: ['id'],
-                update: ['name_fr', 'source', 'category', 'source_spell_id', 'icon_url', 'is_active'],
+                update: ['name_fr', 'name_en', 'source', 'category', 'source_spell_id', 'icon_url', 'is_active'],
             );
         }
 

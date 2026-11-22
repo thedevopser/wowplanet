@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const page = vi.hoisted(() => ({ url: '/base-de-donnees/quetes', props: {} }));
+
 vi.mock('@inertiajs/vue3', () => ({
     Head: { name: 'Head', render: () => null },
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
-    usePage: () => ({ url: '/base-de-donnees/quetes', props: {} }),
+    usePage: () => page,
     router: { get: vi.fn(), visit: vi.fn(), on: vi.fn() },
 }));
 
@@ -111,5 +113,22 @@ describe('DatabaseQuestsPage', () => {
 
         expect(paginations.map((pagination) => pagination.props('placement'))).toEqual(['top', 'bottom']);
         expect(paginations[0].element.compareDocumentPosition(wrapper.find('table').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+});
+
+describe('DatabaseQuestsPage in english', () => {
+    it('shows the english name and zone of a quest, linked to the english Wowhead', async () => {
+        page.props = { locale: 'en' };
+        const wrapper = await mountWithPlugins(DatabaseQuestsPage, {
+            locale: 'en',
+            props: { meta, items: [{ id: 7, name_fr: 'La tâche', name_en: 'The Chore', zone_name: 'Durotar FR', zone_name_en: 'Durotar', faction: null }], total: 1 },
+            stubs: { SearchFilter: true },
+        });
+        page.props = {};
+
+        expect(wrapper.get('tbody a').text()).toBe('The Chore');
+        expect(wrapper.get('tbody a').attributes('href')).toBe('https://www.wowhead.com/quest=7');
+        expect(wrapper.get('tbody').text()).toContain('Durotar');
+        expect(wrapper.get('tbody').text()).not.toContain('Durotar FR');
     });
 });

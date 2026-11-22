@@ -186,3 +186,20 @@ const { queue, interrupted, now } = useQueuePolling(() => props.health.queue);
 - Onglet masqué (`visibilitychange`) : plus aucune mesure ni aucun tic d'horloge ; au retour, une mesure immédiate.
 - Suit la source qu'on lui donne : quand la page recharge `health` (bouton « Rafraîchir », action sur un job échoué), la section rechargée remplace la mesure et règle le rythme.
 - S'arrête avec la portée qui l'a créé (`onScopeDispose`), donc au démontage de la page.
+
+## Langues : `useLocalizedUrl`, `useActiveLocale`, `useTranslate`, `useCatalogLocale`, `useLocaleFormat`, `useScoreLabels`
+
+Les textes vivent dans `resources/lang/fr.json` et `resources/lang/en.json`, partagés avec Laravel, et s'affichent par `$t('clé')` dans les gabarits. `laravel-vue-i18n` est installé dans `inertia.js`, qui ne télécharge que la langue de la page et monte l'application une fois ses textes chargés, et dans `ssr.js`, de façon synchrone. La langue de la page vient de la prop partagée `locale` ; la table `resources/js/i18n/localizedRoutes.json`, lue aussi par le serveur, donne les chemins anglais.
+
+- `useLocalizedUrl()` rend `locale` et `localizedUrl(chemin)` : un lien interne s'écrit avec son chemin français, le chemin de référence, et suit la langue dans laquelle la page est rendue, lue sur l'instance de traduction comme `useActiveLocale()` (`/base-de-donnees/montures` devient `/en/database/mounts`). Un chemin hors de la table (administration, authentification, lien externe) reste tel quel.
+- `useActiveLocale()` rend la langue dans laquelle les textes sont rendus, lue sur l'instance de traduction, pour le formatage des nombres et des dates ; il ne dépend pas d'Inertia.
+- `useTranslate()` rend la fonction de traduction pour les textes construits dans un script, comme les colonnes d'un tableau ; `useTranslateChoice()` celle des textes qui dépendent d'un nombre (`« 1 donjon restant|:count donjons restants »`).
+- `useCatalogLocale()` rend ce qu'une page du catalogue affiche dans la langue de la page : `nameOf(entrée)` (`name_en`, à défaut `name_fr`), `categoryLabel()` et `sourceLabel()` (la taxonomie curée, écrite en anglais, n'est traduite que pour les pages françaises) `wowheadLink(chemin)` (`wowhead.com/fr` ou `wowhead.com`) et `wowheadUrl(type, objet)`, le lien d'une quête, d'un haut-fait ou d'une collection.
+- `useLocaleFormat()` rend `formatNumber`, `formatScore`, `formatDate` et `compareNames` dans la langue de la page : plus aucun composant n'écrit `fr-FR` en dur.
+- `useScoreLabels()` rend `rankLabel(rang)` et `dimensionLabel(clé)`. Le serveur nomme le rang en français, ce qui sert aussi de clé à sa couleur : seul son libellé est traduit.
+
+Le lien de connexion se construit par `loginUrl(locale)` (`utils/auth.js`), qui ajoute `?lang=en` sur une page anglaise pour que le joueur y revienne après Battle.net ; `watchFlashMessages(page, toasts, { t, loginUrl })` reçoit de même la traduction et ce lien.
+
+Les appels XHR vers `/api` portent la langue de la page dans l'en-tête `X-App-Locale`, posé sur axios par `applyPageLocale()` (`resources/js/i18n/pageLocale.js`) au démarrage et à chaque changement de langue, qui règle aussi la langue des infobulles Wowhead.
+
+En test, `tests/setup.js` installe la traduction en français pour tout montage ; `mountWithPlugins(composant, { locale: 'en' })` monte en anglais.

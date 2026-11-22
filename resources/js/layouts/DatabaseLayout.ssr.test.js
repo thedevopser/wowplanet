@@ -2,6 +2,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import { i18nVue } from 'laravel-vue-i18n';
+import { eagerI18nOptions } from '../i18n/translations';
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
@@ -16,7 +18,7 @@ import DatabaseLayout from './DatabaseLayout.vue';
 
 describe('server-side rendering of the database layout', () => {
     it('sends the active section already unfolded, with its sub-category links', async () => {
-        const html = await renderToString(createSSRApp({ render: () => h(DatabaseLayout) }));
+        const html = await renderToString(createSSRApp({ render: () => h(DatabaseLayout) }).use(i18nVue, eagerI18nOptions('fr')));
         const unfolded = html.match(/aria-expanded="true"[^>]*>[\s\S]*?<\/button>/g) ?? [];
 
         expect(unfolded).toHaveLength(1);

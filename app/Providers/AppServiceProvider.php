@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Application\Import\ImportWaitReporter;
+use App\Application\Services\Todo\TodoListBuilder;
+use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocalizedRouteTable;
+use App\Http\Localization\LocalizedUrls;
 use App\Jobs\DescribeQueuedJob;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,6 +31,20 @@ class AppServiceProvider extends ServiceProvider
         // Le rapporteur d'attente porte le job suivi : sept importers et le client API
         // doivent voir le même, sans quoi chacun publierait dans le vide.
         $this->app->singleton(ImportWaitReporter::class);
+
+        $this->app->singleton(
+            LocalizedRouteTable::class,
+            fn (): LocalizedRouteTable => LocalizedRouteTable::fromFile(resource_path('js/i18n/localizedRoutes.json')),
+        );
+
+        $this->app->singleton(function (): LocalizedUrls {
+            /** @var string $appUrl */
+            $appUrl = config('app.url', '');
+
+            return new LocalizedUrls($this->app->make(LocalizedRouteTable::class), $appUrl);
+        });
+
+        $this->app->bind(TodoListBuilder::class, static fn (): TodoListBuilder => new TodoListBuilder(AppLocale::current()));
     }
 
     public function boot(): void

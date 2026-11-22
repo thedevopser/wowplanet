@@ -64,3 +64,16 @@ describe('AchievementsTab', () => {
         expect(wrapper.text()).toContain('Fait par Jaina');
     });
 });
+
+describe('AchievementsTab in english', () => {
+    it('speaks english', async () => {
+        const wrapper = await mountWithPlugins(AchievementsTab, {
+            locale: 'en',
+            initialState: { character: { character: characterData, crossCharacter: null } },
+            stubActions: false,
+        });
+
+        expect(wrapper.find('h2').text()).toBe('Achievements');
+        expect(wrapper.text()).toContain('Hide earned achievements');
+    });
+});

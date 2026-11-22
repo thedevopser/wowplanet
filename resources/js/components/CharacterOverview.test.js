@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { mountWithPlugins } from '../tests/helpers';
 import { createTestingPinia } from '@pinia/testing';
 
 vi.mock('@inertiajs/vue3', () => ({ router: { push: vi.fn() } }));
@@ -128,5 +129,28 @@ describe('CharacterOverview', () => {
 
         expect(wrapper.findComponent({ name: 'ScorePanel' }).exists()).toBe(false);
         expect(wrapper.text()).toContain('Score indisponible');
+    });
+});
+
+describe('CharacterOverview in english', () => {
+    it('labels its counters in english and formats them the english way', async () => {
+        wrapper = await mountWithPlugins(CharacterOverview, {
+            locale: 'en',
+            props: { character: CHARACTER, realm: 'hyjal', name: 'arthas' },
+            stubs: { ScorePanel: true },
+        });
+
+        expect(wrapper.text()).toContain('Achievement points');
+        expect(wrapper.text()).toContain('31,190');
+        expect(wrapper.text()).toContain('Mythic+ rating');
+    });
+
+    it('says in english that the score is unavailable', async () => {
+        wrapper = await mountWithPlugins(CharacterOverview, {
+            locale: 'en',
+            props: { character: { ...CHARACTER, score: null }, realm: 'hyjal', name: 'arthas' },
+        });
+
+        expect(wrapper.text()).toContain('Score unavailable');
     });
 });

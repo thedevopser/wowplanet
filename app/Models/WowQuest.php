@@ -15,8 +15,10 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string $name_fr
+ * @property string|null $name_en
  * @property int $expansion_id
  * @property string $zone_name
+ * @property string|null $zone_name_en
  * @property string|null $faction
  * @property bool $is_active
  * @property Carbon|null $mirror_unresolved_at
@@ -27,8 +29,10 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'id',
     'name_fr',
+    'name_en',
     'expansion_id',
     'zone_name',
+    'zone_name_en',
     'faction',
     'is_active',
 ])]

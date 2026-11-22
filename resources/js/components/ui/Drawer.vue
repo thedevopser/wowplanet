@@ -17,7 +17,7 @@
                 <div class="flex items-center justify-between gap-4">
                     <DialogTitle class="text-base font-semibold text-default">{{ title }}</DialogTitle>
                     <DialogClose as-child>
-                        <IconButton :icon="X" :label="closeLabel" class="-mr-2" />
+                        <IconButton :icon="X" :label="closeLabel ?? $t('common.close_menu')" class="-mr-2" />
                     </DialogClose>
                 </div>
                 <div class="mt-4 flex-1">
@@ -43,7 +43,7 @@ import IconButton from './IconButton.vue';
 defineProps({
     title: { type: String, required: true },
     side: { type: String, default: 'right', validator: (value) => Object.hasOwn(SIDES, value) },
-    closeLabel: { type: String, default: 'Fermer le menu' },
+    closeLabel: { type: String, default: null },
 });
 
 const open = defineModel('open', { type: Boolean, default: false });

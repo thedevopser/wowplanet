@@ -10,7 +10,7 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
             <meta name="twitter:card" content="summary_large_image">
             <meta name="twitter:title" :content="meta.ogTitle">
             <meta name="twitter:description" :content="meta.ogDescription">
@@ -22,11 +22,11 @@
             <CharacterCard :character="store.character" :realm="realm" :name="name" :is-owner="isOwner" />
             <CrossDataBanner :is-owner="isOwner" />
 
-            <Tabs v-model="activeSection" :tabs="SECTIONS" label="Sections de la fiche">
+            <Tabs v-model="activeSection" :tabs="sections" :label="$t('sheet.sections.label')">
                 <template #[OVERVIEW]>
                     <CharacterOverview :character="store.character" :realm="realm" :name="name" :is-owner="isOwner" />
                 </template>
-                <template v-for="section in ROUTED_SECTIONS" :key="section.value" #[section.value]>
+                <template v-for="section in routedSections" :key="section.value" #[section.value]>
                     <Tabs v-model="activeSub" :tabs="section.subs" :label="section.label" variant="secondary">
                         <template v-for="sub in section.subs" :key="sub.value" #[sub.value]>
                             <component :is="SUB_COMPONENTS[sub.value]" v-bind="subPropsFor(sub.value)" />
@@ -37,9 +37,9 @@
         </div>
         <div v-else data-not-found class="mx-auto max-w-xl space-y-4 py-16 text-center">
             <BreadcrumbNavInertia :crumbs="[{ label: notFoundName }]" />
-            <h1 class="font-display text-3xl font-bold text-default">Personnage introuvable</h1>
-            <p class="text-muted">Impossible de récupérer le personnage {{ notFoundName }}. Vérifiez le nom et le royaume.</p>
-            <Button href="/">Retour à l’accueil</Button>
+            <h1 class="font-display text-3xl font-bold text-default">{{ $t('sheet.not_found.title') }}</h1>
+            <p class="text-muted">{{ $t('sheet.not_found.message', { name: notFoundName }) }}</p>
+            <Button :href="localizedUrl('/')">{{ $t('not_found.home') }}</Button>
         </div>
     </div>
 </template>
@@ -60,6 +60,8 @@ import Tabs from '../components/ui/Tabs.vue';
 import { OVERVIEW, SECTIONS, UnknownSheetViewError, viewOf } from '../utils/characterSheet';
 import { useSheetNavigation } from '../composables/useSheetNavigation';
 import { useCharacterStore } from '../stores/character';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useTranslate } from '../composables/useTranslate';
 import CharacterCard from '../components/CharacterCard.vue';
 import BreadcrumbNavInertia from '../components/inertia/BreadcrumbNavInertia.vue';
 import QuestsTab from '../components/QuestsTab.vue';
@@ -87,7 +89,11 @@ const props = defineProps({
 
 const store = useCharacterStore();
 
-const ROUTED_SECTIONS = SECTIONS.filter((section) => section.value !== OVERVIEW);
+const t = useTranslate();
+const { localizedUrl } = useLocalizedUrl();
+const translated = (tab) => ({ ...tab, label: t(tab.label) });
+const sections = computed(() => SECTIONS.map((section) => ({ ...translated(section), subs: section.subs.map(translated) })));
+const routedSections = computed(() => sections.value.filter((section) => section.value !== OVERVIEW));
 
 const SUB_COMPONENTS = Object.freeze({
     quetes: QuestsTab,
@@ -155,7 +161,7 @@ const notFoundName = computed(() => props.name ? props.name.charAt(0).toUpperCas
 const breadcrumbs = computed(() => {
     const crumbs = [];
     if (props.isOwner) {
-        crumbs.push({ label: 'Mon compte', to: '/mon-compte' });
+        crumbs.push({ label: t('nav.account'), to: localizedUrl('/mon-compte') });
     }
     if (store.character) {
         crumbs.push({ label: store.character.name });

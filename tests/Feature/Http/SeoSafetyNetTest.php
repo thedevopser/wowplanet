@@ -128,30 +128,45 @@ test('sitemap index keeps listing the pages and database sitemaps', function ():
     ]);
 });
 
-test('pages sitemap keeps its urls', function (): void {
+test('pages sitemap keeps its urls, each followed by its english version', function (): void {
     expect(sitemapLocations((string) $this->get('/sitemap-pages.xml')->getContent()))->toBe([
         seoBaseUrl(),
+        seoBaseUrl().'/en',
         seoBaseUrl().'/privacy',
+        seoBaseUrl().'/en/privacy',
         seoBaseUrl().'/cgu',
+        seoBaseUrl().'/en/terms',
         seoBaseUrl().'/faq',
+        seoBaseUrl().'/en/faq',
         seoBaseUrl().'/addons',
+        seoBaseUrl().'/en/addons',
         seoBaseUrl().'/classements-pvp',
+        seoBaseUrl().'/en/pvp-leaderboards',
     ]);
 });
 
-test('database sitemap keeps its urls', function (): void {
+test('database sitemap keeps its urls, each followed by its english version', function (): void {
     WowMount::factory()->count(3)->create(['category' => 'Volantes', 'is_active' => true]);
 
     expect(sitemapLocations((string) $this->get('/sitemap-database.xml')->getContent()))->toBe([
         seoBaseUrl().'/base-de-donnees',
+        seoBaseUrl().'/en/database',
         seoBaseUrl().'/base-de-donnees/montures',
+        seoBaseUrl().'/en/database/mounts',
         seoBaseUrl().'/base-de-donnees/hauts-faits',
+        seoBaseUrl().'/en/database/achievements',
         seoBaseUrl().'/base-de-donnees/quetes',
+        seoBaseUrl().'/en/database/quests',
         seoBaseUrl().'/base-de-donnees/mascottes',
+        seoBaseUrl().'/en/database/pets',
         seoBaseUrl().'/base-de-donnees/decorations',
+        seoBaseUrl().'/en/database/decor',
         seoBaseUrl().'/base-de-donnees/garde-robe',
+        seoBaseUrl().'/en/database/appearances',
         seoBaseUrl().'/base-de-donnees/professions',
+        seoBaseUrl().'/en/database/professions',
         seoBaseUrl().'/base-de-donnees/montures/volantes',
+        seoBaseUrl().'/en/database/mounts/volantes',
     ]);
 });
 
@@ -165,15 +180,22 @@ function sitemapDocument(string $path): string
     return trim((string) preg_replace('/>\s+</', '><', (string) test()->get($path)->getContent()));
 }
 
-function sitemapUrl(string $path, string $changeFrequency, string $priority): string
+function sitemapUrl(string $path, string $changeFrequency, string $priority, string $englishPath): string
 {
-    return sprintf(
-        '<url><loc>%s</loc><lastmod>%s</lastmod><changefreq>%s</changefreq><priority>%s</priority></url>',
+    $alternates = sprintf(
+        '<xhtml:link rel="alternate" hreflang="fr" href="%1$s" /><xhtml:link rel="alternate" hreflang="en" href="%2$s" /><xhtml:link rel="alternate" hreflang="x-default" href="%1$s" />',
         seoBaseUrl().$path,
+        seoBaseUrl().$englishPath,
+    );
+
+    return implode('', array_map(static fn (string $location): string => sprintf(
+        '<url><loc>%s</loc>%s<lastmod>%s</lastmod><changefreq>%s</changefreq><priority>%s</priority></url>',
+        seoBaseUrl().$location,
+        $alternates,
         SITEMAP_FROZEN_AT,
         $changeFrequency,
         $priority,
-    );
+    ), [$path, $englishPath]));
 }
 
 function sitemapIndexEntry(string $path): string
@@ -199,12 +221,12 @@ test('pages sitemap keeps its whole document', function (): void {
     expect(sitemapDocument('/sitemap-pages.xml'))->toBe(
         '<?xml version="1.0" encoding="UTF-8"?>'
         .SITEMAP_URLSET_OPENING
-        .sitemapUrl('', 'weekly', '1.0')
-        .sitemapUrl('/privacy', 'yearly', '0.3')
-        .sitemapUrl('/cgu', 'yearly', '0.3')
-        .sitemapUrl('/faq', 'yearly', '0.3')
-        .sitemapUrl('/addons', 'yearly', '0.3')
-        .sitemapUrl('/classements-pvp', 'daily', '0.6')
+        .sitemapUrl('', 'weekly', '1.0', '/en')
+        .sitemapUrl('/privacy', 'yearly', '0.3', '/en/privacy')
+        .sitemapUrl('/cgu', 'yearly', '0.3', '/en/terms')
+        .sitemapUrl('/faq', 'yearly', '0.3', '/en/faq')
+        .sitemapUrl('/addons', 'yearly', '0.3', '/en/addons')
+        .sitemapUrl('/classements-pvp', 'daily', '0.6', '/en/pvp-leaderboards')
         .'</urlset>'
     );
 });
@@ -213,12 +235,19 @@ test('database sitemap keeps its whole document', function (): void {
     $this->travelTo(SITEMAP_FROZEN_AT);
     WowMount::factory()->count(3)->create(['category' => 'Volantes', 'is_active' => true]);
 
-    $paths = ['', '/montures', '/hauts-faits', '/quetes', '/mascottes', '/decorations', '/garde-robe', '/professions', '/montures/volantes'];
+    $paths = [
+        '' => '', '/montures' => '/mounts', '/hauts-faits' => '/achievements', '/quetes' => '/quests', '/mascottes' => '/pets',
+        '/decorations' => '/decor', '/garde-robe' => '/appearances', '/professions' => '/professions', '/montures/volantes' => '/mounts/volantes',
+    ];
 
     expect(sitemapDocument('/sitemap-database.xml'))->toBe(
         '<?xml version="1.0" encoding="UTF-8"?>'
         .SITEMAP_URLSET_OPENING
-        .implode('', array_map(static fn (string $path): string => sitemapUrl('/base-de-donnees'.$path, 'weekly', '0.7'), $paths))
+        .implode('', array_map(
+            static fn (string $path, string $englishPath): string => sitemapUrl('/base-de-donnees'.$path, 'weekly', '0.7', '/en/database'.$englishPath),
+            array_keys($paths),
+            $paths,
+        ))
         .'</urlset>'
     );
 });

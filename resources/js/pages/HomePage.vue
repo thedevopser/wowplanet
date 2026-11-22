@@ -10,7 +10,7 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
             <meta name="twitter:card" content="summary_large_image">
             <meta name="twitter:title" :content="meta.ogTitle">
             <meta name="twitter:description" :content="meta.ogDescription">
@@ -23,26 +23,25 @@
                     <img src="/images/logo.png" alt="" width="40" height="40" class="size-10 rounded-ui-md border border-default object-cover">
                     <span class="font-display text-lg font-semibold text-default">WowPlanet</span>
                 </p>
-                <h1 class="font-display text-4xl font-bold leading-tight text-default sm:text-5xl">Suivez votre progression World of Warcraft</h1>
+                <h1 class="font-display text-4xl font-bold leading-tight text-default sm:text-5xl">{{ $t('home.title') }}</h1>
                 <p class="max-w-prose text-lg leading-relaxed text-muted">
-                    WowPlanet analyse votre personnage World of Warcraft via l’API Blizzard et compare vos accomplissements avec la base de données complète du jeu.
-                    Quêtes, hauts-faits, montures, mascottes, décorations, garde-robe : visualisez tout ce qu’il vous reste à accomplir.
+                    {{ $t('home.intro') }}
                 </p>
                 <div data-hero-actions class="flex flex-wrap gap-3">
-                    <Button v-if="isAuthenticated" href="/mon-compte" variant="primary">
+                    <Button v-if="isAuthenticated" :href="localizedUrl('/mon-compte')" variant="primary">
                         <Icon :icon="UserRound" size="sm" />
-                        Mon compte
+                        {{ $t('nav.account') }}
                     </Button>
-                    <Button v-else :href="LOGIN_URL" external variant="primary">
+                    <Button v-else :href="loginUrl(locale)" external variant="primary">
                         <Icon :icon="LogIn" size="sm" />
-                        Se connecter avec Battle.net
+                        {{ $t('nav.login') }}
                     </Button>
-                    <Button href="/base-de-donnees">
+                    <Button :href="localizedUrl('/base-de-donnees')">
                         <Icon :icon="Library" size="sm" />
-                        Explorer la base de données
+                        {{ $t('home.explore_database') }}
                     </Button>
                 </div>
-                <p v-if="!isAuthenticated" class="text-sm text-subtle">Connexion officielle Battle.net : aucun mot de passe ne transite par WowPlanet.</p>
+                <p v-if="!isAuthenticated" class="text-sm text-subtle">{{ $t('home.login_safety') }}</p>
             </div>
 
             <dl class="grid grid-cols-2 gap-3">
@@ -53,15 +52,15 @@
                     class="rounded-ui-md border border-l-4 border-default bg-surface p-4"
                     :style="{ borderLeftColor: dimensionColor(item.dimension).base }"
                 >
-                    <dt class="text-sm text-muted">{{ item.label }}</dt>
+                    <dt class="text-sm text-muted">{{ $t(`database.sections.${item.countKey}.label`) }}</dt>
                     <dd class="text-2xl font-bold tabular-nums text-default">{{ formatCount(counts[item.countKey]) }}</dd>
-                    <dd class="text-xs text-subtle">{{ item.detail }}</dd>
+                    <dd class="text-xs text-subtle">{{ $t(`home.tracked.${item.countKey}`) }}</dd>
                 </div>
             </dl>
         </section>
 
         <section data-explore aria-labelledby="explore-heading" class="space-y-4">
-            <h2 id="explore-heading" class="font-display text-2xl font-semibold text-default">Explorer la base de données</h2>
+            <h2 id="explore-heading" class="font-display text-2xl font-semibold text-default">{{ $t('home.explore_database') }}</h2>
             <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Card
                     v-for="section in SECTIONS"
@@ -75,8 +74,8 @@
                         <CategoryIcon :category="section.icon" />
                     </span>
                     <div class="min-w-0">
-                        <Link :href="section.path" class="font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0">{{ section.label }}</Link>
-                        <p class="text-sm text-muted">{{ section.detail }}</p>
+                        <Link :href="localizedUrl(section.path)" class="font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0">{{ $t(`database.sections.${section.key}.label`) }}</Link>
+                        <p class="text-sm text-muted">{{ $t(`database.sections.${section.key}.description`) }}</p>
                     </div>
                 </Card>
                 <Card as="li" variant="interactive" class="flex items-center gap-3 border-t-4 border-t-accent p-4">
@@ -84,8 +83,8 @@
                         <Icon :icon="Swords" size="sm" />
                     </span>
                     <div class="min-w-0">
-                        <Link href="/classements-pvp" class="font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0">Classements PvP</Link>
-                        <p class="text-sm text-muted">Arène, mêlée solo et blitz</p>
+                        <Link :href="localizedUrl('/classements-pvp')" class="font-semibold text-default hover:underline focus-visible:outline-none after:absolute after:inset-0">{{ $t('nav.pvp') }}</Link>
+                        <p class="text-sm text-muted">{{ $t('home.pvp_detail') }}</p>
                     </div>
                 </Card>
             </ul>
@@ -94,8 +93,8 @@
         <DiscordInvite />
 
         <p class="text-center text-sm text-muted">
-            Données synchronisées depuis l’API officielle Blizzard. Tous les noms sont en français.
-            <br>Chaque élément est lié à sa fiche Wowhead pour plus de détails.
+            {{ $t('home.footer_data') }}
+            <br>{{ $t('home.footer_wowhead') }}
         </p>
     </div>
 </template>
@@ -118,24 +117,26 @@ import Button from '../components/ui/Button.vue';
 import Card from '../components/ui/Card.vue';
 import Icon from '../components/ui/Icon.vue';
 import { useWowColor } from '../composables/useWowColor';
-import { LOGIN_URL } from '../utils/auth';
+import { loginUrl } from '../utils/auth';
 import { dimensionColor } from '../utils/wowColors';
+import { useActiveLocale } from '../composables/useActiveLocale';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
 
 const TRACKED = [
-    { label: 'Quêtes', countKey: 'quests', dimension: 'quests', detail: 'par zone et par extension' },
-    { label: 'Hauts-faits', countKey: 'achievements', dimension: 'achievements', detail: 'par catégorie et par extension' },
-    { label: 'Montures', countKey: 'mounts', dimension: 'mounts', detail: 'avec leur source d’obtention' },
-    { label: 'Mascottes', countKey: 'pets', dimension: 'pets', detail: 'avec suivi de collection' },
+    { countKey: 'quests', dimension: 'quests' },
+    { countKey: 'achievements', dimension: 'achievements' },
+    { countKey: 'mounts', dimension: 'mounts' },
+    { countKey: 'pets', dimension: 'pets' },
 ];
 
 const SECTIONS = [
-    { path: '/base-de-donnees/montures', label: 'Montures', detail: 'Par catégorie et source', icon: 'mounts', dimension: 'mounts' },
-    { path: '/base-de-donnees/hauts-faits', label: 'Hauts-faits', detail: 'Par extension et catégorie', icon: 'achievements', dimension: 'achievements' },
-    { path: '/base-de-donnees/quetes', label: 'Quêtes', detail: 'Par extension et zone', icon: 'quests', dimension: 'quests' },
-    { path: '/base-de-donnees/mascottes', label: 'Mascottes', detail: 'Par catégorie et source', icon: 'pets', dimension: 'pets' },
-    { path: '/base-de-donnees/decorations', label: 'Décorations', detail: 'Par catégorie et source', icon: 'decor', dimension: 'decor' },
-    { path: '/base-de-donnees/garde-robe', label: 'Garde-robe', detail: 'Apparences par emplacement', icon: 'transmog', dimension: 'transmog' },
-    { path: '/base-de-donnees/professions', label: 'Professions', detail: 'Recettes par extension', icon: 'professions', dimension: 'professions' },
+    { key: 'mounts', path: '/base-de-donnees/montures', icon: 'mounts', dimension: 'mounts' },
+    { key: 'achievements', path: '/base-de-donnees/hauts-faits', icon: 'achievements', dimension: 'achievements' },
+    { key: 'quests', path: '/base-de-donnees/quetes', icon: 'quests', dimension: 'quests' },
+    { key: 'pets', path: '/base-de-donnees/mascottes', icon: 'pets', dimension: 'pets' },
+    { key: 'decors', path: '/base-de-donnees/decorations', icon: 'decor', dimension: 'decor' },
+    { key: 'appearances', path: '/base-de-donnees/garde-robe', icon: 'transmog', dimension: 'transmog' },
+    { key: 'professions', path: '/base-de-donnees/professions', icon: 'professions', dimension: 'professions' },
 ];
 
 defineProps({
@@ -148,5 +149,7 @@ const { readable } = useWowColor();
 
 const isAuthenticated = computed(() => page.props.auth?.isAuthenticated ?? false);
 
-const formatCount = (count) => (count ? count.toLocaleString('fr-FR') : '—');
+const locale = useActiveLocale();
+const { localizedUrl } = useLocalizedUrl();
+const formatCount = (count) => (count ? count.toLocaleString(locale.value) : '—');
 </script>

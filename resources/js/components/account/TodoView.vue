@@ -3,56 +3,56 @@
         <Card v-if="status === 'computing'" data-computing class="mx-auto max-w-xl space-y-4 p-5 sm:p-6">
             <template v-if="step === 'account'">
                 <div role="status" aria-live="polite" class="space-y-1">
-                    <p class="text-lg font-semibold text-default">Analyse de {{ progress.current }}…</p>
-                    <p class="text-sm text-muted">{{ progress.loaded }} / {{ progress.total }} personnages chargés</p>
+                    <p class="text-lg font-semibold text-default">{{ $t('account.computing.analysing', { name: progress.current }) }}</p>
+                    <p class="text-sm text-muted">{{ $t('account.computing.loaded', { loaded: progress.loaded, total: progress.total }) }}</p>
                 </div>
                 <ProgressBar
                     :value="processed"
                     :max="Math.max(progress.total, 1)"
-                    :aria-label="`Personnages analysés : ${processed} sur ${progress.total}`"
+                    :aria-label="$t('account.computing.analysed', { processed, total: progress.total })"
                 />
             </template>
             <div v-else role="status" aria-live="polite" class="flex items-center gap-3">
                 <Spinner />
-                <p class="text-lg font-semibold text-default">Comparaison de vos personnages…</p>
+                <p class="text-lg font-semibold text-default">{{ $t('account.todo.comparing') }}</p>
             </div>
-            <p class="text-xs text-subtle">La liste se prépare une fois, puis reste en mémoire.</p>
+            <p class="text-xs text-subtle">{{ $t('account.todo.prepared_once') }}</p>
         </Card>
 
-        <CardGridSkeleton v-else-if="status === 'loading'" label="Chargement de votre liste" :count="3" />
+        <CardGridSkeleton v-else-if="status === 'loading'" :label="$t('account.todo.loading')" :count="3" />
 
-        <ErrorState v-else-if="status === 'error'" title="Liste indisponible" :message="errorMessage" @retry="start" />
+        <ErrorState v-else-if="status === 'error'" :title="$t('account.todo.unavailable')" :message="errorMessage" @retry="start" />
 
         <EmptyState
             v-else-if="todo.categories.length === 0"
             :icon="PartyPopper"
-            title="Rien à faire"
-            message="Aucune collection, quête, réputation ou recette entamée n’attend vos personnages."
+            :title="$t('account.todo.nothing.title')"
+            :message="$t('account.todo.nothing.message')"
         />
 
         <template v-else>
             <div class="flex flex-wrap items-end justify-between gap-4">
-                <Select v-model="character" label="Personnage" :options="characters" />
+                <Select v-model="character" :label="$t('account.todo.character')" :options="characters" />
                 <div class="flex flex-wrap items-center gap-3">
-                    <p v-if="updatedAt" data-updated-at class="text-xs text-subtle">Mis à jour le {{ updatedAt }}</p>
+                    <p v-if="updatedAt" data-updated-at class="text-xs text-subtle">{{ $t('account.updated_at', { date: updatedAt }) }}</p>
                     <Button variant="secondary" :disabled="refreshing" @click="refresh">
                         <Icon :icon="RotateCw" size="sm" :class="{ 'motion-safe:animate-spin': refreshing }" />
-                        Mettre à jour
+                        {{ $t('account.update') }}
                     </Button>
                 </div>
             </div>
 
             <template v-if="dimension === ALL">
                 <section data-nearly-done class="space-y-4">
-                    <SectionHeader title="Presque fini" :level="2" description="Les catégories les plus proches de la fin, toutes dimensions confondues." />
+                    <SectionHeader :title="$t('account.todo.nearly_done.title')" :level="2" :description="$t('account.todo.nearly_done.description')" />
                     <ul v-if="closest.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <TodoCategoryCard v-for="entry in closest" :key="entry.key" :category="entry" :subtitle="subtitleOf(entry)" :roster="todo.characters" />
                     </ul>
-                    <EmptyState v-else :icon="Filter" title="Rien pour ce personnage" message="Aucun élément entamé n’attend ce personnage." />
+                    <EmptyState v-else :icon="Filter" :title="$t('account.todo.nothing_for_character')" :message="$t('account.todo.nothing_started_for_character')" />
                 </section>
 
                 <section class="space-y-4">
-                    <SectionHeader title="Par dimension" :level="2" description="Tout ce qui reste, dimension par dimension." />
+                    <SectionHeader :title="$t('account.todo.by_dimension.title')" :level="2" :description="$t('account.todo.by_dimension.description')" />
                     <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <li v-for="summary in summaries" :key="summary.dimension">
                             <button
@@ -64,9 +64,9 @@
                             >
                                 <span aria-hidden="true" class="h-10 w-1 shrink-0 rounded-full" :style="{ backgroundColor: readable(todoColor(summary.dimension)) }" />
                                 <span class="min-w-0 flex-1">
-                                    <span data-dimension-label class="block text-sm font-semibold text-default">{{ summary.label }}</span>
+                                    <span data-dimension-label class="block text-sm font-semibold text-default">{{ $t(summary.label) }}</span>
                                     <span class="block text-xs tabular-nums text-subtle">
-                                        {{ summary.categories }} catégorie{{ summary.categories > 1 ? 's' : '' }} · {{ summary.missing }} manquant{{ summary.missing > 1 ? 's' : '' }}
+                                        {{ $tChoice('account.todo.categories', summary.categories, { count: summary.categories }) }} · {{ $tChoice('account.todo.missing', summary.missing, { count: summary.missing }) }}
                                     </span>
                                 </span>
                                 <Icon :icon="ChevronRight" size="sm" class="shrink-0 text-subtle" />
@@ -84,9 +84,9 @@
                     @click="openDimension(ALL)"
                 >
                     <Icon :icon="ChevronLeft" size="sm" />
-                    Vue d’ensemble
+                    {{ $t('account.todo.overview') }}
                 </button>
-                <SectionHeader :title="dimensionLabel(dimension)" :level="2" :description="dimensionDescription" />
+                <SectionHeader :title="$t(dimensionLabel(dimension))" :level="2" :description="dimensionDescription" />
 
                 <div v-if="expansions.length" role="group" aria-label="Extension" class="relative -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
                     <button
@@ -108,9 +108,9 @@
                 <ul v-if="paging.visible.value.length" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <TodoCategoryCard v-for="entry in paging.visible.value" :key="entry.key" :category="entry" :subtitle="subtitleOf(entry)" :roster="todo.characters" />
                 </ul>
-                <EmptyState v-else :icon="Filter" title="Rien pour ce personnage" message="Aucun élément de cette dimension n’attend ce personnage." />
+                <EmptyState v-else :icon="Filter" :title="$t('account.todo.nothing_for_character')" :message="$t('account.todo.nothing_in_dimension_for_character')" />
 
-                <Pagination :page="paging.page.value" :page-count="paging.pageCount.value" label="Pages de la dimension" @update:page="paging.goTo" />
+                <Pagination :page="paging.page.value" :page-count="paging.pageCount.value" :label="$t('account.todo.pages')" @update:page="paging.goTo" />
             </section>
         </template>
     </div>
@@ -123,6 +123,8 @@ import { useAccountComputation } from '../../composables/useAccountComputation';
 import { useClientPaging } from '../../composables/useClientPaging';
 import { useQueryParam, useQueryParamsUpdate } from '../../composables/useQueryParam';
 import { useWowColor } from '../../composables/useWowColor';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useTranslate, useTranslateChoice } from '../../composables/useTranslate';
 import { useCharacterStore } from '../../stores/character';
 import { ALL, characterOptions, dimensionLabel, dimensionSummaries, expansionOptions, filterTodo, nearlyDone, todoColor } from '../../utils/accountTodo';
 import CardGridSkeleton from '../CardGridSkeleton.vue';
@@ -145,6 +147,9 @@ const DIMENSION_PARAM = 'dimension';
 const EXPANSION_PARAM = 'extension';
 
 const store = useCharacterStore();
+const t = useTranslate();
+const tChoice = useTranslateChoice();
+const { formatDate } = useLocaleFormat();
 const { readable } = useWowColor();
 const updateQuery = useQueryParamsUpdate();
 
@@ -154,7 +159,7 @@ const EMPTY_TODO = Object.freeze({ categories: [], characters: [], updatedAt: nu
 const { status, computing, data, errorMessage, refreshing, start, refresh } = useAccountComputation({
     endpoint: '/api/account/todo',
     refreshEndpoint: '/api/account/todo/refresh',
-    messages: { failed: 'Le calcul de vos personnages a échoué. Réessayez dans un instant.', unavailable: 'La liste n’a pas pu être chargée.' },
+    messages: { failed: t('account.todo.failed'), unavailable: t('account.todo.not_loaded') },
 });
 
 const step = computed(() => computing.value?.step ?? 'account');
@@ -173,7 +178,7 @@ const knownOr = (param, options) => computed({
     },
 });
 
-const characters = computed(() => characterOptions(todo.value.characters));
+const characters = computed(() => characterOptions(todo.value.characters, t('account.todo.all_characters')));
 const character = knownOr(useQueryParam('personnage', ALL), characters);
 
 const forCharacter = computed(() => filterTodo(todo.value.categories, { dimension: ALL, character: character.value }));
@@ -184,7 +189,7 @@ const dimensionParam = useQueryParam(DIMENSION_PARAM, ALL);
 const dimension = computed(() => (todo.value.categories.some((entry) => entry.dimension === dimensionParam.value) ? dimensionParam.value : ALL));
 
 const inDimension = computed(() => filterTodo(forCharacter.value, { dimension: dimension.value, character: ALL }));
-const expansions = computed(() => expansionOptions(inDimension.value, expansionNames.value));
+const expansions = computed(() => expansionOptions(inDimension.value, expansionNames.value, t('account.todo.all_expansions')));
 const expansion = knownOr(useQueryParam(EXPANSION_PARAM, ALL), expansions);
 
 const shown = computed(() => filterTodo(inDimension.value, { dimension: ALL, character: ALL, expansion: expansion.value }));
@@ -193,13 +198,13 @@ const paging = useClientPaging(shown, PER_PAGE);
 const dimensionDescription = computed(() => {
     const count = inDimension.value.length;
 
-    return `${count} catégorie${count > 1 ? 's' : ''} entamée${count > 1 ? 's' : ''}, de la plus proche de la fin à la plus lointaine.`;
+    return tChoice('account.todo.dimension_description', count, { count });
 });
 
 const updatedAt = computed(() => {
     if (!todo.value.updatedAt) return '';
 
-    return new Date(todo.value.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return formatDate(todo.value.updatedAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 });
 
 function openDimension(target) {
@@ -210,7 +215,7 @@ function openDimension(target) {
 }
 
 function subtitleOf(category) {
-    const label = dimensionLabel(category.dimension);
+    const label = t(dimensionLabel(category.dimension));
     const expansionName = expansionNames.value.get(category.expansionId);
 
     return expansionName ? `${label} · ${expansionName}` : label;

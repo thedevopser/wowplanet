@@ -6,26 +6,30 @@ const DIFFICULTIES = Object.freeze(['LFR', 'NORMAL', 'HEROIC', 'MYTHIC']);
 
 const DIFFICULTY_LABELS = Object.freeze({ LFR: 'LFR', NORMAL: 'Normal', HEROIC: 'Héroïque', MYTHIC: 'Mythique' });
 
-const UNITS = Object.freeze({
-    raid: (count) => `${count} boss`,
-    mythicPlus: (count) => `${count} donjon${count > 1 ? 's' : ''}`,
+// The words of the page, French unless the page gives its own.
+const FRENCH = Object.freeze({
+    difficulty: (difficulty) => DIFFICULTY_LABELS[difficulty] ?? difficulty,
+    units: Object.freeze({
+        raid: (count) => `${count} boss`,
+        mythicPlus: (count) => `${count} donjon${count > 1 ? 's' : ''}`,
+    }),
 });
 
 const REWARDS = Object.freeze({
-    raid: (difficulty) => difficultyLabel(difficulty),
+    raid: (difficulty, labels) => labels.difficulty(difficulty),
     mythicPlus: (level) => `+${level}`,
 });
 
-export function difficultyLabel(difficulty) {
-    return DIFFICULTY_LABELS[difficulty] ?? difficulty;
+export function difficultyLabel(difficulty, labels = FRENCH) {
+    return labels.difficulty(difficulty);
 }
 
 export function hardestFirst(difficulties) {
     return [...difficulties].sort((first, second) => DIFFICULTIES.indexOf(second.difficulty) - DIFFICULTIES.indexOf(first.difficulty));
 }
 
-export function slotLabel(vault, slot) {
-    return slot.reached ? REWARDS[vault](slot.reward) : UNITS[vault](slot.threshold);
+export function slotLabel(vault, slot, labels = FRENCH) {
+    return slot.reached ? REWARDS[vault](slot.reward, labels) : labels.units[vault](slot.threshold);
 }
 
 export function nextSlot({ count, slots }) {
@@ -34,6 +38,6 @@ export function nextSlot({ count, slots }) {
     return position === -1 ? null : { missing: slots[position].threshold - count, position: position + 1 };
 }
 
-export function unitOf(vault, count) {
-    return UNITS[vault](count);
+export function unitOf(vault, count, labels = FRENCH) {
+    return labels.units[vault](count);
 }

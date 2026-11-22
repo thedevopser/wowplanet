@@ -378,3 +378,18 @@ describe('TaskSidebarInertia', () => {
         });
     });
 });
+
+describe('TaskSidebarInertia in english', () => {
+    it('speaks english', async () => {
+        wrapper = await mountWithPlugins(TaskSidebarInertia, {
+            locale: 'en',
+            initialState: { tasks: { sidebarOpen: true, tasks: [makeTask()] }, character: { isAuthenticated: true } },
+            attachTo: document.body,
+        });
+
+        expect(panel().find('h2').text()).toBe('My tasks');
+        await expandFirst();
+        expect(wrapper.find('[data-testid="task-frequency"]').text()).toBe('Weekly');
+        expect(wrapper.find('[data-testid="add-task-btn"]').text()).toBe('New task');
+    });
+});

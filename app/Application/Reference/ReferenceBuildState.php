@@ -28,7 +28,7 @@ final readonly class ReferenceBuildState
      */
     public function current(?string $liveBuild): array
     {
-        $sources = $this->referenceCatalog->sources();
+        $sources = $this->referenceCatalog->names();
         $lastLoads = $this->lastLoadPerSource();
         $latest = $this->mostRecent($lastLoads);
 

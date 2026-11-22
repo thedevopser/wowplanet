@@ -253,3 +253,22 @@ test('it leaves the existing socle untouched when a file is served empty', funct
 
     expect(DB::table('wow_ref_faction')->count())->toBe(5);
 });
+
+test('it loads the english names of the factions from the same table, in english', function (): void {
+    fakeWago(['Faction' => 4]);
+
+    $this->artisan('app:wow-reference-sync')->assertSuccessful();
+
+    expect(DB::table('wow_ref_faction_en')->count())->toBe(4)
+        ->and(WowReferenceDownload::query()->where('source_table', 'FactionEn')->exists())->toBeTrue();
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/db2/Faction/') && str_contains($request->url(), 'locale=enUS'));
+});
+
+test('it loads the english faction names alone when asked by their name', function (): void {
+    fakeWago();
+
+    $this->artisan('app:wow-reference-sync', ['--table' => 'FactionEn'])->assertSuccessful();
+
+    expect(DB::table('wow_ref_faction_en')->count())->toBe(3)
+        ->and(DB::table('wow_ref_faction')->count())->toBe(0);
+});

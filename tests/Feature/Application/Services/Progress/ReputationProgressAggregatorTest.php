@@ -567,3 +567,12 @@ test('aggregate names an unstarted faction missing from the names reference neut
 
     expect(reputationFactionsOf($result, 0))->toBe([['id' => 72, 'name' => '', 'started' => false]]);
 });
+
+test('an english page says an unstarted faction is not started', function (): void {
+    app()->setLocale('en');
+    $reputationProgressAggregator = makeAggregator(buildMap: [72 => 0], namesMap: [72 => 'Stormwind']);
+
+    $result = reputationProgress($reputationProgressAggregator, []);
+
+    expect($result[0]['factions'][0]['standing_name'])->toBe('Not started');
+});

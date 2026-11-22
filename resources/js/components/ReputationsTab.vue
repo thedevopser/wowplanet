@@ -9,8 +9,8 @@
 
         <template v-if="collection">
             <ProgressSummary
-                title="Réputations"
-                description="Factions dont la réputation est au maximum"
+                :title="$t('score.dimension.reputations')"
+                :description="$t('sheet.reputations.description')"
                 :completed="progress.completed"
                 :total="progress.total"
                 dimension="reputations"
@@ -19,8 +19,8 @@
             <SearchFilter
                 v-model:search="search"
                 v-model:hide-completed="hideCompleted"
-                placeholder="Rechercher une faction…"
-                hide-label="Masquer les terminées"
+                :placeholder="$t('sheet.reputations.search')"
+                :hide-label="$t('sheet.reputations.hide_completed')"
             >
                 <template #extra-toggles>
                     <Button
@@ -30,35 +30,35 @@
                         @click="hideUnstarted = !hideUnstarted"
                     >
                         <Icon :icon="hideUnstarted ? EyeOff : Eye" size="sm" />
-                        Masquer les non commencées
+                        {{ $t('sheet.reputations.hide_unstarted') }}
                     </Button>
                 </template>
             </SearchFilter>
 
             <section v-if="factions.length" class="space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-lg font-semibold text-default">Factions</h3>
-                    <Pagination v-model:page="page" :page-count="pageCount" label="Pages des factions" />
+                    <h3 class="text-lg font-semibold text-default">{{ $t('sheet.reputations.factions') }}</h3>
+                    <Pagination v-model:page="page" :page-count="pageCount" :label="$t('sheet.reputations.pages')" />
                 </div>
                 <ul class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     <Card v-for="entry in visibleFactions" :key="entry.faction.id" as="li" data-faction class="space-y-3 p-4">
                         <div class="flex items-start justify-between gap-2">
                             <a
-                                :href="`https://www.wowhead.com/fr/faction=${entry.faction.id}`"
+                                :href="wowheadLink(`faction=${entry.faction.id}`)"
                                 target="_blank"
                                 rel="noopener"
                                 class="text-sm font-semibold hover:underline"
                                 :class="entry.standing.started === false ? 'text-muted' : 'text-default'"
                             >{{ entry.faction.name }}</a>
-                            <Badge v-if="entry.colorKey" tone="standing" :value="entry.colorKey" class="shrink-0">{{ standingLabel(entry.standing) }}</Badge>
-                            <Badge v-else tone="neutral" class="shrink-0">{{ standingLabel(entry.standing) }}</Badge>
+                            <Badge v-if="entry.colorKey" tone="standing" :value="entry.colorKey" class="shrink-0">{{ standingLabel(entry.standing, { notStarted: $t('reputation.not_started') }) }}</Badge>
+                            <Badge v-else tone="neutral" class="shrink-0">{{ standingLabel(entry.standing, { notStarted: $t('reputation.not_started') }) }}</Badge>
                         </div>
                         <template v-if="entry.faction.max > 0 && entry.faction.value > 0">
                             <ProgressBar
                                 :value="entry.faction.value"
                                 :max="entry.faction.max"
                                 :color="colorOf(entry.colorKey)"
-                                :aria-label="`${entry.faction.name} : ${formatNumber(entry.faction.value)} sur ${formatNumber(entry.faction.max)}`"
+                                :aria-label="$t('common.progress_of', { label: entry.faction.name, completed: formatNumber(entry.faction.value), total: formatNumber(entry.faction.max) })"
                             />
                             <p class="text-right text-xs tabular-nums text-subtle">
                                 {{ formatNumber(entry.faction.value) }} / {{ formatNumber(entry.faction.max) }}
@@ -68,10 +68,10 @@
                     </Card>
                 </ul>
             </section>
-            <EmptyState v-else-if="progress.total === 0" :icon="Inbox" title="Rien à afficher" message="Aucune réputation pour cette extension." />
-            <EmptyState v-else :icon="SearchX" title="Aucun résultat" message="Aucune faction ne correspond à ces filtres." />
+            <EmptyState v-else-if="progress.total === 0" :icon="Inbox" :title="$t('common.nothing_to_show')" :message="$t('sheet.reputations.no_data')" />
+            <EmptyState v-else :icon="SearchX" :title="$t('common.no_result')" :message="$t('sheet.reputations.no_match')" />
         </template>
-        <EmptyState v-else :icon="Inbox" title="Rien à afficher" message="Aucune réputation pour cette extension." />
+        <EmptyState v-else :icon="Inbox" :title="$t('common.nothing_to_show')" :message="$t('sheet.reputations.no_data')" />
     </div>
 </template>
 
@@ -82,6 +82,9 @@ import { useCharacterStore } from '../stores/character';
 import { useQueryParam } from '../composables/useQueryParam';
 import { useWowColor } from '../composables/useWowColor';
 import { useWowheadTooltips } from '../composables/useWowheadTooltips';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useTranslate } from '../composables/useTranslate';
 import { betterElsewhere, effectiveStanding, sortFactions, standingKey, standingLabel } from '../utils/reputations';
 import { standingColor } from '../utils/wowColors';
 import SearchFilter from './SearchFilter.vue';
@@ -97,6 +100,10 @@ import ExpansionFilter from './sheet/ExpansionFilter.vue';
 import ProgressSummary from './sheet/ProgressSummary.vue';
 
 const PER_PAGE = 12;
+
+const t = useTranslate();
+const { formatNumber } = useLocaleFormat();
+const { wowheadLink } = useCatalogLocale();
 
 useWowheadTooltips();
 const store = useCharacterStore();
@@ -117,7 +124,7 @@ const page = ref(1);
 
 const collection = computed(() => store.character?.collections?.[expansionId.value]?.reputations ?? null);
 
-const standingOf = (faction) => effectiveStanding(faction, store.getBestFactionStanding(faction.id));
+const standingOf = (faction) => effectiveStanding(faction, store.getBestFactionStanding(faction.id), (level) => t('reputation.renown', { level }));
 
 const progress = computed(() => {
     const factions = collection.value?.factions ?? [];
@@ -156,7 +163,6 @@ function knownStandingKey(standing) {
 }
 
 const colorOf = (key) => (key === null ? undefined : safe(standingColor, key)?.base);
-const formatNumber = (value) => Number(value).toLocaleString('fr-FR');
 
 watch([expansionId, search, hideCompleted, hideUnstarted], () => {
     page.value = 1;

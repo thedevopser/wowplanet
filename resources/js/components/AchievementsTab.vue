@@ -12,18 +12,19 @@
 
 <script setup>
 import { useCharacterStore } from '../stores/character';
-import { wowheadUrl } from '../utils/wowhead';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
 import ExpansionChecklistTab from './sheet/ExpansionChecklistTab.vue';
 
 const LABELS = Object.freeze({
-    title: 'Hauts-faits',
-    description: 'Hauts-faits obtenus sur l’extension',
-    groups: 'Catégories de hauts-faits',
-    search: 'Rechercher un haut-fait…',
-    hide: 'Masquer les hauts-faits obtenus',
-    noMatch: 'Aucun haut-fait ne correspond à ces filtres.',
-    noData: 'Aucun haut-fait connu pour cette extension.',
+    title: 'score.dimension.achievements',
+    description: 'sheet.achievements.description',
+    groups: 'sheet.achievements.groups',
+    search: 'sheet.achievements.search',
+    hide: 'sheet.achievements.hide',
+    noMatch: 'sheet.achievements.no_match',
+    noData: 'sheet.achievements.no_data',
 });
 
 const store = useCharacterStore();
+const { wowheadUrl } = useCatalogLocale();
 </script>

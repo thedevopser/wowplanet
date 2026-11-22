@@ -60,7 +60,7 @@ test('the reference page is closed to anyone else', function (): void {
 test('the page lists every table of the socle', function (): void {
     $this->withSession(['is_admin' => true])
         ->get('/admin/reference')
-        ->assertInertia(fn (Assert $assert): Assert => $assert->has('tables', count((new ReferenceCatalog)->sources()))->etc());
+        ->assertInertia(fn (Assert $assert): Assert => $assert->has('tables', count((new ReferenceCatalog)->names()))->etc());
 });
 
 test('the page carries the build wago serves, to situate the socle against it', function (): void {

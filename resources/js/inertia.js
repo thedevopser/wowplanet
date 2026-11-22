@@ -9,6 +9,9 @@ import { createApp, h, nextTick } from 'vue';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createPinia } from 'pinia';
+import { getActiveLanguage, i18nVue, loadLanguageAsync } from 'laravel-vue-i18n';
+import { applyPageLocale } from './i18n/pageLocale';
+import { browserI18nOptions } from './i18n/translations';
 import { useAuthGuard } from './composables/useAuthGuard';
 
 createInertiaApp({
@@ -24,7 +27,8 @@ createInertiaApp({
         // pas de session à expirer, et son axios est partagé entre les requêtes.
         useAuthGuard();
 
-        app.mount(el);
+        applyPageLocale(props.initialPage.props.locale);
+        app.use(i18nVue, browserI18nOptions(props.initialPage.props.locale, () => app.mount(el)));
     },
     // Only a visit longer than the delay shows the bar: a quick one stays silent.
     progress: { color: 'var(--wp-accent)', delay: 150, showSpinner: false },
@@ -32,6 +36,11 @@ createInertiaApp({
 
 // Rafraîchit les tooltips Wowhead après chaque navigation Inertia
 // (remplace l'ancien router.afterEach de Vue Router).
-router.on('navigate', () => {
+router.on('navigate', (event) => {
+    const locale = event.detail.page.props.locale;
+    if (locale && locale !== getActiveLanguage()) {
+        applyPageLocale(locale);
+        loadLanguageAsync(locale);
+    }
     nextTick(() => window.$WowheadPower?.refreshLinks());
 });

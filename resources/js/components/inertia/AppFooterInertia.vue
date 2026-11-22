@@ -4,25 +4,25 @@
             <div class="space-y-2">
                 <p class="font-display text-lg font-semibold text-default">WowPlanet</p>
                 <p class="text-xs text-subtle">
-                    Site fan non officiel, sans lien ni affiliation avec Blizzard Entertainment.
+                    {{ $t('footer.disclaimer') }}
                     &copy; {{ year }} WowPlanet.
                 </p>
             </div>
 
             <nav aria-labelledby="footer-explore">
-                <p id="footer-explore" class="mb-2 text-xs font-medium uppercase tracking-wide text-subtle">Explorer</p>
+                <p id="footer-explore" class="mb-2 text-xs font-medium uppercase tracking-wide text-subtle">{{ $t('footer.explore') }}</p>
                 <ul>
                     <li v-for="link in EXPLORE_LINKS" :key="link.href">
-                        <Link :href="link.href" :class="LINK">{{ link.label }}</Link>
+                        <Link :href="localizedUrl(link.href)" :class="LINK">{{ $t(link.label) }}</Link>
                     </li>
                 </ul>
             </nav>
 
             <nav aria-labelledby="footer-about">
-                <p id="footer-about" class="mb-2 text-xs font-medium uppercase tracking-wide text-subtle">Informations</p>
+                <p id="footer-about" class="mb-2 text-xs font-medium uppercase tracking-wide text-subtle">{{ $t('footer.about') }}</p>
                 <ul>
                     <li v-for="link in ABOUT_LINKS" :key="link.href">
-                        <Link :href="link.href" :class="LINK">{{ link.label }}</Link>
+                        <Link :href="localizedUrl(link.href)" :class="LINK">{{ $t(link.label) }}</Link>
                     </li>
                     <li>
                         <a :href="DISCORD_URL" target="_blank" rel="noopener noreferrer" :class="LINK">Discord</a>
@@ -37,16 +37,16 @@
 const DISCORD_URL = 'https://discord.gg/wa49gGF8cr';
 
 const EXPLORE_LINKS = Object.freeze([
-    { label: 'Base de données', href: '/base-de-donnees' },
-    { label: 'Classements PvP', href: '/classements-pvp' },
-    { label: 'Mon compte', href: '/mon-compte' },
+    { label: 'nav.database', href: '/base-de-donnees' },
+    { label: 'nav.pvp', href: '/classements-pvp' },
+    { label: 'nav.account', href: '/mon-compte' },
 ]);
 
 const ABOUT_LINKS = Object.freeze([
-    { label: 'FAQ', href: '/faq' },
-    { label: 'Addons', href: '/addons' },
-    { label: 'Confidentialité', href: '/privacy' },
-    { label: 'CGU', href: '/cgu' },
+    { label: 'nav.faq', href: '/faq' },
+    { label: 'nav.addons', href: '/addons' },
+    { label: 'nav.privacy', href: '/privacy' },
+    { label: 'nav.terms', href: '/cgu' },
 ]);
 
 const LINK = 'inline-flex min-h-11 min-w-11 items-center lg:min-h-9 rounded-ui-sm text-muted transition-colors duration-fast hover:text-default '
@@ -55,6 +55,9 @@ const LINK = 'inline-flex min-h-11 min-w-11 items-center lg:min-h-9 rounded-ui-s
 
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { useLocalizedUrl } from '../../composables/useLocalizedUrl';
+
+const { localizedUrl } = useLocalizedUrl();
 
 const year = new Date().getFullYear();
 </script>

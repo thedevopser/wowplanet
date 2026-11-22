@@ -625,3 +625,34 @@ test('the account data round trip is unchanged', function (): void {
         'merged' => $normalise(CrossCharacterData::query()->find('42')?->data ?? []),
     ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))->toMatchSnapshot();
 });
+
+test('compute keeps the data of each language apart and computes the missing one in its language', function (): void {
+    Queue::fake();
+    signInCrossCharacterUser();
+    $this->partialMock(UserCharacterService::class)->shouldReceive('getUserCharacters')->andReturn([
+        ['name' => 'Thrall', 'realmSlug' => 'hyjal', 'level' => 80],
+    ]);
+    CrossCharacterData::query()->create([
+        'bnet_user_id' => '42',
+        'locale' => 'fr',
+        'data' => ['completedQuestIds' => [1]],
+        'character_count' => 1,
+        'fetched_at' => now()->subHour(),
+    ]);
+    app()->setLocale('en');
+
+    expect(resolve(CrossCharacterService::class)->compute('Thrall#1234')['status'])->toBe('computing');
+    Queue::assertPushed(ComputeCrossCharacterJob::class, fn (ComputeCrossCharacterJob $computeCrossCharacterJob): bool => $computeCrossCharacterJob->locale === 'en');
+});
+
+test('the characters are read from Blizzard in the language of the page', function (): void {
+    app()->setLocale('en');
+    Http::fake([
+        ...fakeCrossCharacter('hyjal', 'thrall', crossCharacterPayloads(100, 200, 2600, 900)),
+    ]);
+
+    mergeCrossCharacters([['name' => 'Thrall', 'realmSlug' => 'hyjal']]);
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), 'locale=en_US'));
+    Http::assertNotSent(fn (Request $request): bool => str_contains($request->url(), 'locale=fr_FR'));
+});

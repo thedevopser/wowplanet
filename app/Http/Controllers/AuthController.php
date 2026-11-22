@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocalizedUrls;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -15,13 +17,20 @@ class AuthController extends Controller
 {
     public const string INTENDED_URL_SESSION_KEY = 'url.intended';
 
+    /** The language of the page the login started from, to come back to it. */
+    public const string LOCALE_SESSION_KEY = 'auth.locale';
+
+    private const string LOCALE_QUERY = 'lang';
+
+    private const string HOME_PATH = '/';
+
     private const string DEFAULT_LANDING_PATH = '/mon-compte';
 
-    private const string INTERRUPTED_LOGIN = 'La connexion Battle.net a été interrompue. Relancez-la depuis le bouton « Se connecter ».';
+    private const string INTERRUPTED_LOGIN = 'auth.login.interrupted';
 
-    private const string REFUSED_LOGIN = 'Battle.net n’a pas validé la connexion. Réessayez dans un instant.';
+    private const string REFUSED_LOGIN = 'auth.login.refused';
 
-    private const string FAILED_LOGIN = 'Une erreur est survenue pendant la connexion à Battle.net. Réessayez dans un instant.';
+    private const string FAILED_LOGIN = 'auth.login.failed';
 
     private readonly string $clientId;
 
@@ -50,10 +59,11 @@ class AuthController extends Controller
         $this->region = $region;
     }
 
-    public function redirect(): RedirectResponse
+    public function redirect(Request $request): RedirectResponse
     {
         $state = Str::random(40);
         Session::put('blizzard_oauth_state', $state);
+        Session::put(self::LOCALE_SESSION_KEY, AppLocale::fromHeader($request->string(self::LOCALE_QUERY)->toString())->value);
 
         $query = http_build_query([
             'client_id' => $this->clientId,
@@ -66,8 +76,12 @@ class AuthController extends Controller
         return redirect(sprintf('https://%s.battle.net/oauth/authorize?%s', $this->region, $query));
     }
 
-    public function callback(Request $request): RedirectResponse
+    public function callback(Request $request, LocalizedUrls $localizedUrls): RedirectResponse
     {
+        $locale = $this->pullLoginLocale();
+        app()->setLocale($locale->value);
+        $home = $localizedUrls->absolute(self::HOME_PATH, $locale);
+
         try {
             /** @var string $code */
             $code = $request->input('code', '');
@@ -83,7 +97,7 @@ class AuthController extends Controller
                     'state_matches' => $state === $expectedState,
                 ]);
 
-                return redirect('/')->with('error', self::INTERRUPTED_LOGIN);
+                return redirect($home)->with('error', __(self::INTERRUPTED_LOGIN));
             }
 
             $response = Http::asForm()
@@ -101,7 +115,7 @@ class AuthController extends Controller
                     'body' => $response->body(),
                 ]);
 
-                return redirect('/')->with('error', self::REFUSED_LOGIN);
+                return redirect($home)->with('error', __(self::REFUSED_LOGIN));
             }
 
             $tokenData = $response->json();
@@ -113,20 +127,20 @@ class AuthController extends Controller
                     'response_keys' => array_keys($tokenData),
                 ]);
 
-                return redirect('/')->with('error', self::REFUSED_LOGIN);
+                return redirect($home)->with('error', __(self::REFUSED_LOGIN));
             }
 
             Session::put('blizzard_user_token', $accessToken);
             $this->fetchAndStoreUserInfo($accessToken);
 
-            return redirect($this->pullLandingPath());
+            return redirect($this->pullLandingPath() ?? $localizedUrls->absolute(self::DEFAULT_LANDING_PATH, $locale));
         } catch (\Throwable $throwable) {
             Log::error('Blizzard OAuth: unexpected error during callback', [
                 'message' => $throwable->getMessage(),
                 'trace' => $throwable->getTraceAsString(),
             ]);
 
-            return redirect('/')->with('error', self::FAILED_LOGIN);
+            return redirect($home)->with('error', __(self::FAILED_LOGIN));
         }
     }
 
@@ -134,15 +148,22 @@ class AuthController extends Controller
      * Only a path of this site is followed: the remembered URL comes from the request,
      * and following an absolute or protocol-relative one would make an open redirect.
      */
-    private function pullLandingPath(): string
+    private function pullLandingPath(): ?string
     {
         $intended = Session::pull(self::INTENDED_URL_SESSION_KEY);
 
         if (! is_string($intended) || preg_match('#^/(?![/\\\\])#', $intended) !== 1) {
-            return self::DEFAULT_LANDING_PATH;
+            return null;
         }
 
         return $intended;
+    }
+
+    private function pullLoginLocale(): AppLocale
+    {
+        $locale = Session::pull(self::LOCALE_SESSION_KEY);
+
+        return AppLocale::fromHeader(is_string($locale) ? $locale : null);
     }
 
     private function fetchAndStoreUserInfo(string $accessToken): void

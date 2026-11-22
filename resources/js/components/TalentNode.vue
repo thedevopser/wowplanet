@@ -1,7 +1,7 @@
 <template>
     <a
         v-if="activeEntry"
-        :href="`https://www.wowhead.com/fr/spell=${activeEntry.spell_id}`"
+        :href="wowheadLink(`spell=${activeEntry.spell_id}`)"
         target="_blank"
         rel="noopener"
         :class="[
@@ -49,6 +49,9 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+
+const { wowheadLink } = useCatalogLocale();
 
 const props = defineProps({
     node: { type: Object, required: true },

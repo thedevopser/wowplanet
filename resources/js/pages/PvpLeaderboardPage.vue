@@ -10,23 +10,23 @@
             <meta property="og:image" :content="meta.ogImage">
             <meta property="og:url" :content="meta.ogUrl">
             <meta property="og:site_name" content="WowPlanet">
-            <meta property="og:locale" content="fr_FR">
+            <meta property="og:locale" :content="$t('locale.og')">
         </Head>
 
         <header class="flex flex-wrap items-end justify-between gap-4 rounded-ui-md border border-l-4 border-default border-l-accent bg-surface p-5 sm:p-6">
             <div class="min-w-0">
-                <h1 class="font-display text-2xl font-bold text-default sm:text-3xl">Classements PvP</h1>
-                <p class="mt-1 text-sm text-muted sm:text-base">{{ seasonId ? `${label} — saison ${seasonId}` : label }}</p>
+                <h1 class="font-display text-2xl font-bold text-default sm:text-3xl">{{ $t('pvp.leaderboards.title') }}</h1>
+                <p class="mt-1 text-sm text-muted sm:text-base">{{ seasonId ? $t('pvp.leaderboards.season', { label: bracketLabel, season: seasonId }) : bracketLabel }}</p>
             </div>
             <p class="text-right">
-                <span class="block text-2xl font-bold tabular-nums text-default sm:text-3xl">{{ total.toLocaleString('fr-FR') }}</span>
-                <span class="text-sm text-muted">joueurs classés</span>
+                <span class="block text-2xl font-bold tabular-nums text-default sm:text-3xl">{{ formatNumber(total) }}</span>
+                <span class="text-sm text-muted">{{ $t('pvp.leaderboards.ranked_players') }}</span>
             </p>
         </header>
 
         <!-- Solo shuffle and Blitz hold about forty brackets each: they go in a list, not in buttons. -->
         <div v-if="groups.length" class="space-y-3">
-            <div role="group" aria-label="Mode" class="flex flex-wrap gap-2">
+            <div role="group" :aria-label="$t('pvp.leaderboards.mode')" class="flex flex-wrap gap-2">
                 <Button
                     v-for="group in groups"
                     :key="group.key"
@@ -34,11 +34,11 @@
                     :variant="group.key === activeGroupKey ? 'secondary' : 'ghost'"
                     :aria-pressed="String(group.key === activeGroupKey)"
                     @click="onModeChange(group)"
-                >{{ group.label }}</Button>
+                >{{ pvpGroupLabel(group, t) }}</Button>
             </div>
 
             <template v-if="activeGroup && activeGroup.brackets.length > 1">
-                <div v-if="activeGroup.brackets.length <= INLINE_OPTIONS_MAX" role="group" aria-label="Format" class="flex flex-wrap gap-2">
+                <div v-if="activeGroup.brackets.length <= INLINE_OPTIONS_MAX" role="group" :aria-label="$t('pvp.leaderboards.format')" class="flex flex-wrap gap-2">
                     <Button
                         v-for="option in activeGroup.brackets"
                         :key="option.slug"
@@ -47,15 +47,15 @@
                         :variant="option.slug === bracket ? 'secondary' : 'ghost'"
                         :aria-pressed="String(option.slug === bracket)"
                         @click="onBracketChange(option.slug)"
-                    >{{ option.short }}</Button>
+                    >{{ pvpShortLabel(option, t) }}</Button>
                 </div>
-                <Select v-else :model-value="bracket" label="Spécialisation" :options="bracketOptions" @update:model-value="onBracketChange" />
+                <Select v-else :model-value="bracket" :label="$t('sheet.talents.spec')" :options="bracketOptions" @update:model-value="onBracketChange" />
             </template>
         </div>
 
         <SearchFilter
             v-model:search="searchTerm"
-            placeholder="Rechercher un joueur ou un royaume…"
+            :placeholder="$t('pvp.leaderboards.search')"
             :show-hide-toggle="false"
             :debounce-ms="300"
             @search-debounced="searchFor"
@@ -63,8 +63,8 @@
 
         <ErrorState
             v-if="unavailable"
-            title="Classement momentanément indisponible"
-            message="L’API Blizzard n’a pas répondu, réessayez dans quelques minutes."
+            :title="$t('pvp.leaderboards.unavailable.title')"
+            :message="$t('pvp.leaderboards.unavailable.message')"
             @retry="router.reload()"
         />
 
@@ -74,13 +74,13 @@
                 :current-page="currentPage"
                 :last-page="lastPage"
                 :total="total"
-                label="Pages du classement"
+                :label="$t('pvp.leaderboards.pages')"
                 @page-change="goToPage"
             />
 
             <CatalogTable
                 v-if="entries.length"
-                :caption="`Classement ${label}`"
+                :caption="$t('pvp.leaderboards.caption', { label: bracketLabel })"
                 :columns="COLUMNS"
                 :rows="entries"
                 :row-attrs="(entry) => ({ 'data-testid': `pvp-rank-${entry.rank}` })"
@@ -90,7 +90,7 @@
                 <template #cell-rank="{ row }"><span class="tabular-nums text-muted">{{ row.rank }}</span></template>
                 <template #cell-player="{ row, linkClass }">
                     <Link
-                        :href="`/character/${row.realm_slug}/${row.name.toLowerCase()}`"
+                        :href="localizedUrl(`/character/${row.realm_slug}/${row.name.toLowerCase()}`)"
                         class="font-medium hover:underline"
                         :class="linkClass"
                         :style="factionStyle(row.faction)"
@@ -101,17 +101,17 @@
                 <template #cell-rating="{ row }"><span class="font-bold tabular-nums text-default">{{ row.rating }}</span></template>
                 <template #cell-record="{ row }">
                     <span class="tabular-nums text-muted">
-                        <span class="text-success">{{ row.won }} V</span> / <span class="text-danger">{{ row.lost }} D</span>
+                        <span class="text-success">{{ $t('pvp.leaderboards.won_short', { count: row.won }) }}</span> / <span class="text-danger">{{ $t('pvp.leaderboards.lost_short', { count: row.lost }) }}</span>
                     </span>
                 </template>
             </CatalogTable>
-            <EmptyState v-else :icon="SearchX" title="Aucun résultat" message="Aucun joueur ni royaume ne correspond à cette recherche." />
+            <EmptyState v-else :icon="SearchX" :title="$t('common.no_result')" :message="$t('pvp.leaderboards.no_match')" />
 
             <DatabasePagination
                 :current-page="currentPage"
                 :last-page="lastPage"
                 :total="total"
-                label="Pages du classement"
+                :label="$t('pvp.leaderboards.pages')"
                 @page-change="goToPage"
             />
         </template>
@@ -139,17 +139,25 @@ import ErrorState from '../components/ui/ErrorState.vue';
 import Select from '../components/ui/Select.vue';
 import { useCatalogPaging } from '../composables/useCatalogPaging';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useTranslate } from '../composables/useTranslate';
+import { pvpBracketLabel, pvpGroupLabel, pvpShortLabel } from '../utils/pvpLabels';
 import { factionColor } from '../utils/wowColors';
 
 const INLINE_OPTIONS_MAX = 6;
 
-const COLUMNS = [
-    { key: 'rank', label: 'Rang', class: 'w-16' },
-    { key: 'player', label: 'Joueur' },
-    { key: 'realm', label: 'Royaume', hideBelow: 'sm' },
-    { key: 'rating', label: 'Cote', align: 'end' },
-    { key: 'record', label: 'Victoires / défaites', align: 'end', hideBelow: 'md' },
-];
+const t = useTranslate();
+const { formatNumber } = useLocaleFormat();
+const { localizedUrl } = useLocalizedUrl();
+
+const COLUMNS = computed(() => [
+    { key: 'rank', label: t('pvp.leaderboards.columns.rank'), class: 'w-16' },
+    { key: 'player', label: t('pvp.leaderboards.columns.player') },
+    { key: 'realm', label: t('account.characters.sort.realm'), hideBelow: 'sm' },
+    { key: 'rating', label: t('sheet.mythic.rating'), align: 'end' },
+    { key: 'record', label: t('pvp.leaderboards.columns.record'), align: 'end', hideBelow: 'md' },
+]);
 
 const props = defineProps({
     meta: { type: Object, required: true },
@@ -172,7 +180,8 @@ const activeGroup = computed(
     () => props.groups.find((group) => group.brackets.some((option) => option.slug === props.bracket)) ?? props.groups[0] ?? null,
 );
 const activeGroupKey = computed(() => activeGroup.value?.key ?? null);
-const bracketOptions = computed(() => (activeGroup.value?.brackets ?? []).map((option) => ({ value: option.slug, label: option.short })));
+const bracketOptions = computed(() => (activeGroup.value?.brackets ?? []).map((option) => ({ value: option.slug, label: pvpShortLabel(option, t) })));
+const bracketLabel = computed(() => pvpBracketLabel({ slug: props.bracket, label: props.label }, t));
 
 // The whole ranking travels in props: only these keys are reloaded.
 const { busy, goToPage, searchFor } = useCatalogPaging(
@@ -191,7 +200,7 @@ function onBracketChange(slug) {
     if (slug === props.bracket) return;
 
     searchTerm.value = '';
-    router.get(`/classements-pvp/${slug}`, {}, { preserveState: false });
+    router.get(localizedUrl(`/classements-pvp/${slug}`), {}, { preserveState: false });
 }
 
 // A mode opens on its "all specs" ranking when Blizzard publishes one, otherwise on its first bracket.

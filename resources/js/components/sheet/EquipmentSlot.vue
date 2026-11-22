@@ -1,7 +1,7 @@
 <template>
     <component
         :is="item ? 'a' : 'div'"
-        :href="item ? `https://www.wowhead.com/fr/item=${item.item_id}` : undefined"
+        :href="item ? wowheadLink(`item=${item.item_id}`) : undefined"
         :target="item ? '_blank' : undefined"
         :rel="item ? 'noopener' : undefined"
         class="flex min-h-11 items-center gap-3 rounded-ui-md border p-3"
@@ -22,7 +22,7 @@
                 class="block truncate text-sm font-semibold"
                 :class="item ? 'text-default' : 'text-subtle'"
                 :style="color ? { color: readable(color) } : undefined"
-            >{{ item ? item.name : 'Vide' }}</span>
+            >{{ item ? item.name : $t('sheet.equipment.empty') }}</span>
             <span class="block text-xs text-subtle">{{ label }}</span>
         </span>
         <span v-if="item" class="shrink-0 text-sm font-semibold tabular-nums text-muted">{{ item.item_level }}</span>
@@ -33,6 +33,7 @@
 import { computed } from 'vue';
 import { qualityColor } from '../../utils/wowColors';
 import { useWowColor } from '../../composables/useWowColor';
+import { useCatalogLocale } from '../../composables/useCatalogLocale';
 
 const props = defineProps({
     label: { type: String, required: true },
@@ -40,6 +41,7 @@ const props = defineProps({
 });
 
 const { readable, safe } = useWowColor();
+const { wowheadLink } = useCatalogLocale();
 
 const color = computed(() => (props.item ? safe(qualityColor, props.item.quality) : null));
 </script>

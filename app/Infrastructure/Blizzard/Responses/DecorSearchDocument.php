@@ -16,6 +16,7 @@ final readonly class DecorSearchDocument
     public function __construct(
         public int $id,
         public ?string $nameFr,
+        public ?string $nameEn,
         public ?int $itemId,
     ) {}
 
@@ -26,6 +27,7 @@ final readonly class DecorSearchDocument
         return new self(
             id: $responsePayload->requiredInt('id'),
             nameFr: TrimmedText::firstNonEmpty($name?->optionalString('fr_FR'), $name?->optionalString('en_US')),
+            nameEn: TrimmedText::firstNonEmpty($name?->optionalString('en_US')),
             itemId: $responsePayload->optionalObject('item')?->optionalInt('id'),
         );
     }

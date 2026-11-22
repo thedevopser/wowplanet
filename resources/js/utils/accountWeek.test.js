@@ -5,7 +5,7 @@ const slots = (rewards, thresholds) => thresholds.map((threshold, index) => ({ t
 
 describe('difficultyLabel', () => {
     it('names the raid difficulties as the site does', () => {
-        expect(['LFR', 'NORMAL', 'HEROIC', 'MYTHIC'].map(difficultyLabel)).toEqual(['LFR', 'Normal', 'Héroïque', 'Mythique']);
+        expect(['LFR', 'NORMAL', 'HEROIC', 'MYTHIC'].map((difficulty) => difficultyLabel(difficulty))).toEqual(['LFR', 'Normal', 'Héroïque', 'Mythique']);
     });
 
     it('shows a difficulty it does not know as Blizzard sends it', () => {

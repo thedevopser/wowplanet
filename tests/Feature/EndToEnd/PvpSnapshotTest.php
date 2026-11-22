@@ -52,7 +52,7 @@ beforeEach(function (): void {
 });
 
 test('the pvp tab payload is unchanged', function (): void {
-    Cache::put('pvp_tier:11', ['name' => 'Rival', 'icon_url' => 'https://render.test/rival.jpg'], 60);
+    Cache::put('pvp_tier:11:fr', ['name' => 'Rival', 'icon_url' => 'https://render.test/rival.jpg'], 60);
 
     $bracket = fn (array $overrides): array => array_merge([
         'season' => ['id' => 40],
@@ -94,7 +94,7 @@ test('the pvp tab payload is unchanged', function (): void {
 
     $pvp = resolve(PvpProfileService::class)->getForCharacter('Hyjal', 'Thrall');
 
-    expect(pvpSnapshot(['pvp' => $pvp, 'tiers' => [Cache::get('pvp_tier:12'), Cache::get('pvp_tier:13'), Cache::get('pvp_tier:99')]]))->toMatchSnapshot();
+    expect(pvpSnapshot(['pvp' => $pvp, 'tiers' => [Cache::get('pvp_tier:12:fr'), Cache::get('pvp_tier:13:fr'), Cache::get('pvp_tier:99:fr')]]))->toMatchSnapshot();
 });
 
 test('the pvp leaderboard payload is unchanged', function (): void {

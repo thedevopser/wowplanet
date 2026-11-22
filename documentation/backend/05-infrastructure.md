@@ -664,7 +664,9 @@ Les correspondances que l'API Blizzard n'expose sur aucun endpoint — extension
 
 ### `ReferenceCatalog`
 
-Déclare les onze tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`, et les trois tables d'étiquettes des décorations, `DataTagXHouseDecorRecord`, `DataTagGroupXDataTag` et `DataTagInfo`. Cette dernière est lue sans locale, donc en anglais : ses libellés d'extension sont ceux de la taxonomie curée.
+Déclare les douze tables DB2 retenues et, pour chacune, les seules colonnes utiles : `Faction`, `FactionEn`, `ContentTuning`, `AreaTable`, `QuestV2CliTask`, `SkillLineAbility`, `CurrencyTypes`, `Mount`, `SpellMisc`, et les trois tables d'étiquettes des décorations, `DataTagXHouseDecorRecord`, `DataTagGroupXDataTag` et `DataTagInfo`. Cette dernière est lue sans locale, donc en anglais : ses libellés d'extension sont ceux de la taxonomie curée.
+
+Une table s'identifie dans le socle par `name()` : son nom DB2, sauf pour une variante de langue. `FactionEn` relit ainsi la table DB2 `Faction` en `enUS`, pour les seuls identifiant et nom, dans `wow_ref_faction_en` : `FactionReference::names()` y prend le nom anglais d'une réputation sur une page anglaise, le français à défaut. C'est ce nom que `app:wow-reference-sync --table` accepte et que l'inventaire retient.
 
 `SpellMisc` est la plus lourde du socle — 417 583 lignes pour 45 Mo — et n'est retenue que pour deux colonnes, `SpellID` et `SpellIconFileDataID`. C'est le prix de l'icône des montures, que l'API n'expose nulle part.
 

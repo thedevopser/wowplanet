@@ -16,10 +16,10 @@ const ITEMS = [
 
 let wrapper;
 
-async function mountMenu(items = ITEMS, extraProps = {}) {
+async function mountMenu(items = ITEMS, extraProps = {}, extraSlots = {}) {
     wrapper = mount(DropdownMenu, {
         props: { items, label: 'Menu du compte', ...extraProps },
-        slots: { trigger: '<button type="button" data-trigger>Arthas</button>' },
+        slots: { trigger: '<button type="button" data-trigger>Arthas</button>', ...extraSlots },
         attachTo: document.body,
     });
     await flushPromises();
@@ -194,6 +194,20 @@ describe('DropdownMenu', () => {
             await openWithKeyboard();
 
             expect(menu().querySelectorAll('[role="separator"]')).toHaveLength(2);
+        });
+
+        it('draws no separator when the choice stands alone', async () => {
+            await mountMenu([], { choices, choice: 'dark' });
+            await openWithKeyboard();
+
+            expect(menu().querySelector('[role="separator"]')).toBeNull();
+        });
+
+        it('lets the caller draw the label of each option', async () => {
+            await mountMenu([], { choices, choice: 'dark' }, { choice: '<template #choice="{ option }"><em>{{ option.value }}</em></template>' });
+            await openWithKeyboard();
+
+            expect(radios().map((item) => item.querySelector('em')?.textContent)).toEqual(['system', 'dark', 'light']);
         });
     });
 });

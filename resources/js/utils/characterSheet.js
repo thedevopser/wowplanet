@@ -1,36 +1,37 @@
-// Mirror of App\Http\Character\CharacterSheetSection: the server routes these slugs.
+// Mirror of App\Http\Character\CharacterSheetSection: the server routes these slugs, the same in
+// both languages. Labels are translation keys.
 export const OVERVIEW = 'apercu';
 
 export const SECTIONS = Object.freeze([
-    { value: OVERVIEW, label: 'Aperçu', subs: [] },
+    { value: OVERVIEW, label: 'sheet.sections.overview', subs: [] },
     {
         value: 'progression',
-        label: 'Progression',
+        label: 'sheet.sections.progress',
         subs: [
-            { value: 'quetes', label: 'Quêtes' },
-            { value: 'hauts-faits', label: 'Hauts-faits' },
-            { value: 'reputations', label: 'Réputations' },
-            { value: 'metiers', label: 'Métiers' },
+            { value: 'quetes', label: 'score.dimension.quests' },
+            { value: 'hauts-faits', label: 'score.dimension.achievements' },
+            { value: 'reputations', label: 'score.dimension.reputations' },
+            { value: 'metiers', label: 'score.dimension.professions' },
         ],
     },
     {
         value: 'endgame',
-        label: 'Endgame',
+        label: 'sheet.sections.endgame',
         subs: [
-            { value: 'mythique-plus', label: 'Mythique+' },
-            { value: 'raids', label: 'Raids' },
-            { value: 'pvp', label: 'PvP' },
-            { value: 'equipement', label: 'Équipement et talents' },
+            { value: 'mythique-plus', label: 'sheet.sections.mythic_plus' },
+            { value: 'raids', label: 'score.dimension.raids' },
+            { value: 'pvp', label: 'sheet.sections.pvp' },
+            { value: 'equipement', label: 'sheet.sections.equipment' },
         ],
     },
     {
         value: 'collections',
-        label: 'Collections',
+        label: 'sheet.sections.collections',
         subs: [
-            { value: 'montures', label: 'Montures' },
-            { value: 'mascottes', label: 'Mascottes' },
-            { value: 'decorations', label: 'Décorations' },
-            { value: 'garde-robe', label: 'Garde-robe' },
+            { value: 'montures', label: 'score.dimension.mounts' },
+            { value: 'mascottes', label: 'score.dimension.pets' },
+            { value: 'decorations', label: 'score.dimension.decor' },
+            { value: 'garde-robe', label: 'score.dimension.transmog' },
         ],
     },
 ]);

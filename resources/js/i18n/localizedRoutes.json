@@ -1,0 +1,18 @@
+{
+    "home": { "fr": "/", "en": "/en" },
+    "character": { "fr": "/character/{realm}/{name}/{section?}/{sub?}", "en": "/en/character/{realm}/{name}/{section?}/{sub?}" },
+    "account": { "fr": "/mon-compte/{view?}", "en": "/en/my-account/{view?}" },
+    "database.index": { "fr": "/base-de-donnees", "en": "/en/database" },
+    "database.mounts": { "fr": "/base-de-donnees/montures/{category?}", "en": "/en/database/mounts/{category?}" },
+    "database.achievements": { "fr": "/base-de-donnees/hauts-faits/{expansion?}", "en": "/en/database/achievements/{expansion?}" },
+    "database.quests": { "fr": "/base-de-donnees/quetes/{expansion?}", "en": "/en/database/quests/{expansion?}" },
+    "database.pets": { "fr": "/base-de-donnees/mascottes/{category?}", "en": "/en/database/pets/{category?}" },
+    "database.decors": { "fr": "/base-de-donnees/decorations/{category?}", "en": "/en/database/decor/{category?}" },
+    "database.appearances": { "fr": "/base-de-donnees/garde-robe/{slot?}", "en": "/en/database/appearances/{slot?}" },
+    "database.professions": { "fr": "/base-de-donnees/professions/{profession?}", "en": "/en/database/professions/{profession?}" },
+    "pvp": { "fr": "/classements-pvp/{bracket?}", "en": "/en/pvp-leaderboards/{bracket?}" },
+    "faq": { "fr": "/faq", "en": "/en/faq" },
+    "terms": { "fr": "/cgu", "en": "/en/terms" },
+    "privacy": { "fr": "/privacy", "en": "/en/privacy" },
+    "addons": { "fr": "/addons", "en": "/en/addons" }
+}

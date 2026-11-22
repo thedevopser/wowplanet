@@ -40,3 +40,8 @@ test('it reads a decor bound to no item, which carries neither icon nor quality'
 test('it refuses a document without an identifier rather than importing it as zero', function (): void {
     decorSearchDocument(['name' => ['fr_FR' => 'Foyer orné en pierre']]);
 })->throws(MissingFieldException::class);
+
+test('it carries the english name beside the french one', function (): void {
+    expect(decorSearchDocument(['id' => 7, 'name' => ['fr_FR' => 'Tabouret', 'en_US' => 'Stool']])->nameEn)->toBe('Stool')
+        ->and(decorSearchDocument(['id' => 7, 'name' => ['fr_FR' => 'Tabouret']])->nameEn)->toBeNull();
+});

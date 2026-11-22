@@ -119,3 +119,20 @@ describe('CollectionTab', () => {
         expect(wrapper.text()).toContain('Aucune monture connue pour ce personnage.');
     });
 });
+
+describe('CollectionTab in english', () => {
+    it('keeps the curated categories and sources in english and links to the english Wowhead', async () => {
+        const wrapper = await mountWithPlugins(CollectionTab, {
+            locale: 'en',
+            props: { kind: 'mounts', character: { mounts: MOUNTS } },
+            stubActions: false,
+        });
+
+        expect(wrapper.find('h2').text()).toBe('Mounts');
+        expect(categorySelect(wrapper).props('label')).toBe('Category');
+        expect(sourceNames(wrapper)).toEqual(['Achievement', 'Raid Drop']);
+        await wrapper.find('[data-group] button').trigger('click');
+        expect(wrapper.find('a[href="https://www.wowhead.com/spell=1003"]').exists()).toBe(true);
+        expect(wrapper.find('input').attributes('placeholder')).toBe('Search for a mount…');
+    });
+});

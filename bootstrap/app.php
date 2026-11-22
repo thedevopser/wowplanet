@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Localization\AppLocale;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use App\Http\Theme\ThemeChoice;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Application;
@@ -21,11 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
         $middleware->encryptCookies(except: [
             ThemeChoice::COOKIE,
+            AppLocale::COOKIE,
         ]);
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            SetLocale::class,
+        ], append: [
             HandleInertiaRequests::class,
         ]);
         $middleware->api(prepend: [
+            SetLocale::class,
             EncryptCookies::class,
             StartSession::class,
         ]);

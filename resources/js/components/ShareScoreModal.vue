@@ -1,16 +1,16 @@
 <template>
-    <Dialog :open="show" size="wide" :title="variant === 'account' ? 'Partager le score du compte' : 'Partager ce score'" @update:open="(open) => !open && $emit('close')">
+    <Dialog :open="show" size="wide" :title="variant === 'account' ? $t('score.share_account') : $t('score.share')" @update:open="(open) => !open && $emit('close')">
         <div class="flex justify-center overflow-auto rounded-ui-md bg-surface-raised p-2 sm:p-4">
             <canvas ref="canvas" role="img" :aria-label="cardLabel" class="h-auto max-w-full rounded-ui-sm" />
         </div>
         <template #footer>
             <Button @click="downloadImage">
                 <Icon :icon="Download" size="sm" />
-                Télécharger
+                {{ $t('score.download') }}
             </Button>
             <Button variant="primary" @click="copyImage">
                 <Icon :icon="copied ? Check : Copy" size="sm" />
-                {{ copied ? 'Image copiée' : 'Copier l’image' }}
+                {{ copied ? $t('score.image_copied') : $t('score.copy_image') }}
             </Button>
         </template>
     </Dialog>
@@ -20,7 +20,9 @@
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { Check, Copy, Download } from 'lucide-vue-next';
 import { renderScoreCard } from '../utils/scoreCardRenderer';
-import { formatScore } from '../utils/formatScore';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useScoreLabels } from '../composables/useScoreLabels';
+import { useTranslate, useTranslateChoice } from '../composables/useTranslate';
 import Button from './ui/Button.vue';
 import Dialog from './ui/Dialog.vue';
 import Icon from './ui/Icon.vue';
@@ -35,17 +37,31 @@ const props = defineProps({
 
 defineEmits(['close']);
 
+const t = useTranslate();
+const tChoice = useTranslateChoice();
+const { locale, formatScore } = useLocaleFormat();
+const { rankLabel, dimensionLabel } = useScoreLabels();
+
+const cardLabels = computed(() => ({
+    locale: locale.value,
+    title: t('sheet.overview.score_title'),
+    accountTitle: t('score.account_title'),
+    charactersAnalysed: (count) => tChoice('score.characters_analysed', count, { count }),
+    rank: rankLabel,
+    dimension: (dimension) => dimensionLabel(dimension.key),
+}));
+
 const canvas = useTemplateRef('canvas');
 const copied = ref(false);
 
-const cardLabel = computed(() => `Carte de score à partager : ${formatScore(props.scoreData.globalScore ?? 0)} sur 100, rang ${props.scoreData.rank ?? ''}`);
+const cardLabel = computed(() => t('score.card_label', { score: formatScore(props.scoreData.globalScore ?? 0), rank: rankLabel(props.scoreData.rank ?? '') }));
 
 // The canvas only exists once the dialog is mounted in its portal: draw when it appears.
 watch(canvas, (target) => {
     if (!target) {
         return;
     }
-    const rendered = renderScoreCard(props.scoreData);
+    const rendered = renderScoreCard(props.scoreData, cardLabels.value);
     target.width = rendered.width;
     target.height = rendered.height;
     target.getContext('2d')?.drawImage(rendered, 0, 0);

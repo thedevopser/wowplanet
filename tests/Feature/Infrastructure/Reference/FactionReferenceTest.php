@@ -253,3 +253,13 @@ test('it returns empty maps when the reference tables are empty', function (): v
         ->and($factionReference->accountWideIds())->toBe([])
         ->and($factionReference->factions())->toBe([]);
 });
+
+test('an english page names a reputation in english, the french name as a fallback', function (): void {
+    seedReferenceFaction(LEGION_HEADER, 'Legion');
+    seedReferenceFaction(500, 'Les Sentinelles', parentFactionId: LEGION_HEADER);
+    seedReferenceFaction(501, 'Les Veilleurs', parentFactionId: LEGION_HEADER);
+    DB::table('wow_ref_faction_en')->insert(['id' => 500, 'name_lang' => 'The Sentinels']);
+    app()->setLocale('en');
+
+    expect(factionReference()->names())->toBe([500 => 'The Sentinels', 501 => 'Les Veilleurs']);
+});

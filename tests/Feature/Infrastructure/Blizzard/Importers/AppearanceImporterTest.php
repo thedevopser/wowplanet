@@ -74,11 +74,11 @@ function mockHighestItemId(MockInterface $mock, ?int $highestItemId): void
  * @param  list<int>  $appearanceIds
  * @return array<string, mixed>
  */
-function itemDocument(int $id, string $name, string $quality, array $appearanceIds, string $category = 'Armure'): array
+function itemDocument(int $id, string $name, string $quality, array $appearanceIds, string $category = 'Armure', ?string $englishName = null): array
 {
     return [
         'id' => $id,
-        'name' => ['fr_FR' => $name],
+        'name' => array_filter(['fr_FR' => $name, 'en_US' => $englishName]),
         'quality' => ['type' => $quality],
         'media' => ['id' => $id],
         'item_class' => ['id' => 4, 'name' => ['fr_FR' => $category]],
@@ -716,4 +716,32 @@ test('a full sweep removes the listed appearances still named by a placeholder',
     resolve(AppearanceImporter::class)->import();
 
     expect(WowAppearance::query()->pluck('id')->all())->toBe([321]);
+});
+
+test('it stores the english name of the representative item', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockSlotIndexes($client, ['HEAD' => [321]]);
+    mockHighestItemId($client, 20);
+    mockSearchWindows($client, 'data/wow/search/item', [0 => [itemDocument(20, 'Couvre-œil', 'EPIC', [321], englishName: 'Eyepatch')]]);
+    mockSearchWindows($client, 'data/wow/search/media', []);
+
+    resolve(AppearanceImporter::class)->import();
+
+    expect(WowAppearance::query()->findOrFail(321)->name_en)->toBe('Eyepatch');
+});
+
+test('it adds the english name to an appearance stored before it existed', function (): void {
+    WowAppearance::factory()->create(['id' => 321, 'name_fr' => 'Couvre-œil', 'name_en' => null, 'slot' => 'HEAD', 'quality' => 4, 'item_id' => 20, 'category' => 'Armure']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockSlotIndexes($client, ['HEAD' => [321]]);
+    mockHighestItemId($client, 20);
+    mockSearchWindows($client, 'data/wow/search/item', [0 => [itemDocument(20, 'Couvre-œil', 'EPIC', [321], englishName: 'Eyepatch')]]);
+    mockSearchWindows($client, 'data/wow/search/media', []);
+
+    resolve(AppearanceImporter::class)->import();
+
+    expect(WowAppearance::query()->findOrFail(321)->name_en)->toBe('Eyepatch');
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Blizzard;
 
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\Responses\ConnectedRealmIndexResponse;
 use App\Infrastructure\Blizzard\Responses\Exceptions\UnexpectedFieldTypeException;
 use App\Infrastructure\Blizzard\Responses\MythicDungeon;
@@ -135,7 +136,7 @@ class BlizzardApiClient
                 'Authorization' => 'Bearer '.$this->getAccessToken(),
                 'Battlenet-Namespace' => $namespace,
             ],
-            'query' => array_merge(['locale' => 'fr_FR'], $query),
+            'query' => array_merge(['locale' => AppLocale::current()->blizzardLocale()], $query),
         ]);
     }
 
@@ -177,7 +178,7 @@ class BlizzardApiClient
                 'Authorization' => 'Bearer '.$userToken,
                 'Battlenet-Namespace' => $this->namespace,
             ],
-            'query' => array_merge(['locale' => 'fr_FR'], $query),
+            'query' => array_merge(['locale' => AppLocale::current()->blizzardLocale()], $query),
         ]);
 
         return ResponsePayload::forEndpoint($endpoint, $this->decode($endpoint, $response));
@@ -198,7 +199,7 @@ class BlizzardApiClient
                 'Authorization' => 'Bearer '.$accessToken,
                 'Battlenet-Namespace' => $namespace,
             ],
-            'query' => array_merge(['locale' => 'fr_FR'], $query),
+            'query' => array_merge(['locale' => AppLocale::current()->blizzardLocale()], $query),
         ]);
     }
 
@@ -249,11 +250,11 @@ class BlizzardApiClient
     public function getCurrentMythicDungeons(): array
     {
         /** @var array<int, string>|null $cached */
-        $cached = Cache::get(self::MYTHIC_DUNGEONS_CACHE_KEY);
+        $cached = Cache::get(AppLocale::current()->scopedCacheKey(self::MYTHIC_DUNGEONS_CACHE_KEY));
         $names = $cached ?? $this->fetchCurrentMythicDungeonNames();
 
         if ($cached === null && $names !== []) {
-            Cache::put(self::MYTHIC_DUNGEONS_CACHE_KEY, $names, self::MYTHIC_DUNGEONS_CACHE_SECONDS);
+            Cache::put(AppLocale::current()->scopedCacheKey(self::MYTHIC_DUNGEONS_CACHE_KEY), $names, self::MYTHIC_DUNGEONS_CACHE_SECONDS);
         }
 
         return array_map(

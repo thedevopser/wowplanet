@@ -3,11 +3,11 @@
         <span class="text-danger">
             <Icon :icon="CircleAlert" size="lg" />
         </span>
-        <p class="font-semibold text-default">{{ title }}</p>
+        <p class="font-semibold text-default">{{ title ?? $t('common.error.title') }}</p>
         <p class="max-w-prose text-sm text-muted">{{ message }}</p>
         <Button v-if="onRetry" class="mt-2" @click="onRetry">
             <Icon :icon="RotateCw" size="sm" />
-            Réessayer
+            {{ $t('sheet.cross.retry') }}
         </Button>
     </div>
 </template>
@@ -20,7 +20,7 @@ import Icon from './Icon.vue';
 // onRetry is declared as a prop so that the retry button shows only when @retry is bound.
 defineProps({
     message: { type: String, required: true },
-    title: { type: String, default: 'Une erreur est survenue' },
+    title: { type: String, default: null },
     onRetry: { type: Function, default: null },
 });
 </script>

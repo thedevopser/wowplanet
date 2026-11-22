@@ -62,3 +62,8 @@ test('a document linked to no appearance carries an empty list', function (): vo
 test('a document without an id is rejected', function (): void {
     itemSearchDocument(['name' => ['fr_FR' => 'Sans identifiant']]);
 })->throws(MissingFieldException::class, 'Missing field [id] in the response of [data/wow/search/item]');
+
+test('it carries the english name beside the french one', function (): void {
+    expect(itemSearchDocument(['id' => 1, 'name' => ['fr_FR' => 'Couvre-œil', 'en_US' => 'Eyepatch'], 'quality' => ['type' => 'COMMON']])->nameEn)->toBe('Eyepatch')
+        ->and(itemSearchDocument(['id' => 1, 'name' => ['fr_FR' => 'Couvre-œil'], 'quality' => ['type' => 'COMMON']])->nameEn)->toBeNull();
+});

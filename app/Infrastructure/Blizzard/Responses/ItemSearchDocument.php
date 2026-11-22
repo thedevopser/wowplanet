@@ -35,6 +35,7 @@ final readonly class ItemSearchDocument
     public function __construct(
         public int $id,
         public ?string $nameFr,
+        public ?string $nameEn,
         public int $quality,
         public ?int $mediaId,
         public ?string $categoryFr,
@@ -53,6 +54,7 @@ final readonly class ItemSearchDocument
         return new self(
             id: $responsePayload->requiredInt('id'),
             nameFr: TrimmedText::firstNonEmpty($name?->optionalString('fr_FR'), $name?->optionalString('en_US')),
+            nameEn: TrimmedText::firstNonEmpty($name?->optionalString('en_US')),
             quality: self::QUALITY_RANKS[$responsePayload->optionalObject('quality')?->optionalString('type') ?? ''] ?? self::DEFAULT_QUALITY,
             mediaId: $responsePayload->optionalObject('media')?->optionalInt('id'),
             categoryFr: TrimmedText::firstNonEmpty($responsePayload->optionalObject('item_class')?->optionalObject('name')?->optionalString('fr_FR')),

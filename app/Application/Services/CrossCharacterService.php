@@ -7,6 +7,7 @@ namespace App\Application\Services;
 use App\Application\DTOs\CharacterProfileDTO;
 use App\Application\DTOs\CrossCharacterProgress;
 use App\Application\DTOs\FetchedCharacterProgress;
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterAchievementsResponse;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfessionsResponse;
@@ -84,7 +85,7 @@ class CrossCharacterService
             'realmSlug' => $character['realmSlug'],
         ], $characters);
 
-        dispatch(new ComputeCrossCharacterJob($jobId, $bnetUserId, $characterReferences, $token, $battleTag));
+        dispatch(new ComputeCrossCharacterJob($jobId, $bnetUserId, $characterReferences, $token, $battleTag, AppLocale::current()->value));
 
         return ['status' => 'computing', 'jobId' => $jobId];
     }
@@ -146,7 +147,7 @@ class CrossCharacterService
             return;
         }
 
-        CrossCharacterData::query()->whereKey($bnetUserId)->update(['fetched_at' => null]);
+        CrossCharacterData::query()->where('bnet_user_id', $bnetUserId)->update(['fetched_at' => null]);
     }
 
     private function freshRecord(): ?CrossCharacterData
@@ -156,10 +157,9 @@ class CrossCharacterService
             return null;
         }
 
-        /** @var CrossCharacterData|null $record */
-        $record = CrossCharacterData::query()->find($bnetUserId);
+        $record = $this->recordOf($bnetUserId);
 
-        if ($record === null || $record->fetched_at === null) {
+        if (! $record instanceof CrossCharacterData || $record->fetched_at === null) {
             return null;
         }
 
@@ -180,16 +180,15 @@ class CrossCharacterService
             return;
         }
 
-        /** @var CrossCharacterData|null $record */
-        $record = CrossCharacterData::query()->find($bnetUserId);
+        $record = $this->recordOf($bnetUserId);
 
-        $crossCharacterProgress = $record !== null && $record->data !== [] ? $this->storedProgress($record) : new CrossCharacterProgress;
+        $crossCharacterProgress = $record instanceof CrossCharacterData && $record->data !== [] ? $this->storedProgress($record) : new CrossCharacterProgress;
 
         $crossCharacterProgress->mergeFromProfile($characterProfileDTO->name, $characterProfileDTO);
 
         $result = $crossCharacterProgress->buildResult();
 
-        CrossCharacterData::query()->updateOrCreate(['bnet_user_id' => $bnetUserId], [
+        CrossCharacterData::query()->updateOrCreate(['bnet_user_id' => $bnetUserId, 'locale' => AppLocale::current()->value], [
             'data' => $result,
             'character_count' => $record->character_count ?? 1,
             'fetched_at' => $record?->fetched_at,
@@ -298,7 +297,7 @@ class CrossCharacterService
             return Http::withToken($token)
                 ->withHeaders(['Battlenet-Namespace' => $namespace])
                 ->timeout(15)
-                ->get($url, ['locale' => 'fr_FR']);
+                ->get($url, ['locale' => AppLocale::current()->blizzardLocale()]);
         } catch (\Throwable $throwable) {
             Log::debug(sprintf('Cross-character fetch error: %s for %s', $throwable->getMessage(), $url));
 
@@ -312,5 +311,13 @@ class CrossCharacterService
         $userId = Session::get('bnet_user_id', '');
 
         return $userId;
+    }
+
+    private function recordOf(string $bnetUserId): ?CrossCharacterData
+    {
+        return CrossCharacterData::query()
+            ->where('bnet_user_id', $bnetUserId)
+            ->where('locale', AppLocale::current()->value)
+            ->first();
     }
 }

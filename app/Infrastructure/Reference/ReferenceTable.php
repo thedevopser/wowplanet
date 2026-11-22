@@ -11,13 +11,23 @@ final readonly class ReferenceTable
     /**
      * @param  string  $source  Nom de la table DB2 chez wago, sensible à la casse
      * @param  list<ReferenceColumn>  $columns
+     * @param  string|null  $variantName  Identité d'une même table DB2 chargée dans une autre langue
      */
     public function __construct(
         public string $source,
         public string $slug,
         public ?string $locale,
         public array $columns,
+        private ?string $variantName = null,
     ) {}
+
+    /**
+     * L'identité de la table dans le socle : son nom DB2, sauf pour une variante de langue.
+     */
+    public function name(): string
+    {
+        return $this->variantName ?? $this->source;
+    }
 
     public function table(): string
     {

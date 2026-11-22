@@ -19,13 +19,13 @@ test('every declared column exists in its table', function (): void {
     }
 });
 
-test('a table is identified by its source name and by its slug alone', function (): void {
+test('a table is identified by its name and by its slug alone', function (): void {
     $tables = (new ReferenceCatalog)->tables();
 
-    $sources = array_map(static fn (ReferenceTable $referenceTable): string => $referenceTable->source, $tables);
+    $names = array_map(static fn (ReferenceTable $referenceTable): string => $referenceTable->name(), $tables);
     $slugs = array_map(static fn (ReferenceTable $referenceTable): string => $referenceTable->slug, $tables);
 
-    expect(array_unique($sources))->toHaveCount(count($tables))
+    expect(array_unique($names))->toHaveCount(count($tables))
         ->and(array_unique($slugs))->toHaveCount(count($tables));
 });
 
@@ -73,4 +73,13 @@ test('the tag labels are read in English, the language of the curated taxonomy',
 
     expect($dataTagInfo)->not->toBeNull()
         ->and($dataTagInfo->locale)->toBeNull();
+});
+
+test('a table is named after its DB2 source unless it is a variant in another language', function (): void {
+    $catalog = new ReferenceCatalog;
+
+    expect($catalog->find('Faction')?->locale)->toBe('frFR')
+        ->and($catalog->find('FactionEn')?->source)->toBe('Faction')
+        ->and($catalog->find('FactionEn')?->locale)->toBe('enUS')
+        ->and($catalog->find('FactionEn')?->table())->toBe('wow_ref_faction_en');
 });

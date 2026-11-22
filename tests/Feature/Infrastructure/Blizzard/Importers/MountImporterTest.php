@@ -311,3 +311,30 @@ test('an import run after a reassignment from the panel keeps the new ranking', 
     expect(WowMount::query()->findOrFail(100)->only(['category', 'source']))
         ->toBe(['category' => 'Legion', 'source' => 'Class Hall']);
 });
+
+test('it stores the english name the search documents carry', function (): void {
+    fakeIconCdn(200);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockMountIndex($client, [['id' => 100, 'name' => 'Loup des bois']]);
+    mockMountSearch($client, [['id' => 100, 'name' => ['fr_FR' => 'Loup des bois', 'en_US' => 'Timber Wolf'], 'source' => ['type' => 'VENDOR']]]);
+
+    resolve(MountImporter::class)->import();
+
+    expect(WowMount::query()->findOrFail(100)->name_en)->toBe('Timber Wolf');
+});
+
+test('it keeps the english name a mount already had when its search window fails', function (): void {
+    fakeIconCdn(200);
+    WowMount::factory()->create(['id' => 100, 'name_fr' => 'Loup des bois', 'name_en' => 'Timber Wolf']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    mockMountIndex($client, [['id' => 100, 'name' => 'Loup des bois']]);
+    mockMountSearch($client, []);
+
+    resolve(MountImporter::class)->import();
+
+    expect(WowMount::query()->findOrFail(100)->name_en)->toBe('Timber Wolf');
+});

@@ -30,7 +30,7 @@ class WowReferenceDownloadFactory extends Factory
     public function definition(): array
     {
         return [
-            'source_table' => fake()->randomElement((new ReferenceCatalog)->sources()),
+            'source_table' => fake()->randomElement((new ReferenceCatalog)->names()),
             'build' => sprintf('12.1.0.%d', fake()->numberBetween(60000, 69999)),
             'filename' => $this->filenameFor(...),
             'bytes' => fake()->numberBetween(1000, 5_000_000),

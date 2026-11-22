@@ -309,3 +309,19 @@ describe('CharactersView', () => {
         expect(favoritesStore.fetchFavorites).toHaveBeenCalled();
     });
 });
+
+describe('CharactersView in english', () => {
+    it('speaks english and links to the english sheets', async () => {
+        const wrapper = await mountWithPlugins(CharactersView, {
+            locale: 'en',
+            initialState: { character: { userCharacters, loadingCharacters: false }, favorites: { favorites: [], loading: false } },
+        });
+        await nextTick();
+
+        expect(wrapper.text()).toContain('My characters');
+        expect(wrapper.text()).toContain('Group by class');
+        expect(wrapper.text()).toContain('Level 80');
+        expect(wrapper.find('a[href="/en/character/hyjal/arthas"]').exists()).toBe(true);
+        expect(wrapper.text()).not.toMatch(/Mes personnages|Niveau|Regrouper/);
+    });
+});

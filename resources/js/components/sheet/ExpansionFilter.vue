@@ -1,5 +1,5 @@
 <template>
-    <Select v-model="selected" label="Extension" :options="options" />
+    <Select v-model="selected" :label="$t('sheet.expansion')" :options="options" />
 </template>
 
 <script>
@@ -11,6 +11,11 @@ const DIMENSIONS = Object.freeze({ quests: 'quests', achievements: 'achievements
 import { computed } from 'vue';
 import { dimensionColor } from '../../utils/wowColors';
 import { useWowColor } from '../../composables/useWowColor';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useTranslate } from '../../composables/useTranslate';
+import { UNCATEGORIZED } from '../../utils/collections';
+
+const t = useTranslate();
 import Select from '../ui/Select.vue';
 
 const props = defineProps({
@@ -30,7 +35,7 @@ const selected = computed({
 });
 
 const color = computed(() => safe(dimensionColor, DIMENSIONS[props.collectionType])?.base);
-const formatNumber = (value) => Number(value).toLocaleString('fr-FR');
+const { formatNumber } = useLocaleFormat();
 
 // A bucket entry (onlyWhenFilled) is not an expansion: it only shows where it holds something.
 const options = computed(() => props.expansions
@@ -41,7 +46,7 @@ const options = computed(() => props.expansions
 
         return {
             value: String(expansion.id),
-            label: expansion.name,
+            label: expansion.name === UNCATEGORIZED ? t('sheet.collections.uncategorized_category') : expansion.name,
             ...(data ? { hint: `${formatNumber(data.completed)} / ${formatNumber(data.total)}`, progress: { value: data.completed, max: data.total, color: color.value } } : {}),
         };
     }));

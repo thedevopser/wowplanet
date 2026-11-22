@@ -44,6 +44,16 @@ test('it reads the static data of a raid from Blizzard once, then from the cache
     resolve(BlizzardApiClient::class)->shouldHaveReceived('get')->once()->with('data/wow/journal-instance/1307', ['namespace' => 'static-eu']);
 });
 
+test('it reads the static data of a raid again for another language', function (): void {
+    journalClient([1307 => ['name' => 'La Flèche du Vide', 'encounters' => []]]);
+
+    resolve(RaidJournal::class)->forInstances([1307]);
+    app()->setLocale('en');
+    resolve(RaidJournal::class)->forInstances([1307]);
+
+    resolve(BlizzardApiClient::class)->shouldHaveReceived('get')->twice()->with('data/wow/journal-instance/1307', ['namespace' => 'static-eu']);
+});
+
 test('a raid whose static data cannot be read is left out, the others stay', function (): void {
     journalClient([
         1307 => new RuntimeException('static data unavailable'),

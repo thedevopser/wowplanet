@@ -52,7 +52,7 @@ final readonly class ReferenceInventory
         $rows = DB::table($referenceTable->table())->count();
 
         return [
-            'source' => $referenceTable->source,
+            'source' => $referenceTable->name(),
             'table' => $referenceTable->table(),
             'rows' => $rows,
             'build' => $last?->build,
@@ -85,7 +85,7 @@ final readonly class ReferenceInventory
     {
         return array_values(
             WowReferenceDownload::query()
-                ->where('source_table', $referenceTable->source)
+                ->where('source_table', $referenceTable->name())
                 ->latest('downloaded_at')
                 ->limit(2)
                 ->get()

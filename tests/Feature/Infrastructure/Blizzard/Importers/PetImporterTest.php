@@ -197,3 +197,33 @@ test('it aborts without deleting anything when the pet index call fails', functi
     expect(WowPet::query()->count())->toBe(1)
         ->and(WowPet::query()->findOrFail(300)->name_fr)->toBe('Mascotte existante');
 });
+
+test('it stores the english name read from the index in english', function (): void {
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/pet/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andReturn(['pets' => [['id' => 39, 'name' => 'Mechanical Squirrel']]]);
+    mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
+    mockPetDetailFailure($client, 39);
+
+    resolve(PetImporter::class)->import();
+
+    expect(WowPet::query()->findOrFail(39)->name_en)->toBe('Mechanical Squirrel');
+});
+
+test('it keeps the english name a pet already had when the english index fails', function (): void {
+    WowPet::factory()->create(['id' => 39, 'name_fr' => 'Écureuil mécanique', 'name_en' => 'Mechanical Squirrel']);
+
+    /** @var BlizzardApiClient|MockInterface $client */
+    $client = $this->mock(BlizzardApiClient::class);
+    $client->shouldReceive('get')
+        ->withArgs(fn (string $endpoint, array $query): bool => $endpoint === 'data/wow/pet/index' && ($query['locale'] ?? null) === 'en_US')
+        ->andThrow(new RuntimeException('API error 404'));
+    mockPetIndex($client, [['id' => 39, 'name' => 'Écureuil mécanique']]);
+    mockPetDetailFailure($client, 39);
+
+    resolve(PetImporter::class)->import();
+
+    expect(WowPet::query()->findOrFail(39)->name_en)->toBe('Mechanical Squirrel');
+});

@@ -11,6 +11,7 @@ vi.mock('../utils/scoreCardRenderer', () => ({
 
 import { renderScoreCard } from '../utils/scoreCardRenderer';
 import ShareScoreModal from './ShareScoreModal.vue';
+import { mountWithPlugins } from '../tests/helpers';
 
 let wrapper;
 
@@ -61,7 +62,7 @@ describe('ShareScoreModal', () => {
     it('draws the share card from the score data once open', async () => {
         await mountModal();
 
-        expect(renderScoreCard).toHaveBeenCalledWith({ globalScore: 75, rank: 'Épique' });
+        expect(renderScoreCard).toHaveBeenCalledWith({ globalScore: 75, rank: 'Épique' }, expect.objectContaining({ title: 'Score de complétion' }));
         expect(dialog().querySelector('canvas')).not.toBeNull();
     });
 
@@ -93,5 +94,24 @@ describe('ShareScoreModal', () => {
 
         expect(button('Télécharger')).toBeDefined();
         expect(button('Copier l’image')).toBeDefined();
+    });
+});
+
+describe('ShareScoreModal in english', () => {
+    it('speaks english and draws the card in english', async () => {
+        wrapper = await mountWithPlugins(ShareScoreModal, {
+            locale: 'en',
+            props: { show: true, variant: 'personal', scoreData: { globalScore: 75.5, rank: 'Épique' } },
+            attachTo: document.body,
+        });
+        await flushPromises();
+
+        expect(dialog().textContent).toContain('Share this score');
+        expect(button('Download')).toBeDefined();
+        expect(document.querySelector('canvas').getAttribute('aria-label')).toBe('Score card to share: 75.5 out of 100, rank Epic');
+        const labels = renderScoreCard.mock.calls.at(-1)[1];
+        expect(labels.title).toBe('Completion score');
+        expect(labels.rank('Épique')).toBe('Epic');
+        expect(labels.charactersAnalysed(3)).toBe('3 characters analysed');
     });
 });

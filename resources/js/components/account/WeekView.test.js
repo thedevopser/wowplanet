@@ -210,3 +210,18 @@ describe('WeekView', () => {
         expect(wrapper.text()).toContain('Aucun personnage à suivre cette semaine');
     });
 });
+
+describe('WeekView in english', () => {
+    it('speaks english', async () => {
+        axios.get.mockResolvedValueOnce(ready());
+
+        const wrapper = await mountWithPlugins(WeekView, { locale: 'en' });
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('What each character has left before the Wednesday reset.');
+        expect(wrapper.text()).toContain('Update');
+        expect(wrapper.find('[data-week-limits]').text()).toContain('The Mythic+ count only sees the best key of each dungeon');
+        expect(cards(wrapper)[0].text()).toContain('level');
+        expect(wrapper.text()).not.toMatch(/Mettre à jour|niveau|Donjons/);
+    });
+});
