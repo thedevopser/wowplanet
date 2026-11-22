@@ -27,6 +27,12 @@
 
     <script src="https://wow.zamimg.com/js/tooltips.js"></script>
 
+    @if (! empty($page['props']['alternateUrls']))
+    <link rel="alternate" hreflang="fr" href="{{ strtok($page['props']['alternateUrls']['fr'], '?') }}">
+    <link rel="alternate" hreflang="en" href="{{ strtok($page['props']['alternateUrls']['en'], '?') }}">
+    <link rel="alternate" hreflang="x-default" href="{{ strtok($page['props']['alternateUrls']['fr'], '?') }}">
+    @endif
+
     @vite(['resources/css/app.css', 'resources/js/inertia.js'])
     @inertiaHead
 

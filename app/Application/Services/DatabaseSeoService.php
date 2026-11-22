@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Services;
 
 use App\Domain\ValueObjects\ExpansionId;
+use App\Http\Localization\LocalizedUrls;
 use App\Models\WowAchievement;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
@@ -23,6 +24,8 @@ use Spatie\Sitemap\Tags\Url;
  */
 class DatabaseSeoService
 {
+    public function __construct(private readonly LocalizedUrls $localizedUrls) {}
+
     /**
      * @return array<string, string|null>
      */
@@ -537,13 +540,10 @@ class DatabaseSeoService
             $sitemap = Sitemap::create();
             $now = now();
 
-            foreach ($this->getSitemapUrls() as $url) {
-                $sitemap->add(
-                    Url::create($url)
-                        ->setLastModificationDate($now)
-                        ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                        ->setPriority(0.7),
-                );
+            foreach ($this->getSitemapUrls() as $frenchUrl) {
+                foreach ($this->localizedUrls->sitemapEntries((string) parse_url($frenchUrl, PHP_URL_PATH)) as $url) {
+                    $sitemap->add($url->setLastModificationDate($now)->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)->setPriority(0.7));
+                }
             }
 
             return $sitemap->render();

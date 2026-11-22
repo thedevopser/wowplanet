@@ -24,6 +24,11 @@ enum AppLocale: string
         return $firstSegment === self::ENGLISH_PREFIX ? self::English : self::French;
     }
 
+    public static function current(): self
+    {
+        return self::tryFrom(app()->getLocale()) ?? self::French;
+    }
+
     public function other(): self
     {
         return $this === self::French ? self::English : self::French;

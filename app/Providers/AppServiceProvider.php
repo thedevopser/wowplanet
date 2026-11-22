@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Application\Import\ImportWaitReporter;
 use App\Http\Localization\LocalizedRouteTable;
+use App\Http\Localization\LocalizedUrls;
 use App\Jobs\DescribeQueuedJob;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -33,6 +34,13 @@ class AppServiceProvider extends ServiceProvider
             LocalizedRouteTable::class,
             fn (): LocalizedRouteTable => LocalizedRouteTable::fromFile(resource_path('js/i18n/localizedRoutes.json')),
         );
+
+        $this->app->singleton(function (): LocalizedUrls {
+            /** @var string $appUrl */
+            $appUrl = config('app.url', '');
+
+            return new LocalizedUrls($this->app->make(LocalizedRouteTable::class), $appUrl);
+        });
     }
 
     public function boot(): void

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Application\Services;
 
 use App\Application\DTOs\CharacterProfileDTO;
+use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocalizedUrls;
 use App\Models\CharacterVisit;
 use App\Models\WowAchievement;
 use App\Models\WowMount;
@@ -12,12 +14,24 @@ use App\Models\WowPet;
 use App\Models\WowQuest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Number;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\SitemapIndex;
 use Spatie\Sitemap\Tags\Url;
 
 class CharacterSeoService
 {
+    /** @var array<string, string> */
+    private const array STATIC_PAGE_KEYS = [
+        'faq' => 'faq',
+        'cgu' => 'terms',
+        'privacy' => 'privacy',
+        'classements-pvp' => 'pvp',
+        'addons' => 'addons',
+    ];
+
+    public function __construct(private readonly LocalizedUrls $localizedUrls) {}
+
     /**
      * @return array<string, string|null>
      */
@@ -32,22 +46,23 @@ class CharacterSeoService
         $questCount = WowQuest::query()->where('is_active', true)->count();
         $petCount = WowPet::query()->where('is_active', true)->count();
 
+        $canonicalUrl = $this->localizedUrls->current('/');
+        $title = __('seo.home.title');
+
         return [
-            'title' => 'WowPlanet - Suivi de progression WoW en français',
-            'description' => 'Analysez votre personnage World of Warcraft en français : quêtes, hauts-faits, montures, mascottes, décorations et professions.'
-                .' Comparez votre progression avec la base de données complète du jeu.',
-            'ogTitle' => 'WowPlanet - Suivi de progression WoW en français',
-            'ogDescription' => sprintf(
-                'Suivez la progression de vos personnages WoW en français. %s quêtes, %s hauts-faits, %s montures et %s mascottes référencées.',
-                number_format($questCount, 0, ',', "\u{202f}"),
-                number_format($achievementCount, 0, ',', "\u{202f}"),
-                number_format($mountCount, 0, ',', "\u{202f}"),
-                number_format($petCount, 0, ',', "\u{202f}"),
-            ),
+            'title' => $title,
+            'description' => __('seo.home.description'),
+            'ogTitle' => $title,
+            'ogDescription' => __('seo.home.og_description', [
+                'quests' => $this->formatCount($questCount),
+                'achievements' => $this->formatCount($achievementCount),
+                'mounts' => $this->formatCount($mountCount),
+                'pets' => $this->formatCount($petCount),
+            ]),
             'ogImage' => $appUrl.'/images/og-default.png',
-            'ogUrl' => $appUrl,
+            'ogUrl' => $canonicalUrl,
             'ogType' => 'website',
-            'canonicalUrl' => $appUrl,
+            'canonicalUrl' => $canonicalUrl,
             'jsonLd' => $this->getHomeJsonLd($appUrl),
         ];
     }
@@ -61,34 +76,11 @@ class CharacterSeoService
         $configUrl = config('app.url', '');
         $appUrl = rtrim($configUrl, '/');
 
-        [$title, $description] = match ($page) {
-            'faq' => [
-                'FAQ - Questions fréquentes | WowPlanet',
-                'Réponses aux questions fréquentes sur WowPlanet : import de personnages, score compte, tâches quotidiennes et base de données WoW.',
-            ],
-            'cgu' => [
-                "Conditions générales d'utilisation | WowPlanet",
-                "Conditions générales d'utilisation du site WowPlanet.",
-            ],
-            'privacy' => [
-                'Politique de confidentialité | WowPlanet',
-                'Politique de confidentialité et gestion des données personnelles sur WowPlanet.',
-            ],
-            'classements-pvp' => [
-                'Classements PvP | WowPlanet',
-                'Classements PvP officiels de World of Warcraft : arène 2c2 et 3c3, champs de bataille cotés, mêlée solo et blitz. Cotes de la saison en cours, mises à jour en direct.',
-            ],
-            'addons' => [
-                'Addons WoW | WowPlanet',
-                'Découvrez MapTidy, WhatTodo et TankTruckReverse, les addons World of Warcraft développés par WowPlanet : filtrage des marqueurs de quêtes, liste de tâches à faire et bip de recul pour tanks.',
-            ],
-            default => [
-                'WowPlanet',
-                'WowPlanet - Suivi de progression World of Warcraft.',
-            ],
-        };
+        $key = self::STATIC_PAGE_KEYS[$page] ?? 'default';
+        $title = __('seo.'.$key.'.title');
+        $description = __('seo.'.$key.'.description');
 
-        $canonicalUrl = $appUrl.'/'.$page;
+        $canonicalUrl = $this->localizedUrls->current('/'.$page);
         $jsonLd = $page === 'faq' ? $this->getFaqJsonLd($appUrl) : null;
 
         return [
@@ -133,26 +125,19 @@ class CharacterSeoService
 
         $this->trackCharacterVisit($realmSlug, $nameSlug, $charData);
 
-        $canonicalUrl = $appUrl.'/character/'.$realmSlug.'/'.$nameSlug;
+        $canonicalUrl = $this->localizedUrls->current('/character/'.$realmSlug.'/'.$nameSlug);
 
-        $title = sprintf(
-            '%s - %s %s | %s | WowPlanet',
-            $characterProfileDTO->name,
-            $characterProfileDTO->class,
-            $characterProfileDTO->level,
-            $characterProfileDTO->realm,
-        );
-        $description = sprintf(
-            '%s, %s %s niveau %s (ilvl %s) sur %s (%s).'
-            .' Consultez sa progression : quêtes, hauts-faits, montures et mascottes.',
-            $characterProfileDTO->name,
-            $characterProfileDTO->race,
-            $characterProfileDTO->class,
-            $characterProfileDTO->level,
-            $characterProfileDTO->ilvl,
-            $characterProfileDTO->realm,
-            $characterProfileDTO->faction,
-        );
+        $placeholders = [
+            'name' => $characterProfileDTO->name,
+            'race' => $characterProfileDTO->race,
+            'class' => $characterProfileDTO->class,
+            'level' => (string) $characterProfileDTO->level,
+            'ilvl' => (string) $characterProfileDTO->ilvl,
+            'realm' => $characterProfileDTO->realm,
+            'faction' => $characterProfileDTO->faction,
+        ];
+        $title = __('seo.character.title', $placeholders);
+        $description = __('seo.character.description', $placeholders);
         $ogImage = $characterProfileDTO->avatarUrl !== '' ? $characterProfileDTO->avatarUrl : $appUrl.'/images/og-default.png';
 
         return [
@@ -180,21 +165,15 @@ class CharacterSeoService
         $appUrl = rtrim($configUrl, '/');
         $realmSlug = mb_strtolower($realm);
         $nameSlug = mb_strtolower($name);
-        $canonicalUrl = $appUrl.'/character/'.$realmSlug.'/'.$nameSlug;
-        $displayName = ucfirst($name);
-        $displayRealm = ucfirst($realm);
-        $title = sprintf('%s - %s | WowPlanet', $displayName, $displayRealm);
+        $canonicalUrl = $this->localizedUrls->current('/character/'.$realmSlug.'/'.$nameSlug);
+        $placeholders = ['name' => ucfirst($name), 'realm' => ucfirst($realm)];
+        $title = __('seo.character.not_found.title', $placeholders);
 
         return [
             'title' => $title,
-            'description' => sprintf(
-                'Profil du personnage %s sur %s.'
-                .' Consultez sa progression World of Warcraft sur WowPlanet.',
-                $displayName,
-                $displayRealm,
-            ),
+            'description' => __('seo.character.not_found.description', $placeholders),
             'ogTitle' => $title,
-            'ogDescription' => sprintf('Profil du personnage %s sur %s.', $displayName, $displayRealm),
+            'ogDescription' => __('seo.character.not_found.og_description', $placeholders),
             'ogImage' => $appUrl.'/images/og-default.png',
             'ogUrl' => $canonicalUrl,
             'ogType' => 'profile',
@@ -230,53 +209,40 @@ class CharacterSeoService
 
     private function buildPagesSitemap(): Sitemap
     {
-        /** @var string $configUrl */
-        $configUrl = config('app.url', '');
-        $appUrl = rtrim($configUrl, '/');
-
+        config('app.url', '');
         $now = now();
 
-        $sitemap = Sitemap::create()
-            ->add(
-                Url::create($appUrl)
-                    ->setLastModificationDate($now)
-                    ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                    ->setPriority(1.0),
-            );
+        $sitemap = Sitemap::create();
 
-        $sitemap->add(
-            Url::create($appUrl.'/privacy')
-                ->setLastModificationDate($now)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3),
-        );
-        $sitemap->add(
-            Url::create($appUrl.'/cgu')
-                ->setLastModificationDate($now)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3),
-        );
-        $sitemap->add(
-            Url::create($appUrl.'/faq')
-                ->setLastModificationDate($now)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3),
-        );
-        $sitemap->add(
-            Url::create($appUrl.'/addons')
-                ->setLastModificationDate($now)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_YEARLY)
-                ->setPriority(0.3),
-        );
-        // Les cotes bougent en continu pendant la saison.
-        $sitemap->add(
-            Url::create($appUrl.'/classements-pvp')
-                ->setLastModificationDate($now)
-                ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY)
-                ->setPriority(0.6),
-        );
+        foreach ($this->sitemapPages() as $path => [$frequency, $priority]) {
+            foreach ($this->localizedUrls->sitemapEntries($path) as $url) {
+                $sitemap->add($url->setLastModificationDate($now)->setChangeFrequency($frequency)->setPriority($priority));
+            }
+        }
 
         return $sitemap;
+    }
+
+    /**
+     * Les cotes PvP bougent en continu pendant la saison, les pages de contenu rarement.
+     *
+     * @return array<string, array{string, float}>
+     */
+    private function sitemapPages(): array
+    {
+        return [
+            '/' => [Url::CHANGE_FREQUENCY_WEEKLY, 1.0],
+            '/privacy' => [Url::CHANGE_FREQUENCY_YEARLY, 0.3],
+            '/cgu' => [Url::CHANGE_FREQUENCY_YEARLY, 0.3],
+            '/faq' => [Url::CHANGE_FREQUENCY_YEARLY, 0.3],
+            '/addons' => [Url::CHANGE_FREQUENCY_YEARLY, 0.3],
+            '/classements-pvp' => [Url::CHANGE_FREQUENCY_DAILY, 0.6],
+        ];
+    }
+
+    private function formatCount(int $count): string
+    {
+        return (string) Number::format($count, locale: AppLocale::current()->value);
     }
 
     /**
@@ -313,11 +279,10 @@ class CharacterSeoService
             '@type' => 'WebApplication',
             'name' => 'WowPlanet',
             'url' => $appUrl,
-            'description' => 'Suivez la progression de vos personnages World of Warcraft'
-                .' : quêtes, hauts-faits, montures et mascottes.',
+            'description' => __('seo.home.json_ld_description'),
             'applicationCategory' => 'GameApplication',
             'operatingSystem' => 'Web',
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'offers' => [
                 '@type' => 'Offer',
                 'price' => '0',
@@ -344,13 +309,12 @@ class CharacterSeoService
             'mainEntity' => [
                 '@type' => 'Person',
                 'name' => (string) $charData['name'],
-                'description' => sprintf(
-                    '%s %s niveau %s sur %s',
-                    (string) ($charData['race'] ?? ''),
-                    (string) ($charData['class'] ?? ''),
-                    (string) ($charData['level'] ?? ''),
-                    (string) ($charData['realm'] ?? ''),
-                ),
+                'description' => __('seo.character.json_ld_description', [
+                    'race' => (string) ($charData['race'] ?? ''),
+                    'class' => (string) ($charData['class'] ?? ''),
+                    'level' => (string) ($charData['level'] ?? ''),
+                    'realm' => (string) ($charData['realm'] ?? ''),
+                ]),
                 'image' => ((string) ($charData['avatarUrl'] ?? '')) ?: null,
             ],
             'isPartOf' => [

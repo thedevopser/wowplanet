@@ -328,6 +328,10 @@ La table des chemins traduits des pages publiques, chargée depuis `resources/js
 
 `HandleInertiaRequests` partage `locale` et `alternateUrls`, c'est-à-dire l'URL absolue de la page dans chaque langue, query string comprise, ou `null` pour une page qui n'existe que dans une langue.
 
+### `LocalizedUrls`
+
+Adresses absolues d'une page publique à partir de son chemin français, le chemin de référence. `absolute()` la rend dans une langue donnée, `current()` dans celle de la requête : c'est ainsi que `CharacterSeoService` construit les URL canoniques et `og:url`, qui pointent vers la page dans sa propre langue. `sitemapEntries()` rend une entrée de sitemap par langue, chacune portant les alternatives `fr`, `en` et `x-default` (le français) : les sitemaps des pages et de la base listent ainsi chaque page en français, suivie de sa version anglaise. Les balises `hreflang` des pages HTML sont posées par `app.blade.php` à partir de `alternateUrls`, sans query string.
+
 ### `LocaleSuggestion`
 
 `LocaleSuggestion::for()` donne la langue à proposer dans le bandeau de suggestion, partagée sous `localeSuggestion`. La langue préférée du navigateur (`Accept-Language`) se ramène au français si elle commence par `fr`, à l'anglais sinon : un navigateur allemand se voit proposer l'anglais. La suggestion n'existe que si cette langue diffère de celle de la page. Rien n'est proposé à un client sans `Accept-Language`, comme les robots d'indexation, ni à un visiteur qui a déjà choisi : le cookie `wowplanet-locale` (`AppLocale::COOKIE`), écrit en clair par le navigateur au clic sur le sélecteur ou sur le bandeau, est exclu du chiffrement comme celui du thème. Le site ne redirige jamais selon la langue du navigateur.
