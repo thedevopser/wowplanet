@@ -375,3 +375,18 @@ describe('TodoView', () => {
         expect(axios.get).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('TodoView in english', () => {
+    it('speaks english', async () => {
+        axios.get.mockResolvedValueOnce(ready);
+
+        const wrapper = await mountWithPlugins(TodoView, { locale: 'en' });
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Nearly done');
+        expect(wrapper.text()).toContain('By dimension');
+        expect(wrapper.find('[data-dimension-label]').text()).toBe('Mounts');
+        expect(wrapper.findAllComponents({ name: 'Select' })[0].props('label')).toBe('Character');
+        expect(wrapper.text()).not.toMatch(/Presque fini|Par dimension|manquant|Tout le compte/);
+    });
+});

@@ -237,7 +237,7 @@ Le calcul inter-personnages n'est lancé qu'une fois : son `jobId` est retenu un
 
 ## `WeeklyActivityService`
 
-La page « Semaine » du compte : ce qu'il reste à chaque personnage avant la remise à zéro. Le calcul tourne dans `ComputeWeeklyActivityJob`, et sa mise en forme revient à `WeeklyActivityBuilder`.
+La page « Semaine » du compte : ce qu'il reste à chaque personnage avant la remise à zéro. Le calcul tourne dans `ComputeWeeklyActivityJob`, et sa mise en forme revient à `WeeklyActivityBuilder`. Le job reçoit la langue de la page qui l'a demandé et l'applique avant de lire Blizzard ; le résultat et le job en attente sont clés par langue, puisque raids et donjons y portent les noms de Blizzard.
 
 | Méthode | Retour | Description |
 |---|---|---|
@@ -259,7 +259,7 @@ Ce qu'il reste à faire sur tout le compte, pour la page `/mon-compte/a-faire`.
 
 ### `TodoListBuilder`
 
-Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et le résultat du calcul inter-personnages (`CrossCharacterResult`), plus les références qu'ils ne portent pas, et rend une liste de catégories, sans lire de cache ni appeler l'API.
+Classe pure : elle reçoit le profil virtuel du compte (`AccountScoreResult`, celui que construit `AccountScoreService`) et le résultat du calcul inter-personnages (`CrossCharacterResult`), plus les références qu'ils ne portent pas, et rend une liste de catégories, sans lire de cache ni appeler l'API. Elle reçoit à la construction la langue de la page (`AppServiceProvider` la lie à `AppLocale::current()`), qui choisit le Wowhead des liens.
 
 | Méthode | Retour | Description |
 |---|---|---|

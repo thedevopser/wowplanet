@@ -29,3 +29,13 @@ describe('ErrorState', () => {
         expect(mount(ErrorState, { props: { message: 'x' } }).find('button').exists()).toBe(false);
     });
 });
+
+describe('ErrorState in english', () => {
+    it('offers to try again in english', async () => {
+        const { mountWithPlugins } = await import('../../tests/helpers');
+        const wrapper = await mountWithPlugins(ErrorState, { locale: 'en', props: { message: 'Boom', onRetry: () => {} } });
+
+        expect(wrapper.text()).toContain('Something went wrong');
+        expect(wrapper.find('button').text()).toBe('Try again');
+    });
+});

@@ -239,3 +239,30 @@ describe('AppLayout', () => {
         wrapper.unmount();
     });
 });
+
+describe('AppLayout in english', () => {
+    it('warns in english about an expired session, with a login that comes back in english', async () => {
+        const wrapper = await mountLayout({ locale: 'en', stubActions: false });
+        const store = useCharacterStore(wrapper.vm.$pinia);
+        const toasts = useToastStore(wrapper.vm.$pinia);
+
+        store.sessionExpired = true;
+        await wrapper.vm.$nextTick();
+
+        expect(toasts.items).toEqual([expect.objectContaining({
+            title: 'Your session has expired',
+            action: { label: 'Log in again', href: '/auth/blizzard/redirect?lang=en' },
+        })]);
+    });
+
+    it('says in english that the characters could not be fetched', async () => {
+        const wrapper = await mountLayout({ locale: 'en', stubActions: false });
+        const store = useCharacterStore(wrapper.vm.$pinia);
+        const toasts = useToastStore(wrapper.vm.$pinia);
+
+        store.error = 'account.characters.fetch_failed';
+        await wrapper.vm.$nextTick();
+
+        expect(toasts.items[0].title).toBe('Your characters could not be retrieved');
+    });
+});

@@ -44,3 +44,8 @@ test('an english page prefers the english name and falls back to the french one'
         ->and(AppLocale::English->pick('Loup', null))->toBe('Loup')
         ->and(AppLocale::French->pick('Loup', 'Wolf'))->toBe('Loup');
 });
+
+test('each language links to its own Wowhead', function (): void {
+    expect(AppLocale::French->wowheadBase())->toBe('https://www.wowhead.com/fr')
+        ->and(AppLocale::English->wowheadBase())->toBe('https://www.wowhead.com');
+});

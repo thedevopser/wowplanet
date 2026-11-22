@@ -1,13 +1,13 @@
 <template>
     <div class="space-y-6">
-        <SectionHeader title="Mes classes" :description="`Répartition de vos ${totalCharacters} personnages par classe`" />
+        <SectionHeader :title="$t('account.classes.title')" :description="$tChoice('account.classes.description', totalCharacters, { count: totalCharacters })" />
 
-        <CardGridSkeleton v-if="store.loadingCharacters" label="Chargement de vos classes" />
+        <CardGridSkeleton v-if="store.loadingCharacters" :label="$t('account.classes.loading')" />
 
         <ErrorState
             v-else-if="store.error && !store.userCharacters.length"
-            title="Classes indisponibles"
-            :message="store.error"
+            :title="$t('account.classes.unavailable')"
+            :message="$t(store.error)"
             @retry="store.fetchUserCharacters()"
         />
 
@@ -27,12 +27,12 @@
                         :style="cls.color ? { borderTopColor: cls.color.base } : undefined"
                         @click="toggleClass(cls.classId)"
                     >
-                        <span class="text-xs font-semibold text-subtle">{{ PODIUM_PLACES[cls.rank].label }}</span>
+                        <span class="text-xs font-semibold text-subtle">{{ $t(PODIUM_PLACES[cls.rank].label) }}</span>
                         <ClassEmblem :cls="cls" :size="cls.rank === 1 ? 'size-16' : 'size-12'" />
                         <span data-class-name class="text-base font-semibold" :style="nameStyle(cls)">{{ cls.className }}</span>
                         <span class="text-sm text-muted">
                             <span data-count class="text-2xl font-bold tabular-nums text-default">{{ cls.count }}</span>
-                            personnage{{ cls.count > 1 ? 's' : '' }}
+                            {{ $tChoice('account.classes.characters', cls.count) }}
                         </span>
                         <Icon :icon="selectedClassId === cls.classId ? ChevronUp : ChevronDown" size="sm" class="text-subtle" />
                     </button>
@@ -59,7 +59,7 @@
                             <ClassEmblem :cls="cls" size="size-10" />
                             <span class="min-w-0 flex-1">
                                 <span data-class-name class="block truncate text-sm font-semibold" :style="nameStyle(cls)">{{ cls.className }}</span>
-                                <span class="text-sm text-muted"><span data-count class="font-bold tabular-nums text-default">{{ cls.count }}</span> personnage{{ cls.count > 1 ? 's' : '' }}</span>
+                                <span class="text-sm text-muted"><span data-count class="font-bold tabular-nums text-default">{{ cls.count }}</span> {{ $tChoice('account.classes.characters', cls.count) }}</span>
                             </span>
                             <span class="text-xs tabular-nums text-subtle">#{{ cls.rank }}</span>
                         </button>
@@ -78,16 +78,16 @@
                         <div class="flex items-center justify-between gap-3">
                             <h3 :id="`${detailId}-heading`" class="text-lg font-semibold">
                                 <span :style="nameStyle(selectedClass)">{{ selectedClass.className }}</span>
-                                <span class="text-muted"> · {{ selectedCharacters.length }} personnage{{ selectedCharacters.length > 1 ? 's' : '' }}</span>
+                                <span class="text-muted"> · {{ selectedCharacters.length }} {{ $tChoice('account.classes.characters', selectedCharacters.length) }}</span>
                             </h3>
-                            <IconButton :icon="X" label="Fermer le détail de la classe" @click="selectedClassId = null" />
+                            <IconButton :icon="X" :label="$t('account.classes.close_detail')" @click="selectedClassId = null" />
                         </div>
                         <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             <Card v-for="char in selectedCharacters" :key="`${char.realmSlug}-${char.name}`" as="li" variant="interactive" class="flex items-center gap-3 p-3">
                                 <img
                                     v-if="char.avatarUrl"
                                     :src="char.avatarUrl"
-                                    :alt="`Avatar de ${char.name}`"
+                                    :alt="$t('sheet.card.avatar', { name: char.name })"
                                     width="40"
                                     height="40"
                                     loading="lazy"
@@ -98,11 +98,11 @@
                                 </span>
                                 <div class="min-w-0 flex-1">
                                     <Link
-                                        :href="`/character/${char.realmSlug}/${char.name.toLowerCase()}`"
+                                        :href="localizedUrl(`/character/${char.realmSlug}/${char.name.toLowerCase()}`)"
                                         class="block truncate text-sm font-semibold hover:underline focus-visible:outline-none after:absolute after:inset-0"
                                         :style="nameStyle(selectedClass)"
                                     >{{ char.name }}</Link>
-                                    <p class="truncate text-xs text-muted">Niveau {{ char.level }} · {{ char.raceName }} · {{ char.realm }}</p>
+                                    <p class="truncate text-xs text-muted">{{ $t('sheet.card.level', { level: char.level }) }} · {{ char.raceName }} · {{ char.realm }}</p>
                                 </div>
                             </Card>
                         </ul>
@@ -114,8 +114,8 @@
         <EmptyState
             v-else
             :icon="UserX"
-            title="Aucun personnage sur ce compte"
-            message="Battle.net ne renvoie que les personnages de niveau 10 et plus, et un personnage récent peut mettre quelques minutes à apparaître."
+            :title="$t('account.characters.none.title')"
+            :message="$t('account.characters.none.message')"
         />
     </div>
 </template>
@@ -125,6 +125,8 @@ import { computed, defineComponent, h, nextTick, onMounted, ref, useId } from 'v
 import { Link } from '@inertiajs/vue3';
 import { ChevronDown, ChevronUp, UserX, X } from 'lucide-vue-next';
 import { useWowColor } from '../../composables/useWowColor';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useLocalizedUrl } from '../../composables/useLocalizedUrl';
 import { useCharacterStore } from '../../stores/character';
 import { classColor } from '../../utils/wowColors';
 import CardGridSkeleton from '../CardGridSkeleton.vue';
@@ -137,13 +139,15 @@ import SectionHeader from '../ui/SectionHeader.vue';
 
 // The DOM keeps the ranking order for screen readers; only the visual podium puts the first in the middle.
 const PODIUM_PLACES = {
-    1: { label: '1re place', order: 'sm:order-2', padding: 'py-6 sm:py-8' },
-    2: { label: '2e place', order: 'sm:order-1', padding: 'py-5' },
-    3: { label: '3e place', order: 'sm:order-3', padding: 'py-4' },
+    1: { label: 'account.classes.place.1', order: 'sm:order-2', padding: 'py-6 sm:py-8' },
+    2: { label: 'account.classes.place.2', order: 'sm:order-1', padding: 'py-5' },
+    3: { label: 'account.classes.place.3', order: 'sm:order-3', padding: 'py-4' },
 };
 const PODIUM_SIZE = 3;
 
 const store = useCharacterStore();
+const { compareNames } = useLocaleFormat();
+const { localizedUrl } = useLocalizedUrl();
 const { readable, safe } = useWowColor();
 const selectedClassId = ref(null);
 const detailId = useId();
@@ -181,7 +185,7 @@ const classStats = computed(() => {
             color: safe(classColor, classId),
             iconUrl: store.classIcons[classId] || '',
         }))
-        .toSorted((a, b) => b.count - a.count || a.className.localeCompare(b.className, 'fr'))
+        .toSorted((a, b) => b.count - a.count || compareNames(a.className, b.className))
         .map((cls, index) => ({ ...cls, rank: index + 1 }));
 });
 
@@ -193,7 +197,7 @@ const selectedClass = computed(() => classStats.value.find((cls) => cls.classId 
 
 const selectedCharacters = computed(() => store.userCharacters
     .filter((char) => char.classId === selectedClassId.value)
-    .toSorted((a, b) => b.level - a.level || a.name.localeCompare(b.name, 'fr')));
+    .toSorted((a, b) => b.level - a.level || compareNames(a.name, b.name)));
 
 function toggleClass(classId) {
     selectedClassId.value = selectedClassId.value === classId ? null : classId;

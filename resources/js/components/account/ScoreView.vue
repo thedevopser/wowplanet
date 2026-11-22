@@ -2,28 +2,28 @@
     <div class="space-y-6">
         <Card v-if="status === 'computing'" data-computing class="mx-auto max-w-xl space-y-4 p-5 sm:p-6">
             <div role="status" aria-live="polite" class="space-y-1">
-                <p class="text-lg font-semibold text-default">Analyse de {{ progress.current }}…</p>
+                <p class="text-lg font-semibold text-default">{{ $t('account.computing.analysing', { name: progress.current }) }}</p>
                 <p class="text-sm text-muted">
-                    {{ progress.loaded }} / {{ progress.total }} personnages chargés<span v-if="progress.errors > 0" class="text-warning">
-                        · {{ progress.errors }} erreur{{ progress.errors > 1 ? 's' : '' }}</span>
+                    {{ $t('account.computing.loaded', { loaded: progress.loaded, total: progress.total }) }}<span v-if="progress.errors > 0" class="text-warning">
+                        · {{ $tChoice('account.computing.errors', progress.errors, { count: progress.errors }) }}</span>
                 </p>
             </div>
             <ProgressBar
                 :value="processed"
                 :max="Math.max(progress.total, 1)"
-                :aria-label="`Personnages analysés : ${processed} sur ${progress.total}`"
+                :aria-label="$t('account.computing.analysed', { processed, total: progress.total })"
             />
-            <p class="text-xs text-subtle">Le résultat est gardé en cache pendant 24 heures.</p>
+            <p class="text-xs text-subtle">{{ $t('account.score.cached') }}</p>
         </Card>
 
-        <CardGridSkeleton v-else-if="status === 'loading'" label="Chargement de votre score" :count="3" />
+        <CardGridSkeleton v-else-if="status === 'loading'" :label="$t('account.score.loading')" :count="3" />
 
-        <ErrorState v-else-if="status === 'error'" title="Score indisponible" :message="errorMessage" @retry="startPolling" />
+        <ErrorState v-else-if="status === 'error'" :title="$t('sheet.overview.score_unavailable.title')" :message="errorMessage" @retry="startPolling" />
 
         <template v-else-if="status === 'ready' && score">
             <ScorePanel
                 :score="score"
-                title="Score du compte"
+                :title="$t('score.account_title')"
                 :subtitle="panelSubtitle"
                 todo-url="/mon-compte/a-faire"
                 :share-data="shareData"
@@ -33,7 +33,7 @@
             <div class="flex justify-center">
                 <Button variant="secondary" :disabled="refreshing" @click="refresh">
                     <Icon :icon="RotateCw" size="sm" :class="{ 'motion-safe:animate-spin': refreshing }" />
-                    Recalculer
+                    {{ $t('account.score.recalculate') }}
                 </Button>
             </div>
         </template>
@@ -41,8 +41,8 @@
         <EmptyState
             v-else-if="status === 'ready'"
             :icon="Gauge"
-            title="Aucun score à afficher"
-            message="Le score du compte se calcule à partir de vos personnages, et aucun n’a été trouvé."
+            :title="$t('account.score.none.title')"
+            :message="$t('account.score.none.message')"
         />
     </div>
 </template>
@@ -59,6 +59,12 @@ import EmptyState from '../ui/EmptyState.vue';
 import ErrorState from '../ui/ErrorState.vue';
 import Icon from '../ui/Icon.vue';
 import ProgressBar from '../ui/ProgressBar.vue';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useTranslate, useTranslateChoice } from '../../composables/useTranslate';
+
+const t = useTranslate();
+const tChoice = useTranslateChoice();
+const { formatDate } = useLocaleFormat();
 
 const status = ref('loading');
 const progress = ref({ loaded: 0, errors: 0, total: 0, current: '' });
@@ -77,14 +83,13 @@ const rank = computed(() => score.value?.rank || 'Débutant');
 
 const cachedAtFormatted = computed(() => {
     if (!cachedAt.value) return '';
-    const d = new Date(cachedAt.value);
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return formatDate(cachedAt.value, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 });
 
 const panelSubtitle = computed(() => {
-    const aggregated = `Agrégé sur ${characterCount.value} personnage${characterCount.value > 1 ? 's' : ''}`;
+    const aggregated = tChoice('account.score.aggregated', characterCount.value, { count: characterCount.value });
 
-    return cachedAtFormatted.value ? `${aggregated} · mis à jour le ${cachedAtFormatted.value}` : aggregated;
+    return cachedAtFormatted.value ? t('account.score.aggregated_at', { aggregated, date: cachedAtFormatted.value }) : aggregated;
 });
 
 async function poll() {
@@ -115,7 +120,7 @@ async function poll() {
             virtualProfile.value = null;
         } else {
             status.value = 'error';
-            errorMessage.value = err.response?.data?.message || 'Erreur lors du calcul du score.';
+            errorMessage.value = err.response?.data?.message || t('account.score.failed');
         }
     }
 }

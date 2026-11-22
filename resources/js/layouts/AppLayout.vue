@@ -37,12 +37,17 @@ import TaskSidebarInertia from '../components/inertia/TaskSidebarInertia.vue';
 import ToastStack from '../components/ui/ToastStack.vue';
 import { useToastStore } from '../stores/toasts';
 import { watchFlashMessages } from '../composables/useFlashToasts';
-import { LOGIN_URL } from '../utils/auth';
+import { loginUrl } from '../utils/auth';
+import { useActiveLocale } from '../composables/useActiveLocale';
+import { useTranslate } from '../composables/useTranslate';
 
 const page = usePage();
 const store = useCharacterStore();
 const taskStore = useTaskStore();
 const toasts = useToastStore();
+const t = useTranslate();
+const locale = useActiveLocale();
+const flashOptions = { t, get loginUrl() { return loginUrl(locale.value); } };
 
 const isDatabase = computed(() => localizePath(page.url.split('?')[0], DEFAULT_LOCALE).startsWith('/base-de-donnees'));
 
@@ -50,7 +55,7 @@ watch(() => page.props.auth, (auth) => store.applySharedAuth(auth), { immediate:
 
 watch(() => store.error, (error) => {
     if (error) {
-        toasts.show({ title: error, tone: 'error' });
+        toasts.show({ title: t(error), tone: 'error' });
     }
 });
 
@@ -59,7 +64,7 @@ watch(() => store.sessionExpired, (expired) => {
         return;
     }
 
-    toasts.show({ title: 'Votre session a expiré', tone: 'warning', action: { label: 'Se reconnecter', href: LOGIN_URL } });
+    toasts.show({ title: t('flash.session_expired.title'), tone: 'warning', action: { label: t('flash.session_expired.action'), href: loginUrl(locale.value) } });
     store.clearSessionExpired();
 });
 
@@ -71,7 +76,7 @@ watch(() => store.isAuthenticated, (authenticated) => {
 
 onMounted(() => {
     startThemeSync();
-    watchFlashMessages(page, toasts);
+    watchFlashMessages(page, toasts, flashOptions);
     if (store.isAuthenticated) {
         taskStore.fetchTasks();
     }

@@ -6,6 +6,7 @@ use App\Application\DTOs\CrossCharacterProgress;
 use App\Application\Services\AccountScoreService;
 use App\Application\Services\AccountTodoService;
 use App\Application\Services\CrossCharacterService;
+use App\Application\Services\Todo\TodoListBuilder;
 use App\Infrastructure\Reference\FactionReference;
 use App\Models\WowQuest;
 use Illuminate\Support\Facades\Session;
@@ -189,4 +190,12 @@ test('refreshing drops both computations and the job it was waiting for', functi
     resolve(AccountScoreService::class)->shouldHaveReceived('invalidate')->once();
     resolve(CrossCharacterService::class)->shouldHaveReceived('invalidate')->once();
     resolve(CrossCharacterService::class)->shouldHaveReceived('compute')->twice();
+});
+
+test('the todo builder of an english request links to the english Wowhead', function (): void {
+    app()->setLocale('en');
+
+    $builder = resolve(TodoListBuilder::class);
+
+    expect(new ReflectionProperty($builder, 'wowheadBase')->getValue($builder))->toBe('https://www.wowhead.com');
 });

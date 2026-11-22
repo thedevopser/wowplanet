@@ -79,7 +79,7 @@ export const useCharacterStore = defineStore('character', {
                 const response = await axios.get('/api/user/characters');
                 this.userCharacters = response.data;
             } catch (err) {
-                this.error = err.response?.data?.message || 'Impossible de récupérer vos personnages';
+                this.error = err.response?.data?.message || 'account.characters.fetch_failed';
             } finally {
                 this.loadingCharacters = false;
             }

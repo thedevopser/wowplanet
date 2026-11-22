@@ -163,3 +163,18 @@ describe('Dialog', () => {
         expect(document.querySelector('[data-trigger]')).toBeNull();
     });
 });
+
+describe('Dialog in english', () => {
+    it('names its close button in english', async () => {
+        const { mountWithPlugins } = await import('../../tests/helpers');
+        wrapper = await mountWithPlugins(Dialog, {
+            locale: 'en',
+            props: { title: 'Share', open: true },
+            slots: { default: '<p>Content</p>' },
+            attachTo: document.body,
+        });
+        await flushPromises();
+
+        expect(dialog().querySelector('button[aria-label="Close"]')).not.toBeNull();
+    });
+});

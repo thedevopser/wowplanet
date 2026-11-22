@@ -198,6 +198,8 @@ Les textes vivent dans `resources/lang/fr.json` et `resources/lang/en.json`, par
 - `useLocaleFormat()` rend `formatNumber`, `formatScore`, `formatDate` et `compareNames` dans la langue de la page : plus aucun composant n'écrit `fr-FR` en dur.
 - `useScoreLabels()` rend `rankLabel(rang)` et `dimensionLabel(clé)`. Le serveur nomme le rang en français, ce qui sert aussi de clé à sa couleur : seul son libellé est traduit.
 
+Le lien de connexion se construit par `loginUrl(locale)` (`utils/auth.js`), qui ajoute `?lang=en` sur une page anglaise pour que le joueur y revienne après Battle.net ; `watchFlashMessages(page, toasts, { t, loginUrl })` reçoit de même la traduction et ce lien.
+
 Les appels XHR vers `/api` portent la langue de la page dans l'en-tête `X-App-Locale`, posé sur axios par `applyPageLocale()` (`resources/js/i18n/pageLocale.js`) au démarrage et à chaque changement de langue, qui règle aussi la langue des infobulles Wowhead.
 
 En test, `tests/setup.js` installe la traduction en français pour tout montage ; `mountWithPlugins(composant, { locale: 'en' })` monte en anglais.

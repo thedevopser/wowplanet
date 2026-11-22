@@ -12,6 +12,10 @@ import { computed } from 'vue';
 import { dimensionColor } from '../../utils/wowColors';
 import { useWowColor } from '../../composables/useWowColor';
 import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useTranslate } from '../../composables/useTranslate';
+import { UNCATEGORIZED } from '../../utils/collections';
+
+const t = useTranslate();
 import Select from '../ui/Select.vue';
 
 const props = defineProps({
@@ -42,7 +46,7 @@ const options = computed(() => props.expansions
 
         return {
             value: String(expansion.id),
-            label: expansion.name,
+            label: expansion.name === UNCATEGORIZED ? t('sheet.collections.uncategorized_category') : expansion.name,
             ...(data ? { hint: `${formatNumber(data.completed)} / ${formatNumber(data.total)}`, progress: { value: data.completed, max: data.total, color: color.value } } : {}),
         };
     }));

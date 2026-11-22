@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-6">
-        <SectionHeader title="Mes personnages" description="Choisissez un personnage pour voir sa progression." />
+        <SectionHeader :title="$t('account.characters.title')" :description="$t('account.characters.description')" />
 
         <Transition
             leave-active-class="transition-opacity duration-slow ease-exit motion-reduce:transition-none"
@@ -14,20 +14,20 @@
                 :class="crossStatus.classes"
             >
                 <Icon :icon="crossStatus.icon" size="sm" :class="{ 'motion-safe:animate-spin': crossStatus.busy }" />
-                <span class="flex-1 text-default">{{ crossStatus.message }}</span>
+                <span class="flex-1 text-default">{{ $t(crossStatus.message) }}</span>
                 <Button v-if="crossStatus.retry" size="sm" variant="secondary" @click="store.computeCrossCharacter()">
                     <Icon :icon="RotateCw" size="sm" />
-                    Relancer
+                    {{ $t('account.characters.cross.retry') }}
                 </Button>
             </div>
         </Transition>
 
-        <CardGridSkeleton v-if="store.loadingCharacters" label="Chargement de vos personnages" />
+        <CardGridSkeleton v-if="store.loadingCharacters" :label="$t('account.characters.loading')" />
 
         <ErrorState
             v-else-if="store.error && !store.userCharacters.length"
-            title="Personnages indisponibles"
-            :message="store.error"
+            :title="$t('account.characters.unavailable')"
+            :message="$t(store.error)"
             @retry="store.fetchUserCharacters()"
         />
 
@@ -36,13 +36,13 @@
                 <SearchFilter
                     v-model:search="characterSearch"
                     :show-hide-toggle="false"
-                    placeholder="Rechercher un personnage…"
+                    :placeholder="$t('account.characters.search')"
                 />
                 <div class="flex flex-wrap items-end gap-3">
-                    <Select v-model="sortBy" label="Trier par" :options="sortOptions" />
+                    <Select v-model="sortBy" :label="$t('account.characters.sort_by')" :options="sortOptions" />
                     <Button :variant="groupByClass ? 'secondary' : 'ghost'" :aria-pressed="String(groupByClass)" @click="groupByClass = !groupByClass">
                         <Icon :icon="LayoutList" size="sm" />
-                        Regrouper par classe
+                        {{ $t('account.characters.group_by_class') }}
                     </Button>
                 </div>
             </div>
@@ -50,7 +50,7 @@
             <section v-if="favoriteCharacters.length" aria-labelledby="favorites-heading" class="space-y-3">
                 <h3 id="favorites-heading" class="flex items-center gap-2 text-lg font-semibold text-default">
                     <Icon :icon="Star" size="sm" class="text-accent [&_svg]:fill-current" />
-                    Favoris
+                    {{ $t('account.characters.favorites') }}
                     <span class="text-sm font-normal tabular-nums text-subtle">{{ favoritesStore.favoriteCount }}/{{ MAX_FAVORITES }}</span>
                 </h3>
                 <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -60,8 +60,8 @@
                 </ul>
             </section>
 
-            <section v-if="filteredUserCharacters.length" aria-label="Tous mes personnages" class="space-y-4">
-                <h3 v-if="favoritesStore.favoriteCount" class="text-lg font-semibold text-default">Tous mes personnages</h3>
+            <section v-if="filteredUserCharacters.length" :aria-label="$t('account.characters.all')" class="space-y-4">
+                <h3 v-if="favoritesStore.favoriteCount" class="text-lg font-semibold text-default">{{ $t('account.characters.all') }}</h3>
                 <div v-for="group in characterGroups" :key="group.name" class="space-y-3">
                     <component :is="favoritesStore.favoriteCount ? 'h4' : 'h3'" v-if="group.name" class="flex items-baseline gap-2 text-base font-semibold" :style="group.style">
                         {{ group.name }}
@@ -78,16 +78,16 @@
             <EmptyState
                 v-if="!favoriteCharacters.length && !filteredUserCharacters.length"
                 :icon="SearchX"
-                title="Aucun résultat"
-                message="Aucun personnage ne correspond à votre recherche."
+                :title="$t('common.no_result')"
+                :message="$t('account.characters.no_match')"
             />
         </template>
 
         <EmptyState
             v-else
             :icon="UserX"
-            title="Aucun personnage sur ce compte"
-            message="Battle.net ne renvoie que les personnages de niveau 10 et plus, et un personnage récent peut mettre quelques minutes à apparaître."
+            :title="$t('account.characters.none.title')"
+            :message="$t('account.characters.none.message')"
         />
     </div>
 </template>
@@ -96,6 +96,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { CircleAlert, CircleCheck, LayoutList, LoaderCircle, RotateCw, SearchX, Star, UserX } from 'lucide-vue-next';
 import { useWowColor } from '../../composables/useWowColor';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
+import { useTranslate } from '../../composables/useTranslate';
 import { useCharacterStore } from '../../stores/character';
 import { MAX_FAVORITES, useFavoriteStore } from '../../stores/favorites';
 import { classColor } from '../../utils/wowColors';
@@ -117,24 +119,27 @@ const characterSearch = ref('');
 const sortBy = ref('name');
 const groupByClass = ref(false);
 
-const sortOptions = [
-    { value: 'name', label: 'Nom' },
-    { value: 'level', label: 'Niveau' },
-    { value: 'class', label: 'Classe' },
-    { value: 'realm', label: 'Royaume' },
-];
+const t = useTranslate();
+const { compareNames } = useLocaleFormat();
+
+const sortOptions = computed(() => [
+    { value: 'name', label: t('account.characters.sort.name') },
+    { value: 'level', label: t('account.characters.sort.level') },
+    { value: 'class', label: t('account.characters.sort.class') },
+    { value: 'realm', label: t('account.characters.sort.realm') },
+]);
 
 const COMPARATORS = {
-    name: (a, b) => a.name.localeCompare(b.name, 'fr'),
-    level: (a, b) => b.level - a.level || a.name.localeCompare(b.name, 'fr'),
-    class: (a, b) => a.className.localeCompare(b.className, 'fr') || a.name.localeCompare(b.name, 'fr'),
-    realm: (a, b) => a.realm.localeCompare(b.realm, 'fr') || a.name.localeCompare(b.name, 'fr'),
+    name: (a, b) => compareNames(a.name, b.name),
+    level: (a, b) => b.level - a.level || compareNames(a.name, b.name),
+    class: (a, b) => compareNames(a.className, b.className) || compareNames(a.name, b.name),
+    realm: (a, b) => compareNames(a.realm, b.realm) || compareNames(a.name, b.name),
 };
 
 const CROSS_STATUSES = {
-    loading: { icon: LoaderCircle, busy: true, message: 'Calcul des données croisées de vos personnages…', classes: 'border-info/40 bg-info/10 text-info' },
-    ready: { icon: CircleCheck, message: 'Données croisées à jour : chaque fiche signale ce qu’un autre de vos personnages a déjà fait.', classes: 'border-success/40 bg-success/10 text-success' },
-    error: { icon: CircleAlert, retry: true, message: 'Les données croisées n’ont pas pu être calculées.', classes: 'border-warning/40 bg-warning/10 text-warning' },
+    loading: { icon: LoaderCircle, busy: true, message: 'account.characters.cross.loading', classes: 'border-info/40 bg-info/10 text-info' },
+    ready: { icon: CircleCheck, message: 'account.characters.cross.ready', classes: 'border-success/40 bg-success/10 text-success' },
+    error: { icon: CircleAlert, retry: true, message: 'account.characters.cross.error', classes: 'border-warning/40 bg-warning/10 text-warning' },
 };
 
 const READY_NOTICE_MS = 4000;
@@ -212,7 +217,7 @@ const characterGroups = computed(() => {
     const byClass = Map.groupBy(filteredUserCharacters.value, (char) => char.className);
 
     return [...byClass.entries()]
-        .toSorted(([a], [b]) => a.localeCompare(b, 'fr'))
+        .toSorted(([a], [b]) => compareNames(a, b))
         .map(([name, characters]) => {
             const color = safe(classColor, characters[0].classId);
 

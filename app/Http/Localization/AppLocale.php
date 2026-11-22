@@ -45,6 +45,14 @@ enum AppLocale: string
         };
     }
 
+    public function wowheadBase(): string
+    {
+        return match ($this) {
+            self::French => 'https://www.wowhead.com/fr',
+            self::English => 'https://www.wowhead.com',
+        };
+    }
+
     public function pick(string $french, ?string $english): string
     {
         return $this === self::English ? $english ?? $french : $french;

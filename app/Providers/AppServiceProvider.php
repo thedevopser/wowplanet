@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Application\Import\ImportWaitReporter;
+use App\Application\Services\Todo\TodoListBuilder;
+use App\Http\Localization\AppLocale;
 use App\Http\Localization\LocalizedRouteTable;
 use App\Http\Localization\LocalizedUrls;
 use App\Jobs\DescribeQueuedJob;
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
 
             return new LocalizedUrls($this->app->make(LocalizedRouteTable::class), $appUrl);
         });
+
+        $this->app->bind(TodoListBuilder::class, static fn (): TodoListBuilder => new TodoListBuilder(AppLocale::current()));
     }
 
     public function boot(): void

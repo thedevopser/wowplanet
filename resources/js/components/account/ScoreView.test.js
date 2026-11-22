@@ -220,3 +220,17 @@ describe('ScoreView', () => {
         expect(wrapper.text()).toContain('Score du compte');
     });
 });
+
+describe('ScoreView in english', () => {
+    it('speaks english', async () => {
+        axios.get.mockResolvedValueOnce({ data: { status: 'ready', data: virtualProfile } });
+
+        const wrapper = await mountWithPlugins(ScoreView, { locale: 'en', stubs });
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Account score');
+        expect(wrapper.text()).toContain('Aggregated over');
+        expect(wrapper.text()).toContain('Recalculate');
+        expect(wrapper.text()).not.toMatch(/Agrégé|Recalculer/);
+    });
+});

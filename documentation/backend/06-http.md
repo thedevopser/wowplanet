@@ -86,8 +86,8 @@ Le flux OAuth2 Battle.net, décrit plus haut.
 
 | Méthode | Route | Description |
 |---|---|---|
-| `redirect()` | `GET /auth/blizzard/redirect` | Redirige vers la page d'autorisation Battle.net. |
-| `callback(Request)` | `GET /auth/blizzard/callback` | Reçoit le code, remplit la session et redirige vers la page que le visiteur avait demandée avant de se connecter (`url.intended` en session), ou vers `/mon-compte` à défaut. Seul un chemin du site est suivi, jamais une URL absolue, pour ne pas servir de redirection ouverte. Un échec redirige vers l'accueil avec un message flash d'erreur en français, et garde la page retenue pour la tentative suivante. |
+| `redirect(Request)` | `GET /auth/blizzard/redirect` | Retient en session (`auth.locale`) la langue de la page de départ, passée par le front en `?lang=en`, le français à défaut, puis redirige vers la page d'autorisation Battle.net. |
+| `callback(Request)` | `GET /auth/blizzard/callback` | Reçoit le code, remplit la session et redirige vers la page que le visiteur avait demandée avant de se connecter (`url.intended` en session), ou vers le hub du compte dans la langue de départ à défaut (`/mon-compte` ou `/en/my-account`). Seul un chemin du site est suivi, jamais une URL absolue, pour ne pas servir de redirection ouverte. Un échec redirige vers l'accueil de la langue de départ avec un message flash d'erreur dans cette langue (`auth.login.*`), et garde la page retenue pour la tentative suivante. |
 
 La déconnexion et le statut ne sont pas ici mais dans `UserCharacterController`.
 

@@ -7,6 +7,7 @@ namespace App\Application\Services;
 use App\Application\Services\Progress\RaidProgressAggregator;
 use App\Application\Services\Week\WeeklyActivityBuilder;
 use App\Domain\Services\WeeklyReset;
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\RaidJournal;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterRaidsResponse;
@@ -74,13 +75,13 @@ class WeeklyActivityService
         }
 
         /** @var AccountWeek|null $stored */
-        $stored = Cache::get(self::RESULT_KEY.$bnetUserId);
+        $stored = Cache::get($this->resultKey($bnetUserId));
 
         if ($stored !== null) {
             return ['status' => 'ready', 'data' => $stored];
         }
 
-        $pendingJobId = Cache::get(self::PENDING_KEY.$bnetUserId);
+        $pendingJobId = Cache::get($this->pendingKey($bnetUserId));
 
         if (is_string($pendingJobId)) {
             return $this->followJob($bnetUserId, $pendingJobId, $battleTag);
@@ -96,8 +97,8 @@ class WeeklyActivityService
     {
         $bnetUserId = $this->bnetUserId();
 
-        Cache::forget(self::RESULT_KEY.$bnetUserId);
-        Cache::forget(self::PENDING_KEY.$bnetUserId);
+        Cache::forget($this->resultKey($bnetUserId));
+        Cache::forget($this->pendingKey($bnetUserId));
     }
 
     /**
@@ -112,7 +113,7 @@ class WeeklyActivityService
 
         $week = $this->weeklyActivityBuilder->build($inputs, $this->raidJournal->forInstances($this->seasonRaids($inputs)), $this->seasonDungeons(), $now);
 
-        Cache::put(self::RESULT_KEY.$bnetUserId, [...$week, 'updatedAt' => $now->format('Y-m-d\TH:i:s\Z')], $this->freshFor($now));
+        Cache::put($this->resultKey($bnetUserId), [...$week, 'updatedAt' => $now->format('Y-m-d\TH:i:s\Z')], $this->freshFor($now));
     }
 
     public function markJob(string $jobId, string $status): void
@@ -137,7 +138,7 @@ class WeeklyActivityService
             return ['status' => 'computing', 'jobId' => $jobId];
         }
 
-        Cache::forget(self::PENDING_KEY.$bnetUserId);
+        Cache::forget($this->pendingKey($bnetUserId));
 
         if ($job['status'] === self::FAILED_JOB) {
             return ['status' => 'failed'];
@@ -163,7 +164,7 @@ class WeeklyActivityService
 
         $jobId = Str::uuid()->toString();
         $this->markJob($jobId, 'pending');
-        Cache::put(self::PENDING_KEY.$bnetUserId, $jobId, self::JOB_TTL_S);
+        Cache::put($this->pendingKey($bnetUserId), $jobId, self::JOB_TTL_S);
 
         // Only what the computation reads goes into the queue.
         $references = array_map(static fn (array $character): array => [
@@ -174,7 +175,7 @@ class WeeklyActivityService
             'classId' => $character['classId'],
         ], $characters);
 
-        dispatch(new ComputeWeeklyActivityJob($jobId, $bnetUserId, $references, $battleTag));
+        dispatch(new ComputeWeeklyActivityJob($jobId, $bnetUserId, $references, $battleTag, AppLocale::current()->value));
 
         return ['status' => 'computing', 'jobId' => $jobId];
     }
@@ -256,5 +257,16 @@ class WeeklyActivityService
         $bnetUserId = Session::get('bnet_user_id', '');
 
         return $bnetUserId;
+    }
+
+    /** The week names raids and dungeons as Blizzard does, in the language of the page. */
+    private function resultKey(string $bnetUserId): string
+    {
+        return AppLocale::current()->scopedCacheKey(self::RESULT_KEY.$bnetUserId);
+    }
+
+    private function pendingKey(string $bnetUserId): string
+    {
+        return AppLocale::current()->scopedCacheKey(self::PENDING_KEY.$bnetUserId);
     }
 }

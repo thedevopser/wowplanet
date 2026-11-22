@@ -147,5 +147,6 @@ describe('HomePage in english', () => {
         expect(wrapper.get('h1').text()).toBe('Track your World of Warcraft progress');
         expect(wrapper.find('a[href="/en/database/mounts"]').text()).toBe('Mounts');
         expect(wrapper.find('a[href="/en/pvp-leaderboards"]').exists()).toBe(true);
+        expect(wrapper.find('[data-hero-actions] a[href="/auth/blizzard/redirect?lang=en"]').exists()).toBe(true);
     });
 });

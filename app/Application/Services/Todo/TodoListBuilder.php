@@ -11,6 +11,7 @@ use App\Application\Services\Progress\CollectionProgressAggregator;
 use App\Application\Services\Progress\ProfessionProgressAggregator;
 use App\Application\Services\Progress\QuestProgressAggregator;
 use App\Domain\ValueObjects\ExpansionId;
+use App\Http\Localization\AppLocale;
 
 /**
  * Ce qu'il reste à faire sur tout le compte : les catégories entamées et incomplètes, du plus proche
@@ -44,8 +45,6 @@ final readonly class TodoListBuilder
 {
     public const int MAX_ITEMS_SHOWN = 20; // @pest-mutate-ignore
 
-    private const string WOWHEAD = 'https://www.wowhead.com/fr'; // @pest-mutate-ignore
-
     private const string SPELL_PATH = 'spell'; // @pest-mutate-ignore
 
     private const string CREATURE_PATH = 'npc'; // @pest-mutate-ignore
@@ -59,6 +58,13 @@ final readonly class TodoListBuilder
     private const string FACTION_PATH = 'faction'; // @pest-mutate-ignore
 
     private const string RECIPE_CATEGORY_SEPARATOR = ' · '; // @pest-mutate-ignore
+
+    private string $wowheadBase;
+
+    public function __construct(?AppLocale $appLocale = null)
+    {
+        $this->wowheadBase = ($appLocale ?? AppLocale::French)->wowheadBase();
+    }
 
     /**
      * @param  AccountScoreResult  $accountProfile
@@ -428,9 +434,9 @@ final readonly class TodoListBuilder
     private function wowheadUrl(string $path, ?int $wowheadId, string $name): string
     {
         if ($wowheadId === null) {
-            return self::WOWHEAD.'/search?q='.rawurlencode($name);
+            return $this->wowheadBase.'/search?q='.rawurlencode($name);
         }
 
-        return self::WOWHEAD.'/'.$path.'='.$wowheadId;
+        return $this->wowheadBase.'/'.$path.'='.$wowheadId;
     }
 }

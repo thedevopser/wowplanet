@@ -24,9 +24,9 @@ const recipes = category('recipes:10:Forge', 'recipes', [item(6, by('Jaina'))], 
 const categories = [mounts, quests, recipes];
 
 describe('dimensionLabel', () => {
-    it('names each dimension of the list in French', () => {
+    it('names each dimension of the list by its translation key', () => {
         expect(['mounts', 'pets', 'decor', 'achievements', 'quests', 'reputations', 'recipes'].map(dimensionLabel))
-            .toEqual(['Montures', 'Mascottes', 'Décorations', 'Hauts-faits', 'Quêtes', 'Réputations', 'Recettes']);
+            .toEqual(['score.dimension.mounts', 'score.dimension.pets', 'score.dimension.decor', 'score.dimension.achievements', 'score.dimension.quests', 'score.dimension.reputations', 'account.todo.recipes']);
     });
 
     it('refuses a dimension it does not know', () => {
@@ -116,8 +116,8 @@ describe('dimensionSummaries', () => {
         const otherMounts = category('mounts:Vendeur', 'mounts', [item(9, account)]);
 
         expect(dimensionSummaries([mounts, quests, otherMounts])).toEqual([
-            { dimension: 'mounts', label: 'Montures', categories: 2, missing: 8 },
-            { dimension: 'quests', label: 'Quêtes', categories: 1, missing: 5 },
+            { dimension: 'mounts', label: 'score.dimension.mounts', categories: 2, missing: 8 },
+            { dimension: 'quests', label: 'score.dimension.quests', categories: 1, missing: 5 },
         ]);
     });
 });

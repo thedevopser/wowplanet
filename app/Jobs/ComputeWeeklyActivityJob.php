@@ -35,12 +35,14 @@ class ComputeWeeklyActivityJob implements DescribedJob, ShouldBeEncrypted, Shoul
         public readonly string $bnetUserId,
         public readonly array $characters,
         public readonly string $battleTag,
+        public readonly string $locale = 'fr',
     ) {
         $this->queue = 'imports';
     }
 
     public function handle(WeeklyActivityService $weeklyActivityService): void
     {
+        app()->setLocale($this->locale);
         $weeklyActivityService->markJob($this->jobId, 'running');
         $weeklyActivityService->computeAndStore($this->bnetUserId, $this->characters, now()->toDateTimeImmutable());
         $weeklyActivityService->markJob($this->jobId, 'completed');

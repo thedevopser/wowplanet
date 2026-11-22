@@ -7,15 +7,15 @@ export const ALL = 'tout';
 
 const ACCOUNT_SCOPE = 'account';
 
-// Mirror of TodoDimension.
+// Mirror of TodoDimension. The labels are translation keys.
 const DIMENSION_LABELS = Object.freeze({
-    mounts: 'Montures',
-    pets: 'Mascottes',
-    decor: 'Décorations',
-    achievements: 'Hauts-faits',
-    quests: 'Quêtes',
-    reputations: 'Réputations',
-    recipes: 'Recettes',
+    mounts: 'score.dimension.mounts',
+    pets: 'score.dimension.pets',
+    decor: 'score.dimension.decor',
+    achievements: 'score.dimension.achievements',
+    quests: 'score.dimension.quests',
+    reputations: 'score.dimension.reputations',
+    recipes: 'account.todo.recipes',
 });
 
 // The recipes have no colour of their own: they are the professions of the score.
@@ -50,7 +50,7 @@ export function dimensionSummaries(categories) {
     return [...summaries.values()];
 }
 
-export function expansionOptions(categories, expansionNames) {
+export function expansionOptions(categories, expansionNames, allLabel = 'Toutes') {
     const counts = new Map();
     for (const category of categories) {
         if (category.expansionId !== null) {
@@ -65,7 +65,7 @@ export function expansionOptions(categories, expansionNames) {
     const latestFirst = [...counts].sort(([first], [second]) => second - first);
 
     return [
-        { value: ALL, label: 'Toutes', count: categories.length },
+        { value: ALL, label: allLabel, count: categories.length },
         ...latestFirst.map(([expansionId, count]) => ({ value: String(expansionId), label: expansionNames.get(expansionId) ?? String(expansionId), count })),
     ];
 }
@@ -75,27 +75,33 @@ export function nearlyDone(categories, count) {
     return categories.slice(0, count);
 }
 
-export function characterOptions(characters) {
-    return [{ value: ALL, label: 'Tous les personnages' }, ...characters.map((name) => ({ value: name, label: name }))];
+export function characterOptions(characters, allLabel = 'Tous les personnages') {
+    return [{ value: ALL, label: allLabel }, ...characters.map((name) => ({ value: name, label: name }))];
 }
 
 const NAMED_DOERS = 3;
 
-export function doersLabel(doers, roster) {
+const FRENCH_DOERS = Object.freeze({
+    account: 'Tout le compte',
+    allCharacters: 'Tous vos personnages',
+    andOthers: (named, others) => `${named} et ${others} autre${others > 1 ? 's' : ''}`,
+});
+
+export function doersLabel(doers, roster, labels = FRENCH_DOERS) {
     if (doers.scope === ACCOUNT_SCOPE) {
-        return 'Tout le compte';
+        return labels.account;
     }
 
     const { characters } = doers;
 
     if (roster.length > 1 && roster.every((name) => characters.includes(name))) {
-        return 'Tous vos personnages';
+        return labels.allCharacters;
     }
 
     const named = characters.slice(0, NAMED_DOERS).join(', ');
     const others = characters.length - NAMED_DOERS;
 
-    return others > 0 ? `${named} et ${others} autre${others > 1 ? 's' : ''}` : named;
+    return others > 0 ? labels.andOthers(named, others) : named;
 }
 
 const doableBy = (character) => (item) => item.doers.scope === ACCOUNT_SCOPE || item.doers.characters.includes(character);

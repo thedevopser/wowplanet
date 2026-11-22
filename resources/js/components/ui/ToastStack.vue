@@ -1,5 +1,5 @@
 <template>
-    <ToastProvider :duration="AUTO_CLOSE_MS" label="Notifications" swipe-direction="right">
+    <ToastProvider :duration="AUTO_CLOSE_MS" :label="$t('common.notifications')" swipe-direction="right">
         <ToastRoot
             v-for="toast in store.items"
             :key="toast.id"
@@ -26,7 +26,7 @@
                 </ToastAction>
             </div>
             <ToastClose as-child>
-                <IconButton :icon="X" label="Fermer la notification" icon-size="sm" class="-mr-2 -mt-2" />
+                <IconButton :icon="X" :label="$t('common.close_notification')" icon-size="sm" class="-mr-2 -mt-2" />
             </ToastClose>
         </ToastRoot>
         <ToastViewport

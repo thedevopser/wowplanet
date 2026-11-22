@@ -20,7 +20,7 @@
                         <DialogDescription v-if="description" class="mt-1 text-sm text-muted">{{ description }}</DialogDescription>
                     </div>
                     <DialogClose as-child>
-                        <IconButton :icon="X" label="Fermer" class="-mr-2 -mt-2" />
+                        <IconButton :icon="X" :label="$t('common.close')" class="-mr-2 -mt-2" />
                     </DialogClose>
                 </div>
                 <div class="mt-4">

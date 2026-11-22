@@ -21,3 +21,11 @@ export function pvpBracketLabel(bracket, t) {
 
     return `${t(`pvp.group.${group}`)}${SEPARATOR}${short}`;
 }
+
+export function pvpShortLabel(option, t) {
+    if (NAMED_BRACKETS.includes(option.slug)) {
+        return t(`pvp.bracket.${option.slug}`);
+    }
+
+    return SPEC_BRACKET.exec(option.slug)?.[2] === OVERALL ? t('pvp.all_specs') : option.short;
+}

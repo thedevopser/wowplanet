@@ -32,7 +32,7 @@
                         <Icon :icon="UserRound" size="sm" />
                         {{ $t('nav.account') }}
                     </Button>
-                    <Button v-else :href="LOGIN_URL" external variant="primary">
+                    <Button v-else :href="loginUrl(locale)" external variant="primary">
                         <Icon :icon="LogIn" size="sm" />
                         {{ $t('nav.login') }}
                     </Button>
@@ -117,7 +117,7 @@ import Button from '../components/ui/Button.vue';
 import Card from '../components/ui/Card.vue';
 import Icon from '../components/ui/Icon.vue';
 import { useWowColor } from '../composables/useWowColor';
-import { LOGIN_URL } from '../utils/auth';
+import { loginUrl } from '../utils/auth';
 import { dimensionColor } from '../utils/wowColors';
 import { useActiveLocale } from '../composables/useActiveLocale';
 import { useLocalizedUrl } from '../composables/useLocalizedUrl';

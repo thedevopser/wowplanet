@@ -43,7 +43,7 @@
                 <template v-else>
                     <!-- The wrapper owns the display: Button sets its own inline-flex, which would beat hidden. -->
                     <div class="hidden sm:block">
-                        <Button variant="primary" :href="LOGIN_URL" external>
+                        <Button variant="primary" :href="loginUrl(activeLocale)" external>
                             {{ $t('nav.login') }}
                         </Button>
                     </div>
@@ -74,7 +74,7 @@
                         </ul>
                     </nav>
                     <div v-if="!store.isAuthenticated" class="mt-6 flex flex-col gap-2 border-t border-default pt-6">
-                        <Button variant="primary" :href="LOGIN_URL" external>
+                        <Button variant="primary" :href="loginUrl(activeLocale)" external>
                             {{ $t('nav.login') }}
                         </Button>
                         <Button variant="ghost" @click="toggleTheme()">
@@ -121,7 +121,10 @@ import Drawer from '../ui/Drawer.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import Icon from '../ui/Icon.vue';
 import IconButton from '../ui/IconButton.vue';
-import { LOGIN_URL } from '../../utils/auth';
+import { loginUrl } from '../../utils/auth';
+import { useActiveLocale } from '../../composables/useActiveLocale';
+
+const activeLocale = useActiveLocale();
 
 const page = usePage();
 const store = useCharacterStore();

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AuthController;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -157,4 +158,28 @@ test('a failed login keeps the remembered page for the next attempt', function (
         ->get('/auth/blizzard/callback?code=abc&state=invalid')
         ->assertRedirect('/')
         ->assertSessionHas('url.intended', '/mon-compte/score');
+});
+
+test('a login started from an english page remembers its language', function (): void {
+    $this->get('/auth/blizzard/redirect?lang=en')->assertSessionHas(AuthController::LOCALE_SESSION_KEY, 'en');
+});
+
+test('a login started with an unknown language remembers french', function (): void {
+    $this->get('/auth/blizzard/redirect?lang=de')->assertSessionHas(AuthController::LOCALE_SESSION_KEY, 'fr');
+});
+
+test('a successful login started in english leads to the english account hub', function (): void {
+    session([AuthController::LOCALE_SESSION_KEY => 'en']);
+
+    completeBlizzardLogin($this, ['sub' => '12345', 'battletag' => 'Thrall#1234'])
+        ->assertRedirect('/en/my-account')
+        ->assertSessionMissing(AuthController::LOCALE_SESSION_KEY);
+});
+
+test('a failed login started in english tells it in english on the english home page', function (): void {
+    session([AuthController::LOCALE_SESSION_KEY => 'en']);
+
+    $this->get('/auth/blizzard/callback?code=abc&state=invalid')
+        ->assertRedirect('/en')
+        ->assertSessionHas('error', 'The Battle.net login was interrupted. Start it again from the “Log in” button.');
 });
