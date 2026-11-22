@@ -64,3 +64,26 @@ test('it renders the not found page in the language of an unknown url', function
 test('it offers no english version of the pages kept out of translation', function (string $path): void {
     $this->get($path)->assertNotFound();
 })->with(['/en/admin', '/en/docs', '/en/ui', '/en/mon-compte', '/en/base-de-donnees']);
+
+test('it shares the suggested language of a visitor whose browser reads another one', function (): void {
+    $this->withHeader('Accept-Language', 'en-US,en;q=0.9')->get('/faq')->assertInertia(
+        fn (AssertableInertia $page): AssertableInertia => $page->where('localeSuggestion', 'en')
+    );
+});
+
+test('it suggests no language on a page that exists in one language only', function (): void {
+    $this->withHeader('Accept-Language', 'en-US')->get('/page-inexistante')->assertInertia(
+        fn (AssertableInertia $page): AssertableInertia => $page->where('localeSuggestion', null)
+    );
+});
+
+test('it reads the language choice from a cookie written in clear by the browser', function (): void {
+    $this->withUnencryptedCookie('wowplanet-locale', 'fr')->withHeader('Accept-Language', 'en-US')->get('/faq')->assertInertia(
+        fn (AssertableInertia $page): AssertableInertia => $page->where('localeSuggestion', null)
+    );
+});
+
+test('it never redirects a visitor according to the language of the browser', function (): void {
+    $this->withHeader('Accept-Language', 'en-US')->get('/faq')->assertOk();
+    $this->withHeader('Accept-Language', 'fr-FR')->get('/en/faq')->assertOk();
+});

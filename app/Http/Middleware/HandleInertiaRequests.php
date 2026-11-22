@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocaleSuggestion;
 use App\Http\Localization\LocalizedRouteTable;
 use App\Http\Theme\ThemeChoice;
 use Illuminate\Http\Request;
@@ -48,6 +49,9 @@ class HandleInertiaRequests extends Middleware
             'theme' => ThemeChoice::fromRequest($request)->value,
             'locale' => fn (): string => app()->getLocale(),
             'alternateUrls' => fn (): ?array => $this->alternateUrls($request),
+            'localeSuggestion' => fn (): ?string => $this->alternateUrls($request) === null
+                ? null
+                : LocaleSuggestion::for($request, AppLocale::fromPath($request->path()))?->value,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

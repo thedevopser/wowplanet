@@ -328,6 +328,10 @@ La table des chemins traduits des pages publiques, chargée depuis `resources/js
 
 `HandleInertiaRequests` partage `locale` et `alternateUrls`, c'est-à-dire l'URL absolue de la page dans chaque langue, query string comprise, ou `null` pour une page qui n'existe que dans une langue.
 
+### `LocaleSuggestion`
+
+`LocaleSuggestion::for()` donne la langue à proposer dans le bandeau de suggestion, partagée sous `localeSuggestion`. La langue préférée du navigateur (`Accept-Language`) se ramène au français si elle commence par `fr`, à l'anglais sinon : un navigateur allemand se voit proposer l'anglais. La suggestion n'existe que si cette langue diffère de celle de la page. Rien n'est proposé à un client sans `Accept-Language`, comme les robots d'indexation, ni à un visiteur qui a déjà choisi : le cookie `wowplanet-locale` (`AppLocale::COOKIE`), écrit en clair par le navigateur au clic sur le sélecteur ou sur le bandeau, est exclu du chiffrement comme celui du thème. Le site ne redirige jamais selon la langue du navigateur.
+
 ## Thème (`app/Http/Theme/`)
 
 Le thème est appliqué avant le premier rendu, sans flash, en SSR comme sans. Le choix du visiteur, `system`, `dark` ou `light`, vit dans le cookie `wowplanet-theme`, écrit par le navigateur et exclu du chiffrement des cookies (`bootstrap/app.php`), puisque le script de démarrage doit le relire.

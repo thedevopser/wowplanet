@@ -1,3 +1,12 @@
 {
-    "locale.name": "Français"
+    "locale.name": "Français",
+    "locale.suggest.en.action": "Read in English",
+    "locale.suggest.en.dismiss": "Stay in French",
+    "locale.suggest.en.label": "Language suggestion",
+    "locale.suggest.en.text": "This page is available in English.",
+    "locale.suggest.fr.action": "Lire en français",
+    "locale.suggest.fr.dismiss": "Rester en anglais",
+    "locale.suggest.fr.label": "Suggestion de langue",
+    "locale.suggest.fr.text": "Cette page existe en français.",
+    "locale.switch": "Version anglaise"
 }

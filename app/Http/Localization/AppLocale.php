@@ -12,6 +12,8 @@ enum AppLocale: string
 {
     public const string ENGLISH_PREFIX = 'en';
 
+    public const string COOKIE = 'wowplanet-locale';
+
     case French = 'fr';
     case English = 'en';
 

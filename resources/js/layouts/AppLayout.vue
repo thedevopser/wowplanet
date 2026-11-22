@@ -5,6 +5,7 @@
         </a>
 
         <AppHeaderInertia />
+        <LocaleSuggestionBanner />
 
         <main id="main-content" class="flex-1" :class="isDatabase ? 'flex' : ''">
             <div v-if="isDatabase" class="flex min-h-0 min-w-0 flex-1">
@@ -29,6 +30,7 @@ import { useCharacterStore } from '../stores/character';
 import { useTaskStore } from '../stores/tasks';
 import { startThemeSync } from '../composables/useTheme';
 import AppHeaderInertia from '../components/inertia/AppHeaderInertia.vue';
+import LocaleSuggestionBanner from '../components/inertia/LocaleSuggestionBanner.vue';
 import AppFooterInertia from '../components/inertia/AppFooterInertia.vue';
 import TaskSidebarInertia from '../components/inertia/TaskSidebarInertia.vue';
 import ToastStack from '../components/ui/ToastStack.vue';

@@ -21,6 +21,7 @@
             </nav>
 
             <div class="ml-auto flex items-center gap-2">
+                <LanguageSwitcher />
                 <template v-if="store.isAuthenticated">
                     <DropdownMenu
                         :items="userMenuItems"
@@ -119,6 +120,7 @@ import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { useCharacterStore } from '../../stores/character';
 import { useTheme } from '../../composables/useTheme';
+import LanguageSwitcher from './LanguageSwitcher.vue';
 import Button from '../ui/Button.vue';
 import Drawer from '../ui/Drawer.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
