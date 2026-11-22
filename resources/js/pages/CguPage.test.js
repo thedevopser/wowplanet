@@ -49,3 +49,20 @@ describe('CguPage', () => {
         expect(wrapper.text()).not.toContain('Rechercher des personnages');
     });
 });
+
+describe('CguPage in english', () => {
+    it('shows the terms in english and says the french version prevails', async () => {
+        const wrapper = await mountWithPlugins(CguPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.get('h1').text()).toBe('Terms of use');
+        expect(wrapper.get('#objet h2').text()).toBe('1. Purpose');
+        expect(wrapper.text()).toContain('The French version prevails');
+        expect(wrapper.text()).not.toContain('Description du service');
+    });
+
+    it('links to the english privacy policy', async () => {
+        const wrapper = await mountWithPlugins(CguPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.find('a[href="/en/privacy"]').exists()).toBe(true);
+    });
+});

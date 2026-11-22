@@ -48,6 +48,7 @@ describe('PrivacyPage', () => {
 
         expect(text).toContain('wowplanet-theme');
         expect(text).toContain('préférence de thème');
+        expect(text).toContain('wowplanet-locale');
     });
 
     it('declares the Wowhead tooltips and the host that receives the visitor address', async () => {
@@ -76,6 +77,23 @@ describe('PrivacyPage', () => {
     it('dates the change of its text', async () => {
         const wrapper = await mountPrivacyPage();
 
-        expect(wrapper.find('header time').attributes('datetime')).toBe('2026-09-25');
+        expect(wrapper.find('header time').attributes('datetime')).toBe('2026-11-22');
+    });
+});
+
+describe('PrivacyPage in english', () => {
+    it('shows the policy in english and says the french version prevails', async () => {
+        const wrapper = await mountWithPlugins(PrivacyPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.get('h1').text()).toBe('Privacy policy');
+        expect(wrapper.get('#vos-droits-rgpd h2').text()).toBe('5. Your rights (GDPR)');
+        expect(wrapper.text()).toContain('The French version prevails');
+        expect(wrapper.text()).not.toContain('Données collectées');
+    });
+
+    it('declares the language preference cookie', async () => {
+        const wrapper = await mountWithPlugins(PrivacyPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.get('#cookies').text()).toContain('wowplanet-locale');
     });
 });
