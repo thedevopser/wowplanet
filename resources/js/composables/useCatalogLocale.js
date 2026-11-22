@@ -15,6 +15,7 @@ export function useCatalogLocale() {
     return {
         locale,
         nameOf: (entry) => (isEnglish.value ? entry.name_en ?? entry.name_fr : entry.name_fr),
+        categoryNameOf: (entry) => (isEnglish.value ? entry.category_name_en ?? entry.category_name : entry.category_name),
         categoryLabel: (kind, name) => (isEnglish.value ? name : translateCategory(kind, name)),
         sourceLabel: (kind, name) => (isEnglish.value ? name : translateSource(kind, name)),
         wowheadLink: (path) => wowheadLink(path, locale.value),

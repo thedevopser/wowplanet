@@ -112,7 +112,7 @@ Gère les tâches personnalisées associées aux personnages d'un utilisateur (t
 
 ## `CrossCharacterService`
 
-Orchestre le calcul de progression agrégée sur tous les personnages d'un compte Battle.net.
+Orchestre le calcul de progression agrégée sur tous les personnages d'un compte Battle.net. Les données portent des libellés de Blizzard (paliers de réputation, renom) : elles sont lues dans la langue de la page et gardées dans `cross_character_data` par compte et par langue (clé `bnet_user_id`, `locale`). `ComputeCrossCharacterJob` reçoit cette langue et l'applique avant de lire Blizzard.
 
 **Constantes**
 

@@ -285,3 +285,10 @@ test('an english page names a profession missing from the catalogue as Blizzard 
 
     expect(professionProgress($response, '')[0]['profession_name'])->toBe('Blacksmithing');
 });
+
+test('an english page names the recipe categories in english', function (): void {
+    WowRecipe::factory()->create(['id' => 1, 'profession_id' => 171, 'expansion_id' => 0, 'category_name' => 'Potions FR', 'category_name_en' => 'Potions', 'is_active' => true]);
+    app()->setLocale('en');
+
+    expect(professionProgress(alchemyResponse(tiers: []), '')[0]['expansions'][0]['categories'][0]['name'])->toBe('Potions');
+});

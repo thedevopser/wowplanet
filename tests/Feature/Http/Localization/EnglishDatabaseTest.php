@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\WowAchievement;
 use App\Models\WowAppearance;
 use App\Models\WowMount;
 use App\Models\WowProfession;
@@ -85,5 +86,13 @@ test('the sidebar cached for one language is never served to the other', functio
 
     $this->get('/en/database')->assertInertia(
         fn (AssertableInertia $page): AssertableInertia => $page->where('subCategories.appearances.0.name', 'Head')
+    );
+});
+
+test('the database serves the english category of achievements and recipes', function (): void {
+    WowAchievement::factory()->create(['id' => 1, 'expansion_id' => 10, 'category_name' => 'Quêtes', 'category_name_en' => 'Quests', 'is_active' => true]);
+
+    $this->get('/en/database/achievements')->assertInertia(
+        fn (AssertableInertia $page): AssertableInertia => $page->where('items.0.category_name_en', 'Quests')
     );
 });

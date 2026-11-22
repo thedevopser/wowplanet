@@ -189,7 +189,7 @@ class ProfessionProgressAggregator
             $items = $this->deduplicateRankedRecipes($items);
 
             $categoryProgress[] = [
-                'name' => $catName,
+                'name' => AppLocale::current()->pick((string) $catName, $catRecipes->first()?->category_name_en),
                 'total' => count($items),
                 'completed' => count(array_filter($items, fn (array $item): bool => $item['is_completed'])),
                 'items' => $items,

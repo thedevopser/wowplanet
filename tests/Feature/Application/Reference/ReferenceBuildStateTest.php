@@ -23,7 +23,7 @@ test('a socle fully loaded on the live build is current', function (): void {
     $state = referenceBuildState()->current('12.1.0.69875');
 
     expect($state['tables_behind'])->toBe(0)
-        ->and($state['tables_total'])->toBe(count((new ReferenceCatalog)->sources()));
+        ->and($state['tables_total'])->toBe(count((new ReferenceCatalog)->names()));
 });
 
 test('a table left on an older build puts the socle behind', function (): void {
@@ -40,7 +40,7 @@ test('a table left on an older build puts the socle behind', function (): void {
 });
 
 test('a table never loaded puts the socle behind', function (): void {
-    foreach ((new ReferenceCatalog)->sources() as $source) {
+    foreach ((new ReferenceCatalog)->names() as $source) {
         if ($source === 'Faction') {
             continue;
         }
@@ -83,5 +83,5 @@ test('a socle never loaded at all is behind on every table', function (): void {
 
     expect($state['build'])->toBeNull()
         ->and($state['loaded_at'])->toBeNull()
-        ->and($state['tables_behind'])->toBe(count((new ReferenceCatalog)->sources()));
+        ->and($state['tables_behind'])->toBe(count((new ReferenceCatalog)->names()));
 });

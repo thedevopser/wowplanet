@@ -678,7 +678,9 @@ test('it stores the english names of the professions and of their recipes', func
 
     expect(WowProfession::query()->findOrFail(164)->name_en)->toBe('Blacksmithing')
         ->and(WowRecipe::query()->findOrFail(5001)->name_en)->toBe('Steel Breastplate')
-        ->and(WowRecipe::query()->findOrFail(5001)->name_fr)->toBe('Plastron en acier');
+        ->and(WowRecipe::query()->findOrFail(5001)->name_fr)->toBe('Plastron en acier')
+        ->and(WowRecipe::query()->findOrFail(5001)->category_name)->toBe('Armures')
+        ->and(WowRecipe::query()->findOrFail(5001)->category_name_en)->toBe('Armor');
 });
 
 test('it keeps the english names already stored when the english calls fail', function (): void {

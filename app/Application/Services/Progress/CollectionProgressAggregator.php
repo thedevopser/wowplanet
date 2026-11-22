@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
 class CollectionProgressAggregator
 {
     /**
-     * Catégorie de garde-robe par slot. Volontairement figée ici plutôt que lue dans
+     * Catégorie de garde-robe par slot, en clé de traduction. Volontairement figée ici plutôt que lue dans
      * wow_appearances.category : cette colonne est le item_class.name brut de Blizzard
      * (classe d'objet, non normalisée), qui contient des valeurs parasites — « Quête »,
      * « Artisanat », « Divers » — pesant 1 à 4 objets par slot.
@@ -29,23 +29,23 @@ class CollectionProgressAggregator
      * @pest-mutate-ignore
      */
     private const array SLOT_CATEGORIES = [
-        'HEAD' => 'Armure',
-        'SHOULDER' => 'Armure',
-        'SHIRT' => 'Armure',
-        'CHEST' => 'Armure',
-        'WAIST' => 'Armure',
-        'LEGS' => 'Armure',
-        'FEET' => 'Armure',
-        'WRIST' => 'Armure',
-        'HAND' => 'Armure',
-        'CLOAK' => 'Armure',
-        'TABARD' => 'Armure',
-        'SHIELD' => 'Armure',
-        'HOLDABLE' => 'Armure',
-        'WEAPON' => 'Arme',
-        'RANGED' => 'Arme',
-        'TWOHWEAPON' => 'Arme',
-        'WEAPONOFFHAND' => 'Arme',
+        'HEAD' => 'appearance.category.armor',
+        'SHOULDER' => 'appearance.category.armor',
+        'SHIRT' => 'appearance.category.armor',
+        'CHEST' => 'appearance.category.armor',
+        'WAIST' => 'appearance.category.armor',
+        'LEGS' => 'appearance.category.armor',
+        'FEET' => 'appearance.category.armor',
+        'WRIST' => 'appearance.category.armor',
+        'HAND' => 'appearance.category.armor',
+        'CLOAK' => 'appearance.category.armor',
+        'TABARD' => 'appearance.category.armor',
+        'SHIELD' => 'appearance.category.armor',
+        'HOLDABLE' => 'appearance.category.armor',
+        'WEAPON' => 'appearance.category.weapon',
+        'RANGED' => 'appearance.category.weapon',
+        'TWOHWEAPON' => 'appearance.category.weapon',
+        'WEAPONOFFHAND' => 'appearance.category.weapon',
     ];
 
     /**
@@ -156,12 +156,19 @@ class CollectionProgressAggregator
         foreach ($totals as $total) {
             $result[] = [
                 'slot' => $total->slot,
-                'category' => self::SLOT_CATEGORIES[$total->slot] ?? null,
+                'category' => isset(self::SLOT_CATEGORIES[$total->slot]) ? $this->translated(self::SLOT_CATEGORIES[$total->slot]) : null,
                 'total' => (int) $total->total,
                 'completed' => $completedBySlot[$total->slot] ?? 0,
             ];
         }
 
         return $result;
+    }
+
+    private function translated(string $key): string
+    {
+        $label = __($key);
+
+        return is_string($label) ? $label : $key;
     }
 }

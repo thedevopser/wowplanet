@@ -115,3 +115,10 @@ test('an english page names achievements in english', function (): void {
 
     expect($result[9]['categories'][0]['items'][0]['name'])->toBe('Explorer');
 });
+
+test('an english page names the achievement categories in english', function (): void {
+    WowAchievement::factory()->create(['id' => 100, 'expansion_id' => 9, 'category_name' => 'Exploration FR', 'category_name_en' => 'Exploration', 'is_active' => true]);
+    app()->setLocale('en');
+
+    expect((new AchievementProgressAggregator)->aggregate([])[9]['categories'][0]['name'])->toBe('Exploration');
+});

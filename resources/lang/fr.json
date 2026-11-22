@@ -115,6 +115,8 @@
     "addons.on_curseforge": "sur CurseForge",
     "addons.title": "Nos Addons",
     "addons.view": "Voir",
+    "appearance.category.armor": "Armure",
+    "appearance.category.weapon": "Arme",
     "auth.login.failed": "Une erreur est survenue pendant la connexion à Battle.net. Réessayez dans un instant.",
     "auth.login.interrupted": "La connexion Battle.net a été interrompue. Relancez-la depuis le bouton « Se connecter ».",
     "auth.login.refused": "Battle.net n’a pas validé la connexion. Réessayez dans un instant.",

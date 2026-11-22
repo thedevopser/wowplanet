@@ -198,7 +198,7 @@ test('the socle says how many of its tables are behind, its build alone not tell
     $entry = entriesByStage()['reference'];
 
     expect($entry['state'])->toBe('stale')
-        ->and($entry['note'])->toBe(sprintf('1 table sur %d en retard', count((new ReferenceCatalog)->sources())));
+        ->and($entry['note'])->toBe(sprintf('1 table sur %d en retard', count((new ReferenceCatalog)->names())));
 });
 
 test('a socle fully loaded carries no note to explain', function (): void {

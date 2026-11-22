@@ -13,6 +13,7 @@ final readonly class AchievementPlacement
         public int $id,
         public string $name,
         public string $categoryName,
+        public int $categoryId,
         public int $expansionId,
     ) {}
 }

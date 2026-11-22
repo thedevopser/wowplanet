@@ -73,7 +73,7 @@ class DatabaseQueryService
     public function achievements(?string $expansionSlug = null, ?string $search = null, ?int $page = null, ?int $perPage = null): array
     {
         $builder = WowAchievement::query()->where('is_active', true)
-            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'icon_url', 'points', 'faction'])
+            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'category_name_en', 'icon_url', 'points', 'faction'])
             ->orderByRaw($this->localizedName());
 
         $this->applyExpansion($builder, $expansionSlug);
@@ -231,7 +231,7 @@ class DatabaseQueryService
 
         $builder = WowRecipe::query()->where('is_active', true)
             ->where('profession_id', $profession->id)
-            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'faction', 'wowhead_spell_id'])
+            ->select(['id', 'name_fr', 'name_en', 'expansion_id', 'category_name', 'category_name_en', 'faction', 'wowhead_spell_id'])
             ->orderByRaw($this->localizedName());
 
         $this->applyExpansion($builder, $expansionSlug);

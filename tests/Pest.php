@@ -100,7 +100,7 @@ function stubWagoBuild(?string $build): void
  */
 function referenceLoadedOn(string $build, ?string $downloadedAt = null): void
 {
-    foreach ((new ReferenceCatalog)->sources() as $source) {
+    foreach ((new ReferenceCatalog)->names() as $source) {
         WowReferenceDownload::factory()->create([
             'source_table' => $source,
             'build' => $build,

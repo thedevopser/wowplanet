@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Reference;
 
+use App\Http\Localization\AppLocale;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -81,9 +82,24 @@ class FactionReference
      */
     public function names(): array
     {
+        $englishNames = AppLocale::current() === AppLocale::English ? $this->englishNames() : [];
+
         $names = [];
         foreach ($this->reputations() as $row) {
-            $names[$row['id']] = $row['name'];
+            $names[$row['id']] = $englishNames[$row['id']] ?? $row['name'];
+        }
+
+        return $names;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function englishNames(): array
+    {
+        $names = [];
+        foreach (DB::table('wow_ref_faction_en')->get(['id', 'name_lang']) as $row) {
+            $names[ReferenceValue::int($row->id)] = ReferenceValue::string($row->name_lang);
         }
 
         return $names;

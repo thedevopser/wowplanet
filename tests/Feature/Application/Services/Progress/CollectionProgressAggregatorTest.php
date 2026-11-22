@@ -199,3 +199,13 @@ test('an english page lists the collections under their english names', function
         ->and($aggregator->aggregatePets([])[0]['name'])->toBe('Cat')
         ->and($aggregator->aggregateDecor([])[0]['name'])->toBe('Statue of a hero');
 });
+
+test('an english page names the wardrobe categories in english', function (): void {
+    WowAppearance::factory()->create(['id' => 1, 'slot' => 'HEAD', 'is_active' => true]);
+    WowAppearance::factory()->create(['id' => 2, 'slot' => 'WEAPON', 'is_active' => true]);
+    app()->setLocale('en');
+
+    $categories = array_column((new CollectionProgressAggregator)->aggregateAppearances([]), 'category', 'slot');
+
+    expect($categories)->toBe(['HEAD' => 'Armor', 'WEAPON' => 'Weapon']);
+});

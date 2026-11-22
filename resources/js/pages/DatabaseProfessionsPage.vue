@@ -94,7 +94,7 @@
                         :class="linkClass"
                     >{{ nameOf(row) }}</a>
                 </template>
-                <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
+                <template #cell-category="{ row }"><span class="text-muted">{{ categoryNameOf(row) }}</span></template>
                 <template #cell-faction="{ row }">
                     <template v-if="row.faction">
                         <Badge v-if="hasFactionColor(row.faction)" tone="faction" :value="row.faction">{{ row.faction }}</Badge>
@@ -145,7 +145,7 @@ import { useWowColor } from '../composables/useWowColor';
 import { dimensionColor, factionColor } from '../utils/wowColors';
 
 const t = useTranslate();
-const { nameOf, wowheadLink } = useCatalogLocale();
+const { nameOf, wowheadLink, categoryNameOf } = useCatalogLocale();
 const { localizedUrl } = useLocalizedUrl();
 const locale = useActiveLocale();
 const professionLabel = (profession) => profession.name ?? profession.name_fr;

@@ -33,6 +33,11 @@ final class ReferenceCatalog
                 new ReferenceColumn('ReputationRaceMasks0_0', 'reputation_race_masks0_0', ReferenceColumnType::BigInteger),
                 new ReferenceColumn('ReputationRaceMasks0_1', 'reputation_race_masks0_1', ReferenceColumnType::BigInteger),
             ]),
+            // Les noms anglais des réputations, pour les pages anglaises.
+            new ReferenceTable('Faction', 'faction_en', 'enUS', [
+                new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
+                new ReferenceColumn('Name_lang', 'name_lang', ReferenceColumnType::Text),
+            ], variantName: 'FactionEn'),
             new ReferenceTable('ContentTuning', 'content_tuning', null, [
                 new ReferenceColumn('ID', 'id', ReferenceColumnType::Integer),
                 new ReferenceColumn('ExpansionID', 'expansion_id', ReferenceColumnType::Integer),
@@ -88,10 +93,10 @@ final class ReferenceCatalog
         ];
     }
 
-    public function find(string $source): ?ReferenceTable
+    public function find(string $name): ?ReferenceTable
     {
         foreach ($this->tables() as $referenceTable) {
-            if ($referenceTable->source === $source) {
+            if ($referenceTable->name() === $name) {
                 return $referenceTable;
             }
         }
@@ -102,8 +107,8 @@ final class ReferenceCatalog
     /**
      * @return list<string>
      */
-    public function sources(): array
+    public function names(): array
     {
-        return array_map(static fn (ReferenceTable $referenceTable): string => $referenceTable->source, $this->tables());
+        return array_map(static fn (ReferenceTable $referenceTable): string => $referenceTable->name(), $this->tables());
     }
 }

@@ -113,3 +113,20 @@ describe('DatabaseAchievementsPage', () => {
         expect(paginations[0].element.compareDocumentPosition(wrapper.find('table').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 });
+
+describe('DatabaseAchievementsPage categories in english', () => {
+    it('names the category of an achievement in english, the french one as a fallback', async () => {
+        const wrapper = await mountWithPlugins(DatabaseAchievementsPage, {
+            locale: 'en',
+            props: {
+                meta, expansion: null, search: null, expansions, total: 2, current_page: 1, last_page: 1,
+                items: [{ ...items[0], category_name_en: 'Exploring' }, items[1]],
+            },
+            stubs: { SearchFilter: true, CollectionIcon: true },
+        });
+
+        expect(wrapper.text()).toContain('Exploring');
+        expect(wrapper.text()).toContain('PvP');
+        expect(wrapper.text()).not.toContain('Exploration');
+    });
+});

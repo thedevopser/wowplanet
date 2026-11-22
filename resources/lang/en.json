@@ -115,6 +115,8 @@
     "addons.on_curseforge": "on CurseForge",
     "addons.title": "Our Addons",
     "addons.view": "View",
+    "appearance.category.armor": "Armor",
+    "appearance.category.weapon": "Weapon",
     "auth.login.failed": "An error occurred while logging in to Battle.net. Try again in a moment.",
     "auth.login.interrupted": "The Battle.net login was interrupted. Start it again from the “Log in” button.",
     "auth.login.refused": "Battle.net did not validate the login. Try again in a moment.",

@@ -43,7 +43,7 @@
             <template #cell-name="{ row, linkClass }">
                 <a :class="linkClass" :href="wowheadLink(`achievement=${row.id}`)" target="_blank" rel="noopener" class="text-default hover:underline">{{ nameOf(row) }}</a>
             </template>
-            <template #cell-category="{ row }"><span class="text-muted">{{ row.category_name }}</span></template>
+            <template #cell-category="{ row }"><span class="text-muted">{{ categoryNameOf(row) }}</span></template>
             <template #cell-points="{ row }"><span class="tabular-nums text-muted">{{ $t('database.points', { points: String(row.points) }) }}</span></template>
         </CatalogTable>
         <EmptyState v-else :icon="SearchX" :title="$t('database.empty.title')" :message="$t('database.empty.message')" />
@@ -82,7 +82,7 @@ import { useCatalogLocale } from '../composables/useCatalogLocale';
 import { useTranslate } from '../composables/useTranslate';
 
 const t = useTranslate();
-const { nameOf, wowheadLink } = useCatalogLocale();
+const { nameOf, wowheadLink, categoryNameOf } = useCatalogLocale();
 
 const COLUMNS = computed(() => [
     { key: 'icon', label: t('database.columns.icon'), visuallyHidden: true, class: 'w-12' },

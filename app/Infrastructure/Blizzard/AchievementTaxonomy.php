@@ -66,7 +66,7 @@ final readonly class AchievementTaxonomy
 
             foreach ($category->achievements as $achievementId => $name) {
                 $candidate = [
-                    'placement' => new AchievementPlacement($achievementId, $name, $root->name, $expansionId),
+                    'placement' => new AchievementPlacement($achievementId, $name, $root->name, $root->id, $expansionId),
                     'label' => $label,
                     'categoryId' => $category->id,
                 ];

@@ -186,3 +186,18 @@ describe('DatabaseProfessionsPage', () => {
         expect(paginations[0].element.compareDocumentPosition(wrapper.find('table').element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 });
+
+describe('DatabaseProfessionsPage categories in english', () => {
+    it('names the category of a recipe in english', async () => {
+        pageUrl = '/en/database/professions/alchimie';
+        const english = { ...recipes, items: [{ ...recipes.items[1], category_name_en: 'Elixirs' }] };
+        const wrapper = await mountWithPlugins(DatabaseProfessionsPage, {
+            locale: 'en',
+            props: { meta, profession: 'alchimie', expansion: null, search: null, professions, total_recipes: 280, recipes: english },
+            stubs: { SearchFilter: true },
+        });
+
+        expect(wrapper.text()).toContain('Elixirs');
+        expect(wrapper.text()).not.toContain('Élixirs');
+    });
+});

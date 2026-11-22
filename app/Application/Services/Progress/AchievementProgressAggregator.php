@@ -62,7 +62,11 @@ class AchievementProgressAggregator
                 continue;
             }
 
-            $categoryProgress[] = $this->buildSingleCategoryProgress((string) $categoryName, $categoryAchievements, $completedAchievementIds);
+            $categoryProgress[] = $this->buildSingleCategoryProgress(
+                AppLocale::current()->pick((string) $categoryName, $categoryAchievements->first()?->category_name_en),
+                $categoryAchievements,
+                $completedAchievementIds,
+            );
         }
 
         return $categoryProgress;
