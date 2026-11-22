@@ -8,7 +8,7 @@
             <div class="flex min-w-0 items-start gap-4">
                 <img
                     :src="character.avatarUrl"
-                    :alt="`Avatar de ${character.name}`"
+                    :alt="$t('sheet.card.avatar', { name: character.name })"
                     width="80"
                     height="80"
                     class="size-20 shrink-0 rounded-ui-md border border-default bg-surface-raised object-cover"
@@ -22,7 +22,7 @@
                     </h1>
                     <p v-if="character.guild" class="text-base text-muted">&lt;{{ character.guild }}&gt;</p>
                     <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-                        <span>Niveau {{ character.level }}</span>
+                        <span>{{ $t('sheet.card.level', { level: character.level }) }}</span>
                         <span aria-hidden="true">·</span>
                         <span>{{ character.race }}</span>
                         <span aria-hidden="true">·</span>
@@ -40,11 +40,11 @@
                 <template v-if="isOwner">
                     <Button :aria-pressed="String(isFavorite)" @click="toggleFavorite">
                         <Icon :icon="Star" :class="{ 'fill-current text-accent': isFavorite }" />
-                        Favori
+                        {{ $t('sheet.card.favorite') }}
                     </Button>
                     <Button @click="taskStore.openFor(realm, name)">
                         <Icon :icon="ListPlus" />
-                        Ajouter une tâche
+                        {{ $t('sheet.card.add_task') }}
                     </Button>
                 </template>
             </div>
@@ -59,6 +59,8 @@ import { useFavoriteStore } from '../stores/favorites';
 import { useTaskStore } from '../stores/tasks';
 import { useToastStore } from '../stores/toasts';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useTranslate } from '../composables/useTranslate';
 import { classColor as classColorOf, factionColor as factionColorOf } from '../utils/wowColors';
 import Badge from './ui/Badge.vue';
 import Button from './ui/Button.vue';
@@ -76,6 +78,8 @@ const favoriteStore = useFavoriteStore();
 const taskStore = useTaskStore();
 const toasts = useToastStore();
 const { readable, safe } = useWowColor();
+const t = useTranslate();
+const { localizedUrl } = useLocalizedUrl();
 
 const classColor = computed(() => safe(classColorOf, props.character.classId));
 const factionColor = computed(() => safe(factionColorOf, props.character.faction));
@@ -91,10 +95,10 @@ onMounted(() => {
 async function toggleFavorite() {
     if (!isFavorite.value && favoriteStore.isFull) {
         toasts.show({
-            title: 'Trois favoris au maximum',
-            description: 'Retirez un favori depuis Mon compte pour épingler celui-ci.',
+            title: t('sheet.card.favorites_full.title'),
+            description: t('sheet.card.favorites_full.description'),
             tone: 'warning',
-            action: { label: 'Gérer mes favoris', href: '/mon-compte' },
+            action: { label: t('sheet.card.favorites_full.action'), href: localizedUrl('/mon-compte') },
         });
         return;
     }
@@ -102,7 +106,7 @@ async function toggleFavorite() {
     try {
         await favoriteStore.toggleFavorite(props.realm, props.name);
     } catch {
-        toasts.show({ title: 'Le favori n’a pas pu être enregistré', description: 'Réessayez dans un instant.', tone: 'error' });
+        toasts.show({ title: t('sheet.card.favorite_failed.title'), description: t('sheet.card.favorite_failed.description'), tone: 'error' });
     }
 }
 </script>

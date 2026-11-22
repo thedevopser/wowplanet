@@ -4,35 +4,37 @@
 const EXALTED = '7';
 const RENOWN = 'renown';
 const LAST_CLASSIC_TIER = 7;
-const LEVEL_NAME = /^Niveau \d+$/;
+const LEVEL_NAME = /^(Niveau|Level) \d+$/;
 
-const renownName = (best) => (best.renown_level > 0 ? `Renom ${best.renown_level}` : best.standing_name);
+const frenchRenown = (level) => `Renom ${level}`;
 
-function withBest(faction, best) {
+const renownName = (best, renownLabel) => (best.renown_level > 0 ? renownLabel(best.renown_level) : best.standing_name);
+
+function withBest(faction, best, renownLabel) {
     return {
         ...faction,
         tier: best.tier,
         raw: best.raw,
         renown_level: best.renown_level,
-        standing_name: renownName(best),
+        standing_name: renownName(best, renownLabel),
         completed: best.completed || faction.completed,
         started: true,
     };
 }
 
-export function effectiveStanding(faction, best) {
+export function effectiveStanding(faction, best, renownLabel = frenchRenown) {
     if (!faction.account_wide || !best) {
         return faction;
     }
     if (faction.started === false) {
-        return withBest(faction, best);
+        return withBest(faction, best, renownLabel);
     }
 
     const ownIsBetter = (faction.renown_level > 0 || best.renown_level > 0)
         ? faction.renown_level >= best.renown_level
         : faction.raw >= best.raw;
 
-    return ownIsBetter ? faction : withBest(faction, best);
+    return ownIsBetter ? faction : withBest(faction, best, renownLabel);
 }
 
 export function betterElsewhere(faction, best, characterName) {
@@ -76,9 +78,9 @@ export function standingKey(standing) {
 }
 
 // Blizzard names a companion level "Niveau 80" whether or not it is the last one.
-export function standingLabel(standing) {
+export function standingLabel(standing, { notStarted = 'Non commencée' } = {}) {
     if (standing.started === false) {
-        return 'Non commencée';
+        return notStarted;
     }
     if (standing.completed && LEVEL_NAME.test(standing.standing_name)) {
         return `${standing.standing_name} · max`;

@@ -82,3 +82,13 @@ test('aggregate keeps a numeric zone name as text', function (): void {
 
     expect((new QuestProgressAggregator)->aggregate([], '')[7]['zones'][0]['name'])->toBe('2024');
 });
+
+test('an english page names quests and zones in english', function (): void {
+    WowQuest::factory()->create(['id' => 1, 'expansion_id' => 0, 'name_fr' => 'La menace', 'name_en' => 'The threat', 'zone_name' => 'Durotar FR', 'zone_name_en' => 'Durotar', 'is_active' => true]);
+    app()->setLocale('en');
+
+    $zone = (new QuestProgressAggregator)->aggregate([], '')[0]['zones'][0];
+
+    expect($zone['name'])->toBe('Durotar')
+        ->and($zone['items'][0]['name'])->toBe('The threat');
+});

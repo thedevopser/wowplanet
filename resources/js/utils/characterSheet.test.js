@@ -4,10 +4,10 @@ import { OVERVIEW, SECTIONS, UnknownSheetViewError, sheetUrl, viewOf } from './c
 describe('characterSheet', () => {
     it('lists the four sections of the sheet, the overview first', () => {
         expect(SECTIONS.map((section) => [section.value, section.label])).toEqual([
-            [OVERVIEW, 'Aperçu'],
-            ['progression', 'Progression'],
-            ['endgame', 'Endgame'],
-            ['collections', 'Collections'],
+            [OVERVIEW, 'sheet.sections.overview'],
+            ['progression', 'sheet.sections.progress'],
+            ['endgame', 'sheet.sections.endgame'],
+            ['collections', 'sheet.sections.collections'],
         ]);
     });
 
@@ -22,10 +22,14 @@ describe('characterSheet', () => {
         });
     });
 
-    it('labels every sub-tab in full', () => {
+    it('labels every sub-tab with a translation key', () => {
         const labels = SECTIONS.flatMap((section) => section.subs.map((sub) => sub.label));
 
-        expect(labels).toEqual(['Quêtes', 'Hauts-faits', 'Réputations', 'Métiers', 'Mythique+', 'Raids', 'PvP', 'Équipement et talents', 'Montures', 'Mascottes', 'Décorations', 'Garde-robe']);
+        expect(labels).toEqual([
+            'score.dimension.quests', 'score.dimension.achievements', 'score.dimension.reputations', 'score.dimension.professions',
+            'sheet.sections.mythic_plus', 'score.dimension.raids', 'sheet.sections.pvp', 'sheet.sections.equipment',
+            'score.dimension.mounts', 'score.dimension.pets', 'score.dimension.decor', 'score.dimension.transmog',
+        ]);
     });
 
     describe('viewOf', () => {

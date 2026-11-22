@@ -16,7 +16,11 @@ final class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        app()->setLocale(AppLocale::fromPath($request->path())->value);
+        $locale = $request->is('api/*')
+            ? AppLocale::fromHeader($request->header(AppLocale::HEADER))
+            : AppLocale::fromPath($request->path());
+
+        app()->setLocale($locale->value);
 
         return $next($request);
     }

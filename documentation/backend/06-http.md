@@ -293,7 +293,7 @@ Middleware d'Inertia, ajouté au groupe `web`. Il fixe la vue Blade racine (`app
 
 ### `SetLocale`
 
-Placé en tête du groupe `web`. Il lit la langue de la page dans son URL (`AppLocale::fromPath()`) et l'applique à Laravel par `App::setLocale()`, avant tout le reste : les traductions, les props partagées et l'attribut `lang` de `<html>` en dépendent. Voir [Langues](#langues-apphttplocalization).
+Placé en tête des groupes `web` et `api`. Il lit la langue de la page dans son URL (`AppLocale::fromPath()`) ; une URL d'API n'en portant pas, il la lit alors dans l'en-tête `X-App-Locale` (`AppLocale::fromHeader()`), que le front pose sur chaque appel, le français à défaut, et l'applique à Laravel par `App::setLocale()`, avant tout le reste : les traductions, les props partagées et l'attribut `lang` de `<html>` en dépendent. Voir [Langues](#langues-apphttplocalization).
 
 ### `SecurityHeaders`
 
@@ -318,7 +318,9 @@ Les textes traduits sont dans `lang/fr.json` et `lang/en.json`, à clés anglais
 
 ### `AppLocale`
 
-Énumération des deux langues. `fromPath()` rend l'anglais quand le premier segment du chemin vaut `en`, le français sinon ; `other()` désigne l'autre langue.
+Énumération des deux langues. `fromPath()` rend l'anglais quand le premier segment du chemin vaut `en`, le français sinon ; `fromHeader()` lit l'en-tête d'un appel d'API ; `other()` désigne l'autre langue.
+
+`blizzardLocale()` donne la langue des appels à l'API Blizzard (`fr_FR`, `en_US`) : `BlizzardApiClient` interroge Blizzard dans la langue de la requête, sauf locale explicite, comme celle des importers. Les caches qui gardent des noms renvoyés par Blizzard (journal des raids, arbres de talents, profil et paliers JcJ, donjons de la saison, noms des classes et spécialisations) sont clés par langue avec `scopedCacheKey()`. `pick(français, anglais)` rend le nom d'une entrée du catalogue dans la langue de la page, le français à défaut : les agrégateurs de la fiche s'en servent.
 
 ### `LocalizedRouteTable` et `LocalizedRoutePattern`
 

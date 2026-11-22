@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services\Progress;
 
+use App\Http\Localization\AppLocale;
 use App\Models\WowQuest;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Support\Collection;
@@ -98,7 +99,7 @@ class QuestProgressAggregator
             $isCompleted = in_array($zoneQuest->id, $completedQuestIds);
             $items[] = [
                 'id' => $zoneQuest->id,
-                'name' => $zoneQuest->name_fr,
+                'name' => AppLocale::current()->pick($zoneQuest->name_fr, $zoneQuest->name_en),
                 'is_completed' => $isCompleted,
             ];
             if ($isCompleted) {
@@ -107,7 +108,7 @@ class QuestProgressAggregator
         }
 
         return [
-            'name' => $zoneName,
+            'name' => AppLocale::current()->pick($zoneName, $zoneQuests->first()?->zone_name_en),
             'total' => count($items),
             'completed' => $completedCount,
             'items' => $items,

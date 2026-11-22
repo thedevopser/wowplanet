@@ -6,11 +6,11 @@
                 <p v-if="description" class="mt-1 text-sm text-muted">{{ description }}</p>
             </div>
             <div class="text-right">
-                <p data-percent class="text-3xl font-bold tabular-nums" :style="{ color: readable(color) }">{{ percent }} %</p>
+                <p data-percent class="text-3xl font-bold tabular-nums" :style="{ color: readable(color) }">{{ $t('common.percent', { value: percent }) }}</p>
                 <p class="text-sm tabular-nums text-subtle">{{ completed }} / {{ total }}</p>
             </div>
         </div>
-        <ProgressBar :value="completed" :max="Math.max(total, 1)" :color="color?.base" :aria-label="`${title} : ${completed} sur ${total}`" />
+        <ProgressBar :value="completed" :max="Math.max(total, 1)" :color="color?.base" :aria-label="$t('common.progress_of', { label: title, completed, total })" />
     </Card>
 </template>
 

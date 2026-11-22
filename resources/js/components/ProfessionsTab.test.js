@@ -221,3 +221,28 @@ describe('ProfessionsTab', () => {
         expect(rows[0].text()).toContain('Fait par Jaina');
     });
 });
+
+describe('ProfessionsTab in english', () => {
+    it('speaks english and links the recipes to the english Wowhead', async () => {
+        const wrapper = await mountWithPlugins(ProfessionsTab, {
+            locale: 'en',
+            initialState: { character: { character: makeCharacter([standardProfession]), crossCharacter: null } },
+            stubActions: false,
+        });
+
+        expect(wrapper.findAllComponents({ name: 'Select' }).some((select) => select.props('label') === 'Profession')).toBe(true);
+        expect(wrapper.text()).toContain('Recipe categories');
+        expect(wrapper.text()).toContain('Skill');
+        expect(wrapper.text()).not.toMatch(/Compétence|Recettes apprises/);
+    });
+
+    it('says in english that the character has no profession', async () => {
+        const wrapper = await mountWithPlugins(ProfessionsTab, {
+            locale: 'en',
+            initialState: { character: { character: makeCharacter([]), crossCharacter: null } },
+            stubActions: false,
+        });
+
+        expect(wrapper.text()).toContain('No profession');
+    });
+});

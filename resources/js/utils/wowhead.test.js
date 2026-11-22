@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { wowheadUrl } from './wowhead';
+import { wowheadLink, wowheadUrl } from './wowhead';
 
 describe('wowheadUrl', () => {
     it.each([
@@ -11,5 +11,13 @@ describe('wowheadUrl', () => {
         ['mount', { name: 'Proto-drake' }, 'https://www.wowhead.com/fr/search?q=Proto-drake'],
     ])('links a %s to its page', (type, entry, expected) => {
         expect(wowheadUrl(type, entry)).toBe(expected);
+    });
+});
+
+describe('wowheadUrl in english', () => {
+    it('links to the english pages of Wowhead', () => {
+        expect(wowheadUrl('quest', { id: 3, name: 'X' }, 'en')).toBe('https://www.wowhead.com/quest=3');
+        expect(wowheadLink('item=5', 'en')).toBe('https://www.wowhead.com/item=5');
+        expect(wowheadLink('item=5', 'fr')).toBe('https://www.wowhead.com/fr/item=5');
     });
 });

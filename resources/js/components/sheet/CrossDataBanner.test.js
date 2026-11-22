@@ -48,3 +48,16 @@ describe('CrossDataBanner', () => {
         expect(store.computeCrossCharacter).toHaveBeenCalled();
     });
 });
+
+describe('CrossDataBanner in english', () => {
+    it('offers in english to compute the data of the other characters', async () => {
+        const wrapper = await mountWithPlugins(CrossDataBanner, {
+            locale: 'en',
+            props: { isOwner: true },
+            initialState: { character: { crossCharacterStatus: 'not_available' } },
+        });
+
+        expect(wrapper.text()).toContain('Data of your other characters not computed');
+        expect(wrapper.find('button').text()).toBe('Compute');
+    });
+});

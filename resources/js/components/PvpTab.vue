@@ -1,30 +1,30 @@
 <template>
     <div class="space-y-6">
         <div v-if="loading" data-testid="pvp-loading" role="status" aria-busy="true" class="space-y-4">
-            <span class="sr-only">Chargement du PvP…</span>
+            <span class="sr-only">{{ $t('sheet.pvp.loading') }}</span>
             <Skeleton class="h-28 w-full" />
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <Skeleton v-for="index in 3" :key="index" class="h-32 w-full" />
             </div>
         </div>
 
-        <ErrorState v-else-if="error" message="Impossible de charger les données PvP de ce personnage." @retry="load" />
+        <ErrorState v-else-if="error" :message="$t('sheet.pvp.error')" @retry="load" />
 
-        <EmptyState v-else-if="!pvp" :icon="Swords" title="Joueur contre joueur" message="Aucune donnée PvP pour ce personnage." />
+        <EmptyState v-else-if="!pvp" :icon="Swords" :title="$t('sheet.pvp.title')" :message="$t('sheet.pvp.no_data')" />
 
         <template v-else>
             <Card data-testid="pvp-header" class="flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
                 <div>
-                    <h2 class="font-display text-2xl font-semibold text-default">Joueur contre joueur</h2>
-                    <p v-if="pvp.season_id" class="mt-1 text-sm text-muted">Saison {{ pvp.season_id }}</p>
+                    <h2 class="font-display text-2xl font-semibold text-default">{{ $t('sheet.pvp.title') }}</h2>
+                    <p v-if="pvp.season_id" class="mt-1 text-sm text-muted">{{ $t('sheet.season', { season: pvp.season_id }) }}</p>
                 </div>
                 <dl class="flex items-end gap-6 text-right">
                     <div v-if="pvp.best_rating">
-                        <dt class="text-xs text-subtle">Meilleure cote</dt>
+                        <dt class="text-xs text-subtle">{{ $t('sheet.pvp.best_rating') }}</dt>
                         <dd class="text-3xl font-bold tabular-nums text-accent">{{ pvp.best_rating }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-subtle">Niveau d’honneur</dt>
+                        <dt class="text-xs text-subtle">{{ $t('sheet.pvp.honor_level') }}</dt>
                         <dd class="text-2xl font-bold tabular-nums text-default">{{ pvp.honor_level }}</dd>
                     </div>
                 </dl>
@@ -35,17 +35,17 @@
                 data-testid="pvp-battlegrounds"
                 class="flex flex-wrap items-center justify-between gap-4 p-4"
             >
-                <span class="text-sm font-semibold text-default">Champs de bataille non cotés</span>
+                <span class="text-sm font-semibold text-default">{{ $t('sheet.pvp.unrated_battlegrounds') }}</span>
                 <RecordLine :played="pvp.battlegrounds.played" :won="pvp.battlegrounds.won" :lost="pvp.battlegrounds.lost" :win-rate="pvp.battlegrounds.win_rate" />
             </Card>
 
             <section v-for="group in pvp.groups" :key="group.key" :data-testid="`pvp-group-${group.key}`" class="space-y-4">
-                <h3 class="text-lg font-semibold text-default">{{ group.label }}</h3>
+                <h3 class="text-lg font-semibold text-default">{{ pvpGroupLabel(group, t) }}</h3>
                 <ul class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <Card v-for="bracket in group.brackets" :key="bracket.slug" as="li" :data-testid="`pvp-bracket-${bracket.slug}`" class="space-y-3 p-4">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-default">{{ bracket.label }}</p>
+                                <p class="truncate text-sm font-semibold text-default">{{ pvpBracketLabel(bracket, t) }}</p>
                                 <p v-if="bracket.tier_name" class="mt-1 flex items-center gap-1.5 text-xs text-muted">
                                     <img v-if="bracket.tier_icon_url" :src="bracket.tier_icon_url" alt="" class="size-4 rounded-ui-sm" loading="lazy">
                                     <span class="truncate">{{ bracket.tier_name }}</span>
@@ -55,7 +55,7 @@
                         </div>
                         <RecordLine :won="bracket.won" :lost="bracket.lost" :win-rate="bracket.win_rate" class="border-t border-default pt-3" />
                         <p v-if="bracket.weekly && bracket.weekly.played > 0" class="text-xs text-subtle">
-                            Cette semaine : {{ bracket.weekly.played }} joués — {{ bracket.weekly.won }} victoires, {{ bracket.weekly.lost }} défaites
+                            {{ $t('sheet.pvp.this_week', { played: bracket.weekly.played, won: bracket.weekly.won, lost: bracket.weekly.lost }) }}
                         </p>
                     </Card>
                 </ul>
@@ -73,6 +73,10 @@ import EmptyState from './ui/EmptyState.vue';
 import ErrorState from './ui/ErrorState.vue';
 import Skeleton from './ui/Skeleton.vue';
 import RecordLine from './sheet/RecordLine.vue';
+import { useTranslate } from '../composables/useTranslate';
+import { pvpBracketLabel, pvpGroupLabel } from '../utils/pvpLabels';
+
+const t = useTranslate();
 
 const props = defineProps({
     realm: { type: String, required: true },

@@ -88,3 +88,14 @@ describe('EquipmentTab', () => {
         expect(wrapper.text()).toContain('Équipement');
     });
 });
+
+describe('EquipmentTab in english', () => {
+    it('names the slots in english', async () => {
+        const wrapper = await mountWithPlugins(EquipmentTab, { locale: 'en', props: { character: makeCharacter(fullEquipment) } });
+
+        expect(wrapper.find('h2 button').text()).toContain('Gear');
+        expect(wrapper.text()).toContain('equipped item level');
+        expect(wrapper.text()).toContain('Main Hand');
+        expect(wrapper.find('a[href="https://www.wowhead.com/item=100"]').exists()).toBe(true);
+    });
+});

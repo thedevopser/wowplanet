@@ -1,3 +1,5 @@
+import { wowheadLink, wowheadSearch } from './wowhead.js';
+
 // French labels of the categories and sources of the three collections. The catalogue
 // keeps Blizzard's English names; expansion names stay in English, as in game.
 
@@ -501,47 +503,43 @@ const DECOR = Object.freeze({
     }),
 });
 
-const WOWHEAD = 'https://www.wowhead.com/fr';
-
-const byWowhead = (path, key) => (item) => (item[key]
-    ? `${WOWHEAD}/${path}=${item[key]}`
-    : `${WOWHEAD}/search?q=${encodeURIComponent(item.name)}`);
+const byWowhead = (path, key) => (item, locale = 'fr') => wowheadLink(item[key] ? `${path}=${item[key]}` : wowheadSearch(item.name), locale);
 
 export const UNCATEGORIZED = 'Non classé';
 
 export const COLLECTIONS = Object.freeze({
     mounts: Object.freeze({
         field: 'mounts',
-        title: 'Montures',
+        title: 'score.dimension.mounts',
         dimension: 'mounts',
-        search: 'Rechercher une monture…',
-        hide: 'Masquer les montures obtenues',
-        uncategorized: 'Montures non classées',
-        empty: 'Aucune monture connue pour ce personnage.',
+        search: 'sheet.collections.mounts.search',
+        hide: 'sheet.collections.mounts.hide',
+        uncategorized: 'sheet.collections.mounts.uncategorized',
+        empty: 'sheet.collections.mounts.empty',
         extraCategories: ['Mounts', 'Racial', 'Professions', 'PVP', 'World Events', 'Limited Time', 'Past Limited Time', 'Promotion', 'Other'],
         wowheadUrl: byWowhead('spell', 'wowhead_id'),
         labels: MOUNTS,
     }),
     pets: Object.freeze({
         field: 'pets',
-        title: 'Mascottes',
+        title: 'score.dimension.pets',
         dimension: 'pets',
-        search: 'Rechercher une mascotte…',
-        hide: 'Masquer les mascottes obtenues',
-        uncategorized: 'Mascottes non classées',
-        empty: 'Aucune mascotte connue pour ce personnage.',
+        search: 'sheet.collections.pets.search',
+        hide: 'sheet.collections.pets.hide',
+        uncategorized: 'sheet.collections.pets.uncategorized',
+        empty: 'sheet.collections.pets.empty',
         extraCategories: ['Pets', 'World Events', 'PVP', 'Promotion'],
         wowheadUrl: byWowhead('npc', 'wowhead_id'),
         labels: PETS,
     }),
     decor: Object.freeze({
         field: 'decor',
-        title: 'Décorations',
+        title: 'score.dimension.decor',
         dimension: 'decor',
-        search: 'Rechercher une décoration…',
-        hide: 'Masquer les décorations obtenues',
-        uncategorized: 'Décorations non classées',
-        empty: 'Aucune décoration connue pour ce personnage.',
+        search: 'sheet.collections.decor.search',
+        hide: 'sheet.collections.decor.hide',
+        uncategorized: 'sheet.collections.decor.uncategorized',
+        empty: 'sheet.collections.decor.empty',
         extraCategories: ['Profession', 'Neighbourhoods', 'General', 'Limited Time', 'World Events', 'PVP', 'Promotion', 'Undiscovered'],
         wowheadUrl: byWowhead('item', 'item_id'),
         labels: DECOR,

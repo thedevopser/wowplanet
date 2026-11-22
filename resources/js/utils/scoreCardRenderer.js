@@ -38,7 +38,16 @@ function roundRect(ctx, x, y, w, h, r) {
     }
 }
 
-export function renderScoreCard({ variant, characterName, characterRealm, characterClass, characterRace, characterLevel, classId, characterCount, globalScore, rank, dimensions }) {
+const FRENCH_LABELS = Object.freeze({
+    locale: 'fr-FR',
+    title: 'Score de complétion',
+    accountTitle: 'Score du compte',
+    charactersAnalysed: (count) => `${count} personnage${count > 1 ? 's' : ''} analysé${count > 1 ? 's' : ''}`,
+    rank: (rank) => rank,
+    dimension: (dimension) => dimension.label,
+});
+
+export function renderScoreCard({ variant, characterName, characterRealm, characterClass, characterRace, characterLevel, classId, characterCount, globalScore, rank, dimensions }, labels = FRENCH_LABELS) {
     const rows = Array.isArray(dimensions) ? dimensions.filter(d => d.applicable) : [];
     const HEIGHT = CHROME_H + rows.length * ROW_H;
 
@@ -65,7 +74,7 @@ export function renderScoreCard({ variant, characterName, characterRealm, charac
     ctx.font = `500 12px ${FONT}`;
     ctx.fillStyle = DARK_THEME['text-muted'];
     ctx.textAlign = 'right';
-    ctx.fillText('Score de complétion', WIDTH - 24, 17);
+    ctx.fillText(labels.title, WIDTH - 24, 17);
     ctx.textAlign = 'left';
 
     const infoY = 44;
@@ -81,11 +90,11 @@ export function renderScoreCard({ variant, characterName, characterRealm, charac
     } else {
         ctx.font = `bold 18px ${FONT}`;
         ctx.fillStyle = DARK_THEME.text;
-        ctx.fillText('Score du compte', 24, infoY);
+        ctx.fillText(labels.accountTitle, 24, infoY);
 
         ctx.font = `400 13px ${FONT}`;
         ctx.fillStyle = DARK_THEME['text-subtle'];
-        ctx.fillText(`${characterCount || 0} personnage${(characterCount || 0) > 1 ? 's' : ''} analysé${(characterCount || 0) > 1 ? 's' : ''}`, 24, infoY + 24);
+        ctx.fillText(labels.charactersAnalysed(characterCount || 0), 24, infoY + 24);
     }
 
     const scoreY = variant === 'personal' ? 85 : 95;
@@ -111,7 +120,7 @@ export function renderScoreCard({ variant, characterName, characterRealm, charac
     ctx.fillText(outOfText, scoreX + scoreWidth + OUT_OF_GAP, scoreY + OUT_OF_BASELINE_OFFSET);
 
     const badgeY = scoreY + 62;
-    const rankText = (rank || '').toUpperCase();
+    const rankText = labels.rank(rank || '').toUpperCase();
     ctx.font = `800 11px ${FONT}`;
     const badgeW = ctx.measureText(rankText).width + 24;
     const badgeX = WIDTH / 2 - badgeW / 2;
@@ -149,7 +158,7 @@ export function renderScoreCard({ variant, characterName, characterRealm, charac
 
         ctx.font = `600 13px ${FONT}`;
         ctx.fillStyle = DARK_THEME.text;
-        ctx.fillText(dim.label, labelX, y);
+        ctx.fillText(labels.dimension(dim), labelX, y);
 
         roundRect(ctx, barX, y + 1, barW, barH, 6);
         ctx.fillStyle = DARK_THEME['surface-raised'];
@@ -168,8 +177,8 @@ export function renderScoreCard({ variant, characterName, characterRealm, charac
 
         ctx.font = `400 10px ${FONT}`;
         ctx.fillStyle = DARK_THEME['text-subtle'];
-        const completed = dim.completed?.toLocaleString('fr-FR') ?? '0';
-        const total = dim.total?.toLocaleString('fr-FR') ?? '0';
+        const completed = dim.completed?.toLocaleString(labels.locale) ?? '0';
+        const total = dim.total?.toLocaleString(labels.locale) ?? '0';
         ctx.fillText(`${completed}/${total}`, detailX, y + 2);
     }
 

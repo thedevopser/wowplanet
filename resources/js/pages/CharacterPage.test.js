@@ -41,8 +41,9 @@ const meta = {
     jsonLd: null,
 };
 
-async function mountCharacterPage(character, { isOwner = false, isAuthenticated = false, section = null, sub = null } = {}) {
+async function mountCharacterPage(character, { isOwner = false, isAuthenticated = false, section = null, sub = null, locale = 'fr' } = {}) {
     const wrapper = await mountWithPlugins(CharacterPage, {
+        locale,
         props: { character, realm: 'hyjal', name: 'arthas', meta, isOwner, section, sub },
         initialState: { character: { isAuthenticated } },
         stubs: {
@@ -214,5 +215,25 @@ describe('CharacterPage', () => {
         const wrapper = await mountCharacterPage(characterData);
 
         await expectNoAxeViolations(wrapper.element);
+    });
+});
+
+describe('CharacterPage in english', () => {
+    it('names its tabs in english and keeps the sheet under /en', async () => {
+        const wrapper = await mountCharacterPage(characterData, { locale: 'en' });
+
+        const sections = tabLists(wrapper)[0];
+        expect(sections.findAll('[role="tab"]').map((tab) => tab.text())).toEqual(['Overview', 'Progress', 'Endgame', 'Collections']);
+
+        await tabNamed(sections, 'Collections').trigger('mousedown', { button: 0 });
+        expect(router.push.mock.calls.at(-1)[0].url).toBe('/en/character/hyjal/arthas/collections/montures');
+        wrapper.unmount();
+    });
+
+    it('says in english that the character cannot be found', async () => {
+        const wrapper = await mountWithPlugins(CharacterPage, { locale: 'en', props: { character: null, realm: 'hyjal', name: 'arthas', meta } });
+
+        expect(wrapper.get('h1').text()).toBe('Character not found');
+        expect(wrapper.find('a[href="/en"]').exists()).toBe(true);
     });
 });

@@ -73,3 +73,13 @@ describe('TransmogTab', () => {
         expect(wrapper.text()).toContain('Aucune apparence connue pour ce personnage.');
     });
 });
+
+describe('TransmogTab in english', () => {
+    it('names the slots in english', async () => {
+        const wrapper = await mountWithPlugins(TransmogTab, { locale: 'en', props: { character: { appearances: APPEARANCES } } });
+
+        expect(wrapper.find('h2').text()).toBe('Appearances');
+        expect(wrapper.findAll('[data-slot-name]').map((name) => name.text())).toContain('Head');
+        expect(wrapper.text()).not.toContain('Tête');
+    });
+});

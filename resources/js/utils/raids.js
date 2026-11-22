@@ -3,10 +3,10 @@
 
 // Difficulty colours borrow the item qualities, as players read them in game.
 export const DIFFICULTIES = Object.freeze([
-    { type: 'LFR', label: 'Outil Raids', short: 'LFR', quality: 'UNCOMMON' },
-    { type: 'NORMAL', label: 'Normal', short: 'N', quality: 'RARE' },
-    { type: 'HEROIC', label: 'Héroïque', short: 'H', quality: 'EPIC' },
-    { type: 'MYTHIC', label: 'Mythique', short: 'M', quality: 'LEGENDARY' },
+    { type: 'LFR', label: 'sheet.raids.raid_finder', short: 'LFR', quality: 'UNCOMMON' },
+    { type: 'NORMAL', label: 'raid.difficulty.normal', short: 'N', quality: 'RARE' },
+    { type: 'HEROIC', label: 'raid.difficulty.heroic', short: 'H', quality: 'EPIC' },
+    { type: 'MYTHIC', label: 'raid.difficulty.mythic', short: 'M', quality: 'LEGENDARY' },
 ]);
 
 const modeOf = (raid, type) => (raid.modes ?? []).find((mode) => mode.difficulty_type === type) ?? null;

@@ -167,10 +167,10 @@ test('it resolves tier names and icons, then serves them from cache', function (
 
     expect($bracket['tier_name'])->toBe('Duelliste')
         ->and($bracket['tier_icon_url'])->toBe('https://render.test/duelist.jpg')
-        ->and(Cache::get('pvp_tier:12'))->toBe(['name' => 'Duelliste', 'icon_url' => 'https://render.test/duelist.jpg']);
+        ->and(Cache::get('pvp_tier:12:fr'))->toBe(['name' => 'Duelliste', 'icon_url' => 'https://render.test/duelist.jpg']);
 
     // Deuxième personnage, même palier : plus aucun appel palier.
-    Cache::forget('pvp_profile:hyjal:jaina');
+    Cache::forget('pvp_profile:hyjal:jaina:fr');
     $requested = [];
     pvpService()->getForCharacter('hyjal', 'jaina');
 
@@ -188,7 +188,21 @@ test('it caches the normalised payload per character', function (): void {
     $second = pvpService()->getForCharacter('hyjal', 'thrall');
 
     expect($second)->toBe($first)
-        ->and(Cache::has('pvp_profile:hyjal:thrall'))->toBeTrue();
+        ->and(Cache::has('pvp_profile:hyjal:thrall:fr'))->toBeTrue();
+});
+
+test('it caches the english payload apart from the french one', function (): void {
+    $mock = mockPvpClient(['pvp-bracket/3v3' => pvpBracketResponse(1842)]);
+
+    /** @var Expectation $expectation */
+    $expectation = $mock->shouldReceive('get');
+    $expectation->twice()->andReturn(pvpSummaryResponse(['3v3']));
+
+    pvpService()->getForCharacter('hyjal', 'thrall');
+    app()->setLocale('en');
+    pvpService()->getForCharacter('hyjal', 'thrall');
+
+    expect(Cache::has('pvp_profile:hyjal:thrall:en'))->toBeTrue();
 });
 
 test('it caches the absence of pvp data to avoid refetching', function (): void {

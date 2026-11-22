@@ -1,10 +1,10 @@
 <template>
     <div class="space-y-6">
-        <EmptyState v-if="!professions.length" :icon="Hammer" title="Aucun métier" message="Ce personnage n’a aucun métier." />
+        <EmptyState v-if="!professions.length" :icon="Hammer" :title="$t('sheet.professions.none.title')" :message="$t('sheet.professions.none.message')" />
 
         <template v-else>
             <div class="flex flex-wrap items-center gap-4">
-                <Select v-model="professionParam" label="Métier" :options="professionOptions" />
+                <Select v-model="professionParam" :label="$t('sheet.professions.profession')" :options="professionOptions" />
                 <ExpansionFilter
                     v-if="!isArchaeology"
                     v-model="expansionId"
@@ -18,25 +18,25 @@
                 <ProgressSummary
                     v-if="selected.global_max_skill_points > 0"
                     :title="selected.profession_name"
-                    description="Niveau de compétence global"
+                    :description="$t('sheet.professions.global_skill')"
                     :completed="selected.global_skill_points ?? 0"
                     :total="selected.global_max_skill_points"
                     dimension="professions"
                 />
-                <EmptyState v-else :icon="Inbox" :title="selected.profession_name" message="Aucune donnée d’archéologie disponible." />
+                <EmptyState v-else :icon="Inbox" :title="selected.profession_name" :message="$t('sheet.professions.no_archaeology')" />
             </template>
 
             <EmptyState
                 v-else-if="tierNotLearned"
                 :icon="BookX"
                 :title="selected.profession_name"
-                :message="`${selected.profession_name} n’a pas été appris pour cette extension.`"
+                :message="$t('sheet.professions.not_learned', { profession: selected.profession_name })"
             />
 
             <template v-else-if="expansion">
                 <ProgressSummary
                     :title="selected.profession_name"
-                    :description="isGathering ? 'Niveau de compétence' : 'Recettes apprises sur l’extension'"
+                    :description="isGathering ? $t('sheet.professions.skill_level') : $t('sheet.professions.recipes_learned')"
                     :completed="isGathering ? expansion.skill_points : expansion.completed"
                     :total="isGathering ? expansion.max_skill_points : expansion.total"
                     dimension="professions"
@@ -44,13 +44,13 @@
 
                 <Card v-if="!isGathering && expansion.max_skill_points > 0" data-skill class="space-y-2 p-4">
                     <div class="flex items-center justify-between text-sm">
-                        <span class="font-medium text-muted">Compétence</span>
+                        <span class="font-medium text-muted">{{ $t('sheet.professions.skill') }}</span>
                         <span class="tabular-nums text-default">{{ expansion.skill_points }} / {{ expansion.max_skill_points }}</span>
                     </div>
                     <ProgressBar
                         :value="expansion.skill_points"
                         :max="expansion.max_skill_points"
-                        :aria-label="`Compétence : ${expansion.skill_points} sur ${expansion.max_skill_points}`"
+                        :aria-label="$t('common.progress_of', { label: $t('sheet.professions.skill'), completed: expansion.skill_points, total: expansion.max_skill_points })"
                     />
                     <BetterElsewhere v-if="betterSkill" :character="betterSkill.character_name" :detail="`${betterSkill.skill_points} / ${betterSkill.max_skill_points}`" />
                 </Card>
@@ -59,11 +59,11 @@
                     <SearchFilter
                         v-model:search="search"
                         v-model:hide-completed="hideCompleted"
-                        placeholder="Rechercher une recette…"
-                        hide-label="Masquer les recettes apprises"
+                        :placeholder="$t('sheet.professions.search')"
+                        :hide-label="$t('sheet.professions.hide')"
                     />
 
-                    <GroupedChecklist :groups="groups" title="Catégories de recettes" dimension="professions" empty-message="Aucune recette ne correspond à ces filtres.">
+                    <GroupedChecklist :groups="groups" :title="$t('sheet.professions.categories')" dimension="professions" :empty-message="$t('sheet.professions.no_match')">
                         <template #item="{ item }">
                             <a
                                 :href="recipeUrl(item)"
@@ -78,7 +78,7 @@
                 </template>
             </template>
 
-            <EmptyState v-else :icon="Inbox" :title="selected.profession_name" message="Aucune donnée pour cette extension." />
+            <EmptyState v-else :icon="Inbox" :title="selected.profession_name" :message="$t('sheet.professions.no_data')" />
         </template>
     </div>
 </template>
@@ -89,6 +89,9 @@ import { BookX, Hammer, Inbox } from 'lucide-vue-next';
 import { useCharacterStore } from '../stores/character';
 import { useQueryParam } from '../composables/useQueryParam';
 import { useWowheadTooltips } from '../composables/useWowheadTooltips';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { wowheadSearch } from '../utils/wowhead';
 import SearchFilter from './SearchFilter.vue';
 import Card from './ui/Card.vue';
 import EmptyState from './ui/EmptyState.vue';
@@ -160,7 +163,9 @@ watch([() => selected.value?.profession_id, expansionId], () => {
     hideCompleted.value = false;
 });
 
-const byName = (a, b) => a.name.localeCompare(b.name, 'fr');
+const { compareNames } = useLocaleFormat();
+const { wowheadLink } = useCatalogLocale();
+const byName = (a, b) => compareNames(a.name, b.name);
 
 const groups = computed(() => {
     const query = search.value.trim().toLowerCase();
@@ -178,7 +183,5 @@ const groups = computed(() => {
         .toSorted(byName);
 });
 
-const recipeUrl = (item) => (item.wowhead_spell_id
-    ? `https://www.wowhead.com/fr/spell=${item.wowhead_spell_id}`
-    : `https://www.wowhead.com/fr/search?q=${encodeURIComponent(item.name)}`);
+const recipeUrl = (item) => wowheadLink(item.wowhead_spell_id ? `spell=${item.wowhead_spell_id}` : wowheadSearch(item.name));
 </script>

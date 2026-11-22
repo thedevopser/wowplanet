@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services;
 
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use Illuminate\Support\Facades\Cache;
@@ -51,7 +52,7 @@ class PlayableNameService
     {
         /** @var array{classes: array<string, string>, specs: array<string, string>} $names */
         $names = Cache::remember(
-            'wow_playable_names:'.$this->blizzardApiClient->getRegion(),
+            AppLocale::current()->scopedCacheKey('wow_playable_names:'.$this->blizzardApiClient->getRegion()),
             self::TTL_S,
             fn (): array => [
                 'classes' => $this->buildMap('data/wow/playable-class/index', 'classes'),

@@ -1,17 +1,17 @@
 <template>
     <Card as="section" data-resilience-goal class="space-y-4 p-5 sm:p-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-default">Objectif rési</h3>
-            <Select v-model="target" label="Niveau visé" :options="options" />
+            <h3 class="text-lg font-semibold text-default">{{ $t('sheet.resilience.title') }}</h3>
+            <Select v-model="target" :label="$t('sheet.resilience.target')" :options="options" />
         </div>
 
         <p v-if="!remaining.length" data-goal-reached class="flex items-center gap-2 text-sm font-medium text-success">
             <Icon :icon="CircleCheck" size="sm" class="shrink-0" />
-            <span>Rési +{{ target }} atteinte : les {{ resilience.dungeons.length }} donjons sont timés à ce niveau ou au-dessus.</span>
+            <span>{{ $t('sheet.resilience.reached', { level: target, count: resilience.dungeons.length }) }}</span>
         </p>
 
         <template v-else>
-            <p data-goal-count class="text-sm text-muted">{{ countLabel(remaining.length) }} sur {{ resilience.dungeons.length }}</p>
+            <p data-goal-count class="text-sm text-muted">{{ $tChoice('sheet.resilience.remaining_of', remaining.length, { count: remaining.length, total: resilience.dungeons.length }) }}</p>
             <ul class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 <li
                     v-for="dungeon in remaining"
@@ -21,8 +21,8 @@
                 >
                     <p class="truncate text-sm font-semibold text-default">{{ dungeon.name }}</p>
                     <p class="text-xs text-muted">
-                        <template v-if="dungeon.best_timed_level === null">Jamais timé</template>
-                        <template v-else>Meilleure clé timée : <span class="font-semibold tabular-nums text-default">+{{ dungeon.best_timed_level }}</span></template>
+                        <template v-if="dungeon.best_timed_level === null">{{ $t('sheet.resilience.never_timed') }}</template>
+                        <template v-else>{{ $t('sheet.resilience.best_timed') }} <span class="font-semibold tabular-nums text-default">+{{ dungeon.best_timed_level }}</span></template>
                     </p>
                 </li>
             </ul>
@@ -37,6 +37,7 @@ import { defaultResilienceTarget, remainingDungeons } from '../../utils/mythicRu
 import Card from '../ui/Card.vue';
 import Icon from '../ui/Icon.vue';
 import Select from '../ui/Select.vue';
+import { useTranslate, useTranslateChoice } from '../../composables/useTranslate';
 
 const props = defineProps({
     resilience: { type: Object, required: true },
@@ -51,14 +52,15 @@ watch(() => props.resilience, (resilience) => {
 
 const remaining = computed(() => remainingDungeons(props.resilience, Number(target.value)));
 
-const countLabel = (count) => (count === 1 ? '1 donjon restant' : `${count} donjons restants`);
+const t = useTranslate();
+const tChoice = useTranslateChoice();
 
 function hintFor(count) {
     if (count === 0) {
-        return 'Atteinte';
+        return t('sheet.resilience.goal_reached');
     }
 
-    return count === 1 ? '1 restant' : `${count} restants`;
+    return tChoice('sheet.resilience.remaining', count, { count });
 }
 
 const options = computed(() => props.resilience.targets.map(({ level, remaining: left }) => ({

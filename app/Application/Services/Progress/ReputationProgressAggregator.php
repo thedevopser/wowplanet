@@ -16,7 +16,7 @@ class ReputationProgressAggregator
     // @pest-mutate-ignore
     private const int UNSTARTED_TIER = -1;
 
-    private const string UNSTARTED_STANDING = 'Non commencée';
+    private const string UNSTARTED_STANDING = 'reputation.not_started';
 
     public function __construct(
         private readonly FactionReference $factionReference,
@@ -108,7 +108,7 @@ class ReputationProgressAggregator
             $grouped[$expansionId][] = [
                 'id' => $factionId,
                 'name' => $name,
-                'standing_name' => self::UNSTARTED_STANDING,
+                'standing_name' => __(self::UNSTARTED_STANDING),
                 'tier' => self::UNSTARTED_TIER,
                 'value' => 0,
                 'max' => 0,

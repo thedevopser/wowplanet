@@ -5,8 +5,8 @@
                 <h2 :id="titleId" class="font-display text-2xl font-semibold text-default">{{ title }}</h2>
                 <p class="mt-1 text-sm text-muted">
                     <template v-if="subtitle">{{ subtitle }} · </template>
-                    Progression globale sur {{ scored.length }} dimension{{ scored.length > 1 ? 's' : '' }}
-                    · <a href="/faq" class="underline decoration-dotted hover:text-default">formule v{{ score.version }}</a>
+                    {{ $tChoice('score.overall', scored.length, { count: scored.length }) }}
+                    · <a :href="localizedUrl('/faq')" class="underline decoration-dotted hover:text-default">{{ $t('score.formula', { version: score.version }) }}</a>
                 </p>
             </div>
 
@@ -17,18 +17,18 @@
                         <span data-global-score class="text-5xl font-bold tabular-nums text-default">{{ formatScore(score.global) }}</span>
                         <span class="text-base text-subtle">/ 100</span>
                     </p>
-                    <Badge v-if="rankIsKnown" data-rank tone="rank" :value="score.rank">{{ score.rank }}</Badge>
-                    <Badge v-else data-rank>{{ score.rank }}</Badge>
+                    <Badge v-if="rankIsKnown" data-rank tone="rank" :value="score.rank">{{ rankLabel(score.rank) }}</Badge>
+                    <Badge v-else data-rank>{{ rankLabel(score.rank) }}</Badge>
                     <Button class="mt-3" @click="shareOpen = true">
                         <Icon :icon="Share2" size="sm" />
-                        Partager ce score
+                        {{ $t('score.share') }}
                     </Button>
                 </div>
             </div>
         </Card>
 
         <section class="space-y-4">
-            <SectionHeader title="Détail par dimension" :level="3" />
+            <SectionHeader :title="$t('score.by_dimension')" :level="3" />
             <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <Card
                     v-for="dim in score.dimensions"
@@ -44,18 +44,18 @@
                             :href="dimensionLinks[dim.key]"
                             class="text-sm font-semibold text-default outline-none after:absolute after:inset-0"
                             @click="onDimensionClick($event, dim.key)"
-                        >{{ dim.label }}</a>
-                        <span v-else class="text-sm font-semibold text-default">{{ dim.label }}</span>
+                        >{{ dimensionLabel(dim.key) }}</a>
+                        <span v-else class="text-sm font-semibold text-default">{{ dimensionLabel(dim.key) }}</span>
                         <span
                             v-if="dim.applicable"
                             class="text-lg font-bold tabular-nums"
                             :style="{ color: readable(colorOf(dim.key)) }"
                         >{{ Math.round(dim.score) }} %</span>
-                        <span v-else class="text-xs font-medium text-subtle">Non applicable</span>
+                        <span v-else class="text-xs font-medium text-subtle">{{ $t('score.not_applicable') }}</span>
                     </div>
                     <ProgressBar
                         :value="dim.applicable ? dim.score : 0"
-                        :aria-label="`${dim.label} : ${Math.round(dim.score)} %`"
+                        :aria-label="$t('score.dimension_progress', { dimension: dimensionLabel(dim.key), score: Math.round(dim.score) })"
                         :color="colorOf(dim.key)?.base"
                     />
                     <p class="text-xs tabular-nums text-subtle">
@@ -74,8 +74,8 @@
                     :href="todoUrl"
                     class="text-base font-semibold text-default outline-none after:absolute after:inset-0
                         focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-accent"
-                >Ce qu’il vous reste à faire</Link>
-                <span class="block text-sm text-muted">Collections, quêtes, réputations et recettes entamées, et quel personnage peut les faire.</span>
+                >{{ $t('score.todo.title') }}</Link>
+                <span class="block text-sm text-muted">{{ $t('score.todo.description') }}</span>
             </span>
             <Icon :icon="ChevronRight" size="sm" class="shrink-0 text-subtle" />
         </Card>
@@ -88,9 +88,11 @@
 import { computed, ref, useId } from 'vue';
 import { ChevronRight, ListChecks, Share2 } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
-import { formatScore } from '../utils/formatScore';
 import { dimensionColor, rankColor } from '../utils/wowColors';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useLocalizedUrl } from '../composables/useLocalizedUrl';
+import { useScoreLabels } from '../composables/useScoreLabels';
 import Badge from './ui/Badge.vue';
 import Button from './ui/Button.vue';
 import Card from './ui/Card.vue';
@@ -115,15 +117,17 @@ const emit = defineEmits(['navigate']);
 const titleId = useId();
 const shareOpen = ref(false);
 const { readable, safe } = useWowColor();
+const { formatNumber, formatScore } = useLocaleFormat();
+const { localizedUrl } = useLocalizedUrl();
+const { rankLabel, dimensionLabel } = useScoreLabels();
 
 // Dimensions without data leave the radar: an axis at zero would warp the polygon.
 const scored = computed(() => (props.score.dimensions ?? []).filter((dimension) => dimension.applicable));
-const radarAxes = computed(() => scored.value.map((dimension) => ({ label: dimension.label, score: dimension.score })));
+const radarAxes = computed(() => scored.value.map((dimension) => ({ label: dimensionLabel(dimension.key), score: dimension.score })));
 const radarColors = computed(() => scored.value.map((dimension) => colorOf(dimension.key)?.base ?? 'currentColor'));
 const rankIsKnown = computed(() => safe(rankColor, props.score.rank) !== null);
 
 const colorOf = (key) => safe(dimensionColor, key);
-const formatNumber = (value) => Number(value).toLocaleString('fr-FR');
 
 // A plain click moves inside the page; a modified one (new tab) is left to the browser.
 function onDimensionClick(event, key) {

@@ -19,14 +19,14 @@
 
         <div v-if="expanded" :id="panelId" class="mt-4 space-y-4">
             <div v-if="loading" role="status" aria-busy="true" class="space-y-3">
-                <span class="sr-only">Chargement des talents…</span>
+                <span class="sr-only">{{ $t('sheet.talents.loading') }}</span>
                 <Skeleton class="h-11 w-2/3" />
                 <Skeleton class="h-64 w-full" />
             </div>
 
             <ErrorState v-else-if="error" :message="error" @retry="fetchTalents" />
 
-            <Tabs v-else-if="talentData" v-model="activeTab" :tabs="tabs" label="Arbres de talents" variant="secondary">
+            <Tabs v-else-if="talentData" v-model="activeTab" :tabs="tabs" :label="$t('sheet.talents.trees')" variant="secondary">
                 <template #class>
                     <Card class="overflow-hidden p-4 sm:p-6">
                         <TalentTreeGrid :nodes="talentData.class_nodes" />
@@ -75,6 +75,9 @@ import Icon from './ui/Icon.vue';
 import Skeleton from './ui/Skeleton.vue';
 import Tabs from './ui/Tabs.vue';
 import TalentTreeGrid from './TalentTreeGrid.vue';
+import { useTranslate } from '../composables/useTranslate';
+
+const t = useTranslate();
 
 useWowheadTooltips();
 
@@ -94,12 +97,12 @@ let fetched = false;
 
 const tabs = computed(() => {
     const list = [
-        { value: 'class', label: talentData.value ? talentData.value.class_name : 'Classe' },
-        { value: 'spec', label: talentData.value ? talentData.value.spec_name : 'Spécialisation' },
+        { value: 'class', label: talentData.value ? talentData.value.class_name : t('sheet.talents.class') },
+        { value: 'spec', label: talentData.value ? talentData.value.spec_name : t('sheet.talents.spec') },
     ];
 
     if (talentData.value?.hero_trees?.length) {
-        list.push({ value: 'hero', label: 'Talents héroïques' });
+        list.push({ value: 'hero', label: t('sheet.talents.hero') });
     }
 
     return list;
@@ -128,7 +131,7 @@ async function fetchTalents() {
             activeHeroTreeId.value = talentData.value.hero_trees[0].id;
         }
     } catch {
-        error.value = 'Impossible de charger les talents.';
+        error.value = t('sheet.talents.error');
         fetched = false;
     } finally {
         loading.value = false;

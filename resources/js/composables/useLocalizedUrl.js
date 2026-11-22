@@ -1,14 +1,12 @@
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
-import { DEFAULT_LOCALE, localizePath } from '../i18n/localizePath.js';
+import { localizePath } from '../i18n/localizePath.js';
+import { useActiveLocale } from './useActiveLocale.js';
 
 /**
  * Internal links are written with their French path, the canonical one, and follow the
- * locale of the current page.
+ * language the page is rendered in.
  */
 export function useLocalizedUrl() {
-    const page = usePage();
-    const locale = computed(() => page.props.locale ?? DEFAULT_LOCALE);
+    const locale = useActiveLocale();
 
     return {
         locale,

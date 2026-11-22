@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services\Progress;
 
+use App\Http\Localization\AppLocale;
 use App\Models\WowAppearance;
 use App\Models\WowDecor;
 use App\Models\WowMount;
@@ -57,7 +58,7 @@ class CollectionProgressAggregator
         foreach (WowMount::all() as $mount) {
             $result[] = [
                 'id' => $mount->id,
-                'name' => $mount->name_fr,
+                'name' => AppLocale::current()->pick($mount->name_fr, $mount->name_en),
                 'is_completed' => in_array($mount->id, $characterMountIds),
                 'source' => $mount->source ?? null,
                 'category' => $mount->category ?? null,
@@ -79,7 +80,7 @@ class CollectionProgressAggregator
         foreach (WowPet::all() as $pet) {
             $result[] = [
                 'id' => $pet->id,
-                'name' => $pet->name_fr,
+                'name' => AppLocale::current()->pick($pet->name_fr, $pet->name_en),
                 'is_completed' => in_array($pet->id, $characterPetIds),
                 'source' => $pet->source ?? null,
                 'category' => $pet->category ?? null,
@@ -106,7 +107,7 @@ class CollectionProgressAggregator
         foreach ($decors as $decor) {
             $result[] = [
                 'id' => $decor->id,
-                'name' => $decor->name_fr,
+                'name' => AppLocale::current()->pick($decor->name_fr, $decor->name_en),
                 'is_completed' => in_array($decor->id, $characterDecorIds),
                 'item_id' => $decor->item_id,
                 'icon_url' => $decor->icon_url,

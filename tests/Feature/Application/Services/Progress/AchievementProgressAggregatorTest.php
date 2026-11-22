@@ -106,3 +106,12 @@ test('aggregate keeps a numeric category name as text', function (): void {
 
     expect((new AchievementProgressAggregator)->aggregate([])[9]['categories'][0]['name'])->toBe('2024');
 });
+
+test('an english page names achievements in english', function (): void {
+    WowAchievement::factory()->create(['id' => 100, 'expansion_id' => 9, 'name_fr' => 'Explorateur', 'name_en' => 'Explorer', 'category_name' => 'Exploration', 'is_active' => true]);
+    app()->setLocale('en');
+
+    $result = (new AchievementProgressAggregator)->aggregate([]);
+
+    expect($result[9]['categories'][0]['items'][0]['name'])->toBe('Explorer');
+});

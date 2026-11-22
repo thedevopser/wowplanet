@@ -268,3 +268,26 @@ describe('renderScoreCard', () => {
     });
 });
 
+
+describe('renderScoreCard in another language', () => {
+    it('writes the given labels and formats the counts in their language', () => {
+        painted.length = 0;
+        renderScoreCard({
+            variant: 'account',
+            characterCount: 3,
+            globalScore: 52,
+            rank: 'Rare',
+            dimensions: [dimension('mounts', 'Montures', 1200, 2400, 50)],
+        }, {
+            locale: 'en',
+            title: 'Completion score',
+            accountTitle: 'Account score',
+            charactersAnalysed: (count) => `${count} characters analysed`,
+            rank: () => 'Rare',
+            dimension: () => 'Mounts',
+        });
+
+        const texts = painted.map(([text]) => text);
+        expect(texts).toEqual(expect.arrayContaining(['Completion score', 'Account score', '3 characters analysed', 'Mounts', '1,200/2,400']));
+    });
+});

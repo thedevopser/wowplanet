@@ -161,3 +161,15 @@ describe('RaidsTab', () => {
         expect(wrapper.findAll('[data-raid]').map((entry) => entry.attributes('data-raid'))).toEqual(['1320', '1314', '1307']);
     });
 });
+
+describe('RaidsTab in english', () => {
+    it('names the difficulties and the states in english', async () => {
+        const wrapper = await mountWithPlugins(RaidsTab, { locale: 'en', initialState: { character: { character: { raids: [makeRaid()] } } } });
+
+        expect(wrapper.text()).toContain('Raid Finder');
+        expect(wrapper.text()).toContain('Mythic');
+        expect(wrapper.text()).toContain('Cleared');
+        expect(wrapper.text()).toContain('Not started');
+        expect(wrapper.find('caption').text()).toBe('Bosses defeated in The Voidspire, by difficulty');
+    });
+});

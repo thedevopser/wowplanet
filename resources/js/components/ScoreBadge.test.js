@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { mountWithPlugins } from '../tests/helpers';
 
 const theme = vi.hoisted(() => ({ effective: null }));
 
@@ -64,5 +65,14 @@ describe('ScoreBadge', () => {
 
         expect(html).not.toMatch(/\b(?:text|bg)-slate-\d+\b/);
         expect(html).not.toMatch(/text-\[\d+px\]/);
+    });
+});
+
+describe('ScoreBadge in english', () => {
+    it('reads the score and the rank in english', async () => {
+        const wrapper = await mountWithPlugins(ScoreBadge, { locale: 'en', props: { score: 25.8, rank: 'Commun' } });
+
+        expect(wrapper.get('[data-rank]').text()).toBe('Common');
+        expect(wrapper.get('svg').attributes('aria-label')).toBe('Score 25.8 out of 100, rank Common');
     });
 });

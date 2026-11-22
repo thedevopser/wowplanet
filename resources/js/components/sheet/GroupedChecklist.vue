@@ -2,7 +2,7 @@
     <section class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="text-lg font-semibold text-default">{{ title }}</h3>
-            <Pagination v-model:page="page" :page-count="pageCount" :label="`Pages : ${title}`" />
+            <Pagination v-model:page="page" :page-count="pageCount" :label="$t('sheet.checklist.pages', { title })" />
         </div>
 
         <ul v-if="groups.length" class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -26,7 +26,7 @@
                         :value="group.completed"
                         :max="Math.max(group.total, 1)"
                         :color="color?.base"
-                        :aria-label="`${group.name} : ${group.completed} sur ${group.total}`"
+                        :aria-label="$t('common.progress_of', { label: group.name, completed: group.completed, total: group.total })"
                     />
                 </button>
                 <ul v-if="expanded === group.name" :id="`${listId}-${index}`" class="max-h-96 space-y-1 overflow-y-auto border-t border-default px-4 py-3">
@@ -36,7 +36,7 @@
                 </ul>
             </Card>
         </ul>
-        <EmptyState v-else :icon="SearchX" title="Aucun résultat" :message="emptyMessage" />
+        <EmptyState v-else :icon="SearchX" :title="$t('common.no_result')" :message="emptyMessage" />
     </section>
 </template>
 

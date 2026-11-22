@@ -12,7 +12,7 @@ test('show returns talent data for character', function (): void {
     // Pre-cache the spell icon so the controller does not attempt getAsync
     Cache::put('spell_icon:100', 'https://render.worldofwarcraft.com/eu/icons/56/charge.jpg', 60);
     // Ensure clean talent tree cache
-    Cache::forget('talent_tree:v2:786:72');
+    Cache::forget('talent_tree:v2:786:72:fr');
     Cache::forget('playable_spec:72');
 
     $mock = $this->partialMock(BlizzardApiClient::class);

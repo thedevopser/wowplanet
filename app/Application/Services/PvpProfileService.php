@@ -6,6 +6,7 @@ namespace App\Application\Services;
 
 use App\Application\Services\Progress\PvpProgressAggregator;
 use App\Domain\Services\PvpBracketClassifier;
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\BlizzardApiClient;
 use App\Infrastructure\Blizzard\Concerns\FetchesProfileEndpoints;
 use App\Infrastructure\Blizzard\Responses\MediaIconResponse;
@@ -54,7 +55,7 @@ class PvpProfileService
         // L'absence de PvP est le cas majoritaire : on l'enveloppe pour la mettre
         // en cache aussi (Cache::remember ne mémorise pas un null).
         $cached = Cache::remember(
-            sprintf('pvp_profile:%s:%s', $realm, $name),
+            AppLocale::current()->scopedCacheKey(sprintf('pvp_profile:%s:%s', $realm, $name)),
             self::PROFILE_TTL_S,
             fn (): array => ['pvp' => $this->build($realm, $name)],
         );
@@ -197,7 +198,7 @@ class PvpProfileService
                 continue;
             }
 
-            Cache::put('pvp_tier:'.$tierId, $tier, self::TIER_TTL_S);
+            Cache::put(AppLocale::current()->scopedCacheKey('pvp_tier:'.$tierId), $tier, self::TIER_TTL_S);
             $tiers[$tierId] = $tier;
         }
 
@@ -209,7 +210,7 @@ class PvpProfileService
      */
     private function cachedTier(int $tierId): ?array
     {
-        $cached = Cache::get('pvp_tier:'.$tierId);
+        $cached = Cache::get(AppLocale::current()->scopedCacheKey('pvp_tier:'.$tierId));
 
         if (! is_array($cached) || ! is_string($cached['name'] ?? null) || ! is_string($cached['icon_url'] ?? null)) {
             return null;

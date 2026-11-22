@@ -9,6 +9,9 @@
 import { computed } from 'vue';
 import { Check, Circle, Users } from 'lucide-vue-next';
 import Icon from '../ui/Icon.vue';
+import { useTranslate } from '../../composables/useTranslate';
+
+const t = useTranslate();
 
 const props = defineProps({
     done: { type: Boolean, required: true },
@@ -19,12 +22,12 @@ const props = defineProps({
 
 const state = computed(() => {
     if (props.done) {
-        return { icon: Check, tone: 'text-success', text: 'Fait', visible: false };
+        return { icon: Check, tone: 'text-success', text: t('sheet.completion.done'), visible: false };
     }
     if (props.elsewhere) {
-        return { icon: Users, tone: 'text-warning', text: `Fait par ${props.owner || 'un autre personnage'}`, visible: true };
+        return { icon: Users, tone: 'text-warning', text: props.owner ? t('sheet.completion.done_by', { owner: props.owner }) : t('sheet.completion.done_elsewhere'), visible: true };
     }
 
-    return { icon: Circle, tone: 'text-subtle', text: 'À faire', visible: false };
+    return { icon: Circle, tone: 'text-subtle', text: t('sheet.completion.todo'), visible: false };
 });
 </script>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
+import { mountWithPlugins } from '../tests/helpers';
 import { createTestingPinia } from '@pinia/testing';
 
 vi.mock('@inertiajs/vue3', () => ({
@@ -133,5 +134,33 @@ describe('ScorePanel', () => {
 
         expect(html).not.toMatch(/\b(?:bg|text|border)-(?:slate|blue|indigo|amber|white)(?:-\d+)?\b/);
         expect(html).not.toMatch(/text-\[\d+px\]/);
+    });
+});
+
+describe('ScorePanel in english', () => {
+    it('names the dimensions and the rank in english', async () => {
+        wrapper = await mountWithPlugins(ScorePanel, {
+            locale: 'en',
+            props: { score: SCORE, title: 'Completion score', shareData: {} },
+            stubs: { ShareScoreModal: true },
+            attachTo: document.body,
+        });
+
+        expect(wrapper.text()).toContain('Overall progress across 2 dimensions');
+        expect(wrapper.text()).toContain('Quests');
+        expect(wrapper.text()).toContain('Not applicable');
+        expect(wrapper.text()).toContain('Share this score');
+        expect(wrapper.get('[data-rank]').text()).toBe('Rare');
+        expect(wrapper.text()).not.toContain('Quêtes');
+    });
+
+    it('keeps the colour of the rank on an english page', async () => {
+        wrapper = await mountWithPlugins(ScorePanel, {
+            locale: 'en',
+            props: { score: { ...SCORE, rank: 'Légendaire' }, title: 'Completion score', shareData: {} },
+            stubs: { ShareScoreModal: true },
+        });
+
+        expect(wrapper.get('[data-rank]').text()).toBe('Legendary');
     });
 });

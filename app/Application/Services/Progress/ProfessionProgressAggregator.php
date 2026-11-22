@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Services\Progress;
 
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\ExpansionTierMatcher;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfession;
 use App\Infrastructure\Blizzard\Responses\Profile\CharacterProfessionsResponse;
@@ -78,8 +79,8 @@ class ProfessionProgressAggregator
         );
 
         $professionName = $profession !== null
-            ? (string) $profession->name_fr
-            : (self::PROFESSION_NAMES_FR[$professionId] ?? $characterProfession->professionName ?? '');
+            ? AppLocale::current()->pick((string) $profession->name_fr, $profession->name_en)
+            : $this->uncataloguedProfessionName($professionId, $characterProfession->professionName);
         $professionType = $profession !== null
             ? (string) $profession->type
             : (in_array($professionId, self::SECONDARY_PROFESSION_IDS, true) ? 'secondary' : 'primary');
@@ -198,6 +199,13 @@ class ProfessionProgressAggregator
         return $categoryProgress;
     }
 
+    private function uncataloguedProfessionName(int $professionId, ?string $blizzardName): string
+    {
+        $frenchName = self::PROFESSION_NAMES_FR[$professionId] ?? $blizzardName ?? '';
+
+        return AppLocale::current() === AppLocale::English ? $blizzardName ?? $frenchName : $frenchName;
+    }
+
     /**
      * @param  Collection<int, WowRecipe>  $recipes
      * @param  list<int>  $knownRecipeIds
@@ -209,7 +217,7 @@ class ProfessionProgressAggregator
         foreach ($recipes as $recipe) {
             $items[] = [
                 'id' => $recipe->id,
-                'name' => $recipe->name_fr,
+                'name' => AppLocale::current()->pick($recipe->name_fr, $recipe->name_en),
                 'is_completed' => in_array($recipe->id, $knownRecipeIds),
                 'wowhead_spell_id' => $recipe->wowhead_spell_id,
             ];

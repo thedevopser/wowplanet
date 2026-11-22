@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Services\Progress;
 
 use App\Domain\ValueObjects\ExpansionId;
+use App\Http\Localization\AppLocale;
 use App\Models\WowAchievement;
 use Illuminate\Support\Collection;
 
@@ -81,7 +82,7 @@ class AchievementProgressAggregator
             $isCompleted = in_array($categoryAchievement->id, $completedAchievementIds);
             $items[] = [
                 'id' => $categoryAchievement->id,
-                'name' => $categoryAchievement->name_fr,
+                'name' => AppLocale::current()->pick($categoryAchievement->name_fr, $categoryAchievement->name_en),
                 'icon_url' => $categoryAchievement->icon_url,
                 'is_completed' => $isCompleted,
             ];

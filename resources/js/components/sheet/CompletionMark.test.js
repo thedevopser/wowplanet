@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { mountWithPlugins } from '../../tests/helpers';
 import CompletionMark from './CompletionMark.vue';
 
 describe('CompletionMark', () => {
@@ -31,5 +32,13 @@ describe('CompletionMark', () => {
 
     it('prefers done over done elsewhere', () => {
         expect(mount(CompletionMark, { props: { done: true, elsewhere: true, owner: 'Jaina' } }).text()).toBe('Fait');
+    });
+});
+
+describe('CompletionMark in english', () => {
+    it('says in english who did it', async () => {
+        const wrapper = await mountWithPlugins(CompletionMark, { locale: 'en', props: { done: false, elsewhere: true, owner: 'Jaina' } });
+
+        expect(wrapper.text()).toBe('Done by Jaina');
     });
 });

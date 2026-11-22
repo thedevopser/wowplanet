@@ -1,8 +1,8 @@
 <template>
     <div class="space-y-6">
-        <SectionHeader title="Raids" description="Progression de la saison en cours, par difficulté" />
+        <SectionHeader :title="$t('score.dimension.raids')" :description="$t('sheet.raids.description')" />
 
-        <EmptyState v-if="!raids || !raids.length" :icon="Swords" title="Aucun raid" message="Aucune progression de raid pour la saison en cours." />
+        <EmptyState v-if="!raids || !raids.length" :icon="Swords" :title="$t('sheet.raids.none.title')" :message="$t('sheet.raids.none.message')" />
 
         <template v-else>
             <Card v-for="raid in raids" :key="raid.instance_id" as="section" :data-raid="raid.instance_id" class="overflow-hidden">
@@ -31,7 +31,7 @@
                         >
                             <div class="flex items-baseline justify-between gap-2">
                                 <span class="text-sm font-semibold" :style="summary.started ? { color: readable(colorOf(summary.quality)) } : undefined" :class="{ 'text-subtle': !summary.started }">
-                                    {{ summary.label }}
+                                    {{ $t(summary.label) }}
                                 </span>
                                 <span v-if="summary.started" class="text-sm font-bold tabular-nums text-default">{{ summary.completed }}/{{ summary.total }}</span>
                             </div>
@@ -40,22 +40,22 @@
                                 :filled="summary.completed"
                                 :total="summary.total"
                                 :color="colorOf(summary.quality).base"
-                                :label="`${summary.label} : ${summary.completed} boss vaincus sur ${summary.total}`"
+                                :label="$t('sheet.raids.bosses_defeated', { difficulty: $t(summary.label), completed: summary.completed, total: summary.total })"
                             />
                             <p class="flex items-center gap-1 text-xs" :class="summary.cleared ? 'text-success' : 'text-subtle'">
                                 <Icon v-if="summary.cleared" :icon="CircleCheck" size="sm" />
-                                {{ summary.cleared ? 'Terminé' : summary.started ? 'En cours' : 'Non entamé' }}
+                                {{ summary.cleared ? $t('sheet.raids.cleared') : summary.started ? $t('sheet.raids.in_progress') : $t('sheet.raids.not_started') }}
                             </p>
                         </li>
                     </ul>
                 </div>
 
-                <div v-if="!isCollapsed(raid)" :id="`raid-body-${raid.instance_id}`" class="relative overflow-x-auto border-t border-default" tabindex="0" role="region" :aria-label="`Boss vaincus de ${raid.instance_name}, par difficulté`">
+                <div v-if="!isCollapsed(raid)" :id="`raid-body-${raid.instance_id}`" class="relative overflow-x-auto border-t border-default" tabindex="0" role="region" :aria-label="$t('sheet.raids.matrix', { raid: raid.instance_name })">
                     <table class="w-full text-sm">
-                        <caption class="sr-only">Boss vaincus de {{ raid.instance_name }}, par difficulté</caption>
+                        <caption class="sr-only">{{ $t('sheet.raids.matrix', { raid: raid.instance_name }) }}</caption>
                         <thead>
                             <tr class="text-xs text-subtle">
-                                <th scope="col" class="px-5 py-3 text-left font-medium sm:px-6">Boss</th>
+                                <th scope="col" class="px-5 py-3 text-left font-medium sm:px-6">{{ $t('sheet.raids.boss') }}</th>
                                 <th
                                     v-for="type in matrixOf(raid).difficulties"
                                     :key="type"
@@ -73,12 +73,12 @@
                                 <td v-for="type in matrixOf(raid).difficulties" :key="type" class="px-2 py-2.5 text-center">
                                     <span v-if="row.kills[type]" class="inline-flex flex-col items-center gap-0.5">
                                         <Icon :icon="CircleCheck" size="sm" :style="{ color: readable(colorOf(qualityOf(type))) }" />
-                                        <span class="sr-only">Vaincu le {{ formatDate(row.kills[type]) }}</span>
+                                        <span class="sr-only">{{ $t('sheet.raids.defeated_on', { date: formatDate(row.kills[type]) }) }}</span>
                                         <span aria-hidden="true" class="text-xs tabular-nums text-subtle">{{ formatShortDate(row.kills[type]) }}</span>
                                     </span>
                                     <span v-else class="text-subtle">
                                         <span aria-hidden="true">–</span>
-                                        <span class="sr-only">Non vaincu</span>
+                                        <span class="sr-only">{{ $t('sheet.raids.not_defeated') }}</span>
                                     </span>
                                 </td>
                             </tr>
@@ -86,7 +86,7 @@
                         <tfoot v-if="matrixOf(raid).unknownCount > 0">
                             <tr class="border-t border-default">
                                 <td :colspan="matrixOf(raid).difficulties.length + 1" class="px-5 py-2.5 text-xs text-subtle sm:px-6">
-                                    {{ matrixOf(raid).unknownCount }} boss jamais vaincus, dont Blizzard ne donne pas le nom
+                                    {{ $t('sheet.raids.unknown_bosses', { count: matrixOf(raid).unknownCount }) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -102,6 +102,8 @@ import { computed, onMounted, ref } from 'vue';
 import { ChevronDown, CircleCheck, Swords } from 'lucide-vue-next';
 import { useCharacterStore } from '../stores/character';
 import { useWowColor } from '../composables/useWowColor';
+import { useLocaleFormat } from '../composables/useLocaleFormat';
+import { useTranslate } from '../composables/useTranslate';
 import { DIFFICULTIES, bossMatrix, difficultySummaries, sortNewestFirst } from '../utils/raids';
 import { qualityColor } from '../utils/wowColors';
 import PipGauge from './sheet/PipGauge.vue';
@@ -162,18 +164,20 @@ function toggle(raid) {
 }
 
 const { readable } = useWowColor();
+const t = useTranslate();
+const { formatDate: formatLocaleDate } = useLocaleFormat();
 
 const byType = Object.fromEntries(DIFFICULTIES.map((difficulty) => [difficulty.type, difficulty]));
 const qualityOf = (type) => byType[type].quality;
-const labelOf = (type) => byType[type].label;
+const labelOf = (type) => t(byType[type].label);
 const shortOf = (type) => byType[type].short;
 const colorOf = (quality) => qualityColor(quality);
 
 function formatDate(timestamp) {
-    return new Date(timestamp).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return formatLocaleDate(timestamp, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function formatShortDate(timestamp) {
-    return new Date(timestamp).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    return formatLocaleDate(timestamp, { day: '2-digit', month: '2-digit' });
 }
 </script>

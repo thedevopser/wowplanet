@@ -11,18 +11,19 @@
 
 <script setup>
 import { useCharacterStore } from '../stores/character';
-import { wowheadUrl } from '../utils/wowhead';
+import { useCatalogLocale } from '../composables/useCatalogLocale';
 import ExpansionChecklistTab from './sheet/ExpansionChecklistTab.vue';
 
 const LABELS = Object.freeze({
-    title: 'Quêtes',
-    description: 'Progression des quêtes de l’extension',
-    groups: 'Décomposition par zone',
-    search: 'Rechercher une quête…',
-    hide: 'Masquer les quêtes faites',
-    noMatch: 'Aucune quête ne correspond à ces filtres.',
-    noData: 'Aucune quête connue pour cette extension.',
+    title: 'score.dimension.quests',
+    description: 'sheet.quests.description',
+    groups: 'sheet.quests.groups',
+    search: 'sheet.quests.search',
+    hide: 'sheet.quests.hide',
+    noMatch: 'sheet.quests.no_match',
+    noData: 'sheet.quests.no_data',
 });
 
 const store = useCharacterStore();
+const { wowheadUrl } = useCatalogLocale();
 </script>

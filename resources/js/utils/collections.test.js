@@ -8,8 +8,8 @@ const item = (id, category, source, done = false, extra = {}) => ({ id, name: `O
 describe('COLLECTIONS', () => {
     it('describes the three collections of the sheet', () => {
         expect(Object.keys(COLLECTIONS)).toEqual(['mounts', 'pets', 'decor']);
-        expect(COLLECTIONS.mounts).toEqual(expect.objectContaining({ field: 'mounts', title: 'Montures', dimension: 'mounts' }));
-        expect(COLLECTIONS.decor).toEqual(expect.objectContaining({ field: 'decor', title: 'Décorations', dimension: 'decor' }));
+        expect(COLLECTIONS.mounts).toEqual(expect.objectContaining({ field: 'mounts', title: 'score.dimension.mounts', dimension: 'mounts' }));
+        expect(COLLECTIONS.decor).toEqual(expect.objectContaining({ field: 'decor', title: 'score.dimension.decor', dimension: 'decor' }));
     });
 
     it.each([

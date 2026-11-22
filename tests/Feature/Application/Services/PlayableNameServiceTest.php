@@ -100,7 +100,7 @@ test('it resolves the four indexes once and serves them from cache', function ()
     playableNameService()->labelFor('hunter', 'beastmastery');
 
     expect($calls)->toHaveCount(4)
-        ->and(Cache::has('wow_playable_names:eu'))->toBeTrue();
+        ->and(Cache::has('wow_playable_names:eu:fr'))->toBeTrue();
 });
 
 test('it degrades to null when the api fails', function (): void {

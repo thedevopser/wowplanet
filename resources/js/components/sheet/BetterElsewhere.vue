@@ -1,7 +1,7 @@
 <template>
     <p class="flex items-center gap-1 text-xs text-warning">
         <Icon :icon="Users" size="sm" />
-        Meilleur : {{ character }} — {{ detail }}
+        {{ $t('sheet.better_elsewhere', { character, detail }) }}
     </p>
 </template>
 

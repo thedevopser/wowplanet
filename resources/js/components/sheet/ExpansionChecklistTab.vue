@@ -9,8 +9,8 @@
 
         <template v-if="collection">
             <ProgressSummary
-                :title="labels.title"
-                :description="labels.description"
+                :title="$t(labels.title)"
+                :description="$t(labels.description)"
                 :completed="collection.completed"
                 :total="collection.total"
                 :dimension="collectionType"
@@ -19,11 +19,11 @@
             <SearchFilter
                 v-model:search="search"
                 v-model:hide-completed="hideCompleted"
-                :placeholder="labels.search"
-                :hide-label="labels.hide"
+                :placeholder="$t(labels.search)"
+                :hide-label="$t(labels.hide)"
             />
 
-            <GroupedChecklist :groups="groups" :title="labels.groups" :dimension="collectionType" :empty-message="labels.noMatch">
+            <GroupedChecklist :groups="groups" :title="$t(labels.groups)" :dimension="collectionType" :empty-message="$t(labels.noMatch)">
                 <template #item="{ item }">
                     <CollectionIcon v-if="withIcon" :src="item.icon_url" :alt="''" fallback="" />
                     <a
@@ -37,7 +37,7 @@
                 </template>
             </GroupedChecklist>
         </template>
-        <EmptyState v-else :icon="Inbox" title="Rien à afficher" :message="labels.noData" />
+        <EmptyState v-else :icon="Inbox" :title="$t('common.nothing_to_show')" :message="$t(labels.noData)" />
     </div>
 </template>
 
@@ -47,6 +47,7 @@ import { Inbox } from 'lucide-vue-next';
 import { useCharacterStore } from '../../stores/character';
 import { useQueryParam } from '../../composables/useQueryParam';
 import { useWowheadTooltips } from '../../composables/useWowheadTooltips';
+import { useLocaleFormat } from '../../composables/useLocaleFormat';
 import CollectionIcon from '../CollectionIcon.vue';
 import SearchFilter from '../SearchFilter.vue';
 import EmptyState from '../ui/EmptyState.vue';
@@ -85,7 +86,8 @@ watch(expansionId, () => {
 
 const collection = computed(() => store.character?.collections?.[expansionId.value]?.[props.collectionType] ?? null);
 
-const byName = (a, b) => a.name.localeCompare(b.name, 'fr');
+const { compareNames } = useLocaleFormat();
+const byName = (a, b) => compareNames(a.name, b.name);
 
 const groups = computed(() => {
     const query = search.value.trim().toLowerCase();

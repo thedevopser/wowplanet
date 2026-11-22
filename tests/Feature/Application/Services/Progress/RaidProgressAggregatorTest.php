@@ -139,6 +139,28 @@ test('aggregate maps difficulty types to French labels', function (): void {
     expect($labels)->toBe(['LFR', 'Héroïque', 'Mythique']);
 });
 
+test('an english page names the difficulties in english', function (): void {
+    $response = [
+        'expansions' => [
+            raidExpansion(505, 'Current Season', [
+                [
+                    'instance' => ['id' => 1305, 'name' => 'Sporefall'],
+                    'modes' => [
+                        raidMode('LFR', 'Raids', 1, 1, [['id' => 1, 'name' => 'A']]),
+                        raidMode('HEROIC', 'ignored', 1, 1, [['id' => 2, 'name' => 'B']]),
+                        raidMode('MYTHIC', 'ignored', 1, 1, [['id' => 3, 'name' => 'C']]),
+                    ],
+                ],
+            ]),
+        ],
+    ];
+
+    app()->setLocale('en');
+    $labels = array_column(aggregateRaids($response)[0]['modes'], 'difficulty_label');
+
+    expect($labels)->toBe(['LFR', 'Heroic', 'Mythic']);
+});
+
 test('aggregate overrides instance and boss names with localized name map', function (): void {
     $response = [
         'expansions' => [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Blizzard;
 
+use App\Http\Localization\AppLocale;
 use App\Infrastructure\Blizzard\Responses\Profile\JournalInstanceResponse;
 use App\Infrastructure\Blizzard\Responses\ResponsePayload;
 use Illuminate\Support\Facades\Cache;
@@ -58,7 +59,7 @@ class RaidJournal
         $endpoint = 'data/wow/journal-instance/'.$instanceId;
 
         $decoded = Cache::remember(
-            self::CACHE_PREFIX.$instanceId,
+            AppLocale::current()->scopedCacheKey(self::CACHE_PREFIX.$instanceId),
             self::CACHE_TTL_S,
             fn (): array => $this->blizzardApiClient->get($endpoint, ['namespace' => 'static-'.$this->blizzardApiClient->getRegion()]),
         );

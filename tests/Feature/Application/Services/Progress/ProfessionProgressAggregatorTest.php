@@ -267,3 +267,21 @@ test('aggregate names a profession missing from the catalogue', function (int $i
     "nom de l'API à défaut" => [999, 'Tinkering', 'Tinkering', 'primary'],
     'aucun nom' => [998, null, '', 'primary'],
 ]);
+
+test('an english page names the profession and its recipes in english', function (): void {
+    $this->profession->update(['name_en' => 'Alchemy']);
+    WowRecipe::factory()->create(['id' => 1, 'profession_id' => 171, 'expansion_id' => 0, 'name_fr' => 'Potion de soins', 'name_en' => 'Healing Potion', 'category_name' => 'Potions', 'is_active' => true]);
+    app()->setLocale('en');
+
+    $progress = professionProgress(alchemyResponse(tiers: []), '')[0];
+
+    expect($progress['profession_name'])->toBe('Alchemy')
+        ->and($progress['expansions'][0]['categories'][0]['items'][0]['name'])->toBe('Healing Potion');
+});
+
+test('an english page names a profession missing from the catalogue as Blizzard does', function (): void {
+    app()->setLocale('en');
+    $response = ['primaries' => [['profession' => ['id' => 164, 'name' => 'Blacksmithing'], 'tiers' => []]], 'secondaries' => []];
+
+    expect(professionProgress($response, '')[0]['profession_name'])->toBe('Blacksmithing');
+});

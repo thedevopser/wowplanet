@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import axios from 'axios';
 import { flushPromises, mount } from '@vue/test-utils';
+import { mountWithPlugins } from '../tests/helpers';
 import { createTestingPinia } from '@pinia/testing';
 
 vi.mock('axios');
@@ -191,5 +192,20 @@ describe('CharacterCard', () => {
 
             expect(useTaskStore().openFor).toHaveBeenCalledWith('hyjal', 'arthas');
         });
+    });
+});
+
+describe('CharacterCard in english', () => {
+    it('describes the character and its actions in english', async () => {
+        wrapper = await mountWithPlugins(CharacterCard, {
+            locale: 'en',
+            props: { character: baseCharacter, realm: 'hyjal', name: 'arthas', isOwner: true },
+            attachTo: document.body,
+        });
+
+        expect(wrapper.text()).toContain(`Level ${baseCharacter.level}`);
+        expect(wrapper.text()).toContain('Favourite');
+        expect(wrapper.text()).toContain('Add a task');
+        expect(wrapper.get('img').attributes('alt')).toBe(`${baseCharacter.name}'s avatar`);
     });
 });

@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
         $middleware->api(prepend: [
+            SetLocale::class,
             EncryptCookies::class,
             StartSession::class,
         ]);

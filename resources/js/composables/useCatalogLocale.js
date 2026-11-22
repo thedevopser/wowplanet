@@ -1,11 +1,7 @@
 import { computed } from 'vue';
 import { useLocalizedUrl } from './useLocalizedUrl.js';
 import { translateCategory, translateSource } from '../utils/collections.js';
-
-const WOWHEAD_BY_LOCALE = Object.freeze({
-    fr: 'https://www.wowhead.com/fr',
-    en: 'https://www.wowhead.com',
-});
+import { wowheadLink, wowheadUrl } from '../utils/wowhead.js';
 
 /**
  * What a catalogue page shows in the language of the page: the name of an entry, the label of
@@ -21,6 +17,7 @@ export function useCatalogLocale() {
         nameOf: (entry) => (isEnglish.value ? entry.name_en ?? entry.name_fr : entry.name_fr),
         categoryLabel: (kind, name) => (isEnglish.value ? name : translateCategory(kind, name)),
         sourceLabel: (kind, name) => (isEnglish.value ? name : translateSource(kind, name)),
-        wowheadLink: (path) => `${WOWHEAD_BY_LOCALE[locale.value] ?? WOWHEAD_BY_LOCALE.fr}/${path}`,
+        wowheadLink: (path) => wowheadLink(path, locale.value),
+        wowheadUrl: (type, item) => wowheadUrl(type, item, locale.value),
     };
 }
