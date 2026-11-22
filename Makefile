@@ -13,7 +13,7 @@ help: ## Display this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build: ## Build docker images
-	docker compose build --no-cache
+	docker compose build --pull --no-cache
 
 up: ## Start the application
 	docker compose up -d
@@ -212,11 +212,11 @@ PORTAINER_ENDPOINT_ID ?= 1
 -include .env.deploy
 
 build-prod: ## Build production Docker image
-	docker build --target prod \
+	docker build --pull --target prod \
 	             -t $(HARBOR_REGISTRY)/$(IMAGE_NAME):latest .
 
 build-prod-ssr: ## Build production SSR (Node) Docker image
-	docker build --target ssr \
+	docker build --pull --target ssr \
 	             -t $(HARBOR_REGISTRY)/$(SSR_IMAGE_NAME):latest .
 
 build-prod-all: build-prod build-prod-ssr ## Build both prod images (app + SSR)
