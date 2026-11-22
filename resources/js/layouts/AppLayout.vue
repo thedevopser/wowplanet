@@ -1,7 +1,7 @@
 <template>
     <div class="flex min-h-screen flex-col font-sans selection:bg-accent/30">
         <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-toast focus:rounded-ui-md focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent focus:shadow-elevation-2">
-            Aller au contenu principal
+            {{ $t('nav.skip_to_content') }}
         </a>
 
         <AppHeaderInertia />

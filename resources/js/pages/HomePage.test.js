@@ -137,3 +137,15 @@ describe('HomePage', () => {
         await expectNoAxeViolations(wrapper.element);
     });
 });
+
+describe('HomePage in english', () => {
+    it('welcomes in english and links to the english pages', async () => {
+        pageState.props.locale = 'en';
+        const wrapper = await mountWithPlugins(HomePage, { locale: 'en', props: { meta, counts } });
+        delete pageState.props.locale;
+
+        expect(wrapper.get('h1').text()).toBe('Track your World of Warcraft progress');
+        expect(wrapper.find('a[href="/en/database/mounts"]').text()).toBe('Mounts');
+        expect(wrapper.find('a[href="/en/pvp-leaderboards"]').exists()).toBe(true);
+    });
+});

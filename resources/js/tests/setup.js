@@ -1,5 +1,5 @@
 import { config } from '@vue/test-utils';
-import { i18nVue } from 'laravel-vue-i18n';
+import { I18n, i18nVue } from 'laravel-vue-i18n';
 import { eagerI18nOptions } from '../i18n/translations.js';
 
 // Node exposes an experimental global localStorage accessor that stays undefined without
@@ -14,6 +14,12 @@ if (typeof window !== 'undefined') {
         });
     }
 }
+
+// Both languages are loaded once, so that every later instance applies its language at once
+// instead of rendering the translation keys until a promise settles.
+const preloader = new I18n(eagerI18nOptions('fr'));
+await preloader.loadLanguageAsync('fr');
+await preloader.loadLanguageAsync('en');
 
 // Every mounted component can translate, in French unless mountWithPlugins asks otherwise.
 config.global.plugins.push([i18nVue, eagerI18nOptions('fr')]);

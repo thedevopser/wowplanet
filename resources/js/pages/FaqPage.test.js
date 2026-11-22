@@ -104,3 +104,14 @@ describe('FaqPage', () => {
         await expectNoAxeViolations(wrapper.element);
     });
 });
+
+describe('FaqPage in english', () => {
+    it('answers in english, with the table of contents in english', async () => {
+        const wrapper = await mountWithPlugins(FaqPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.get('h1').text()).toBe('Frequently asked questions');
+        expect(wrapper.get('#quest-ce-que-wowplanet h2').text()).toBe('What is WowPlanet?');
+        expect(wrapper.find('a[href="/en/database"]').exists()).toBe(true);
+        expect(wrapper.text()).not.toContain('Qu’est-ce que WowPlanet');
+    });
+});

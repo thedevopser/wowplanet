@@ -334,46 +334,46 @@ class CharacterSeoService
             '@context' => 'https://schema.org',
             '@type' => 'FAQPage',
             'url' => $appUrl.'/faq',
-            'inLanguage' => 'fr',
+            'inLanguage' => AppLocale::current()->value,
             'mainEntity' => [
                 [
                     '@type' => 'Question',
-                    'name' => "Qu'est-ce que WowPlanet ?",
+                    'name' => __('seo.faq.what.question'),
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'WowPlanet est un site fan gratuit de suivi de progression pour World of Warcraft. Il permet de visualiser la progression de vos personnages et de comparer vos accomplissements avec la base de données complète du jeu, entièrement en français.',
+                        'text' => __('seo.faq.what.answer'),
                     ],
                 ],
                 [
                     '@type' => 'Question',
-                    'name' => 'Comment importer mes personnages ?',
+                    'name' => __('seo.faq.import.question'),
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'Cliquez sur « Se connecter avec Battle.net » en haut du site. Une fois authentifié, tous vos personnages sont automatiquement importés et synchronisés.',
+                        'text' => __('seo.faq.import.answer'),
                     ],
                 ],
                 [
                     '@type' => 'Question',
-                    'name' => "Qu'est-ce que le score compte ?",
+                    'name' => __('seo.faq.score.question'),
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => "Le score compte est une note globale sur 100 qui évalue votre progression sur l'ensemble de vos personnages : quêtes, hauts-faits, montures, mascottes, métiers, décorations et réputations.",
+                        'text' => __('seo.faq.score.answer'),
                     ],
                 ],
                 [
                     '@type' => 'Question',
-                    'name' => 'Peut-on utiliser le site sans se connecter ?',
+                    'name' => __('seo.faq.anonymous.question'),
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'Oui. La base de données complète, les classements PvP et les fiches publiques des personnages sont consultables sans connexion. La connexion Battle.net est nécessaire uniquement pour importer vos propres personnages.',
+                        'text' => __('seo.faq.anonymous.answer'),
                     ],
                 ],
                 [
                     '@type' => 'Question',
-                    'name' => 'Comment fonctionnent les tâches quotidiennes ?',
+                    'name' => __('seo.faq.tasks.question'),
                     'acceptedAnswer' => [
                         '@type' => 'Answer',
-                        'text' => 'WowPlanet permet de créer des tâches personnalisées pour chacun de vos personnages. Les tâches quotidiennes se réinitialisent chaque jour à 4 h UTC, les hebdomadaires chaque mercredi à 4 h UTC et les mensuelles le 1er de chaque mois à 4 h UTC, comme la remise à zéro de Blizzard en Europe : 5 h à Paris en hiver, 6 h en été.',
+                        'text' => __('seo.faq.tasks.answer'),
                     ],
                 ],
             ],

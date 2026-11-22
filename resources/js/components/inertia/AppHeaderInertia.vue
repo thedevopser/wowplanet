@@ -1,12 +1,12 @@
 <template>
     <header class="sticky top-0 z-header shrink-0 border-b border-default bg-surface">
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-6">
-            <Link href="/" class="flex shrink-0 items-center gap-2 rounded-ui-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+            <Link :href="localizedUrl('/')" class="flex shrink-0 items-center gap-2 rounded-ui-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                 <img src="/images/logo.png" alt="WowPlanet" width="44" height="44" class="size-11 rounded-ui-md object-cover">
                 <span aria-hidden="true" class="hidden font-display text-xl font-semibold text-default sm:inline">WowPlanet</span>
             </Link>
 
-            <nav aria-label="Navigation principale" class="hidden lg:flex">
+            <nav :aria-label="$t('nav.main')" class="hidden lg:flex">
                 <ul class="flex items-center gap-1">
                     <li v-for="entry in entries" :key="entry.href">
                         <Link
@@ -25,7 +25,7 @@
                 <template v-if="store.isAuthenticated">
                     <DropdownMenu
                         :items="userMenuItems"
-                        label="Menu du compte"
+                        :label="$t('nav.account_menu')"
                         :choices="THEME_CHOICES"
                         :choice="themeChoice"
                         @update:choice="setThemeChoice"
@@ -44,23 +44,23 @@
                     <!-- The wrapper owns the display: Button sets its own inline-flex, which would beat hidden. -->
                     <div class="hidden sm:block">
                         <Button variant="primary" :href="LOGIN_URL" external>
-                            Se connecter avec Battle.net
+                            {{ $t('nav.login') }}
                         </Button>
                     </div>
                     <div class="hidden lg:block">
                         <IconButton
                             :icon="effectiveTheme === DARK ? Sun : Moon"
-                            :label="effectiveTheme === DARK ? 'Passer en mode clair' : 'Passer en mode sombre'"
+                            :label="effectiveTheme === DARK ? $t('theme.switch_to_light') : $t('theme.switch_to_dark')"
                             @click="toggleTheme()"
                         />
                     </div>
                 </template>
 
-                <Drawer v-model:open="drawerOpen" title="Menu">
+                <Drawer v-model:open="drawerOpen" :title="$t('nav.menu')">
                     <template #trigger>
-                        <IconButton class="lg:hidden" :icon="Menu" label="Ouvrir le menu" />
+                        <IconButton class="lg:hidden" :icon="Menu" :label="$t('nav.open_menu')" />
                     </template>
-                    <nav aria-label="Navigation principale">
+                    <nav :aria-label="$t('nav.main')">
                         <ul class="flex flex-col gap-1">
                             <li v-for="entry in entries" :key="entry.href">
                                 <Link
@@ -75,11 +75,11 @@
                     </nav>
                     <div v-if="!store.isAuthenticated" class="mt-6 flex flex-col gap-2 border-t border-default pt-6">
                         <Button variant="primary" :href="LOGIN_URL" external>
-                            Se connecter avec Battle.net
+                            {{ $t('nav.login') }}
                         </Button>
                         <Button variant="ghost" @click="toggleTheme()">
                             <Icon :icon="effectiveTheme === DARK ? Sun : Moon" />
-                            {{ effectiveTheme === DARK ? 'Mode clair' : 'Mode sombre' }}
+                            {{ effectiveTheme === DARK ? $t('theme.light_mode') : $t('theme.dark_mode') }}
                         </Button>
                     </div>
                 </Drawer>
@@ -96,14 +96,6 @@ const LOGOUT = 'logout';
 const DISCORD_URL = 'https://discord.gg/wa49gGF8cr';
 const ACCOUNT_PATH = '/mon-compte';
 
-const THEME_CHOICES = Object.freeze({
-    label: 'Thème',
-    options: [
-        { value: 'system', label: 'Système' },
-        { value: 'dark', label: 'Sombre' },
-        { value: 'light', label: 'Clair' },
-    ],
-});
 
 const NAV_LINK = 'relative inline-flex h-11 items-center rounded-ui-sm px-3 text-sm font-medium transition-colors duration-fast '
     + 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
@@ -121,6 +113,9 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { useCharacterStore } from '../../stores/character';
 import { useTheme } from '../../composables/useTheme';
 import LanguageSwitcher from './LanguageSwitcher.vue';
+import { useLocalizedUrl } from '../../composables/useLocalizedUrl';
+import { useTranslate } from '../../composables/useTranslate';
+import { DEFAULT_LOCALE, localizePath } from '../../i18n/localizePath';
 import Button from '../ui/Button.vue';
 import Drawer from '../ui/Drawer.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
@@ -132,7 +127,20 @@ const page = usePage();
 const store = useCharacterStore();
 const { effective: effectiveTheme, choice: themeChoice, toggle: toggleTheme, setChoice: setThemeChoice } = useTheme();
 
-const currentPath = computed(() => page.url.split('?')[0]);
+const t = useTranslate();
+const { localizedUrl } = useLocalizedUrl();
+
+// Compared in French, the reference language of the paths: the English pages match too.
+const currentPath = computed(() => localizePath(page.url.split('?')[0], DEFAULT_LOCALE));
+
+const THEME_CHOICES = computed(() => ({
+    label: t('theme.label'),
+    options: [
+        { value: 'system', label: t('theme.system') },
+        { value: 'dark', label: t('theme.dark') },
+        { value: 'light', label: t('theme.light') },
+    ],
+}));
 const drawerOpen = ref(false);
 
 const isAccountPage = computed(() => currentPath.value === ACCOUNT_PATH || currentPath.value.startsWith(`${ACCOUNT_PATH}/`)
@@ -140,24 +148,24 @@ const isAccountPage = computed(() => currentPath.value === ACCOUNT_PATH || curre
 
 const entries = computed(() => {
     const list = [
-        { label: 'Base de données', href: '/base-de-donnees', active: currentPath.value.startsWith('/base-de-donnees') },
-        { label: 'Classements PvP', href: '/classements-pvp', active: currentPath.value.startsWith('/classements-pvp') },
+        { label: t('nav.database'), href: localizedUrl('/base-de-donnees'), active: currentPath.value.startsWith('/base-de-donnees') },
+        { label: t('nav.pvp'), href: localizedUrl('/classements-pvp'), active: currentPath.value.startsWith('/classements-pvp') },
     ];
 
     if (store.isAuthenticated) {
-        list.push({ label: 'Mon compte', href: ACCOUNT_PATH, active: isAccountPage.value });
+        list.push({ label: t('nav.account'), href: localizedUrl(ACCOUNT_PATH), active: isAccountPage.value });
     }
 
     return list;
 });
 
 // The battletag reads "Name#1234": the number only matters to Battle.net.
-const accountName = computed(() => store.battletag.split('#')[0] || 'Mon compte');
+const accountName = computed(() => store.battletag.split('#')[0] || t('nav.account'));
 
 const userMenuItems = computed(() => [
     { key: 'discord', label: 'Discord', href: DISCORD_URL, external: true, icon: MessageCircle },
-    ...(store.isAdmin ? [{ key: 'admin', label: 'Administration', href: '/admin', icon: Shield }] : []),
-    { key: LOGOUT, label: 'Déconnexion', icon: LogOut, tone: 'danger' },
+    ...(store.isAdmin ? [{ key: 'admin', label: t('nav.admin'), href: '/admin', icon: Shield }] : []),
+    { key: LOGOUT, label: t('nav.logout'), icon: LogOut, tone: 'danger' },
 ]);
 
 async function onUserMenuSelect(key) {
@@ -166,7 +174,7 @@ async function onUserMenuSelect(key) {
     }
 
     await store.logout();
-    router.visit('/');
+    router.visit(localizedUrl('/'));
 }
 
 watch(currentPath, () => {

@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
 import { vi } from 'vitest';
-import { i18nVue, reset as resetLoadedLanguages } from 'laravel-vue-i18n';
+import { i18nVue } from 'laravel-vue-i18n';
 import { eagerI18nOptions } from '../i18n/translations.js';
 
 export async function mountWithPlugins(component, options = {}) {
@@ -11,9 +11,6 @@ export async function mountWithPlugins(component, options = {}) {
         stubActions: options.stubActions !== false,
     });
 
-    // Loaded languages are cached on the class: a language loaded by an earlier test would be
-    // applied before the new instance renders, leaving the keys it reads untranslated.
-    resetLoadedLanguages();
     const wrapper = mount(component, {
         global: {
             plugins: [pinia, { install: (app) => i18nVue.install(app, eagerI18nOptions(options.locale)) }],

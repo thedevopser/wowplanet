@@ -60,3 +60,13 @@ describe('AddonsPage', () => {
         expect(hrefs).toContain('https://www.curseforge.com/wow/addons/tanks-truck-reverse');
     });
 });
+
+describe('AddonsPage in english', () => {
+    it('presents the addons in english', async () => {
+        const wrapper = await mountWithPlugins(AddonsPage, { locale: 'en', props: { meta } });
+
+        expect(wrapper.get('h1').text()).toBe('Our Addons');
+        expect(wrapper.text()).toContain('Quest marker filtering');
+        expect(wrapper.text()).toContain('View');
+    });
+});

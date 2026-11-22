@@ -86,3 +86,9 @@ test('the database sitemap lists both language versions of each page', function 
     expect($xml)->toContain('<loc>'.url('/en/database').'</loc>')
         ->and($xml)->toContain('hreflang="fr" href="'.url('/base-de-donnees').'"');
 });
+
+test('the structured faq follows the language of the page', function (): void {
+    $this->get('/en/faq')->assertInertia(
+        fn (AssertableInertia $page): AssertableInertia => $page->where('meta.jsonLd', fn (string $jsonLd): bool => str_contains($jsonLd, 'What is WowPlanet?') && str_contains($jsonLd, '"inLanguage":"en"'))
+    );
+});

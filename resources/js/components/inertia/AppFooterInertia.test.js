@@ -1,11 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 
+const page = vi.hoisted(() => ({ props: {} }));
+
 vi.mock('@inertiajs/vue3', () => ({
     Link: { name: 'Link', props: ['href'], template: '<a :href="href"><slot /></a>' },
+    usePage: () => page,
 }));
 
 import AppFooterInertia from './AppFooterInertia.vue';
+import { mountWithPlugins } from '../../tests/helpers';
 
 const RAW_TEXT_SIZE = /text-\[\d+px\]/;
 
@@ -61,5 +65,17 @@ describe('AppFooterInertia', () => {
 
     it('keeps its text at twelve pixels at least', () => {
         expect(mount(AppFooterInertia).html()).not.toMatch(RAW_TEXT_SIZE);
+    });
+});
+
+describe('AppFooterInertia in english', () => {
+    it('links to the english pages, labelled in english', async () => {
+        page.props = { locale: 'en' };
+        const wrapper = await mountWithPlugins(AppFooterInertia, { locale: 'en' });
+        page.props = {};
+
+        expect(wrapper.text()).toContain('Unofficial fan site');
+        expect(wrapper.find('a[href="/en/database"]').text()).toBe('Database');
+        expect(wrapper.find('a[href="/en/terms"]').text()).toBe('Terms of use');
     });
 });

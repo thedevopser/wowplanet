@@ -7,8 +7,8 @@
                 </svg>
             </span>
             <div>
-                <h2 class="text-base font-semibold text-default">Rejoins la communauté</h2>
-                <p class="text-sm text-muted">Propose des fonctionnalités, signale un bug, échange avec les joueurs.</p>
+                <h2 class="text-base font-semibold text-default">{{ $t('discord.title') }}</h2>
+                <p class="text-sm text-muted">{{ $t('discord.message') }}</p>
             </div>
         </div>
         <a
@@ -18,9 +18,9 @@
             class="inline-flex h-11 shrink-0 items-center gap-2 rounded-ui-md bg-brand-discord px-4 font-medium text-on-brand-discord transition-opacity duration-fast hover:opacity-90
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-            Rejoindre le Discord
+            {{ $t('discord.join') }}
             <Icon :icon="ExternalLink" size="sm" />
-            <span class="sr-only">(nouvel onglet)</span>
+            <span class="sr-only">{{ $t('common.new_tab') }}</span>
         </a>
     </section>
 </template>

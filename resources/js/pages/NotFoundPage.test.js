@@ -48,3 +48,12 @@ describe('NotFoundPage', () => {
         await expectNoAxeViolations(wrapper.element);
     });
 });
+
+describe('NotFoundPage in english', () => {
+    it('says the page is missing in english', async () => {
+        const { mountWithPlugins } = await import('../tests/helpers');
+        const wrapper = await mountWithPlugins(NotFoundPage, { locale: 'en' });
+
+        expect(wrapper.get('h1').text()).toBe('Page not found');
+    });
+});
