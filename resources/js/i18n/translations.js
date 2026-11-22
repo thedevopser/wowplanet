@@ -1,9 +1,9 @@
 import { DEFAULT_LOCALE } from './localizePath.js';
 
-const lazyLanguages = import.meta.glob('../../../lang/*.json');
-const eagerLanguages = import.meta.glob('../../../lang/*.json', { eager: true, import: 'default' });
+const lazyLanguages = import.meta.glob('../../lang/*.json');
+const eagerLanguages = import.meta.glob('../../lang/*.json', { eager: true, import: 'default' });
 
-const fileOf = (lang) => `../../../lang/${lang}.json`;
+const fileOf = (lang) => `../../lang/${lang}.json`;
 
 /**
  * The browser downloads only the language of the page, and mounts the application once it

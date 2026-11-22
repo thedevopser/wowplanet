@@ -30,3 +30,7 @@ test('laravel reads the translation of the current locale', function (): void {
 
     expect(__('locale.name'))->toBe('English');
 });
+
+test('the translation files live under resources, the only tree the dev server is routed', function (): void {
+    expect(lang_path())->toBe(resource_path('lang'));
+});
