@@ -25,7 +25,7 @@
                                     <Icon :icon="Check" size="sm" />
                                 </DropdownMenuItemIndicator>
                             </span>
-                            {{ option.label }}
+                            <slot name="choice" :option="option">{{ option.label }}</slot>
                         </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                 </template>
