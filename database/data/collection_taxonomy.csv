@@ -1665,6 +1665,7 @@ mount,3106,,,true
 mount,3107,"World Events","Trading Post",true
 mount,3119,"World Events","Trading Post",true
 mount,3125,"World Events","Trading Post",true
+mount,3133,,,true
 mount,3137,Midnight,Vendor,true
 mount,3138,,,true
 mount,3139,,,true
@@ -3853,6 +3854,7 @@ pet,5133,Midnight,Treasure,true
 pet,5134,Midnight,"Mysterious Mixing",true
 pet,5137,Midnight,"Rare Drop",true
 pet,5164,Midnight,Riddle,true
+pet,5173,,,true
 decor,80,Neighbourhoods,"Neighbourhood Vendor",true
 decor,81,Neighbourhoods,"Neighbourhood Vendor",true
 decor,126,"Warlords of Draenor","Alliance Garrison Vendor",true
@@ -6186,7 +6188,13 @@ decor,27617,Shadowlands,Vendor,true
 decor,27683,"Warlords of Draenor",Vendor,true
 decor,27684,Shadowlands,Vendor,true
 decor,27824,Legion,Vendor,true
+decor,27913,Midnight,"Neighbourhood Vendor",true
+decor,27914,Midnight,"Neighbourhood Vendor",true
+decor,27915,Midnight,"Neighbourhood Vendor",true
 decor,27973,Neighbourhoods,"Neighbourhood Vendor",true
+decor,27975,Midnight,"Neighbourhood Vendor",true
+decor,27976,Midnight,"Neighbourhood Vendor",true
+decor,27977,Midnight,"Neighbourhood Vendor",true
 decor,27982,"Battle for Azeroth",Vendor,true
 decor,28106,Legion,Vendor,true
 decor,28107,Legion,Vendor,true
@@ -6223,6 +6231,8 @@ decor,28350,Neighbourhoods,,true
 decor,28353,Shadowlands,Vendor,true
 decor,28354,Shadowlands,Vendor,true
 decor,28367,Shadowlands,Vendor,true
+decor,28403,Midnight,"Neighbourhood Vendor",true
+decor,28404,Midnight,"Neighbourhood Vendor",true
 decor,28427,Legion,Vendor,true
 decor,28428,Legion,Vendor,true
 decor,28429,Legion,Vendor,true
@@ -6362,5 +6372,19 @@ decor,28633,"Battle for Azeroth",Vendor,true
 decor,28634,Shadowlands,Vendor,true
 decor,28693,"Warlords of Draenor",Vendor,true
 decor,28694,"Battle for Azeroth",Vendor,true
+decor,28718,Midnight,"Neighbourhood Vendor",true
+decor,29099,Midnight,"Neighbourhood Vendor",true
+decor,29100,Midnight,"Neighbourhood Vendor",true
 decor,29117,Midnight,"Amani Troll Endeavors",true
+decor,29506,Midnight,"Neighbourhood Vendor",true
+decor,29507,Midnight,"Neighbourhood Vendor",true
+decor,29508,Midnight,"Neighbourhood Vendor",true
+decor,29509,Midnight,"Neighbourhood Vendor",true
+decor,29525,Midnight,"Neighbourhood Vendor",true
+decor,29976,Midnight,"Neighbourhood Vendor",true
+decor,29977,Midnight,"Neighbourhood Vendor",true
+decor,29978,Midnight,"Neighbourhood Vendor",true
+decor,29999,Midnight,"Neighbourhood Vendor",true
 decor,30255,"Warlords of Draenor",Vendor,true
+decor,30834,Midnight,"Neighbourhood Vendor",true
+decor,30835,Midnight,"Neighbourhood Vendor",true
