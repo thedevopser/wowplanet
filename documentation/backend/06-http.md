@@ -289,7 +289,11 @@ Alias `admin`. Vérifie le drapeau `is_admin` que le callback OAuth pose en sess
 
 ### `HandleInertiaRequests`
 
-Middleware d'Inertia, ajouté au groupe `web`. Il fixe la vue Blade racine (`app`) et partage avec toutes les pages le choix de thème validé (`theme`, voir [Thème](#thème-apphttptheme)), l'état d'authentification et les messages flash, voir [Authentification](#authentification). Les props sont des closures, évaluées seulement si la page les lit. C'est l'une des frontières de `mixed-boundaries.txt` : il surcharge `share()`, dont le contrat d'Inertia ne type pas les props par défaut.
+Middleware d'Inertia, ajouté au groupe `web`. Il fixe la vue Blade racine (`app`) et partage avec toutes les pages le choix de thème validé (`theme`, voir [Thème](#thème-apphttptheme)), la langue de la page et ses URL dans les deux langues (`locale`, `alternateUrls`, voir [Langues](#langues-apphttplocalization)), l'état d'authentification et les messages flash, voir [Authentification](#authentification). Les props sont des closures, évaluées seulement si la page les lit. C'est l'une des frontières de `mixed-boundaries.txt` : il surcharge `share()`, dont le contrat d'Inertia ne type pas les props par défaut.
+
+### `SetLocale`
+
+Placé en tête du groupe `web`. Il lit la langue de la page dans son URL (`AppLocale::fromPath()`) et l'applique à Laravel par `App::setLocale()`, avant tout le reste : les traductions, les props partagées et l'attribut `lang` de `<html>` en dépendent. Voir [Langues](#langues-apphttplocalization).
 
 ### `SecurityHeaders`
 
@@ -305,6 +309,24 @@ Ajoute les en-têtes de sécurité HTTP à chaque réponse :
 | `Content-Security-Policy` | Uniquement en production |
 
 La politique n'autorise aucun script inline, à une exception près : le script de démarrage du thème, admis par son empreinte `sha256` que fournit `ThemeBootScript::cspSource()`. Modifier `resources/js/themeBoot.js` met l'empreinte à jour d'elle-même, puisqu'elle est calculée sur le texte servi.
+
+## Langues (`app/Http/Localization/`)
+
+Le site existe en français et en anglais. Le français garde ses URL historiques, sans préfixe ; l'anglais vit sous `/en`, avec des chemins traduits (`/en/database/mounts`). L'administration, `/docs` et `/ui` n'existent qu'en français : une URL comme `/en/admin` tombe dans la catch-all et rend la 404, en anglais.
+
+Les textes traduits sont dans `lang/fr.json` et `lang/en.json`, à clés anglaises sémantiques (`database.mounts.title`), lus par Laravel (`__()`) comme par le front (`laravel-vue-i18n`). Un test échoue dès qu'une clé manque dans l'une des deux langues.
+
+### `AppLocale`
+
+Énumération des deux langues. `fromPath()` rend l'anglais quand le premier segment du chemin vaut `en`, le français sinon ; `other()` désigne l'autre langue.
+
+### `LocalizedRouteTable` et `LocalizedRoutePattern`
+
+La table des chemins traduits des pages publiques, chargée depuis `resources/js/i18n/localizedRoutes.json`, que le front lit aussi. `routes/web.php` déclare chaque page publique une fois par langue à partir de cette table. `alternate()` rend la même page dans l'autre langue : il reconnaît le chemin concret, puis le reconstruit avec les mêmes valeurs de paramètres. Il ne traduit que les segments fixes, donc un royaume ou un personnage nommé comme un segment traduit reste intact. Un chemin hors de la table n'a pas d'alternative (`null`). La table est validée à la construction : chaque route a ses deux chemins, l'anglais commence par `/en` et le français non, et les deux déclarent les mêmes paramètres. Sinon, elle lève `InvalidLocalizedRouteTable`. Une route inconnue demandée à `path()` lève `UnknownLocalizedRoute`.
+
+`LocalizedRoutePattern` porte un chemin à la syntaxe de Laravel (`/a/{b}/{c?}`), le reconnaît dans un chemin concret (`match()`) et le reconstruit à partir des valeurs (`build()`), une valeur vide omettant un paramètre facultatif.
+
+`HandleInertiaRequests` partage `locale` et `alternateUrls`, c'est-à-dire l'URL absolue de la page dans chaque langue, query string comprise, ou `null` pour une page qui n'existe que dans une langue.
 
 ## Thème (`app/Http/Theme/`)
 

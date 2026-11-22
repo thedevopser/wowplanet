@@ -14,6 +14,8 @@ use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\DocsController;
 use App\Http\Controllers\PvpController;
 use App\Http\Controllers\SeoController;
+use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocalizedRouteTable;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/blizzard/redirect', [AuthController::class, 'redirect']);
@@ -24,11 +26,30 @@ Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
 Route::get('/sitemap-pages.xml', [SeoController::class, 'sitemapPages']);
 Route::get('/sitemap-database.xml', [DatabaseController::class, 'sitemap']);
 
-Route::get('/', [SeoController::class, 'home']);
+$localizedRoutes = resolve(LocalizedRouteTable::class);
 
-Route::get('/character/{realm}/{name}/{section?}/{sub?}', [CharacterController::class, 'page']);
+foreach (AppLocale::cases() as $locale) {
+    $path = fn (string $name): string => $localizedRoutes->path($name, $locale);
 
-Route::get('/mon-compte/{view?}', [AccountController::class, 'hub']);
+    Route::get($path('home'), [SeoController::class, 'home']);
+    Route::get($path('character'), [CharacterController::class, 'page']);
+    Route::get($path('account'), [AccountController::class, 'hub']);
+    Route::get($path('database.index'), [DatabaseController::class, 'index']);
+    Route::get($path('database.mounts'), [DatabaseController::class, 'mounts']);
+    Route::get($path('database.achievements'), [DatabaseController::class, 'achievements']);
+    Route::get($path('database.quests'), [DatabaseController::class, 'quests']);
+    Route::get($path('database.pets'), [DatabaseController::class, 'pets']);
+    Route::get($path('database.decors'), [DatabaseController::class, 'decors']);
+    Route::get($path('database.appearances'), [DatabaseController::class, 'appearances']);
+    Route::get($path('database.professions'), [DatabaseController::class, 'professions']);
+    // Classements PvP : pas un catalogue, donc hors /base-de-donnees et hors DatabaseLayout.
+    Route::get($path('pvp'), [PvpController::class, 'leaderboard']);
+    Route::get($path('faq'), [SeoController::class, 'faqPage']);
+    Route::get($path('terms'), [SeoController::class, 'cguPage']);
+    Route::get($path('privacy'), [SeoController::class, 'privacyPage']);
+    Route::get($path('addons'), [SeoController::class, 'addonsPage']);
+}
+
 Route::permanentRedirect('/my-characters', '/mon-compte');
 Route::permanentRedirect('/my-score', '/mon-compte/score');
 Route::permanentRedirect('/class-stats', '/mon-compte/classes');
@@ -45,23 +66,6 @@ Route::middleware(['throttle:admin', 'admin'])->prefix('admin')->group(function 
     Route::get('/history/{jobId}', [HistoryController::class, 'entry']);
     Route::get('/tools', [ToolsController::class, 'page']);
 });
-
-Route::get('/base-de-donnees', [DatabaseController::class, 'index']);
-Route::get('/base-de-donnees/montures/{category?}', [DatabaseController::class, 'mounts']);
-Route::get('/base-de-donnees/hauts-faits/{expansion?}', [DatabaseController::class, 'achievements']);
-Route::get('/base-de-donnees/quetes/{expansion?}', [DatabaseController::class, 'quests']);
-Route::get('/base-de-donnees/mascottes/{category?}', [DatabaseController::class, 'pets']);
-Route::get('/base-de-donnees/decorations/{category?}', [DatabaseController::class, 'decors']);
-Route::get('/base-de-donnees/garde-robe/{slot?}', [DatabaseController::class, 'appearances']);
-Route::get('/base-de-donnees/professions/{profession?}', [DatabaseController::class, 'professions']);
-
-// Classements PvP : pas un catalogue, donc hors /base-de-donnees et hors DatabaseLayout.
-Route::get('/classements-pvp/{bracket?}', [PvpController::class, 'leaderboard']);
-
-Route::get('/faq', [SeoController::class, 'faqPage']);
-Route::get('/cgu', [SeoController::class, 'cguPage']);
-Route::get('/privacy', [SeoController::class, 'privacyPage']);
-Route::get('/addons', [SeoController::class, 'addonsPage']);
 
 if (app()->isLocal()) {
     Route::get('/docs', [DocsController::class, 'index']);

@@ -6,8 +6,10 @@ import { h } from 'vue';
 // voit nulle part ailleurs.
 
 const useAuthGuard = vi.fn();
+const i18n = vi.hoisted(() => ({ active: 'fr', loadLanguageAsync: vi.fn() }));
 const inertiaAppOptions = {};
 let routerEvents = [];
+let onNavigate;
 
 vi.mock('@inertiajs/vue3', () => ({
     createInertiaApp: (options) => {
@@ -22,6 +24,12 @@ vi.mock('laravel-vite-plugin/inertia-helpers', () => ({
 
 vi.mock('./bootstrap', () => ({}));
 
+vi.mock('laravel-vue-i18n', async (importOriginal) => ({
+    ...(await importOriginal()),
+    getActiveLanguage: () => i18n.active,
+    loadLanguageAsync: i18n.loadLanguageAsync,
+}));
+
 vi.mock('./composables/useAuthGuard', () => ({ useAuthGuard }));
 
 
@@ -31,18 +39,25 @@ beforeAll(async () => {
     await import('./inertia');
     const { router } = await import('@inertiajs/vue3');
     routerEvents = router.on.mock.calls.map(([event]) => event);
+    onNavigate = router.on.mock.calls[0][1];
 });
 
-function runSetup() {
+function runSetup(locale = 'fr') {
     const el = document.createElement('div');
     document.body.appendChild(el);
 
     inertiaAppOptions.setup({
         el,
-        App: { render: () => h('div') },
-        props: {},
+        App: { render: () => h('div', { class: 'mounted-app' }) },
+        props: { initialPage: { props: { locale } } },
         plugin: { install: () => {} },
     });
+
+    return el;
+}
+
+function navigateTo(locale) {
+    onNavigate({ detail: { page: { props: { locale } } } });
 }
 
 describe('amorçage Inertia', () => {
@@ -54,6 +69,12 @@ describe('amorçage Inertia', () => {
         expect(useAuthGuard).toHaveBeenCalledOnce();
     });
 
+    it('mounts the application once the language of the page is loaded', async () => {
+        const el = runSetup('en');
+
+        await vi.waitFor(() => expect(el.querySelector('.mounted-app')).not.toBeNull());
+    });
+
     it('signals every visit with the progress bar, in the accent colour', () => {
         expect(inertiaAppOptions.progress).toEqual({ color: 'var(--wp-accent)', delay: 150, showSpinner: false });
     });
@@ -62,5 +83,24 @@ describe('amorçage Inertia', () => {
 describe('navigation', () => {
     it('lays no overlay over the page during a visit', () => {
         expect(routerEvents).toEqual(['navigate']);
+    });
+});
+
+describe('changement de langue', () => {
+    it('loads the language of a page reached in the other language', () => {
+        i18n.active = 'fr';
+
+        navigateTo('en');
+
+        expect(i18n.loadLanguageAsync).toHaveBeenCalledWith('en');
+    });
+
+    it('loads nothing when the language stays the same', () => {
+        i18n.active = 'fr';
+        i18n.loadLanguageAsync.mockClear();
+
+        navigateTo('fr');
+
+        expect(i18n.loadLanguageAsync).not.toHaveBeenCalled();
     });
 });

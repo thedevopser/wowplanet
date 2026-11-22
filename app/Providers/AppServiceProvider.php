@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Application\Import\ImportWaitReporter;
+use App\Http\Localization\LocalizedRouteTable;
 use App\Jobs\DescribeQueuedJob;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
         // Le rapporteur d'attente porte le job suivi : sept importers et le client API
         // doivent voir le même, sans quoi chacun publierait dans le vide.
         $this->app->singleton(ImportWaitReporter::class);
+
+        $this->app->singleton(
+            LocalizedRouteTable::class,
+            fn (): LocalizedRouteTable => LocalizedRouteTable::fromFile(resource_path('js/i18n/localizedRoutes.json')),
+        );
     }
 
     public function boot(): void

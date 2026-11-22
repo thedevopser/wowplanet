@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Localization\AppLocale;
+use App\Http\Localization\LocalizedRouteTable;
 use App\Http\Theme\ThemeChoice;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(private readonly LocalizedRouteTable $localizedRouteTable) {}
+
     /**
      * Le template Blade racine chargé au premier rendu (contient @inertia / @inertiaHead).
      */
@@ -42,11 +46,37 @@ class HandleInertiaRequests extends Middleware
                 },
             ],
             'theme' => ThemeChoice::fromRequest($request)->value,
+            'locale' => fn (): string => app()->getLocale(),
+            'alternateUrls' => fn (): ?array => $this->alternateUrls($request),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'authRequired' => fn (): bool => $request->session()->get('auth_required') === true,
             ],
         ];
+    }
+
+    /**
+     * The current page in each locale, query string included, or null for a page that
+     * exists in one language only.
+     *
+     * @return array{fr: string, en: string}|null
+     */
+    private function alternateUrls(Request $request): ?array
+    {
+        $query = $request->getQueryString();
+        $urls = [];
+
+        foreach (AppLocale::cases() as $locale) {
+            $path = $this->localizedRouteTable->alternate('/'.$request->path(), $locale);
+
+            if ($path === null) {
+                return null;
+            }
+
+            $urls[$locale->value] = url($path).($query === null ? '' : '?'.$query);
+        }
+
+        return ['fr' => $urls['fr'], 'en' => $urls['en']];
     }
 }
